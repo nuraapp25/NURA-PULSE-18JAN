@@ -6,8 +6,12 @@ import os
 import logging
 import requests
 from typing import Dict, List, Optional, Any
+from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
+
+# Track last sync time
+last_sync_time = None
 
 # Configuration
 GOOGLE_SHEETS_ENABLED = os.environ.get('GOOGLE_SHEETS_ENABLED', 'false').lower() == 'true'
