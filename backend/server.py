@@ -605,6 +605,181 @@ async def sync_all_users_to_sheets(current_user: User = Depends(get_current_user
         raise HTTPException(status_code=500, detail="Failed to sync users to Google Sheets. Check if Google Sheets integration is enabled.")
 
 
+# ==================== Multi-App Endpoints ====================
+
+from app_models import (
+    PaymentRecord, PaymentRecordCreate,
+    DriverRecord, DriverRecordCreate,
+    TelecallerTask, TelecallerTaskCreate,
+    VehicleRecord, VehicleRecordCreate
+)
+
+# Payment Reconciliation
+@api_router.post("/payment-reconciliation")
+async def create_payment(payment_data: PaymentRecordCreate, current_user: User = Depends(get_current_user)):
+    """Create new payment record"""
+    payment = PaymentRecord(**payment_data.model_dump())
+    payment_dict = payment.model_dump()
+    payment_dict['date'] = payment_dict['date'].isoformat()
+    payment_dict['created_at'] = payment_dict['created_at'].isoformat()
+    
+    await db.payment_reconciliation.insert_one(payment_dict)
+    sync_single_record('payment_reconciliation', payment_dict)
+    
+    return {"message": "Payment record created", "payment": payment}
+
+
+@api_router.get("/payment-reconciliation")
+async def get_payments(current_user: User = Depends(get_current_user)):
+    """Get all payment records"""
+    payments = await db.payment_reconciliation.find({}, {"_id": 0}).to_list(1000)
+    for payment in payments:
+        if isinstance(payment.get('date'), str):
+            payment['date'] = datetime.fromisoformat(payment['date'])
+        if isinstance(payment.get('created_at'), str):
+            payment['created_at'] = datetime.fromisoformat(payment['created_at'])
+    return payments
+
+
+@api_router.post("/payment-reconciliation/sync")
+async def sync_payments(current_user: User = Depends(get_current_user)):
+    """Sync all payments to Google Sheets"""
+    payments = await db.payment_reconciliation.find({}, {"_id": 0}).to_list(1000)
+    success = sync_all_records('payment_reconciliation', payments)
+    if success:
+        return {"message": "Payments synced successfully"}
+    raise HTTPException(status_code=500, detail="Failed to sync payments")
+
+
+# Driver Onboarding
+@api_router.post("/driver-onboarding")
+async def create_driver(driver_data: DriverRecordCreate, current_user: User = Depends(get_current_user)):
+    """Create new driver record"""
+    driver = DriverRecord(**driver_data.model_dump())
+    driver_dict = driver.model_dump()
+    driver_dict['date'] = driver_dict['date'].isoformat()
+    driver_dict['created_at'] = driver_dict['created_at'].isoformat()
+    
+    await db.driver_onboarding.insert_one(driver_dict)
+    sync_single_record('driver_onboarding', driver_dict)
+    
+    return {"message": "Driver record created", "driver": driver}
+
+
+@api_router.get("/driver-onboarding")
+async def get_drivers(current_user: User = Depends(get_current_user)):
+    """Get all driver records"""
+    drivers = await db.driver_onboarding.find({}, {"_id": 0}).to_list(1000)
+    for driver in drivers:
+        if isinstance(driver.get('date'), str):
+            driver['date'] = datetime.fromisoformat(driver['date'])
+        if isinstance(driver.get('created_at'), str):
+            driver['created_at'] = datetime.fromisoformat(driver['created_at'])
+    return drivers
+
+
+@api_router.post("/driver-onboarding/sync")
+async def sync_drivers(current_user: User = Depends(get_current_user)):
+    """Sync all drivers to Google Sheets"""
+    drivers = await db.driver_onboarding.find({}, {"_id": 0}).to_list(1000)
+    success = sync_all_records('driver_onboarding', drivers)
+    if success:
+        return {"message": "Drivers synced successfully"}
+    raise HTTPException(status_code=500, detail="Failed to sync drivers")
+
+
+# Telecaller Queue
+@api_router.post("/telecaller-queue")
+async def create_telecaller_task(task_data: TelecallerTaskCreate, current_user: User = Depends(get_current_user)):
+    """Create new telecaller task"""
+    task = TelecallerTask(**task_data.model_dump())
+    task_dict = task.model_dump()
+    task_dict['date'] = task_dict['date'].isoformat()
+    task_dict['created_at'] = task_dict['created_at'].isoformat()
+    if task_dict.get('scheduled_time'):
+        task_dict['scheduled_time'] = task_dict['scheduled_time'].isoformat()
+    
+    await db.telecaller_queue.insert_one(task_dict)
+    sync_single_record('telecaller_queue', task_dict)
+    
+    return {"message": "Telecaller task created", "task": task}
+
+
+@api_router.get("/telecaller-queue")
+async def get_telecaller_tasks(current_user: User = Depends(get_current_user)):
+    """Get all telecaller tasks"""
+    tasks = await db.telecaller_queue.find({}, {"_id": 0}).to_list(1000)
+    for task in tasks:
+        if isinstance(task.get('date'), str):
+            task['date'] = datetime.fromisoformat(task['date'])
+        if isinstance(task.get('created_at'), str):
+            task['created_at'] = datetime.fromisoformat(task['created_at'])
+    return tasks
+
+
+@api_router.post("/telecaller-queue/sync")
+async def sync_telecaller_queue(current_user: User = Depends(get_current_user)):
+    """Sync all telecaller tasks to Google Sheets"""
+    tasks = await db.telecaller_queue.find({}, {"_id": 0}).to_list(1000)
+    success = sync_all_records('telecaller_queue', tasks)
+    if success:
+        return {"message": "Telecaller queue synced successfully"}
+    raise HTTPException(status_code=500, detail="Failed to sync telecaller queue")
+
+
+# Montra Vehicle Insights
+@api_router.post("/montra-vehicle-insights")
+async def create_vehicle(vehicle_data: VehicleRecordCreate, current_user: User = Depends(get_current_user)):
+    """Create new vehicle record"""
+    vehicle = VehicleRecord(**vehicle_data.model_dump())
+    vehicle_dict = vehicle.model_dump()
+    vehicle_dict['date'] = vehicle_dict['date'].isoformat()
+    vehicle_dict['created_at'] = vehicle_dict['created_at'].isoformat()
+    if vehicle_dict.get('last_service'):
+        vehicle_dict['last_service'] = vehicle_dict['last_service'].isoformat()
+    
+    await db.montra_vehicle_insights.insert_one(vehicle_dict)
+    sync_single_record('montra_vehicle_insights', vehicle_dict)
+    
+    return {"message": "Vehicle record created", "vehicle": vehicle}
+
+
+@api_router.get("/montra-vehicle-insights")
+async def get_vehicles(current_user: User = Depends(get_current_user)):
+    """Get all vehicle records"""
+    vehicles = await db.montra_vehicle_insights.find({}, {"_id": 0}).to_list(1000)
+    for vehicle in vehicles:
+        if isinstance(vehicle.get('date'), str):
+            vehicle['date'] = datetime.fromisoformat(vehicle['date'])
+        if isinstance(vehicle.get('created_at'), str):
+            vehicle['created_at'] = datetime.fromisoformat(vehicle['created_at'])
+        if vehicle.get('last_service') and isinstance(vehicle.get('last_service'), str):
+            vehicle['last_service'] = datetime.fromisoformat(vehicle['last_service'])
+    return vehicles
+
+
+@api_router.post("/montra-vehicle-insights/sync")
+async def sync_vehicles(current_user: User = Depends(get_current_user)):
+    """Sync all vehicles to Google Sheets"""
+    vehicles = await db.montra_vehicle_insights.find({}, {"_id": 0}).to_list(1000)
+    success = sync_all_records('montra_vehicle_insights', vehicles)
+    if success:
+        return {"message": "Vehicles synced successfully"}
+    raise HTTPException(status_code=500, detail="Failed to sync vehicles")
+
+
+# Fetch from Sheets (Read from Sheets to app)
+@api_router.get("/sheets/fetch/{tab}")
+async def fetch_from_sheets(tab: str, current_user: User = Depends(get_current_user)):
+    """Fetch data from Google Sheets"""
+    valid_tabs = ['payment_reconciliation', 'driver_onboarding', 'telecaller_queue', 'montra_vehicle_insights']
+    if tab not in valid_tabs:
+        raise HTTPException(status_code=400, detail="Invalid tab name")
+    
+    records = get_all_records(tab)
+    return {"message": f"Fetched {len(records)} records", "data": records}
+
+
 # ==================== App Initialization ====================
 
 @app.on_event("startup")
