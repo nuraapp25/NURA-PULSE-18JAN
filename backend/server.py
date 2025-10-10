@@ -825,6 +825,41 @@ async def update_lead_status(lead_id: str, status_data: LeadStatusUpdate, curren
     return {"message": "Lead status updated successfully", "lead": updated_lead}
 
 
+class BulkLeadStatusUpdate(BaseModel):
+    lead_ids: List[str]
+    status: str
+
+
+@api_router.patch("/driver-onboarding/leads/bulk-update-status")
+async def bulk_update_lead_status(bulk_data: BulkLeadStatusUpdate, current_user: User = Depends(get_current_user)):
+    """Bulk update lead status"""
+    if not bulk_data.lead_ids:
+        raise HTTPException(status_code=400, detail="No leads selected")
+    
+    # Update all leads
+    result = await db.driver_leads.update_many(
+        {"id": {"$in": bulk_data.lead_ids}},
+        {"$set": {"status": bulk_data.status}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="No leads found to update")
+    
+    # Get updated leads for sync
+    updated_leads = await db.driver_leads.find(
+        {"id": {"$in": bulk_data.lead_ids}},
+        {"_id": 0}
+    ).to_list(1000)
+    
+    # Sync all to Google Sheets
+    sync_all_records('leads', updated_leads)
+    
+    return {
+        "message": f"Successfully updated {result.modified_count} lead(s)",
+        "updated_count": result.modified_count
+    }
+
+
 # Telecaller Queue
 @api_router.post("/telecaller-queue")
 async def create_telecaller_task(task_data: TelecallerTaskCreate, current_user: User = Depends(get_current_user)):
