@@ -18,33 +18,39 @@ SPREADSHEET_ID = "1PPtzfxqvP80SqCywj3F_3FbCVPOLw2lh_-RG95rZYSY"
 WORKSHEET_NAME = "Users"
 
 
-def get_gspread_client():
-    """Initialize and return gspread client"""
+def send_to_web_app(payload: Dict) -> bool:
+    """Send data to Google Sheets Web App"""
     if not GOOGLE_SHEETS_ENABLED:
-        return None
+        logger.info("Google Sheets sync is disabled")
+        return False
+    
+    if not GOOGLE_SHEETS_WEB_APP_URL:
+        logger.warning("GOOGLE_SHEETS_WEB_APP_URL not configured")
+        return False
     
     try:
-        import gspread
-        from oauth2client.service_account import ServiceAccountCredentials
+        response = requests.post(
+            GOOGLE_SHEETS_WEB_APP_URL,
+            json=payload,
+            headers={'Content-Type': 'application/json'},
+            timeout=30
+        )
         
-        # Get credentials from environment variable
-        creds_json = os.environ.get('GOOGLE_SHEETS_CREDENTIALS')
-        if not creds_json:
-            logger.warning("GOOGLE_SHEETS_CREDENTIALS not found in environment")
-            return None
-        
-        creds_dict = json.loads(creds_json)
-        scope = [
-            'https://spreadsheets.google.com/feeds',
-            'https://www.googleapis.com/auth/drive'
-        ]
-        
-        credentials = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
-        client = gspread.authorize(credentials)
-        return client
+        if response.status_code == 200:
+            result = response.json()
+            if result.get('success'):
+                logger.info(f"Google Sheets sync success: {result.get('message')}")
+                return True
+            else:
+                logger.error(f"Google Sheets sync failed: {result.get('message')}")
+                return False
+        else:
+            logger.error(f"Google Sheets Web App returned status {response.status_code}")
+            return False
+            
     except Exception as e:
-        logger.error(f"Failed to initialize gspread client: {e}")
-        return None
+        logger.error(f"Failed to sync to Google Sheets: {e}")
+        return False
 
 
 def sync_user_to_sheets(user_data: Dict) -> bool:
