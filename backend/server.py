@@ -752,9 +752,10 @@ async def import_leads(file: UploadFile = File(...), current_user: User = Depend
                     "experience": experience,
                     "interested_ev": interested_ev,
                     "monthly_salary": str(row.iloc[6]) if pd.notna(row.iloc[6]) else "",
-                    "residing_chennai": "Yes" if location else "No",
+                    "residing_chennai": None,
                     "current_location": location,
-                    "import_date": import_date
+                    "import_date": import_date,
+                    "status": "New"
                 }
                 leads.append(lead)
         else:
