@@ -343,6 +343,37 @@ const DriverOnboardingPage = () => {
     }
   };
 
+  const handleDeleteLead = async () => {
+    if (!selectedLead) return;
+
+    setDeletingLead(true);
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(
+        `${API}/driver-onboarding/leads/${selectedLead.id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      toast.success("Lead deleted successfully!");
+      
+      // Update local state - remove deleted lead
+      const updatedLeads = leads.filter(lead => lead.id !== selectedLead.id);
+      setLeads(updatedLeads);
+      
+      // Close dialogs
+      setDeleteDialogOpen(false);
+      setDetailDialogOpen(false);
+      
+      // Update last sync time
+      await fetchLastSyncTime();
+      
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to delete lead");
+    } finally {
+      setDeletingLead(false);
+    }
+  };
+
   const clearDateFilter = () => {
     setStartDate(null);
     setEndDate(null);
