@@ -49,6 +49,9 @@ const DriverOnboardingPage = () => {
   // Edit mode for lead details
   const [isEditMode, setIsEditMode] = useState(false);
   const [editedLead, setEditedLead] = useState(null);
+  
+  // Last sync time
+  const [lastSyncTime, setLastSyncTime] = useState(null);
 
   const fetchLeads = async () => {
     setLoading(true);
