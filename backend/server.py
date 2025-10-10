@@ -184,7 +184,12 @@ async def register(user_data: UserCreate):
     # Check if user already exists
     existing_user = await db.users.find_one({"email": user_data.email})
     if existing_user:
-        raise HTTPException(status_code=400, detail="Email already registered. If you're awaiting approval, please contact admin.")
+        # Allow re-registration if the account was deleted
+        if existing_user.get('status') == 'deleted':
+            # Delete the old record completely
+            await db.users.delete_one({"email": user_data.email})
+        else:
+            raise HTTPException(status_code=400, detail="Email already registered. If you're awaiting approval, please contact admin.")
     
     # Validate account type
     if user_data.account_type not in ["admin", "standard"]:
