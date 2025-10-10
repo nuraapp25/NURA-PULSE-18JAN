@@ -989,6 +989,90 @@ async def test_bulk_endpoint(current_user: User = Depends(get_current_user)):
     return {"message": "Bulk update endpoint route is accessible", "version": "2"}
 
 
+@api_router.get("/driver-onboarding/performance-tracking")
+async def get_performance_tracking(current_user: User = Depends(get_current_user)):
+    """Get telecaller performance metrics"""
+    try:
+        # Get all leads
+        all_leads = await db.driver_leads.find({}, {"_id": 0}).to_list(10000)
+        
+        # Group by telecaller
+        telecaller_stats = {}
+        
+        for lead in all_leads:
+            telecaller = lead.get("assigned_telecaller", "Unassigned")
+            
+            if telecaller not in telecaller_stats:
+                telecaller_stats[telecaller] = {
+                    "name": telecaller,
+                    "total_leads": 0,
+                    "contacted": 0,
+                    "qualified": 0,
+                    "onboarded": 0,
+                    "rejected": 0,
+                    "in_progress": 0,
+                    "conversion_rate": 0,
+                    "stages": {
+                        "new": 0,
+                        "contacted": 0,
+                        "qualified": 0,
+                        "assigned": 0,
+                        "in_progress": 0
+                    }
+                }
+            
+            stats = telecaller_stats[telecaller]
+            stats["total_leads"] += 1
+            
+            # Count by status
+            status = lead.get("status", "New").lower()
+            if "contact" in status:
+                stats["contacted"] += 1
+            elif "interested" in status or "qualified" in status:
+                stats["qualified"] += 1
+            elif "onboard" in status:
+                stats["onboarded"] += 1
+            elif "reject" in status or "not interested" in status:
+                stats["rejected"] += 1
+            
+            # Count by lead stage
+            lead_stage = lead.get("lead_stage", "New").lower()
+            if "new" in lead_stage:
+                stats["stages"]["new"] += 1
+            elif "contacted" in lead_stage:
+                stats["stages"]["contacted"] += 1
+            elif "qualified" in lead_stage:
+                stats["stages"]["qualified"] += 1
+            elif "assigned" in lead_stage:
+                stats["stages"]["assigned"] += 1
+            elif "progress" in lead_stage:
+                stats["stages"]["in_progress"] += 1
+        
+        # Calculate conversion rates
+        for telecaller, stats in telecaller_stats.items():
+            if stats["total_leads"] > 0:
+                stats["conversion_rate"] = round((stats["onboarded"] / stats["total_leads"]) * 100, 2)
+        
+        # Overall stats
+        total_leads = len(all_leads)
+        total_contacted = sum(s["contacted"] for s in telecaller_stats.values())
+        total_onboarded = sum(s["onboarded"] for s in telecaller_stats.values())
+        overall_conversion = round((total_onboarded / total_leads * 100), 2) if total_leads > 0 else 0
+        
+        return {
+            "telecallers": list(telecaller_stats.values()),
+            "overall": {
+                "total_leads": total_leads,
+                "total_contacted": total_contacted,
+                "total_onboarded": total_onboarded,
+                "conversion_rate": overall_conversion
+            }
+        }
+    except Exception as e:
+        logger.error(f"Performance tracking error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get performance data: {str(e)}")
+
+
 # Telecaller Queue Manager - Lead Assignment
 @api_router.get("/telecaller-queue/daily-assignments")
 async def get_daily_assignments(current_user: User = Depends(get_current_user)):
