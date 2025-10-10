@@ -612,7 +612,8 @@ from app_models import (
     PaymentRecord, PaymentRecordCreate,
     DriverRecord, DriverRecordCreate,
     TelecallerTask, TelecallerTaskCreate,
-    VehicleRecord, VehicleRecordCreate
+    VehicleRecord, VehicleRecordCreate,
+    DriverLead, DriverLeadUpdate, BulkLeadStatusUpdate, BulkLeadDelete
 )
 
 # Payment Reconciliation
