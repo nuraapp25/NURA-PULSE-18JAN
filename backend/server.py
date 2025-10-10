@@ -884,45 +884,38 @@ class BulkLeadStatusUpdate(BaseModel):
 
 @api_router.patch("/driver-onboarding/leads/bulk-update-status")
 async def bulk_update_lead_status(bulk_data: BulkLeadStatusUpdate, current_user: User = Depends(get_current_user)):
-    """Bulk update lead status"""
-    if not bulk_data.lead_ids:
-        raise HTTPException(status_code=400, detail="No leads selected")
+    """Bulk update lead status for multiple leads"""
+    if not bulk_data.lead_ids or len(bulk_data.lead_ids) == 0:
+        raise HTTPException(status_code=400, detail="No leads selected for update")
     
-    logger.info(f"Bulk update request: {len(bulk_data.lead_ids)} leads to status '{bulk_data.status}'")
-    logger.info(f"Lead IDs: {bulk_data.lead_ids[:5]}")  # Log first 5 IDs
-    
-    # Update all leads
+    # Update all matching leads
     result = await db.driver_leads.update_many(
         {"id": {"$in": bulk_data.lead_ids}},
         {"$set": {"status": bulk_data.status}}
     )
     
-    logger.info(f"Update result: matched={result.matched_count}, modified={result.modified_count}")
-    
-    # Check if any leads were matched (not just modified)
-    if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail=f"No leads found with the provided IDs. Searched for {len(bulk_data.lead_ids)} IDs.")
-    
-    # Get updated leads for sync
+    # Get all updated leads for syncing to Google Sheets
     updated_leads = await db.driver_leads.find(
         {"id": {"$in": bulk_data.lead_ids}},
         {"_id": 0}
     ).to_list(1000)
     
-    # Sync all to Google Sheets
-    sync_all_records('leads', updated_leads)
+    if not updated_leads or len(updated_leads) == 0:
+        raise HTTPException(status_code=404, detail="Could not find any leads with the provided IDs")
     
-    # Return appropriate message
-    if result.modified_count > 0:
-        return {
-            "message": f"Successfully updated {result.modified_count} lead(s) to {bulk_data.status}",
-            "updated_count": result.modified_count
-        }
-    else:
-        return {
-            "message": f"All {result.matched_count} selected lead(s) already have status '{bulk_data.status}'",
-            "updated_count": 0
-        }
+    # Sync all to Google Sheets
+    try:
+        sync_all_records('leads', updated_leads)
+    except Exception as e:
+        logger.error(f"Failed to sync to Google Sheets: {str(e)}")
+        # Don't fail the whole operation if sheets sync fails
+    
+    # Return success message
+    count = len(updated_leads)
+    return {
+        "message": f"Successfully updated status for {count} lead(s) to '{bulk_data.status}'",
+        "updated_count": count
+    }
 
 
 # Telecaller Queue Manager - Lead Assignment
