@@ -46,16 +46,29 @@ const TelecallerQueuePage = () => {
     fetchAssignments();
   }, []);
 
-  const handleCallLead = (lead, telecaller) => {
-    setSelectedLead(lead);
-    setSelectedTelecaller(telecaller);
-    setCallOutcome("");
-    setCallDialogOpen(true);
+  const handleCallClick = (phoneNumber) => {
+    // Open phone's calling app
+    window.location.href = `tel:${phoneNumber}`;
   };
 
-  const handleUpdateCallStatus = async () => {
-    if (!callOutcome) {
-      toast.error("Please select a call outcome");
+  const handleWhatsAppClick = (phoneNumber) => {
+    // Open WhatsApp chat
+    // Format: Remove any spaces or special characters
+    const cleanPhone = phoneNumber.replace(/[^0-9]/g, '');
+    window.open(`https://wa.me/91${cleanPhone}`, '_blank');
+  };
+
+  const handleOpenStatusDialog = (lead, telecaller) => {
+    setSelectedLead(lead);
+    setSelectedTelecaller(telecaller);
+    setNewStatus(lead.status || "");
+    setNotes("");
+    setStatusDialogOpen(true);
+  };
+
+  const handleUpdateStatus = async () => {
+    if (!newStatus) {
+      toast.error("Please select a status");
       return;
     }
 
@@ -68,20 +81,21 @@ const TelecallerQueuePage = () => {
         {
           params: {
             lead_id: selectedLead.id,
-            call_outcome: callOutcome
+            call_outcome: newStatus,
+            notes: notes
           },
           headers: { Authorization: `Bearer ${token}` }
         }
       );
 
-      toast.success("Call status updated successfully!");
-      setCallDialogOpen(false);
+      toast.success("Status updated successfully!");
+      setStatusDialogOpen(false);
       
       // Refresh assignments
       await fetchAssignments();
       
     } catch (error) {
-      toast.error(error.response?.data?.detail || "Failed to update call status");
+      toast.error(error.response?.data?.detail || "Failed to update status");
     } finally {
       setUpdating(false);
     }
