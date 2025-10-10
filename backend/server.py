@@ -14,10 +14,12 @@ from passlib.context import CryptContext
 import jwt
 import secrets
 import string
-from google_sheets_sync import sync_user_to_sheets, bulk_sync_users_to_sheets, delete_user_from_sheets
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
+
+# Import after loading .env so environment variables are available
+from google_sheets_sync import sync_user_to_sheets, bulk_sync_users_to_sheets, delete_user_from_sheets
 
 # MongoDB connection
 mongo_url = os.environ['MONGO_URL']
