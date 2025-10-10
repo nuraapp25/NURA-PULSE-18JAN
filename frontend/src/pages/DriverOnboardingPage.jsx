@@ -643,6 +643,104 @@ const DriverOnboardingPage = () => {
         </Card>
       )}
 
+      {/* Stage Filters Panel */}
+      {showStageFilters && (
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
+          <CardContent className="pt-6">
+            <div className="grid grid-cols-5 gap-4 mb-4">
+              <div>
+                <Label className="text-sm text-gray-700 dark:text-gray-300 mb-2">Lead Stage</Label>
+                <Select value={leadStageFilter} onValueChange={setLeadStageFilter}>
+                  <SelectTrigger className="dark:bg-gray-700 dark:border-gray-600">
+                    <SelectValue placeholder="All" />
+                  </SelectTrigger>
+                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                    <SelectItem value="All">All</SelectItem>
+                    {LEAD_STAGE_OPTIONS.map(option => (
+                      <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label className="text-sm text-gray-700 dark:text-gray-300 mb-2">Status</Label>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="dark:bg-gray-700 dark:border-gray-600">
+                    <SelectValue placeholder="All" />
+                  </SelectTrigger>
+                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                    <SelectItem value="All">All</SelectItem>
+                    {STATUS_OPTIONS.map(option => (
+                      <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label className="text-sm text-gray-700 dark:text-gray-300 mb-2">Driver Readiness</Label>
+                <Select value={driverReadinessFilter} onValueChange={setDriverReadinessFilter}>
+                  <SelectTrigger className="dark:bg-gray-700 dark:border-gray-600">
+                    <SelectValue placeholder="All" />
+                  </SelectTrigger>
+                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                    <SelectItem value="All">All</SelectItem>
+                    {DRIVER_READINESS_OPTIONS.map(option => (
+                      <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label className="text-sm text-gray-700 dark:text-gray-300 mb-2">Docs Collection</Label>
+                <Select value={docsCollectionFilter} onValueChange={setDocsCollectionFilter}>
+                  <SelectTrigger className="dark:bg-gray-700 dark:border-gray-600">
+                    <SelectValue placeholder="All" />
+                  </SelectTrigger>
+                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                    <SelectItem value="All">All</SelectItem>
+                    {DOCS_COLLECTION_OPTIONS.map(option => (
+                      <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label className="text-sm text-gray-700 dark:text-gray-300 mb-2">Customer Readiness</Label>
+                <Select value={customerReadinessFilter} onValueChange={setCustomerReadinessFilter}>
+                  <SelectTrigger className="dark:bg-gray-700 dark:border-gray-600">
+                    <SelectValue placeholder="All" />
+                  </SelectTrigger>
+                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                    <SelectItem value="All">All</SelectItem>
+                    {CUSTOMER_READINESS_OPTIONS.map(option => (
+                      <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Showing {filteredLeads.length} of {leads.length} leads
+              </p>
+              <Button
+                onClick={clearAllFilters}
+                variant="outline"
+                className="border-red-300 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+              >
+                <X size={18} className="mr-2" />
+                Clear All Filters
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Bulk Actions Bar */}
       {selectedLeadIds.length > 0 && (
         <Card className="dark:bg-gray-800 dark:border-blue-500 border-2 border-blue-500">
