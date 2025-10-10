@@ -382,7 +382,17 @@ const UserManagement = () => {
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">User Management</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">Manage users and password resets</p>
         </div>
-        <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <div className="flex items-center space-x-3">
+          <Button
+            onClick={handleSyncToSheets}
+            variant="outline"
+            data-testid="sync-to-sheets-button"
+            className="border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20"
+          >
+            <RefreshCw size={18} className="mr-2" />
+            Sync to Google Sheets
+          </Button>
+          <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button data-testid="create-user-button" className="bg-blue-600 hover:bg-blue-700">
               <UserPlus size={18} className="mr-2" />
