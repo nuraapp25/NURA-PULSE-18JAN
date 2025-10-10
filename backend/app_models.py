@@ -120,3 +120,63 @@ class VehicleRecordCreate(BaseModel):
     mileage: Optional[int] = 0
     location: Optional[str] = None
     notes: Optional[str] = None
+
+
+# ==================== Driver Leads (Enhanced) ====================
+
+class DriverLead(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    phone_number: str
+    vehicle: Optional[str] = None
+    driving_license: Optional[str] = None
+    experience: Optional[str] = None
+    interested_ev: Optional[str] = None
+    monthly_salary: Optional[str] = None
+    residing_chennai: Optional[str] = None
+    current_location: Optional[str] = None
+    import_date: str
+    
+    # Stage fields
+    lead_stage: str = "New"  # New, Contacted, Qualified, Assigned to Telecaller, In Progress
+    status: str = "New"  # Status/Filtration stage
+    driver_readiness: str = "Not Started"  # Not Started, Training Pending, In Training, Training Completed
+    docs_collection: str = "Pending"  # Pending, Documents Submitted, Documents Verified, Road Test Scheduled, Road Test Passed, Road Test Failed
+    customer_readiness: str = "Not Ready"  # Not Ready, Ready for Onboarding, Onboarded
+    
+    # Telecaller assignment
+    assigned_telecaller: Optional[str] = None
+    telecaller_notes: Optional[str] = None
+    
+    notes: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class DriverLeadUpdate(BaseModel):
+    name: Optional[str] = None
+    phone_number: Optional[str] = None
+    vehicle: Optional[str] = None
+    driving_license: Optional[str] = None
+    experience: Optional[str] = None
+    interested_ev: Optional[str] = None
+    monthly_salary: Optional[str] = None
+    current_location: Optional[str] = None
+    lead_stage: Optional[str] = None
+    status: Optional[str] = None
+    driver_readiness: Optional[str] = None
+    docs_collection: Optional[str] = None
+    customer_readiness: Optional[str] = None
+    assigned_telecaller: Optional[str] = None
+    telecaller_notes: Optional[str] = None
+    notes: Optional[str] = None
+
+
+class BulkLeadStatusUpdate(BaseModel):
+    lead_ids: List[str]
+    status: str
+
+
+class BulkLeadDelete(BaseModel):
+    lead_ids: List[str]
