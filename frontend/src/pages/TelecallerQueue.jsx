@@ -313,27 +313,49 @@ const TelecallerQueuePage = () => {
                           {index + 1}. {lead.name}
                         </p>
                         <p className="text-sm text-gray-600 dark:text-gray-400">{lead.phone_number}</p>
+                        {lead.current_location && (
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            📍 {lead.current_location}
+                          </p>
+                        )}
                       </div>
                       {getPriorityBadge(lead.status)}
                     </div>
+                    
                     <div className="flex items-center justify-between mt-3">
                       <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(lead.status)}`}>
                         {lead.status || "New"}
                       </span>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="grid grid-cols-3 gap-2 mt-3">
                       <Button
                         size="sm"
-                        onClick={() => handleCallLead(lead, "Telecaller 2")}
-                        className="bg-green-600 hover:bg-green-700"
+                        onClick={() => handleCallClick(lead.phone_number)}
+                        className="bg-green-600 hover:bg-green-700 text-white"
                       >
                         <Phone size={14} className="mr-1" />
                         Call
                       </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => handleWhatsAppClick(lead.phone_number)}
+                        className="bg-green-500 hover:bg-green-600 text-white"
+                      >
+                        <Phone size={14} className="mr-1" />
+                        WhatsApp
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => handleOpenStatusDialog(lead, "Telecaller 2")}
+                        variant="outline"
+                        className="border-green-500 text-green-600"
+                      >
+                        <CheckCircle size={14} className="mr-1" />
+                        Status
+                      </Button>
                     </div>
-                    {lead.current_location && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                        📍 {lead.current_location}
-                      </p>
-                    )}
                   </div>
                 ))}
                 {assignments.telecaller2.leads.length === 0 && (
