@@ -76,6 +76,16 @@ def get_last_sync_time() -> Optional[str]:
     return last_sync_time
 
 
+def update_last_sync_time(tab: str = None) -> None:
+    """
+    Update the last sync time to mark that data has changed
+    This can be used to indicate that a sync is needed without actually syncing
+    """
+    global last_sync_time
+    last_sync_time = datetime.now(timezone.utc).isoformat()
+    logger.info(f"Updated last sync time for tab: {tab if tab else 'all'}")
+
+
 # ==================== WRITE OPERATIONS ====================
 
 def sync_all_records(tab: str, records: List[Dict]) -> bool:
