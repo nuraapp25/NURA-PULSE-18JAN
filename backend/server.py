@@ -403,11 +403,12 @@ async def approve_password_reset(
 
 @api_router.get("/users")
 async def get_all_users(current_user: User = Depends(get_current_user)):
-    """Get all users (master admin only)"""
+    """Get all users (master admin only) - excludes deleted users"""
     if current_user.account_type != "master_admin":
         raise HTTPException(status_code=403, detail="Not authorized")
     
-    users = await db.users.find({}, {"_id": 0, "password": 0}).to_list(1000)
+    # Filter out deleted users
+    users = await db.users.find({"status": {"$ne": "deleted"}}, {"_id": 0, "password": 0}).to_list(1000)
     
     # Convert datetime strings
     for user in users:
