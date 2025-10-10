@@ -969,13 +969,14 @@ async def bulk_delete_leads(bulk_data: BulkLeadDelete, current_user: User = Depe
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="No leads found to delete")
     
-    # Try to delete from Google Sheets (don't fail if it doesn't work)
+    # Update last sync time to trigger a full re-sync from Google Sheets
+    # This is more efficient than deleting individual records
     try:
-        for lead_id in bulk_data.lead_ids:
-            delete_record('leads', lead_id)
+        update_last_sync_time('leads')
+        logger.info(f"Bulk delete: Updated sync time for {result.deleted_count} leads")
     except Exception as e:
-        logger.error(f"Failed to delete from Google Sheets: {str(e)}")
-        # Continue even if sheets delete fails
+        logger.error(f"Failed to update sync time: {str(e)}")
+        # Continue even if sync update fails
     
     return {
         "message": f"Successfully deleted {result.deleted_count} lead(s)",
