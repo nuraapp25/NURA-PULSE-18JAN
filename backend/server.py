@@ -882,6 +882,12 @@ class BulkLeadStatusUpdate(BaseModel):
     status: str
 
 
+@api_router.get("/driver-onboarding/test-bulk")
+async def test_bulk_endpoint(current_user: User = Depends(get_current_user)):
+    """Test endpoint to verify route is working"""
+    return {"message": "Bulk update endpoint route is accessible", "version": "2"}
+
+
 @api_router.patch("/driver-onboarding/leads/bulk-update-status")
 async def bulk_update_lead_status(bulk_data: BulkLeadStatusUpdate, current_user: User = Depends(get_current_user)):
     """Bulk update lead status for multiple leads"""
