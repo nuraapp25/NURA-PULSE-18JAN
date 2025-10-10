@@ -55,14 +55,17 @@ class User(BaseModel):
     
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     first_name: str
+    last_name: Optional[str] = None
     email: str  # Changed from EmailStr to allow "admin"
     account_type: str  # "master_admin", "admin", "standard"
+    status: str = "pending"  # "pending", "active", "rejected", "deleted"
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     is_temp_password: bool = False
 
 
 class UserCreate(BaseModel):
     first_name: str
+    last_name: Optional[str] = None
     email: str  # Changed from EmailStr to allow flexible validation
     password: str
     account_type: str  # "admin" or "standard"
