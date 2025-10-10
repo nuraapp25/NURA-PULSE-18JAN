@@ -53,6 +53,18 @@ const DriverOnboardingPage = () => {
   // Last sync time
   const [lastSyncTime, setLastSyncTime] = useState(null);
 
+  const fetchLastSyncTime = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(`${API}/sheets/last-sync-time`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setLastSyncTime(response.data.last_sync_time);
+    } catch (error) {
+      console.error("Failed to fetch last sync time");
+    }
+  };
+
   const fetchLeads = async () => {
     setLoading(true);
     try {
@@ -62,6 +74,9 @@ const DriverOnboardingPage = () => {
       });
       setLeads(response.data);
       setFilteredLeads(response.data);
+      
+      // Fetch last sync time after fetching leads
+      await fetchLastSyncTime();
     } catch (error) {
       toast.error("Failed to fetch leads");
     } finally {
