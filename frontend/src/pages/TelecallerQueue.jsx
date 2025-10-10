@@ -369,13 +369,13 @@ const TelecallerQueuePage = () => {
         )}
       </div>
 
-      {/* Call Status Update Dialog */}
-      <Dialog open={callDialogOpen} onOpenChange={setCallDialogOpen}>
-        <DialogContent className="dark:bg-gray-800">
+      {/* Status Update Dialog */}
+      <Dialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
+        <DialogContent className="dark:bg-gray-800 max-w-lg">
           <DialogHeader>
-            <DialogTitle className="dark:text-white">Update Call Status</DialogTitle>
+            <DialogTitle className="dark:text-white">Update Lead Status</DialogTitle>
             <DialogDescription className="dark:text-gray-400">
-              {selectedTelecaller} calling {selectedLead?.name}
+              {selectedTelecaller} - {selectedLead?.name}
             </DialogDescription>
           </DialogHeader>
           
@@ -385,20 +385,25 @@ const TelecallerQueuePage = () => {
                 <p className="text-sm text-gray-600 dark:text-gray-400">Lead Details</p>
                 <p className="font-medium text-gray-900 dark:text-white">{selectedLead.name}</p>
                 <p className="text-sm text-gray-600 dark:text-gray-400">{selectedLead.phone_number}</p>
+                {selectedLead.current_location && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    📍 {selectedLead.current_location}
+                  </p>
+                )}
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   Current Status: <span className={`px-2 py-1 rounded ${getStatusColor(selectedLead.status)}`}>
-                    {selectedLead.status}
+                    {selectedLead.status || "New"}
                   </span>
                 </p>
               </div>
 
               <div>
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
-                  Select Call Outcome
+                  Update Status
                 </label>
-                <Select value={callOutcome} onValueChange={setCallOutcome}>
+                <Select value={newStatus} onValueChange={setNewStatus}>
                   <SelectTrigger className="w-full dark:bg-gray-700 dark:border-gray-600">
-                    <SelectValue placeholder="Choose outcome..." />
+                    <SelectValue placeholder="Choose status..." />
                   </SelectTrigger>
                   <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
                     {STATUS_OPTIONS.map((option) => {
@@ -416,17 +421,30 @@ const TelecallerQueuePage = () => {
                 </Select>
               </div>
 
+              <div>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                  Notes (Optional)
+                </label>
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Add any notes about this call..."
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white resize-none"
+                  rows={3}
+                />
+              </div>
+
               <div className="flex justify-end space-x-3 pt-4">
                 <Button
-                  onClick={() => setCallDialogOpen(false)}
+                  onClick={() => setStatusDialogOpen(false)}
                   variant="outline"
                   className="dark:border-gray-600"
                 >
                   Cancel
                 </Button>
                 <Button
-                  onClick={handleUpdateCallStatus}
-                  disabled={!callOutcome || updating}
+                  onClick={handleUpdateStatus}
+                  disabled={!newStatus || updating}
                   className="bg-blue-600 hover:bg-blue-700"
                 >
                   {updating ? (
