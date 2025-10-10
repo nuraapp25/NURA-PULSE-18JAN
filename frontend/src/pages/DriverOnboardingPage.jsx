@@ -272,6 +272,9 @@ const DriverOnboardingPage = () => {
       setLeads(updatedLeads);
       setSelectedLead({ ...selectedLead, status: newStatus });
       
+      // Update last sync time after status change
+      await fetchLastSyncTime();
+      
     } catch (error) {
       toast.error(error.response?.data?.detail || "Failed to update status");
     } finally {
