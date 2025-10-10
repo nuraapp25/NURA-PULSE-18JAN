@@ -363,7 +363,14 @@ const DriverOnboardingPage = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Driver Onboarding</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Manage driver leads and onboarding</p>
+          <div className="flex items-center space-x-4 mt-1">
+            <p className="text-gray-600 dark:text-gray-400">Manage driver leads and onboarding</p>
+            {lastSyncTime && (
+              <p className="text-xs text-gray-500 dark:text-gray-500">
+                Last synced: {new Date(lastSyncTime).toLocaleString()}
+              </p>
+            )}
+          </div>
         </div>
         <div className="flex items-center space-x-3">
           <Button
