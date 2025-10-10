@@ -877,17 +877,6 @@ async def update_lead_status(lead_id: str, status_data: LeadStatusUpdate, curren
     return {"message": "Lead status updated successfully", "lead": updated_lead}
 
 
-class LeadUpdate(BaseModel):
-    name: Optional[str] = None
-    phone_number: Optional[str] = None
-    vehicle: Optional[str] = None
-    driving_license: Optional[str] = None
-    experience: Optional[str] = None
-    interested_ev: Optional[str] = None
-    monthly_salary: Optional[str] = None
-    current_location: Optional[str] = None
-
-
 class BulkLeadStatusUpdate(BaseModel):
     lead_ids: List[str]
     status: str
