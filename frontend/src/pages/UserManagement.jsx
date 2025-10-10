@@ -319,6 +319,32 @@ const UserManagement = () => {
     }
   };
 
+  const handleSyncToSheets = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.post(
+        `${API}/users/sync-to-sheets`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      toast.success("All users synced to Google Sheets successfully!");
+    } catch (error) {
+      const errorMsg = error.response?.data?.detail || "Failed to sync to Google Sheets";
+      if (errorMsg.includes("not enabled")) {
+        toast.error(
+          <div>
+            <p className="font-semibold">Google Sheets Integration Not Enabled</p>
+            <p className="text-xs mt-1">Please configure Google Sheets credentials in backend .env file</p>
+          </div>,
+          { duration: 8000 }
+        );
+      } else {
+        toast.error(errorMsg);
+      }
+    }
+  };
+
   const getStatusBadge = (status) => {
     const styles = {
       active: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
