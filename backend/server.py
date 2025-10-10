@@ -807,6 +807,17 @@ async def sync_leads_to_sheets(current_user: User = Depends(get_current_user)):
     raise HTTPException(status_code=500, detail="Failed to sync leads to Google Sheets")
 
 
+class LeadUpdate(BaseModel):
+    name: Optional[str] = None
+    phone_number: Optional[str] = None
+    vehicle: Optional[str] = None
+    driving_license: Optional[str] = None
+    experience: Optional[str] = None
+    interested_ev: Optional[str] = None
+    monthly_salary: Optional[str] = None
+    current_location: Optional[str] = None
+
+
 class LeadStatusUpdate(BaseModel):
     status: str
 
