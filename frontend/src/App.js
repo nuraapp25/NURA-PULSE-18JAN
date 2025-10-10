@@ -9,7 +9,7 @@ import Dashboard from "@/pages/Dashboard";
 import HomePage from "@/pages/HomePage";
 import UserManagement from "@/pages/UserManagement";
 import PaymentReconciliation from "@/pages/PaymentReconciliation";
-import DriverOnboarding from "@/pages/DriverOnboarding";
+import DriverOnboarding from "@/pages/DriverOnboardingPage";
 import TelecallerQueue from "@/pages/TelecallerQueue";
 import MontraVehicle from "@/pages/MontraVehicle";
 import ManagePage from "@/pages/ManagePage";
