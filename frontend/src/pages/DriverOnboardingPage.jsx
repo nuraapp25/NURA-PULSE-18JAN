@@ -329,6 +329,9 @@ const DriverOnboardingPage = () => {
       setBulkStatusDialogOpen(false);
       setBulkStatus("");
       
+      // Update last sync time after bulk update
+      await fetchLastSyncTime();
+      
     } catch (error) {
       toast.error(error.response?.data?.detail || "Failed to update status");
     } finally {
