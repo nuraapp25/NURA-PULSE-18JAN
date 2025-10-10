@@ -888,15 +888,20 @@ async def bulk_update_lead_status(bulk_data: BulkLeadStatusUpdate, current_user:
     if not bulk_data.lead_ids:
         raise HTTPException(status_code=400, detail="No leads selected")
     
+    logger.info(f"Bulk update request: {len(bulk_data.lead_ids)} leads to status '{bulk_data.status}'")
+    logger.info(f"Lead IDs: {bulk_data.lead_ids[:5]}")  # Log first 5 IDs
+    
     # Update all leads
     result = await db.driver_leads.update_many(
         {"id": {"$in": bulk_data.lead_ids}},
         {"$set": {"status": bulk_data.status}}
     )
     
+    logger.info(f"Update result: matched={result.matched_count}, modified={result.modified_count}")
+    
     # Check if any leads were matched (not just modified)
     if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="No leads found with the provided IDs")
+        raise HTTPException(status_code=404, detail=f"No leads found with the provided IDs. Searched for {len(bulk_data.lead_ids)} IDs.")
     
     # Get updated leads for sync
     updated_leads = await db.driver_leads.find(
