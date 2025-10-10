@@ -2,7 +2,7 @@
 Database Models for Nura Pulse Apps
 """
 from pydantic import BaseModel, Field, ConfigDict
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime, timezone
 import uuid
 
