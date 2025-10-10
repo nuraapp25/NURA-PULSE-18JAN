@@ -25,6 +25,36 @@ const STATUS_OPTIONS = [
   { value: "Not Interested", label: "Not Interested", color: "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400" },
 ];
 
+const LEAD_STAGE_OPTIONS = [
+  { value: "New", label: "New" },
+  { value: "Contacted", label: "Contacted" },
+  { value: "Qualified", label: "Qualified" },
+  { value: "Assigned to Telecaller", label: "Assigned to Telecaller" },
+  { value: "In Progress", label: "In Progress" },
+];
+
+const DRIVER_READINESS_OPTIONS = [
+  { value: "Not Started", label: "Not Started" },
+  { value: "Training Pending", label: "Training Pending" },
+  { value: "In Training", label: "In Training" },
+  { value: "Training Completed", label: "Training Completed" },
+];
+
+const DOCS_COLLECTION_OPTIONS = [
+  { value: "Pending", label: "Pending" },
+  { value: "Documents Submitted", label: "Documents Submitted" },
+  { value: "Documents Verified", label: "Documents Verified" },
+  { value: "Road Test Scheduled", label: "Road Test Scheduled" },
+  { value: "Road Test Passed", label: "Road Test Passed" },
+  { value: "Road Test Failed", label: "Road Test Failed" },
+];
+
+const CUSTOMER_READINESS_OPTIONS = [
+  { value: "Not Ready", label: "Not Ready" },
+  { value: "Ready for Onboarding", label: "Ready for Onboarding" },
+  { value: "Onboarded", label: "Onboarded" },
+];
+
 const DriverOnboardingPage = () => {
   const [leads, setLeads] = useState([]);
   const [filteredLeads, setFilteredLeads] = useState([]);
