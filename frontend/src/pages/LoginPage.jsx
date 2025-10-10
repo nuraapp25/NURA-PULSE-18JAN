@@ -91,7 +91,13 @@ const LoginPage = () => {
           <div className="mt-6 space-y-3 text-center text-sm">
             <p className="text-gray-600 dark:text-gray-400">
               Forgot password?{" "}
-              <span className="text-blue-600 dark:text-blue-400 font-medium">Contact admin</span>
+              <Link
+                to="/forgot-password"
+                data-testid="forgot-password-link"
+                className="text-blue-600 dark:text-blue-400 font-medium hover:underline"
+              >
+                Reset here
+              </Link>
             </p>
             <p className="text-gray-600 dark:text-gray-400">
               Don't have an account?{" "}
