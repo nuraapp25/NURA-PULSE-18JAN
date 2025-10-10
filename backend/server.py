@@ -744,10 +744,19 @@ async def import_leads(file: UploadFile = File(...), current_user: User = Depend
                 interested_ev = str(row.iloc[5]) if pd.notna(row.iloc[5]) else ""
                 location = str(row.iloc[7]) if pd.notna(row.iloc[7]) else ""
                 
+                # Parse phone number - remove p:+91 prefix and get last 10 digits
+                raw_phone = str(row.iloc[2]) if pd.notna(row.iloc[2]) else ""
+                phone_number = raw_phone
+                if raw_phone.startswith("p:"):
+                    # Remove p: prefix and any country code, keep last 10 digits
+                    phone_number = raw_phone.replace("p:", "").replace("+", "").replace(" ", "")
+                    if len(phone_number) > 10:
+                        phone_number = phone_number[-10:]  # Get last 10 digits
+                
                 lead = {
                     "id": str(uuid.uuid4()),
                     "name": str(row.iloc[0]) if pd.notna(row.iloc[0]) else "",
-                    "phone_number": str(row.iloc[2]) if pd.notna(row.iloc[2]) else "",
+                    "phone_number": phone_number,
                     "vehicle": None,
                     "driving_license": driving_license,
                     "experience": experience,
