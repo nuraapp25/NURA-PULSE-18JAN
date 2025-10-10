@@ -915,33 +915,44 @@ const DriverOnboardingPage = () => {
                 </div>
               </div>
 
-              <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-                {isEditMode && (
-                  <Button
-                    onClick={handleSaveChanges}
-                    disabled={updatingStatus}
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
-                    {updatingStatus ? (
-                      <>
-                        <RefreshCw size={18} className="mr-2 animate-spin" />
-                        Saving...
-                      </>
-                    ) : (
-                      "Save Changes"
-                    )}
-                  </Button>
-                )}
+              <div className="flex justify-between items-center pt-4 border-t border-gray-200 dark:border-gray-700">
                 <Button
-                  onClick={() => {
-                    setDetailDialogOpen(false);
-                    setIsEditMode(false);
-                  }}
+                  onClick={() => setDeleteDialogOpen(true)}
                   variant="outline"
-                  className="dark:border-gray-600"
+                  className="border-red-500 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
                 >
-                  Close
+                  <XCircle size={18} className="mr-2" />
+                  Delete Lead
                 </Button>
+                
+                <div className="flex space-x-3">
+                  {isEditMode && (
+                    <Button
+                      onClick={handleSaveChanges}
+                      disabled={updatingStatus}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      {updatingStatus ? (
+                        <>
+                          <RefreshCw size={18} className="mr-2 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        "Save Changes"
+                      )}
+                    </Button>
+                  )}
+                  <Button
+                    onClick={() => {
+                      setDetailDialogOpen(false);
+                      setIsEditMode(false);
+                    }}
+                    variant="outline"
+                    className="dark:border-gray-600"
+                  >
+                    Close
+                  </Button>
+                </div>
               </div>
             </div>
           )}
