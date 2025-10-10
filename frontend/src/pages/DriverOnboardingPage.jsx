@@ -1054,14 +1054,19 @@ const DriverOnboardingPage = () => {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="dark:bg-gray-800">
           <DialogHeader>
-            <DialogTitle className="dark:text-white">Delete Lead</DialogTitle>
+            <DialogTitle className="dark:text-white">
+              {selectedLeadIds.length > 0 && !selectedLead ? "Delete Multiple Leads" : "Delete Lead"}
+            </DialogTitle>
             <DialogDescription className="dark:text-gray-400">
-              Are you sure you want to delete this lead? This action cannot be undone.
+              {selectedLeadIds.length > 0 && !selectedLead 
+                ? `Are you sure you want to delete ${selectedLeadIds.length} selected lead(s)? This action cannot be undone.`
+                : "Are you sure you want to delete this lead? This action cannot be undone."
+              }
             </DialogDescription>
           </DialogHeader>
           
-          {selectedLead && (
-            <div className="space-y-4 mt-4">
+          <div className="space-y-4 mt-4">
+            {selectedLead ? (
               <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
                 <p className="font-semibold text-gray-900 dark:text-white">{selectedLead.name}</p>
                 <p className="text-sm text-gray-600 dark:text-gray-400">{selectedLead.phone_number}</p>
@@ -1071,35 +1076,47 @@ const DriverOnboardingPage = () => {
                   </span>
                 </p>
               </div>
-
-              <div className="flex justify-end space-x-3 pt-4">
-                <Button
-                  onClick={() => setDeleteDialogOpen(false)}
-                  variant="outline"
-                  className="dark:border-gray-600"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleDeleteLead}
-                  disabled={deletingLead}
-                  className="bg-red-600 hover:bg-red-700"
-                >
-                  {deletingLead ? (
-                    <>
-                      <RefreshCw size={18} className="mr-2 animate-spin" />
-                      Deleting...
-                    </>
-                  ) : (
-                    <>
-                      <XCircle size={18} className="mr-2" />
-                      Delete Lead
-                    </>
-                  )}
-                </Button>
+            ) : selectedLeadIds.length > 0 && (
+              <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                <div className="flex items-center space-x-2">
+                  <XCircle className="text-red-600" size={20} />
+                  <p className="font-semibold text-gray-900 dark:text-white">
+                    {selectedLeadIds.length} lead(s) will be permanently deleted
+                  </p>
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                  This includes all their information and cannot be recovered.
+                </p>
               </div>
+            )}
+
+            <div className="flex justify-end space-x-3 pt-4">
+              <Button
+                onClick={() => setDeleteDialogOpen(false)}
+                variant="outline"
+                className="dark:border-gray-600"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleDeleteLead}
+                disabled={deletingLead}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                {deletingLead ? (
+                  <>
+                    <RefreshCw size={18} className="mr-2 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <XCircle size={18} className="mr-2" />
+                    Delete {selectedLeadIds.length > 0 && !selectedLead ? `${selectedLeadIds.length} Leads` : "Lead"}
+                  </>
+                )}
+              </Button>
             </div>
-          )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>
