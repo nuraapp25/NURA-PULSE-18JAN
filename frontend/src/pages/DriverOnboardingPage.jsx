@@ -533,7 +533,24 @@ const DriverOnboardingPage = () => {
             className="border-gray-300 dark:border-gray-600"
           >
             <Filter size={18} className="mr-2" />
-            Filter by Date
+            Date
+          </Button>
+          <Button
+            onClick={() => setShowStageFilters(!showStageFilters)}
+            variant="outline"
+            className="border-purple-600 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20"
+          >
+            <Filter size={18} className="mr-2" />
+            Stages
+          </Button>
+          <Button
+            onClick={fetchPerformanceData}
+            variant="outline"
+            className="border-orange-600 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+            disabled={loadingPerformance}
+          >
+            <Users size={18} className="mr-2" />
+            Performance
           </Button>
           <Button
             onClick={handleSyncToSheets}
@@ -541,7 +558,7 @@ const DriverOnboardingPage = () => {
             className="border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20"
           >
             <RefreshCw size={18} className="mr-2" />
-            Sync to Sheets
+            Sync
           </Button>
           <Button
             onClick={() => setImportDialogOpen(true)}
