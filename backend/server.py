@@ -22,7 +22,7 @@ load_dotenv(ROOT_DIR / '.env')
 from sheets_multi_sync import (
     sync_user_to_sheets, bulk_sync_users_to_sheets, delete_user_from_sheets,
     sync_all_records, get_all_records, sync_single_record, delete_record,
-    get_last_sync_time
+    get_last_sync_time, update_last_sync_time
 )
 
 # MongoDB connection
