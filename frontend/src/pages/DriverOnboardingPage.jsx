@@ -344,31 +344,56 @@ const DriverOnboardingPage = () => {
   };
 
   const handleDeleteLead = async () => {
-    if (!selectedLead) return;
+    // Check if deleting single lead or bulk
+    const isBulkDelete = selectedLeadIds.length > 0 && !selectedLead;
+    
+    if (!selectedLead && !isBulkDelete) return;
 
     setDeletingLead(true);
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(
-        `${API}/driver-onboarding/leads/${selectedLead.id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      
+      if (isBulkDelete) {
+        // Bulk delete
+        const response = await axios.post(
+          `${API}/driver-onboarding/leads/bulk-delete`,
+          { lead_ids: selectedLeadIds },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        
+        toast.success(response.data.message);
+        
+        // Update local state - remove deleted leads
+        const updatedLeads = leads.filter(lead => !selectedLeadIds.includes(lead.id));
+        setLeads(updatedLeads);
+        
+        // Clear selection
+        setSelectedLeadIds([]);
+      } else {
+        // Single delete
+        await axios.delete(
+          `${API}/driver-onboarding/leads/${selectedLead.id}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
 
-      toast.success("Lead deleted successfully!");
+        toast.success("Lead deleted successfully!");
+        
+        // Update local state - remove deleted lead
+        const updatedLeads = leads.filter(lead => lead.id !== selectedLead.id);
+        setLeads(updatedLeads);
+        
+        // Close detail dialog
+        setDetailDialogOpen(false);
+      }
       
-      // Update local state - remove deleted lead
-      const updatedLeads = leads.filter(lead => lead.id !== selectedLead.id);
-      setLeads(updatedLeads);
-      
-      // Close dialogs
+      // Close delete dialog
       setDeleteDialogOpen(false);
-      setDetailDialogOpen(false);
       
       // Update last sync time
       await fetchLastSyncTime();
       
     } catch (error) {
-      toast.error(error.response?.data?.detail || "Failed to delete lead");
+      toast.error(error.response?.data?.detail || "Failed to delete lead(s)");
     } finally {
       setDeletingLead(false);
     }
