@@ -539,7 +539,7 @@ async def generate_temp_password_for_user(user_id: str, current_user: User = Dep
 
 @api_router.delete("/users/{user_id}")
 async def delete_user(user_id: str, current_user: User = Depends(get_current_user)):
-    """Delete a user (master admin only)"""
+    """Delete a user (master admin only) - permanently removes from database"""
     if current_user.account_type != "master_admin":
         raise HTTPException(status_code=403, detail="Not authorized")
     
@@ -551,13 +551,10 @@ async def delete_user(user_id: str, current_user: User = Depends(get_current_use
     if user_to_delete.get('account_type') == "master_admin":
         raise HTTPException(status_code=400, detail="Cannot delete master admin")
     
-    # Mark as deleted instead of actually deleting
-    await db.users.update_one(
-        {"id": user_id},
-        {"$set": {"status": "deleted"}}
-    )
+    # Permanently delete the user
+    await db.users.delete_one({"id": user_id})
     
-    # Update Google Sheets
+    # Update Google Sheets - remove the row
     delete_user_from_sheets(user_to_delete.get('email'))
     
     return {"message": "User deleted successfully"}
