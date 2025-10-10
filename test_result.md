@@ -237,15 +237,18 @@ frontend:
 
   - task: "Driver Onboarding Page"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/frontend/src/pages/DriverOnboardingPage.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Import leads dialog with file upload, leads list display, sync button."
+        - working: true
+          agent: "main"
+          comment: "✅ ENHANCED: Added 3 new features - (1) Removed 'residing_chennai' field from Format 2 CSV import (2) Click on lead to view details and update status with 8 status options (New, Contacted, Interested, Documents Pending, Scheduled, Onboarded, Rejected, Not Interested) (3) Date filter with calendar view for Start/End date filtering. All features tested and working."
 
 metadata:
   created_by: "main_agent"
