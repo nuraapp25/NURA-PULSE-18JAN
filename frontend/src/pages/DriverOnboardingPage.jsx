@@ -464,6 +464,32 @@ const DriverOnboardingPage = () => {
     setEndDate(null);
   };
 
+  const clearAllFilters = () => {
+    setStartDate(null);
+    setEndDate(null);
+    setLeadStageFilter("All");
+    setStatusFilter("All");
+    setDriverReadinessFilter("All");
+    setDocsCollectionFilter("All");
+    setCustomerReadinessFilter("All");
+  };
+
+  const fetchPerformanceData = async () => {
+    setLoadingPerformance(true);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(`${API}/driver-onboarding/performance-tracking`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setPerformanceData(response.data);
+      setPerformanceDialogOpen(true);
+    } catch (error) {
+      toast.error("Failed to fetch performance data");
+    } finally {
+      setLoadingPerformance(false);
+    }
+  };
+
   const getStatusColor = (status) => {
     const statusOption = STATUS_OPTIONS.find(opt => opt.value === status);
     return statusOption ? statusOption.color : "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400";
