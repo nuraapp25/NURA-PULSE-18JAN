@@ -929,6 +929,27 @@ async def update_lead_status(lead_id: str, status_data: LeadStatusUpdate, curren
     return {"message": "Lead status updated successfully", "lead": updated_lead}
 
 
+@api_router.delete("/driver-onboarding/leads/{lead_id}")
+async def delete_lead(lead_id: str, current_user: User = Depends(get_current_user)):
+    """Delete a lead"""
+    # Find the lead
+    lead = await db.driver_leads.find_one({"id": lead_id})
+    if not lead:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    
+    # Delete from MongoDB
+    await db.driver_leads.delete_one({"id": lead_id})
+    
+    # Delete from Google Sheets
+    try:
+        delete_record('leads', lead_id)
+    except Exception as e:
+        logger.error(f"Failed to delete from Google Sheets: {str(e)}")
+        # Don't fail the whole operation if sheets delete fails
+    
+    return {"message": "Lead deleted successfully"}
+
+
 @api_router.get("/driver-onboarding/test-bulk")
 async def test_bulk_endpoint(current_user: User = Depends(get_current_user)):
     """Test endpoint to verify route is working"""
