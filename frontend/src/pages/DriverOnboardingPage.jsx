@@ -676,15 +676,25 @@ const DriverOnboardingPage = () => {
 
       {/* Lead Detail Dialog */}
       <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
-        <DialogContent className="dark:bg-gray-800 max-w-2xl">
+        <DialogContent className="dark:bg-gray-800 max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="dark:text-white">Lead Details</DialogTitle>
+            <DialogTitle className="dark:text-white flex items-center justify-between">
+              Lead Details
+              <Button
+                onClick={() => setIsEditMode(!isEditMode)}
+                variant="outline"
+                size="sm"
+                className="ml-4"
+              >
+                {isEditMode ? "Cancel Edit" : "Edit Details"}
+              </Button>
+            </DialogTitle>
             <DialogDescription className="dark:text-gray-400">
-              View and update lead information
+              {isEditMode ? "Edit lead information" : "View and update lead information"}
             </DialogDescription>
           </DialogHeader>
           
-          {selectedLead && (
+          {selectedLead && editedLead && (
             <div className="space-y-6 mt-4">
               {/* Status Update Section */}
               <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
@@ -715,51 +725,115 @@ const DriverOnboardingPage = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className="text-sm text-gray-600 dark:text-gray-400">Name</Label>
-                  <p className="text-base font-medium text-gray-900 dark:text-white mt-1">
-                    {selectedLead.name}
-                  </p>
+                  {isEditMode ? (
+                    <Input
+                      value={editedLead.name}
+                      onChange={(e) => handleFieldChange('name', e.target.value)}
+                      className="mt-1 dark:bg-gray-700 dark:border-gray-600"
+                    />
+                  ) : (
+                    <p className="text-base font-medium text-gray-900 dark:text-white mt-1">
+                      {selectedLead.name}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <Label className="text-sm text-gray-600 dark:text-gray-400">Phone Number</Label>
-                  <p className="text-base font-medium text-gray-900 dark:text-white mt-1">
-                    {selectedLead.phone_number}
-                  </p>
+                  {isEditMode ? (
+                    <Input
+                      value={editedLead.phone_number}
+                      onChange={(e) => handleFieldChange('phone_number', e.target.value)}
+                      className="mt-1 dark:bg-gray-700 dark:border-gray-600"
+                    />
+                  ) : (
+                    <p className="text-base font-medium text-gray-900 dark:text-white mt-1">
+                      {selectedLead.phone_number}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <Label className="text-sm text-gray-600 dark:text-gray-400">Vehicle</Label>
-                  <p className="text-base text-gray-900 dark:text-white mt-1">
-                    {selectedLead.vehicle || '-'}
-                  </p>
+                  {isEditMode ? (
+                    <Input
+                      value={editedLead.vehicle || ''}
+                      onChange={(e) => handleFieldChange('vehicle', e.target.value)}
+                      className="mt-1 dark:bg-gray-700 dark:border-gray-600"
+                    />
+                  ) : (
+                    <p className="text-base text-gray-900 dark:text-white mt-1">
+                      {selectedLead.vehicle || '-'}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <Label className="text-sm text-gray-600 dark:text-gray-400">Driving License</Label>
-                  <p className="text-base text-gray-900 dark:text-white mt-1">
-                    {selectedLead.driving_license || '-'}
-                  </p>
+                  {isEditMode ? (
+                    <Input
+                      value={editedLead.driving_license || ''}
+                      onChange={(e) => handleFieldChange('driving_license', e.target.value)}
+                      className="mt-1 dark:bg-gray-700 dark:border-gray-600"
+                    />
+                  ) : (
+                    <p className="text-base text-gray-900 dark:text-white mt-1">
+                      {selectedLead.driving_license || '-'}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <Label className="text-sm text-gray-600 dark:text-gray-400">Experience</Label>
-                  <p className="text-base text-gray-900 dark:text-white mt-1">
-                    {selectedLead.experience || '-'}
-                  </p>
+                  {isEditMode ? (
+                    <Input
+                      value={editedLead.experience || ''}
+                      onChange={(e) => handleFieldChange('experience', e.target.value)}
+                      className="mt-1 dark:bg-gray-700 dark:border-gray-600"
+                    />
+                  ) : (
+                    <p className="text-base text-gray-900 dark:text-white mt-1">
+                      {selectedLead.experience || '-'}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <Label className="text-sm text-gray-600 dark:text-gray-400">Interested in EV</Label>
-                  <p className="text-base text-gray-900 dark:text-white mt-1">
-                    {selectedLead.interested_ev || '-'}
-                  </p>
+                  {isEditMode ? (
+                    <Input
+                      value={editedLead.interested_ev || ''}
+                      onChange={(e) => handleFieldChange('interested_ev', e.target.value)}
+                      className="mt-1 dark:bg-gray-700 dark:border-gray-600"
+                    />
+                  ) : (
+                    <p className="text-base text-gray-900 dark:text-white mt-1">
+                      {selectedLead.interested_ev || '-'}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <Label className="text-sm text-gray-600 dark:text-gray-400">Monthly Salary</Label>
-                  <p className="text-base text-gray-900 dark:text-white mt-1">
-                    {selectedLead.monthly_salary || '-'}
-                  </p>
+                  {isEditMode ? (
+                    <Input
+                      value={editedLead.monthly_salary || ''}
+                      onChange={(e) => handleFieldChange('monthly_salary', e.target.value)}
+                      className="mt-1 dark:bg-gray-700 dark:border-gray-600"
+                    />
+                  ) : (
+                    <p className="text-base text-gray-900 dark:text-white mt-1">
+                      {selectedLead.monthly_salary || '-'}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <Label className="text-sm text-gray-600 dark:text-gray-400">Location in Chennai</Label>
-                  <p className="text-base text-gray-900 dark:text-white mt-1">
-                    {selectedLead.current_location || '-'}
-                  </p>
+                  {isEditMode ? (
+                    <Input
+                      value={editedLead.current_location || ''}
+                      onChange={(e) => handleFieldChange('current_location', e.target.value)}
+                      className="mt-1 dark:bg-gray-700 dark:border-gray-600"
+                    />
+                  ) : (
+                    <p className="text-base text-gray-900 dark:text-white mt-1">
+                      {selectedLead.current_location || '-'}
+                    </p>
+                  )}
                 </div>
                 <div className="col-span-2">
                   <Label className="text-sm text-gray-600 dark:text-gray-400">Import Date</Label>
@@ -770,8 +844,27 @@ const DriverOnboardingPage = () => {
               </div>
 
               <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                {isEditMode && (
+                  <Button
+                    onClick={handleSaveChanges}
+                    disabled={updatingStatus}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    {updatingStatus ? (
+                      <>
+                        <RefreshCw size={18} className="mr-2 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      "Save Changes"
+                    )}
+                  </Button>
+                )}
                 <Button
-                  onClick={() => setDetailDialogOpen(false)}
+                  onClick={() => {
+                    setDetailDialogOpen(false);
+                    setIsEditMode(false);
+                  }}
                   variant="outline"
                   className="dark:border-gray-600"
                 >
