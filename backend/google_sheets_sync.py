@@ -72,7 +72,7 @@ def sync_user_to_sheets(user_data: Dict) -> bool:
 
 def bulk_sync_users_to_sheets(users: List[Dict]) -> bool:
     """
-    Sync multiple users to Google Sheets
+    Sync multiple users to Google Sheets via Web App
     
     Args:
         users: List of user dictionaries
@@ -80,54 +80,11 @@ def bulk_sync_users_to_sheets(users: List[Dict]) -> bool:
     Returns:
         bool: True if sync successful, False otherwise
     """
-    if not GOOGLE_SHEETS_ENABLED:
-        logger.info("Google Sheets sync is disabled")
-        return False
-    
-    try:
-        client = get_gspread_client()
-        if not client:
-            return False
-        
-        # Open spreadsheet and worksheet
-        spreadsheet = client.open_by_key(SPREADSHEET_ID)
-        worksheet = spreadsheet.worksheet(WORKSHEET_NAME)
-        
-        # Clear existing data (except header)
-        worksheet.clear()
-        
-        # Set header
-        header = ['S. No.', 'Date Created', 'Mail ID', 'Account Type', 'Status']
-        worksheet.append_row(header)
-        
-        # Prepare all rows
-        from datetime import datetime
-        rows = []
-        for idx, user in enumerate(users, start=1):
-            created_date = user.get('created_at')
-            if isinstance(created_date, str):
-                created_date = datetime.fromisoformat(created_date)
-            
-            formatted_date = created_date.strftime('%Y-%m-%d %H:%M:%S') if created_date else ''
-            
-            row = [
-                idx,  # S. No.
-                formatted_date,  # Date Created
-                user.get('email', ''),  # Mail ID
-                user.get('account_type', '').replace('_', ' ').title(),  # Account Type
-                user.get('status', 'pending').title()  # Status
-            ]
-            rows.append(row)
-        
-        # Batch update
-        if rows:
-            worksheet.append_rows(rows)
-        
-        logger.info(f"Bulk synced {len(users)} users to Google Sheets")
-        return True
-    except Exception as e:
-        logger.error(f"Failed to bulk sync users to Google Sheets: {e}")
-        return False
+    payload = {
+        'action': 'sync_all_users',
+        'users': users
+    }
+    return send_to_web_app(payload)
 
 
 def delete_user_from_sheets(user_email: str) -> bool:
