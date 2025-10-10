@@ -45,6 +45,10 @@ const DriverOnboardingPage = () => {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [showDateFilter, setShowDateFilter] = useState(false);
+  
+  // Edit mode for lead details
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editedLead, setEditedLead] = useState(null);
 
   const fetchLeads = async () => {
     setLoading(true);
