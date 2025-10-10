@@ -961,7 +961,7 @@ async def bulk_delete_leads(bulk_data: BulkLeadDelete, current_user: User = Depe
     if not bulk_data.lead_ids or len(bulk_data.lead_ids) == 0:
         raise HTTPException(status_code=400, detail="No leads selected for deletion")
     
-    # Delete from MongoDB
+    # Delete from MongoDB first (fast operation)
     result = await db.driver_leads.delete_many(
         {"id": {"$in": bulk_data.lead_ids}}
     )
@@ -969,14 +969,14 @@ async def bulk_delete_leads(bulk_data: BulkLeadDelete, current_user: User = Depe
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="No leads found to delete")
     
-    # Update last sync time to trigger a full re-sync from Google Sheets
-    # This is more efficient than deleting individual records
+    # Return immediately, sync will happen in background
+    # Note: We just update the sync time marker, the actual Google Sheets
+    # will be synced on next manual sync or when leads are updated
     try:
         update_last_sync_time('leads')
-        logger.info(f"Bulk delete: Updated sync time for {result.deleted_count} leads")
+        logger.info(f"Bulk delete: Deleted {result.deleted_count} leads from database")
     except Exception as e:
         logger.error(f"Failed to update sync time: {str(e)}")
-        # Continue even if sync update fails
     
     return {
         "message": f"Successfully deleted {result.deleted_count} lead(s)",
