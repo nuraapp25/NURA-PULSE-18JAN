@@ -290,7 +290,15 @@ const DriverOnboardingPage = () => {
           experience: editedLead.experience,
           interested_ev: editedLead.interested_ev,
           monthly_salary: editedLead.monthly_salary,
-          current_location: editedLead.current_location
+          current_location: editedLead.current_location,
+          lead_stage: editedLead.lead_stage,
+          status: editedLead.status,
+          driver_readiness: editedLead.driver_readiness,
+          docs_collection: editedLead.docs_collection,
+          customer_readiness: editedLead.customer_readiness,
+          assigned_telecaller: editedLead.assigned_telecaller,
+          telecaller_notes: editedLead.telecaller_notes,
+          notes: editedLead.notes
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
