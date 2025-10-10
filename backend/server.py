@@ -891,6 +891,10 @@ async def test_bulk_endpoint(current_user: User = Depends(get_current_user)):
 @api_router.patch("/driver-onboarding/leads/bulk-update-status")
 async def bulk_update_lead_status(bulk_data: BulkLeadStatusUpdate, current_user: User = Depends(get_current_user)):
     """Bulk update lead status for multiple leads"""
+    print(f"=== BULK UPDATE CALLED ===")
+    print(f"Lead IDs count: {len(bulk_data.lead_ids) if bulk_data.lead_ids else 0}")
+    print(f"Status: {bulk_data.status}")
+    
     if not bulk_data.lead_ids or len(bulk_data.lead_ids) == 0:
         raise HTTPException(status_code=400, detail="No leads selected for update")
     
@@ -900,13 +904,18 @@ async def bulk_update_lead_status(bulk_data: BulkLeadStatusUpdate, current_user:
         {"$set": {"status": bulk_data.status}}
     )
     
+    print(f"MongoDB update result: matched={result.matched_count}, modified={result.modified_count}")
+    
     # Get all updated leads for syncing to Google Sheets
     updated_leads = await db.driver_leads.find(
         {"id": {"$in": bulk_data.lead_ids}},
         {"_id": 0}
     ).to_list(1000)
     
+    print(f"Found {len(updated_leads)} leads to sync")
+    
     if not updated_leads or len(updated_leads) == 0:
+        print("ERROR: No leads found - raising 404")
         raise HTTPException(status_code=404, detail="Could not find any leads with the provided IDs")
     
     # Sync all to Google Sheets
