@@ -828,6 +828,10 @@ class BulkLeadStatusUpdate(BaseModel):
     status: str
 
 
+class BulkLeadDelete(BaseModel):
+    lead_ids: List[str]
+
+
 # IMPORTANT: Bulk update route must come BEFORE {lead_id} routes to avoid path conflicts
 @api_router.patch("/driver-onboarding/leads/bulk-update-status")
 async def bulk_update_lead_status(bulk_data: BulkLeadStatusUpdate, current_user: User = Depends(get_current_user)):
