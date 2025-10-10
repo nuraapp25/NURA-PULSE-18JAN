@@ -78,7 +78,7 @@ class PasswordResetRequest(BaseModel):
     
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     user_id: str
-    user_email: EmailStr
+    user_email: str  # Changed from EmailStr
     user_name: str
     status: str = "pending"  # pending, approved, rejected
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
