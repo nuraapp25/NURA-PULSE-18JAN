@@ -912,6 +912,79 @@ async def bulk_update_lead_status(bulk_data: BulkLeadStatusUpdate, current_user:
     }
 
 
+# Telecaller Queue Manager - Lead Assignment
+@api_router.get("/telecaller-queue/daily-assignments")
+async def get_daily_assignments(current_user: User = Depends(get_current_user)):
+    """Get daily lead assignments for telecallers"""
+    # Status priority for calling
+    # High Priority: New, Interested, Scheduled
+    # Medium Priority: Contacted, Documents Pending
+    # Low Priority: Not Interested
+    # Excluded: Onboarded, Rejected
+    
+    # Get top 20 leads based on priority
+    high_priority = await db.driver_leads.find({
+        "status": {"$in": ["New", "Interested", "Scheduled"]}
+    }, {"_id": 0}).sort("import_date", 1).to_list(15)
+    
+    medium_priority = await db.driver_leads.find({
+        "status": {"$in": ["Contacted", "Documents Pending"]}
+    }, {"_id": 0}).sort("import_date", 1).to_list(10)
+    
+    # Combine and limit to 20
+    all_leads = high_priority + medium_priority
+    selected_leads = all_leads[:20]
+    
+    # Split between 2 telecallers (10 each)
+    telecaller1_leads = selected_leads[0:10]
+    telecaller2_leads = selected_leads[10:20]
+    
+    return {
+        "telecaller1": {
+            "name": "Telecaller 1",
+            "leads": telecaller1_leads,
+            "count": len(telecaller1_leads)
+        },
+        "telecaller2": {
+            "name": "Telecaller 2", 
+            "leads": telecaller2_leads,
+            "count": len(telecaller2_leads)
+        },
+        "total_assigned": len(selected_leads),
+        "assignment_date": datetime.now(timezone.utc).isoformat()
+    }
+
+
+@api_router.post("/telecaller-queue/update-call-status")
+async def update_call_status(
+    lead_id: str,
+    call_outcome: str,
+    notes: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Update lead status after call"""
+    # Find the lead
+    lead = await db.driver_leads.find_one({"id": lead_id})
+    if not lead:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    
+    # Update status based on call outcome
+    new_status = call_outcome
+    
+    await db.driver_leads.update_one(
+        {"id": lead_id},
+        {"$set": {"status": new_status}}
+    )
+    
+    # Get updated lead for sync
+    updated_lead = await db.driver_leads.find_one({"id": lead_id}, {"_id": 0})
+    
+    # Sync to Google Sheets
+    sync_single_record('leads', updated_lead)
+    
+    return {"message": "Call status updated successfully", "lead": updated_lead}
+
+
 # Telecaller Queue
 @api_router.post("/telecaller-queue")
 async def create_telecaller_task(task_data: TelecallerTaskCreate, current_user: User = Depends(get_current_user)):
