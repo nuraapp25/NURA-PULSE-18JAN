@@ -167,7 +167,7 @@ const DriverOnboardingPage = () => {
 
       setImportDialogOpen(false);
       setSelectedFile(null);
-      fetchLeads();
+      await fetchLeads(); // This will also update last sync time
     } catch (error) {
       toast.error(error.response?.data?.detail || "Failed to import leads");
     } finally {
