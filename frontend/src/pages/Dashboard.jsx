@@ -57,10 +57,11 @@ const Dashboard = () => {
           <div className="p-6 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
-                  <span className="text-xl font-bold text-white">N</span>
-                </div>
-                <span className="text-xl font-bold text-gray-900 dark:text-white">NURA</span>
+                <img 
+                  src="https://nuraemobility.co.in/assets/Asset%205@4x-DaHkW2HF.png" 
+                  alt="Nura Logo" 
+                  className="h-10 w-auto"
+                />
               </div>
               <button
                 onClick={() => setSidebarOpen(false)}
