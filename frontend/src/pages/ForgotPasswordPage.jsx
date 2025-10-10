@@ -81,6 +81,20 @@ const ForgotPasswordPage = () => {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
+              <Label htmlFor="email" className="text-gray-700 dark:text-gray-300">Email Address *</Label>
+              <Input
+                id="email"
+                type="email"
+                data-testid="reset-email-input"
+                placeholder="Enter your email address"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                className="mt-1.5 h-11 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                required
+              />
+            </div>
+
+            <div>
               <Label htmlFor="temp_password" className="text-gray-700 dark:text-gray-300">Temporary Password *</Label>
               <Input
                 id="temp_password"
