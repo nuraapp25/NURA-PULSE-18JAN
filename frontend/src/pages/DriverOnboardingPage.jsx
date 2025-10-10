@@ -52,6 +52,10 @@ const DriverOnboardingPage = () => {
   
   // Last sync time
   const [lastSyncTime, setLastSyncTime] = useState(null);
+  
+  // Delete confirmation
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingLead, setDeletingLead] = useState(false);
 
   const fetchLastSyncTime = async () => {
     try {
