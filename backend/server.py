@@ -1100,6 +1100,17 @@ async def fetch_from_sheets(tab: str, current_user: User = Depends(get_current_u
     return {"message": f"Fetched {len(records)} records", "data": records}
 
 
+@api_router.get("/sheets/last-sync-time")
+async def get_sheets_last_sync_time(current_user: User = Depends(get_current_user)):
+    """Get the last sync time from Google Sheets"""
+    try:
+        last_sync = get_last_sync_time()
+        return {"last_sync_time": last_sync}
+    except Exception as e:
+        logger.error(f"Failed to get last sync time: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get last sync time")
+
+
 # ==================== App Initialization ====================
 
 @app.on_event("startup")
