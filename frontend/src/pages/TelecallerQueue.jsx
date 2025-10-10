@@ -138,8 +138,8 @@ const TelecallerQueuePage = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Telecaller Queue Manager</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Daily lead assignments for telecallers</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Telecaller's Desk</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Daily lead assignments and call management</p>
         </div>
         <Button
           onClick={fetchAssignments}
