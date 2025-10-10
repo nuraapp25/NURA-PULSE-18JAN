@@ -526,6 +526,14 @@ const DriverOnboardingPage = () => {
                   Update Status
                 </Button>
                 <Button
+                  onClick={() => setDeleteDialogOpen(true)}
+                  variant="outline"
+                  className="border-red-500 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                >
+                  <XCircle size={18} className="mr-2" />
+                  Delete Selected
+                </Button>
+                <Button
                   onClick={handleClearSelection}
                   variant="outline"
                   className="border-gray-300 dark:border-gray-600"
