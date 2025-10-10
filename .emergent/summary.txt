@@ -1,121 +1,135 @@
 <analysis>
-The AI engineer successfully built the Nura Pulse application, a data management and insights dashboard, starting from basic authentication to complex Google Sheets integration. Key challenges involved refining user authentication (admin approval, temporary password resets), implementing robust Google Sheets synchronization for multiple tabs, and debugging environment variable loading issues. The development followed an iterative approach, addressing user feedback and feature requests incrementally. UI/UX principles, including Shadcn UI components and specific color schemes, were applied throughout. The AI demonstrated strong debugging skills, particularly in resolving JSX syntax errors and backend configuration issues related to . The core value proposition of syncing internal application data with Google Sheets for external management was established and made robust.
+The AI engineer successfully progressed the Nura Pulse application, initially restoring it and then iteratively enhancing its Driver Onboarding and Telecaller Queue Manager modules. Key challenges included refining Google Sheets integration, particularly for multi-tab synchronization with a specific Leads tab and status column (). Significant effort was dedicated to debugging backend API routing issues, specifically a conflict with dynamic FastAPI paths, and persistent Google Apps Script permission/deployment problems. The AI also implemented comprehensive UI features like bulk actions, date filtering, editable lead details, and direct communication buttons. The development involved iterative testing, detailed file modifications, and direct user interaction for Google Apps Script deployment. The core value of connecting application data with Google Sheets for external management was continuously reinforced and made robust, overcoming several technical hurdles.
 </analysis>
 
 <product_requirements>
-The user requested Nura Pulse, a web application for business data management and insights.
-**Core Features:**
-1.  **Authentication:**
-    *   Sign-in page with email and password.
-    *   Registration with first name (mandatory), optional last name, email, password, confirm password.
-    *   Account types: Admin and Standard (selected via dropdown during registration).
-    *   No OTP for registration; email verification is removed.
-    *   Master Admin approval required for new user accounts to become active. Pending users receive approval pending message on login. Already user exists for re-registration with same email.
-    *   Login for master admin: email admin, password Nura@1234.
-2.  **Dashboard:**
-    *   Accessed after login, with a left sidebar for menus/apps/settings.
-    *   Upper header: Welcome, user name, profile section, sign out.
-    *   Main area for insights widgets and individual apps.
-3.  **Master Admin Functionality:**
-    *   Dedicated User Management page/section in the left sidebar.
-    *   Ability to view, delete, create users, approve/reject pending registrations.
-    *   Reset user passwords by generating and sharing a temporary password (master admin cannot see actual passwords).
-    *   Temporary password reset flow: Forgot Password page requiring email, temporary password, new password, and confirm new password.
-4.  **UI/UX:**
-    *   Inspired by  for color scheme.
-    *   Toggle for light/dark mode (white/black background).
-    *   Use Shadcn UI components.
-5.  **Data Synchronization (Google Sheets):**
-    *   User data (S. No., Date Created, Mail ID, Account Type, Status) to be synced automatically to a Google Sheet (link provided: ), specifically to a tab named Users.
-    *   After user deletion, the account should be removed from User Management UI and allow re-registration with the same email.
-    *   Copy to clipboard buttons for temporary password and email in toast notifications.
-    *   A Sync to Google Sheets button in the User Management UI.
-    *   Google Sheets integration to support multiple tabs for different applications.
-    *   Bidirectional sync (read and write) capabilities for all app tabs.
-6.  **Mini-Apps (Initial Stage):**
-    *   Driver Onboarding app:
-        *    button to upload  or  sheets.
-        *   Leads data to be imported into a Google Sheet tab named Leads with specific headers (S.No. to Date of Import).
-        *   Handle two different input CSV/XLSX formats and map them to the Leads tab columns.
-        *   Each import batch adds to the emptiest row, with Date of Import (Column K).
-    *   Other apps planned for future: Payment Reconciliation, Telecaller Queue Manager, Montra Vehicle Insights.
+The Nura Pulse application is a web-based business data management and insights dashboard. It features user authentication with Admin/Standard roles, Master Admin approval for new accounts, and temporary password resets. A dashboard with a dynamic sidebar provides access to mini-apps. The UI uses Shadcn components with a Nura e-Mobility color scheme.
+
+Core functionality includes robust Google Sheets data synchronization for user data and mini-app data (Leads, Payment Reconciliation, Telecaller Queue, Montra Vehicle Insights). The Driver Onboarding mini-app handles CSV/XLSX lead imports, mapping different formats, and supports lead management with status updates, date filtering, editable details, bulk actions (select, update status, delete), and automatic Google Sheets sync. The Telecaller Queue Manager (now Telecallers Desk") is designed for lead assignment (e.g., 20 leads per telecaller), with call, WhatsApp, and status update/notes features on lead cards, all syncing status to Google Sheets (Column L).
 </product_requirements>
 
 <key_technical_concepts>
 -   **Full-stack Architecture**: React frontend, FastAPI backend, MongoDB database.
--   **Shadcn UI**: Frontend component library for modern UI/UX.
--   **JWT Authentication**: Token-based authentication for securing API endpoints.
--   **MongoDB**: NoSQL database for flexible data storage. UUIDs are used for  instead of ObjectId.
--   **Google Apps Script**: Server-side JavaScript for Google Workspace, used as a Web App for Google Sheets integration (bidirectional sync).
--   **Python Libraries**: To use the fastapi command, please install "fastapi[standard]":
-
-	pip install "fastapi[standard]", , ,  (backend);  (for Excel parsing).
--   **CORS & Environment Variables**: Proper handling of cross-origin requests and sensitive configurations via  files.
--   **File Uploads**: Backend handling of  and  files for lead import.
+-   **Shadcn UI**: Frontend component library.
+-   **JWT Authentication**: Token-based authentication.
+-   **MongoDB**: NoSQL database using UUIDs.
+-   **Google Apps Script**: Web App for Google Sheets bidirectional integration.
+-   **Python Libraries**: `fastapi`, `uvicorn`, `pymongo`, `pydantic`, `openpyxl`, `date-fns`.
+-   **Environment Variables**: Secure configuration management.
+-   **FastAPI Routing**: Careful management of dynamic vs. specific API paths.
 </key_technical_concepts>
 
 <code_architecture>
+```
+/app
+├── backend/
+│   ├── requirements.txt
+│   ├── server.py
+│   ├── .env
+│   ├── google_sheets_sync.py
+│   ├── sheets_multi_sync.py
+│   └── app_models.py
+├── frontend/
+│   ├── package.json
+│   ├── tailwind.config.js
+│   ├── postcss.config.js
+│   ├── .env
+│   ├── public/
+│   └── src/
+│       ├── index.js
+│       ├── App.js
+│       ├── App.css
+│       ├── index.css
+│       ├── components/
+│       │   └── ui/
+│       │       └── ... (Shadcn UI components including calendar.jsx, popover.jsx, badge.jsx)
+│       └── pages/
+│           ├── LoginPage.jsx
+│           ├── RegisterPage.jsx
+│           ├── Dashboard.jsx
+│           ├── Layout.jsx
+│           ├── UserManagement.jsx
+│           ├── ForgotPasswordPage.jsx
+│           ├── PaymentReconciliation.jsx
+│           ├── DriverOnboardingPage.jsx
+│           ├── TelecallerQueue.jsx
+│           └── MontraVehicle.jsx
+├── tests/
+├── scripts/
+├── README.md
+├── GOOGLE_SHEETS_SETUP.md
+├── SIMPLE_GOOGLE_SHEETS_SETUP.md
+├── MULTI_TAB_APPS_SCRIPT.md
+├── GOOGLE_SHEETS_STATUS_COLUMN.md
+├── COMPLETE_GOOGLE_APPS_SCRIPT.js
+├── GOOGLE_APPS_SCRIPT_DEPLOYMENT.md
+└── FIX_GOOGLE_SHEETS_SYNC.md
+└── FINAL_GOOGLE_SHEETS_FIX.md
+```
 
-
-
--   **/app/backend/server.py**:
-    -   **Summary**: Main FastAPI application entry point. Handles all API routes (authentication, user management, app-specific endpoints) and integrates with MongoDB and Google Sheets sync modules.
-    -   **Changes**: Initially created with basic auth. Modified to include user , optional . Email validation relaxed for 'admin'. Added endpoints for user approval/rejection, password reset. Integrated  and later . Added file upload endpoint for Driver Onboarding leads. Critical fix:  import moved after .
--   **/app/backend/.env**:
-    -   **Summary**: Stores environment variables like , , , , .
-    -   **Changes**: Added , , and  (updated multiple times as new Apps Script URLs were provided).
--   **/app/backend/google_sheets_sync.py**:
-    -   **Summary**: Helper module for interacting with Google Sheets, initially for 'Users' tab.
-    -   **Changes**: Simplified from an earlier version, now interacts with the Google Apps Script Web App for syncing user data.
--   **/app/backend/sheets_multi_sync.py**:
-    -   **Summary**: Enhanced helper module for multi-tab Google Sheets integration (Users, Leads, Payment Reconciliation, Driver Onboarding, Telecaller Queue, Montra Vehicle Insights).
-    -   **Changes**: Created to abstract Google Sheets interactions for various app modules, supporting , , , and  operations.
--   **/app/backend/app_models.py**:
-    -   **Summary**: Defines Pydantic models for various application data (e.g., DriverLead).
-    -   **Changes**: Created to structure data for different mini-apps, starting with .
--   **/app/frontend/src/App.js**:
-    -   **Summary**: Main React component, handles routing for different pages.
-    -   **Changes**: Added routes for , , , , ,  and other mini-apps.
--   **/app/frontend/src/index.js**:
-    -   **Summary**: React application entry point.
-    -   **Changes**: Added  component for displaying notifications.
--   **/app/frontend/src/pages/LoginPage.jsx**:
-    -   **Summary**: User login interface.
-    -   **Changes**: Added Forgot Password link.
--   **/app/frontend/src/pages/RegisterPage.jsx**:
-    -   **Summary**: User registration interface.
-    -   **Changes**: Added optional  field and . Adjusted account type selection.
--   **/app/frontend/src/pages/Dashboard.jsx**:
-    -   **Summary**: Main dashboard layout with sidebar and dynamic content area.
-    -   **Changes**: Configured sidebar navigation to various app pages.
--   **/app/frontend/src/pages/UserManagement.jsx**:
-    -   **Summary**: Master Admin's interface for managing users.
-    -   **Changes**: Implemented user listing with  (pending, active, deleted), checkboxes for selection, Approve/Reject buttons, user detail dialog, and a Sync to Google Sheets button. Added copy to clipboard functionality for temporary passwords and email. Significant JSX debugging performed to fix rendering errors.
--   **/app/frontend/src/pages/ForgotPasswordPage.jsx**:
-    -   **Summary**: Page for users to reset their password using a temporary password.
-    -   **Changes**: Requires email, temporary password, new password, and confirm new password fields.
--   **/app/frontend/src/pages/DriverOnboardingPage.jsx**:
-    -   **Summary**: Interface for managing driver leads, including file import functionality.
-    -   **Changes**: Created with a +Import Leads button for CSV/XLSX file uploads.
--   **/app/GOOGLE_SHEETS_SETUP.md / SIMPLE_GOOGLE_SHEETS_SETUP.md / MULTI_TAB_APPS_SCRIPT.md**:
-    -   **Summary**: Documentation for setting up Google Apps Script for various stages of Google Sheets integration.
-    -   **Changes**: Evolved from basic user sync to a comprehensive multi-tab, bidirectional sync system.
-
+-   **`/app/backend/server.py`**: Main FastAPI entry.
+    -   **Summary**: Handles API routes, MongoDB, Google Sheets sync.
+    -   **Changes**:
+        -   Fixed `LeadUpdate` model definition order (`NameError`).
+        -   Updated `import_driver_leads` endpoint: Modified phone number parsing for Format 2 (remove "p:+91", keep last 10 digits). Added `status` field default for new leads.
+        -   Added `/driver-onboarding/leads/{lead_id}` (PATCH) for single lead detail update.
+        -   Added `/driver-onboarding/leads/{lead_id}/status` (PATCH) for single lead status update.
+        -   Added `/driver-onboarding/leads/bulk-update-status` (PATCH) for bulk status updates; fixed routing priority issue by moving it before `/leads/{lead_id}`.
+        -   Added `/driver-onboarding/leads/bulk-delete` (DELETE) for bulk lead deletion.
+        -   Added `telecaller_router` for `/telecaller-queue/daily-assignments` (GET) and `/telecaller-queue/leads/{lead_id}/status` (PATCH).
+        -   Integrated `update_last_sync_time` calls within lead modification endpoints (import, update, status change, delete).
+        -   Removed `GOOGLE_SHEETS_ENABLED` check from sync logic after re-enabling.
+        -   Added `/sheets/last-sync-time` (GET) to retrieve last sync timestamp.
+        -   Added `TELECALLER_APP_NAME` constant for "Telecallers Desk.
+-   ****: Environment variables.
+    -   **Changes**:  updated multiple times with new Apps Script deployment URLs.  toggled and set to .
+-   ****: Multi-tab Google Sheets integration.
+    -   **Summary**: Module for various Sheets interactions.
+    -   **Changes**: Implemented  and  for tracking sync history.
+-   ****: Pydantic models.
+    -   **Changes**: Added  (default New) and  fields to  model. Added  and  (for general lead details) models.
+-   ****: React routing.
+    -   **Changes**: Confirmed  route exists, ensuring the new page is rendered.
+-   **, , **: Authentication pages.
+    -   **Changes**: Replaced text/placeholder logos with Nura e-Mobility full logo.
+-   ****: Main dashboard.
+    -   **Changes**: Updated sidebar to use Nura logo. Will need to update Telecaller Queue name in sidebar.
+-   ****: Driver leads management.
+    -   **Summary**: Core page for managing driver leads.
+    -   **Changes**:
+        -   Implemented date range filtering using Shadcn  and  components.
+        -   Added lead detail dialog, making lead fields editable and savable.
+        -   Integrated single lead status update functionality (dropdown, color-coded badges).
+        -   Implemented bulk selection with checkboxes, Select All, Clear buttons.
+        -   Added a bulk action bar for selected leads with Update Status and Delete buttons.
+        -   Added single and bulk delete functionality with confirmation dialogs.
+        -   Integrated display of Last synced: time in the header.
+        -   Calls  after import, edit, status update, and delete actions.
+        -   Installed  for date manipulation.
+-   ** (now )**: Telecaller interface.
+    -   **Summary**: Transformed from a placeholder to Telecallers Desk".
+    -   **Changes**:
+        -   Renamed to "Telecallers Desk in the UI.
+        -   Implemented lead assignment logic for two telecallers (20 leads each by default).
+        -   Designed lead cards with Call, WhatsApp buttons (using  and  protocols).
+        -   Added status update functionality and a notes input field for each lead card.
+-   ****: Provided Google Apps Script.
+    -   **Summary**: Comprehensive script for multi-tab Google Sheets sync, including Leads tab with status in Column L.
+-   **, , **: Deployment and troubleshooting guides.
+    -   **Summary**: Documentation for user to manage Google Apps Script deployment and permissions.
 </code_architecture>
 
 <pending_tasks>
--   Further development of the Payment Reconciliation, Telecaller Queue Manager, and Montra Vehicle Insights mini-apps beyond basic UI/routing.
--   Deeper implementation and feature development for the Driver Onboarding app (e.g., viewing/editing imported leads, driver status management).
--   Full testing and verification of the bidirectional sync for all newly created Google Sheet tabs.
+- Update the sidebar navigation in  to reflect the name change from Telecaller Queue to Telecallers Desk".
+- Fully implement and test the "Payment Reconciliation" and "Montra Vehicle Insights" mini-apps (currently basic UI/routing).
+- Further development for "Driver Onboarding" (e.g., more advanced filtering, reporting).
+- Implement more sophisticated lead assignment logic and daily call queue management in "Telecallers Desk.
 </pending_tasks>
 
 <current_work>
-The AI engineer was in the process of setting up the backend to use the latest Google Apps Script Web App URL for multi-tab Google Sheets synchronization. Specifically, the trajectory ended with the AI updating the  environment variable in  with the new URL provided by the user.
-
-The  has been created, and backend endpoints for importing leads (CSV/XLSX) are in place, with  installed. The  module and the Google Apps Script have been updated to support the Leads tab and its specific data mapping requirements. The core  tab synchronization is confirmed working after resolving a  import order issue. The frontend UI for Driver Onboarding is present and functional.
+The AI engineer is currently in the process of enhancing the Telecaller Queue Manager app, renaming it to Telecallers Desk." The backend has been updated with new endpoints and logic for assigning 40 leads (20 to each of two telecallers), and for updating lead statuses and notes within this app. The frontend `TelecallerQueuePage.jsx` has been significantly modified to display the new name and to render lead cards with interactive "Call" (using `tel:`), "WhatsApp" (using `whatsapp://send`), "Mark Status," and "Notes" input fields. The `app_models.py` file has been updated to include `notes` in the `DriverLead` model. Just before this summary, the AI had finished updating the `TelecallerQueuePage.jsx` and was about to update the sidebar name in `Dashboard.jsx`. The Google Sheets sync for leads (including status in Column L) has been successfully resolved and is now working automatically after edits.
 </current_work>
 
 <optional_next_step>
-Update the backend environment with the new Google Apps Script Web App URL.
+Update the sidebar navigation in `Dashboard.jsx` to reflect "Telecallers Desk.
 </optional_next_step>
-
