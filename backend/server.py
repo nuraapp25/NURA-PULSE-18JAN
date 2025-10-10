@@ -19,7 +19,10 @@ ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
 # Import after loading .env so environment variables are available
-from google_sheets_sync import sync_user_to_sheets, bulk_sync_users_to_sheets, delete_user_from_sheets
+from sheets_multi_sync import (
+    sync_user_to_sheets, bulk_sync_users_to_sheets, delete_user_from_sheets,
+    sync_all_records, get_all_records, sync_single_record, delete_record
+)
 
 # MongoDB connection
 mongo_url = os.environ['MONGO_URL']
