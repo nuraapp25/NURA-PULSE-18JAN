@@ -732,7 +732,15 @@ async def import_leads(file: UploadFile = File(...), current_user: User = Depend
                     "residing_chennai": None,
                     "current_location": None,
                     "import_date": import_date,
-                    "status": "New"
+                    "status": "New",
+                    "lead_stage": "New",
+                    "driver_readiness": "Not Started",
+                    "docs_collection": "Pending",
+                    "customer_readiness": "Not Ready",
+                    "assigned_telecaller": None,
+                    "telecaller_notes": None,
+                    "notes": None,
+                    "created_at": import_date
                 }
                 leads.append(lead)
         
