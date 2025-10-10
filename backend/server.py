@@ -292,23 +292,25 @@ async def change_password(
 
 @api_router.post("/auth/reset-with-temp-password")
 async def reset_with_temp_password(reset_data: TempPasswordReset):
-    """Reset password using temporary password (from forgot password page)"""
-    # Find user with temp password
-    all_users = await db.users.find({"is_temp_password": True}).to_list(1000)
+    """Reset password using email and temporary password (from forgot password page)"""
+    # Find user by email
+    user = await db.users.find_one({"email": reset_data.email})
     
-    user_found = None
-    for user in all_users:
-        if verify_password(reset_data.temp_password, user['password']):
-            user_found = user
-            break
+    if not user:
+        raise HTTPException(status_code=400, detail="Invalid email or temporary password")
     
-    if not user_found:
-        raise HTTPException(status_code=400, detail="Invalid temporary password")
+    # Check if user has a temporary password
+    if not user.get('is_temp_password'):
+        raise HTTPException(status_code=400, detail="No temporary password set for this account. Please request a password reset from admin.")
+    
+    # Verify the temporary password
+    if not verify_password(reset_data.temp_password, user['password']):
+        raise HTTPException(status_code=400, detail="Invalid email or temporary password")
     
     # Update password
     new_hashed_password = hash_password(reset_data.new_password)
     await db.users.update_one(
-        {"id": user_found['id']},
+        {"id": user['id']},
         {"$set": {"password": new_hashed_password, "is_temp_password": False}}
     )
     
