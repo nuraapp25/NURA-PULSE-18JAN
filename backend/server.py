@@ -811,6 +811,38 @@ class LeadStatusUpdate(BaseModel):
     status: str
 
 
+@api_router.patch("/driver-onboarding/leads/{lead_id}")
+async def update_lead(lead_id: str, lead_data: LeadUpdate, current_user: User = Depends(get_current_user)):
+    """Update lead details"""
+    # Find the lead
+    lead = await db.driver_leads.find_one({"id": lead_id})
+    if not lead:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    
+    # Prepare update data (only include fields that are provided)
+    update_data = {}
+    for field, value in lead_data.model_dump(exclude_unset=True).items():
+        if value is not None:
+            update_data[field] = value
+    
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No fields to update")
+    
+    # Update lead
+    await db.driver_leads.update_one(
+        {"id": lead_id},
+        {"$set": update_data}
+    )
+    
+    # Get updated lead for sync
+    updated_lead = await db.driver_leads.find_one({"id": lead_id}, {"_id": 0})
+    
+    # Sync to Google Sheets
+    sync_single_record('leads', updated_lead)
+    
+    return {"message": "Lead updated successfully", "lead": updated_lead}
+
+
 @api_router.patch("/driver-onboarding/leads/{lead_id}/status")
 async def update_lead_status(lead_id: str, status_data: LeadStatusUpdate, current_user: User = Depends(get_current_user)):
     """Update lead status"""
