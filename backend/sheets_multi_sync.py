@@ -16,6 +16,7 @@ GOOGLE_SHEETS_WEB_APP_URL = os.environ.get('GOOGLE_SHEETS_WEB_APP_URL', '')
 # Tab mappings
 TABS = {
     'users': 'users',
+    'leads': 'leads',
     'payment_reconciliation': 'payment_reconciliation',
     'driver_onboarding': 'driver_onboarding',
     'telecaller_queue': 'telecaller_queue',
