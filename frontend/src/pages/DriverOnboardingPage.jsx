@@ -241,6 +241,9 @@ const DriverOnboardingPage = () => {
       setSelectedLead(response.data.lead);
       setIsEditMode(false);
       
+      // Update last sync time after edit
+      await fetchLastSyncTime();
+      
     } catch (error) {
       toast.error(error.response?.data?.detail || "Failed to update lead");
     } finally {
