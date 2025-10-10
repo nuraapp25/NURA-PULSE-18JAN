@@ -35,6 +35,8 @@ def send_to_sheets(payload: Dict) -> Dict:
     Returns:
         Dict with success status and message
     """
+    global last_sync_time
+    
     if not GOOGLE_SHEETS_ENABLED:
         logger.info("Google Sheets sync is disabled")
         return {'success': False, 'message': 'Sync disabled'}
@@ -54,6 +56,7 @@ def send_to_sheets(payload: Dict) -> Dict:
         if response.status_code == 200:
             result = response.json()
             if result.get('success'):
+                last_sync_time = datetime.now(timezone.utc).isoformat()
                 logger.info(f"Sheets sync success: {result.get('message')}")
                 return result
             else:
@@ -66,6 +69,11 @@ def send_to_sheets(payload: Dict) -> Dict:
     except Exception as e:
         logger.error(f"Failed to sync to Sheets: {e}")
         return {'success': False, 'message': str(e)}
+
+
+def get_last_sync_time() -> Optional[str]:
+    """Get the last successful sync time"""
+    return last_sync_time
 
 
 # ==================== WRITE OPERATIONS ====================
