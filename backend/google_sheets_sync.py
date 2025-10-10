@@ -89,38 +89,16 @@ def bulk_sync_users_to_sheets(users: List[Dict]) -> bool:
 
 def delete_user_from_sheets(user_email: str) -> bool:
     """
-    Mark user as deleted in Google Sheets (update status to 'Deleted')
+    Delete user from Google Sheets (remove row completely)
     
     Args:
-        user_email: Email of the user to mark as deleted
+        user_email: Email of the user to delete
         
     Returns:
         bool: True if successful, False otherwise
     """
-    if not GOOGLE_SHEETS_ENABLED:
-        logger.info("Google Sheets sync is disabled")
-        return False
-    
-    try:
-        client = get_gspread_client()
-        if not client:
-            return False
-        
-        # Open spreadsheet and worksheet
-        spreadsheet = client.open_by_key(SPREADSHEET_ID)
-        worksheet = spreadsheet.worksheet(WORKSHEET_NAME)
-        
-        # Find user row
-        all_records = worksheet.get_all_records()
-        for idx, record in enumerate(all_records, start=2):  # Start from row 2
-            if record.get('Mail ID') == user_email:
-                # Update status to 'Deleted'
-                worksheet.update(f'E{idx}', 'Deleted')
-                logger.info(f"Marked user {user_email} as Deleted in Google Sheets")
-                return True
-        
-        logger.warning(f"User {user_email} not found in Google Sheets")
-        return False
-    except Exception as e:
-        logger.error(f"Failed to delete user from Google Sheets: {e}")
-        return False
+    payload = {
+        'action': 'delete_user',
+        'email': user_email
+    }
+    return send_to_web_app(payload)
