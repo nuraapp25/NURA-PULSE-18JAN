@@ -20,10 +20,11 @@ const STATUS_OPTIONS = [
 const TelecallerQueuePage = () => {
   const [assignments, setAssignments] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [callDialogOpen, setCallDialogOpen] = useState(false);
+  const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null);
   const [selectedTelecaller, setSelectedTelecaller] = useState(null);
-  const [callOutcome, setCallOutcome] = useState("");
+  const [newStatus, setNewStatus] = useState("");
+  const [notes, setNotes] = useState("");
   const [updating, setUpdating] = useState(false);
 
   const fetchAssignments = async () => {
