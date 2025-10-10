@@ -101,3 +101,147 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: "Restore and verify Nura Pulse application to working state as it was before fork. The app includes authentication, user management, Google Sheets sync, and 4 mini-apps (Payment Reconciliation, Driver Onboarding, Telecaller Queue, Montra Vehicle Insights)."
+
+backend:
+  - task: "User Authentication (Login/Register)"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Initial verification needed. Auth system implemented with master admin, pending approval workflow."
+
+  - task: "User Management APIs"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "User approval/rejection, temp password generation, delete user endpoints implemented."
+
+  - task: "Google Sheets Sync - Users"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/sheets_multi_sync.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Google Sheets sync implemented with Web App URL configured. Needs verification."
+
+  - task: "Driver Onboarding - Leads Import"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "CSV/XLSX import with 2 format detection. Saves to MongoDB and syncs to Google Sheets."
+
+  - task: "Payment Reconciliation APIs"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "CRUD endpoints for payment records with Google Sheets sync."
+
+  - task: "Telecaller Queue APIs"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "CRUD endpoints for telecaller tasks with Google Sheets sync."
+
+  - task: "Montra Vehicle Insights APIs"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "CRUD endpoints for vehicle records with Google Sheets sync."
+
+frontend:
+  - task: "Login Page"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/LoginPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Login page with forgot password link implemented."
+
+  - task: "User Management Page"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/UserManagement.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Full user management interface with approve/reject, temp password, sync to sheets."
+
+  - task: "Driver Onboarding Page"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/DriverOnboardingPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Import leads dialog with file upload, leads list display, sync button."
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 0
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "User Authentication (Login/Register)"
+    - "User Management APIs"
+    - "Google Sheets Sync - Users"
+    - "Driver Onboarding - Leads Import"
+  stuck_tasks: []
+  test_all: true
+  test_priority: "high_first"
+
+agent_communication:
+    - agent: "main"
+      message: "Initial setup complete. Application restored from previous session. Need to verify all core functionality is working: Authentication, User Management, Google Sheets sync, and Driver Onboarding leads import. Testing backend first before frontend verification."
