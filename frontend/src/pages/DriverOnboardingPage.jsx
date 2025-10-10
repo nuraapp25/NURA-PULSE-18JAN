@@ -177,7 +177,54 @@ const DriverOnboardingPage = () => {
       return;
     }
     setSelectedLead(lead);
+    setEditedLead({...lead}); // Create a copy for editing
+    setIsEditMode(false); // Start in view mode
     setDetailDialogOpen(true);
+  };
+
+  const handleFieldChange = (field, value) => {
+    setEditedLead(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleSaveChanges = async () => {
+    if (!editedLead) return;
+
+    setUpdatingStatus(true);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.patch(
+        `${API}/driver-onboarding/leads/${editedLead.id}`,
+        {
+          name: editedLead.name,
+          phone_number: editedLead.phone_number,
+          vehicle: editedLead.vehicle,
+          driving_license: editedLead.driving_license,
+          experience: editedLead.experience,
+          interested_ev: editedLead.interested_ev,
+          monthly_salary: editedLead.monthly_salary,
+          current_location: editedLead.current_location
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      toast.success("Lead details updated successfully!");
+      
+      // Update local state
+      const updatedLeads = leads.map(lead => 
+        lead.id === editedLead.id ? response.data.lead : lead
+      );
+      setLeads(updatedLeads);
+      setSelectedLead(response.data.lead);
+      setIsEditMode(false);
+      
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to update lead");
+    } finally {
+      setUpdatingStatus(false);
+    }
   };
 
   const handleStatusUpdate = async (newStatus) => {
