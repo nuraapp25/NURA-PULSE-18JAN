@@ -880,7 +880,7 @@ async def bulk_update_lead_status(bulk_data: BulkLeadStatusUpdate, current_user:
 
 
 @api_router.patch("/driver-onboarding/leads/{lead_id}")
-async def update_lead(lead_id: str, lead_data: LeadUpdate, current_user: User = Depends(get_current_user)):
+async def update_lead(lead_id: str, lead_data: DriverLeadUpdate, current_user: User = Depends(get_current_user)):
     """Update lead details"""
     # Find the lead
     lead = await db.driver_leads.find_one({"id": lead_id})
