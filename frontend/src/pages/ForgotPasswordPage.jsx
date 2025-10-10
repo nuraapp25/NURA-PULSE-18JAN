@@ -11,6 +11,7 @@ import { Key, ArrowLeft } from "lucide-react";
 const ForgotPasswordPage = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
+    email: "",
     temp_password: "",
     new_password: "",
     confirm_password: ""
@@ -34,6 +35,7 @@ const ForgotPasswordPage = () => {
 
     try {
       const response = await axios.post(`${API}/auth/reset-with-temp-password`, {
+        email: formData.email,
         temp_password: formData.temp_password,
         new_password: formData.new_password
       });
