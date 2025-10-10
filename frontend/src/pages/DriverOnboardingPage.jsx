@@ -135,32 +135,49 @@ const DriverOnboardingPage = () => {
     fetchLeads();
   }, []);
 
-  // Filter leads by date range
+  // Filter leads by date range and stages
   useEffect(() => {
-    if (!startDate && !endDate) {
-      setFilteredLeads(leads);
-      return;
+    let filtered = [...leads];
+
+    // Date filter
+    if (startDate || endDate) {
+      filtered = filtered.filter(lead => {
+        if (!lead.import_date) return false;
+        
+        const leadDate = new Date(lead.import_date);
+        const start = startDate ? new Date(startDate) : null;
+        const end = endDate ? new Date(endDate) : null;
+
+        if (start && end) {
+          return leadDate >= start && leadDate <= end;
+        } else if (start) {
+          return leadDate >= start;
+        } else if (end) {
+          return leadDate <= end;
+        }
+        return true;
+      });
     }
 
-    const filtered = leads.filter(lead => {
-      if (!lead.import_date) return false;
-      
-      const leadDate = new Date(lead.import_date);
-      const start = startDate ? new Date(startDate) : null;
-      const end = endDate ? new Date(endDate) : null;
-
-      if (start && end) {
-        return leadDate >= start && leadDate <= end;
-      } else if (start) {
-        return leadDate >= start;
-      } else if (end) {
-        return leadDate <= end;
-      }
-      return true;
-    });
+    // Stage filters
+    if (leadStageFilter !== "All") {
+      filtered = filtered.filter(lead => (lead.lead_stage || "New") === leadStageFilter);
+    }
+    if (statusFilter !== "All") {
+      filtered = filtered.filter(lead => (lead.status || "New") === statusFilter);
+    }
+    if (driverReadinessFilter !== "All") {
+      filtered = filtered.filter(lead => (lead.driver_readiness || "Not Started") === driverReadinessFilter);
+    }
+    if (docsCollectionFilter !== "All") {
+      filtered = filtered.filter(lead => (lead.docs_collection || "Pending") === docsCollectionFilter);
+    }
+    if (customerReadinessFilter !== "All") {
+      filtered = filtered.filter(lead => (lead.customer_readiness || "Not Ready") === customerReadinessFilter);
+    }
 
     setFilteredLeads(filtered);
-  }, [startDate, endDate, leads]);
+  }, [startDate, endDate, leadStageFilter, statusFilter, driverReadinessFilter, docsCollectionFilter, customerReadinessFilter, leads]);
 
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
