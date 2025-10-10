@@ -894,8 +894,9 @@ async def bulk_update_lead_status(bulk_data: BulkLeadStatusUpdate, current_user:
         {"$set": {"status": bulk_data.status}}
     )
     
-    if result.modified_count == 0:
-        raise HTTPException(status_code=404, detail="No leads found to update")
+    # Check if any leads were matched (not just modified)
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="No leads found with the provided IDs")
     
     # Get updated leads for sync
     updated_leads = await db.driver_leads.find(
@@ -906,10 +907,17 @@ async def bulk_update_lead_status(bulk_data: BulkLeadStatusUpdate, current_user:
     # Sync all to Google Sheets
     sync_all_records('leads', updated_leads)
     
-    return {
-        "message": f"Successfully updated {result.modified_count} lead(s)",
-        "updated_count": result.modified_count
-    }
+    # Return appropriate message
+    if result.modified_count > 0:
+        return {
+            "message": f"Successfully updated {result.modified_count} lead(s) to {bulk_data.status}",
+            "updated_count": result.modified_count
+        }
+    else:
+        return {
+            "message": f"All {result.matched_count} selected lead(s) already have status '{bulk_data.status}'",
+            "updated_count": 0
+        }
 
 
 # Telecaller Queue Manager - Lead Assignment
