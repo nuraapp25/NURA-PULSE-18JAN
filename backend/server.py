@@ -801,20 +801,15 @@ async def get_leads(current_user: User = Depends(get_current_user)):
 @api_router.post("/driver-onboarding/sync-leads")
 async def sync_leads_to_sheets(current_user: User = Depends(get_current_user)):
     """Sync all leads to Google Sheets"""
-    # Check if Google Sheets is enabled
-    sheets_enabled = os.environ.get('GOOGLE_SHEETS_ENABLED', 'false').lower() == 'true'
-    
-    if not sheets_enabled:
-        raise HTTPException(
-            status_code=400, 
-            detail="Google Sheets sync is currently disabled. Please deploy a new version of the Apps Script and enable it in backend .env"
-        )
-    
-    leads = await db.driver_leads.find({}, {"_id": 0}).to_list(10000)
-    success = sync_all_records('leads', leads)
-    if success:
-        return {"message": f"Successfully synced {len(leads)} leads to Google Sheets"}
-    raise HTTPException(status_code=500, detail="Failed to sync leads to Google Sheets")
+    try:
+        leads = await db.driver_leads.find({}, {"_id": 0}).to_list(10000)
+        success = sync_all_records('leads', leads)
+        if success:
+            return {"message": f"Successfully synced {len(leads)} leads to Google Sheets"}
+        raise HTTPException(status_code=500, detail="Failed to sync leads to Google Sheets")
+    except Exception as e:
+        logger.error(f"Sync error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to sync: {str(e)}")
 
 
 class LeadUpdate(BaseModel):
