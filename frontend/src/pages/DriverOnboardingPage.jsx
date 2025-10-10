@@ -1016,6 +1016,59 @@ const DriverOnboardingPage = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="dark:bg-gray-800">
+          <DialogHeader>
+            <DialogTitle className="dark:text-white">Delete Lead</DialogTitle>
+            <DialogDescription className="dark:text-gray-400">
+              Are you sure you want to delete this lead? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedLead && (
+            <div className="space-y-4 mt-4">
+              <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                <p className="font-semibold text-gray-900 dark:text-white">{selectedLead.name}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{selectedLead.phone_number}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                  Status: <span className={`px-2 py-1 rounded ${getStatusColor(selectedLead.status)}`}>
+                    {selectedLead.status || "New"}
+                  </span>
+                </p>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <Button
+                  onClick={() => setDeleteDialogOpen(false)}
+                  variant="outline"
+                  className="dark:border-gray-600"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleDeleteLead}
+                  disabled={deletingLead}
+                  className="bg-red-600 hover:bg-red-700"
+                >
+                  {deletingLead ? (
+                    <>
+                      <RefreshCw size={18} className="mr-2 animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <XCircle size={18} className="mr-2" />
+                      Delete Lead
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
