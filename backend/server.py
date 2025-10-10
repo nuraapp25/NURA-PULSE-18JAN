@@ -688,6 +688,114 @@ async def sync_drivers(current_user: User = Depends(get_current_user)):
     raise HTTPException(status_code=500, detail="Failed to sync drivers")
 
 
+# Driver Onboarding - Leads Import
+from fastapi import File, UploadFile
+import pandas as pd
+import io
+
+
+@api_router.post("/driver-onboarding/import-leads")
+async def import_leads(file: UploadFile = File(...), current_user: User = Depends(get_current_user)):
+    """Import driver leads from CSV or XLSX"""
+    try:
+        # Read file content
+        content = await file.read()
+        
+        # Detect file type and parse
+        if file.filename.endswith('.csv'):
+            df = pd.read_csv(io.BytesIO(content))
+        elif file.filename.endswith(('.xlsx', '.xls')):
+            df = pd.read_excel(io.BytesIO(content))
+        else:
+            raise HTTPException(status_code=400, detail="Invalid file type. Only CSV and XLSX are supported.")
+        
+        # Detect format and map columns
+        leads = []
+        import_date = datetime.now(timezone.utc).isoformat()
+        
+        # Check column count to determine format
+        if len(df.columns) == 4:
+            # Format 1: S. No., Name, Vehicle, Phone Number
+            logger.info("Detected Format 1 (4 columns)")
+            for _, row in df.iterrows():
+                lead = {
+                    "id": str(uuid.uuid4()),
+                    "name": str(row.iloc[1]) if pd.notna(row.iloc[1]) else "",
+                    "phone_number": str(row.iloc[3]) if pd.notna(row.iloc[3]) else "",
+                    "vehicle": str(row.iloc[2]) if pd.notna(row.iloc[2]) else "",
+                    "driving_license": None,
+                    "experience": None,
+                    "interested_ev": None,
+                    "monthly_salary": None,
+                    "residing_chennai": None,
+                    "current_location": None,
+                    "import_date": import_date
+                }
+                leads.append(lead)
+        
+        elif len(df.columns) >= 8:
+            # Format 2: 8 columns with Tamil
+            logger.info("Detected Format 2 (8+ columns)")
+            for _, row in df.iterrows():
+                # Map Tamil questions to English fields
+                driving_license = str(row.iloc[3]) if pd.notna(row.iloc[3]) else ""
+                experience = str(row.iloc[4]) if pd.notna(row.iloc[4]) else ""
+                interested_ev = str(row.iloc[5]) if pd.notna(row.iloc[5]) else ""
+                location = str(row.iloc[7]) if pd.notna(row.iloc[7]) else ""
+                
+                lead = {
+                    "id": str(uuid.uuid4()),
+                    "name": str(row.iloc[0]) if pd.notna(row.iloc[0]) else "",
+                    "phone_number": str(row.iloc[2]) if pd.notna(row.iloc[2]) else "",
+                    "vehicle": None,
+                    "driving_license": driving_license,
+                    "experience": experience,
+                    "interested_ev": interested_ev,
+                    "monthly_salary": str(row.iloc[6]) if pd.notna(row.iloc[6]) else "",
+                    "residing_chennai": "Yes" if location else "No",
+                    "current_location": location,
+                    "import_date": import_date
+                }
+                leads.append(lead)
+        else:
+            raise HTTPException(status_code=400, detail=f"Unsupported format. Expected 4 or 8 columns, got {len(df.columns)}")
+        
+        # Save to database
+        if leads:
+            await db.driver_leads.insert_many(leads)
+            logger.info(f"Imported {len(leads)} leads to database")
+            
+            # Sync to Google Sheets
+            sync_all_records('leads', leads)
+        
+        return {
+            "message": f"Successfully imported {len(leads)} leads",
+            "count": len(leads),
+            "format_detected": "Format 1 (4 columns)" if len(df.columns) == 4 else "Format 2 (8 columns)"
+        }
+        
+    except Exception as e:
+        logger.error(f"Error importing leads: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to import leads: {str(e)}")
+
+
+@api_router.get("/driver-onboarding/leads")
+async def get_leads(current_user: User = Depends(get_current_user)):
+    """Get all driver leads"""
+    leads = await db.driver_leads.find({}, {"_id": 0}).to_list(10000)
+    return leads
+
+
+@api_router.post("/driver-onboarding/sync-leads")
+async def sync_leads_to_sheets(current_user: User = Depends(get_current_user)):
+    """Sync all leads to Google Sheets"""
+    leads = await db.driver_leads.find({}, {"_id": 0}).to_list(10000)
+    success = sync_all_records('leads', leads)
+    if success:
+        return {"message": f"Successfully synced {len(leads)} leads to Google Sheets"}
+    raise HTTPException(status_code=500, detail="Failed to sync leads to Google Sheets")
+
+
 # Telecaller Queue
 @api_router.post("/telecaller-queue")
 async def create_telecaller_task(task_data: TelecallerTaskCreate, current_user: User = Depends(get_current_user)):
