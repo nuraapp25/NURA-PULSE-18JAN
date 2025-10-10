@@ -729,7 +729,8 @@ async def import_leads(file: UploadFile = File(...), current_user: User = Depend
                     "monthly_salary": None,
                     "residing_chennai": None,
                     "current_location": None,
-                    "import_date": import_date
+                    "import_date": import_date,
+                    "status": "New"
                 }
                 leads.append(lead)
         
