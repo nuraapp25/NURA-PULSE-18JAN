@@ -469,6 +469,7 @@ const UserManagement = () => {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {/* Stats */}
