@@ -55,7 +55,7 @@ def send_to_web_app(payload: Dict) -> bool:
 
 def sync_user_to_sheets(user_data: Dict) -> bool:
     """
-    Sync a single user to Google Sheets
+    Sync a single user to Google Sheets via Web App
     
     Args:
         user_data: Dictionary containing user information
@@ -63,62 +63,11 @@ def sync_user_to_sheets(user_data: Dict) -> bool:
     Returns:
         bool: True if sync successful, False otherwise
     """
-    if not GOOGLE_SHEETS_ENABLED:
-        logger.info("Google Sheets sync is disabled")
-        return False
-    
-    try:
-        client = get_gspread_client()
-        if not client:
-            return False
-        
-        # Open spreadsheet and worksheet
-        spreadsheet = client.open_by_key(SPREADSHEET_ID)
-        worksheet = spreadsheet.worksheet(WORKSHEET_NAME)
-        
-        # Get all records
-        all_records = worksheet.get_all_records()
-        
-        # Check if user already exists
-        user_email = user_data.get('email')
-        existing_row = None
-        for idx, record in enumerate(all_records, start=2):  # Start from row 2 (after header)
-            if record.get('Mail ID') == user_email:
-                existing_row = idx
-                break
-        
-        # Prepare row data
-        from datetime import datetime
-        created_date = user_data.get('created_at')
-        if isinstance(created_date, str):
-            created_date = datetime.fromisoformat(created_date)
-        
-        formatted_date = created_date.strftime('%Y-%m-%d %H:%M:%S') if created_date else ''
-        
-        # Determine row number (S. No.)
-        row_num = existing_row - 1 if existing_row else len(all_records) + 1
-        
-        row_data = [
-            row_num,  # S. No.
-            formatted_date,  # Date Created
-            user_data.get('email', ''),  # Mail ID
-            user_data.get('account_type', '').replace('_', ' ').title(),  # Account Type
-            user_data.get('status', 'pending').title()  # Status
-        ]
-        
-        if existing_row:
-            # Update existing row
-            worksheet.update(f'A{existing_row}:E{existing_row}', [row_data])
-            logger.info(f"Updated user {user_email} in Google Sheets")
-        else:
-            # Append new row
-            worksheet.append_row(row_data)
-            logger.info(f"Added user {user_email} to Google Sheets")
-        
-        return True
-    except Exception as e:
-        logger.error(f"Failed to sync user to Google Sheets: {e}")
-        return False
+    payload = {
+        'action': 'sync_single_user',
+        'user': user_data
+    }
+    return send_to_web_app(payload)
 
 
 def bulk_sync_users_to_sheets(users: List[Dict]) -> bool:
