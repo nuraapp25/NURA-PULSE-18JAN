@@ -95,6 +95,7 @@ class PasswordChange(BaseModel):
 
 
 class TempPasswordReset(BaseModel):
+    email: str
     temp_password: str
     new_password: str
 
