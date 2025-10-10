@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import axios from "axios";
 import LoginPage from "@/pages/LoginPage";
 import RegisterPage from "@/pages/RegisterPage";
+import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
 import Dashboard from "@/pages/Dashboard";
 import HomePage from "@/pages/HomePage";
 import UserManagement from "@/pages/UserManagement";
