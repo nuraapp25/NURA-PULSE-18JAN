@@ -798,6 +798,33 @@ async def sync_leads_to_sheets(current_user: User = Depends(get_current_user)):
     raise HTTPException(status_code=500, detail="Failed to sync leads to Google Sheets")
 
 
+class LeadStatusUpdate(BaseModel):
+    status: str
+
+
+@api_router.patch("/driver-onboarding/leads/{lead_id}/status")
+async def update_lead_status(lead_id: str, status_data: LeadStatusUpdate, current_user: User = Depends(get_current_user)):
+    """Update lead status"""
+    # Find the lead
+    lead = await db.driver_leads.find_one({"id": lead_id})
+    if not lead:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    
+    # Update status
+    await db.driver_leads.update_one(
+        {"id": lead_id},
+        {"$set": {"status": status_data.status}}
+    )
+    
+    # Get updated lead for sync
+    updated_lead = await db.driver_leads.find_one({"id": lead_id}, {"_id": 0})
+    
+    # Sync to Google Sheets
+    sync_single_record('leads', updated_lead)
+    
+    return {"message": "Lead status updated successfully", "lead": updated_lead}
+
+
 # Telecaller Queue
 @api_router.post("/telecaller-queue")
 async def create_telecaller_task(task_data: TelecallerTaskCreate, current_user: User = Depends(get_current_user)):
