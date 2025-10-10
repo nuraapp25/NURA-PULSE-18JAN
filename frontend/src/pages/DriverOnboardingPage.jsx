@@ -1149,6 +1149,139 @@ const DriverOnboardingPage = () => {
                     </p>
                   )}
                 </div>
+              </div>
+
+              {/* Stage Fields */}
+              <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Pipeline Stages</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm text-gray-600 dark:text-gray-400">Lead Stage</Label>
+                    {isEditMode ? (
+                      <Select
+                        value={editedLead.lead_stage || "New"}
+                        onValueChange={(value) => handleFieldChange('lead_stage', value)}
+                      >
+                        <SelectTrigger className="mt-1 dark:bg-gray-700 dark:border-gray-600">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                          {LEAD_STAGE_OPTIONS.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <p className="text-base text-gray-900 dark:text-white mt-1">
+                        {selectedLead.lead_stage || 'New'}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label className="text-sm text-gray-600 dark:text-gray-400">Driver Readiness</Label>
+                    {isEditMode ? (
+                      <Select
+                        value={editedLead.driver_readiness || "Not Started"}
+                        onValueChange={(value) => handleFieldChange('driver_readiness', value)}
+                      >
+                        <SelectTrigger className="mt-1 dark:bg-gray-700 dark:border-gray-600">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                          {DRIVER_READINESS_OPTIONS.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <p className="text-base text-gray-900 dark:text-white mt-1">
+                        {selectedLead.driver_readiness || 'Not Started'}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label className="text-sm text-gray-600 dark:text-gray-400">Docs Collection</Label>
+                    {isEditMode ? (
+                      <Select
+                        value={editedLead.docs_collection || "Pending"}
+                        onValueChange={(value) => handleFieldChange('docs_collection', value)}
+                      >
+                        <SelectTrigger className="mt-1 dark:bg-gray-700 dark:border-gray-600">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                          {DOCS_COLLECTION_OPTIONS.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <p className="text-base text-gray-900 dark:text-white mt-1">
+                        {selectedLead.docs_collection || 'Pending'}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label className="text-sm text-gray-600 dark:text-gray-400">Customer Readiness</Label>
+                    {isEditMode ? (
+                      <Select
+                        value={editedLead.customer_readiness || "Not Ready"}
+                        onValueChange={(value) => handleFieldChange('customer_readiness', value)}
+                      >
+                        <SelectTrigger className="mt-1 dark:bg-gray-700 dark:border-gray-600">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                          {CUSTOMER_READINESS_OPTIONS.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <p className="text-base text-gray-900 dark:text-white mt-1">
+                        {selectedLead.customer_readiness || 'Not Ready'}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label className="text-sm text-gray-600 dark:text-gray-400">Assigned Telecaller</Label>
+                    {isEditMode ? (
+                      <Input
+                        value={editedLead.assigned_telecaller || ''}
+                        onChange={(e) => handleFieldChange('assigned_telecaller', e.target.value)}
+                        className="mt-1 dark:bg-gray-700 dark:border-gray-600"
+                        placeholder="Enter telecaller name"
+                      />
+                    ) : (
+                      <p className="text-base text-gray-900 dark:text-white mt-1">
+                        {selectedLead.assigned_telecaller || '-'}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label className="text-sm text-gray-600 dark:text-gray-400">Notes</Label>
+                    {isEditMode ? (
+                      <Input
+                        value={editedLead.notes || ''}
+                        onChange={(e) => handleFieldChange('notes', e.target.value)}
+                        className="mt-1 dark:bg-gray-700 dark:border-gray-600"
+                        placeholder="Add notes"
+                      />
+                    ) : (
+                      <p className="text-base text-gray-900 dark:text-white mt-1">
+                        {selectedLead.notes || '-'}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
                   <Label className="text-sm text-gray-600 dark:text-gray-400">Import Date</Label>
                   <p className="text-base text-gray-900 dark:text-white mt-1">
