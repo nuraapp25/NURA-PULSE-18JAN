@@ -1,16 +1,18 @@
 """
 Google Sheets synchronization module for Nura Pulse
-This module handles syncing user data with Google Sheets
+This module handles syncing user data with Google Sheets using Web App
 """
 import os
 import json
 from typing import Dict, List, Optional
 import logging
+import requests
 
 logger = logging.getLogger(__name__)
 
 # Google Sheets configuration
 GOOGLE_SHEETS_ENABLED = os.environ.get('GOOGLE_SHEETS_ENABLED', 'false').lower() == 'true'
+GOOGLE_SHEETS_WEB_APP_URL = os.environ.get('GOOGLE_SHEETS_WEB_APP_URL', '')
 SPREADSHEET_URL = "https://docs.google.com/spreadsheets/d/1PPtzfxqvP80SqCywj3F_3FbCVPOLw2lh_-RG95rZYSY/edit?gid=0#gid=0"
 SPREADSHEET_ID = "1PPtzfxqvP80SqCywj3F_3FbCVPOLw2lh_-RG95rZYSY"
 WORKSHEET_NAME = "Users"
