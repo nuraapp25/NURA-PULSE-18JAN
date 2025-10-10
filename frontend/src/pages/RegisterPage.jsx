@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
-import { API, useAuth } from "@/App";
+import { API } from "@/App";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,11 +10,12 @@ import { toast } from "sonner";
 
 const RegisterPage = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
   const [formData, setFormData] = useState({
     first_name: "",
+    last_name: "",
     email: "",
     password: "",
+    confirm_password: "",
     account_type: ""
   });
   const [loading, setLoading] = useState(false);
@@ -27,15 +28,36 @@ const RegisterPage = () => {
       return;
     }
 
+    if (formData.password !== formData.confirm_password) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const response = await axios.post(`${API}/auth/register`, formData);
-      login(response.data.user, response.data.token);
-      toast.success("Registration successful!");
-      navigate("/dashboard");
+      const { confirm_password, ...registerData } = formData;
+      const response = await axios.post(`${API}/auth/register`, registerData);
+      
+      toast.success(
+        <div>
+          <p className="font-semibold">Registration Successful!</p>
+          <p className="text-sm mt-1">{response.data.message}</p>
+        </div>,
+        { duration: 8000 }
+      );
+      
+      setTimeout(() => {
+        navigate("/login");
+      }, 2000);
     } catch (error) {
-      toast.error(error.response?.data?.detail || "Registration failed");
+      const errorMessage = error.response?.data?.detail || "Registration failed";
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -57,19 +79,34 @@ const RegisterPage = () => {
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-200 dark:border-gray-700">
           <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6">Register</h2>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <Label htmlFor="first_name" className="text-gray-700 dark:text-gray-300">First Name *</Label>
-              <Input
-                id="first_name"
-                type="text"
-                data-testid="register-firstname-input"
-                placeholder="Enter your first name"
-                value={formData.first_name}
-                onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-                className="mt-1.5 h-11 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                required
-              />
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="first_name" className="text-gray-700 dark:text-gray-300">First Name *</Label>
+                <Input
+                  id="first_name"
+                  type="text"
+                  data-testid="register-firstname-input"
+                  placeholder="Enter first name"
+                  value={formData.first_name}
+                  onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                  className="mt-1.5 h-11 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  required
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="last_name" className="text-gray-700 dark:text-gray-300">Last Name</Label>
+                <Input
+                  id="last_name"
+                  type="text"
+                  data-testid="register-lastname-input"
+                  placeholder="Enter last name"
+                  value={formData.last_name}
+                  onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                  className="mt-1.5 h-11 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                />
+              </div>
             </div>
 
             <div>
@@ -92,9 +129,23 @@ const RegisterPage = () => {
                 id="password"
                 type="password"
                 data-testid="register-password-input"
-                placeholder="Create a password"
+                placeholder="Create a password (min 6 characters)"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                className="mt-1.5 h-11 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="confirm_password" className="text-gray-700 dark:text-gray-300">Confirm Password *</Label>
+              <Input
+                id="confirm_password"
+                type="password"
+                data-testid="register-confirm-password-input"
+                placeholder="Re-enter your password"
+                value={formData.confirm_password}
+                onChange={(e) => setFormData({ ...formData, confirm_password: e.target.value })}
                 className="mt-1.5 h-11 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 required
               />
@@ -120,7 +171,7 @@ const RegisterPage = () => {
               type="submit"
               data-testid="register-submit-button"
               disabled={loading}
-              className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg"
+              className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg mt-2"
             >
               {loading ? "Creating Account..." : "Create Account"}
             </Button>
