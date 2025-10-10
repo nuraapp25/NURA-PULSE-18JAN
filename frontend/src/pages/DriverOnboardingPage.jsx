@@ -184,6 +184,9 @@ const DriverOnboardingPage = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       toast.success("Leads synced to Google Sheets successfully!");
+      
+      // Update last sync time
+      await fetchLastSyncTime();
     } catch (error) {
       toast.error(error.response?.data?.detail || "Failed to sync to Google Sheets");
     }
