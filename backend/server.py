@@ -6,7 +6,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
 from pathlib import Path
-from pydantic import BaseModel, Field, ConfigDict, EmailStr, field_validator
+from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional
 import uuid
 from datetime import datetime, timezone, timedelta
@@ -14,6 +14,7 @@ from passlib.context import CryptContext
 import jwt
 import secrets
 import string
+from google_sheets_sync import sync_user_to_sheets, bulk_sync_users_to_sheets, delete_user_from_sheets
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -56,7 +57,7 @@ class User(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     first_name: str
     last_name: Optional[str] = None
-    email: str  # Changed from EmailStr to allow "admin"
+    email: str
     account_type: str  # "master_admin", "admin", "standard"
     status: str = "pending"  # "pending", "active", "rejected", "deleted"
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -66,13 +67,13 @@ class User(BaseModel):
 class UserCreate(BaseModel):
     first_name: str
     last_name: Optional[str] = None
-    email: str  # Changed from EmailStr to allow flexible validation
+    email: str
     password: str
     account_type: str  # "admin" or "standard"
 
 
 class UserLogin(BaseModel):
-    email: str  # Changed from EmailStr to allow "admin"
+    email: str
     password: str
 
 
@@ -81,7 +82,7 @@ class PasswordResetRequest(BaseModel):
     
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     user_id: str
-    user_email: str  # Changed from EmailStr
+    user_email: str
     user_name: str
     status: str = "pending"  # pending, approved, rejected
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -93,8 +94,17 @@ class PasswordChange(BaseModel):
     new_password: str
 
 
+class TempPasswordReset(BaseModel):
+    temp_password: str
+    new_password: str
+
+
 class PasswordResetApproval(BaseModel):
     request_id: str
+
+
+class UserApproval(BaseModel):
+    user_id: str
 
 
 # ==================== Helper Functions ====================
@@ -152,14 +162,19 @@ async def initialize_master_admin():
         master_admin_data = {
             "id": str(uuid.uuid4()),
             "first_name": "Master Admin",
+            "last_name": "",
             "email": "admin",
             "password": hash_password("Nura@1234$"),
             "account_type": "master_admin",
+            "status": "active",  # Master admin is always active
             "created_at": datetime.now(timezone.utc).isoformat(),
             "is_temp_password": False
         }
         await db.users.insert_one(master_admin_data)
         logger.info("Master admin account created")
+        
+        # Sync to Google Sheets
+        sync_user_to_sheets(master_admin_data)
 
 
 # ==================== Auth Routes ====================
@@ -169,18 +184,20 @@ async def register(user_data: UserCreate):
     # Check if user already exists
     existing_user = await db.users.find_one({"email": user_data.email})
     if existing_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
+        raise HTTPException(status_code=400, detail="Email already registered. If you're awaiting approval, please contact admin.")
     
     # Validate account type
     if user_data.account_type not in ["admin", "standard"]:
         raise HTTPException(status_code=400, detail="Invalid account type")
     
-    # Create user
+    # Create user with pending status
     hashed_password = hash_password(user_data.password)
     user = User(
         first_name=user_data.first_name,
+        last_name=user_data.last_name,
         email=user_data.email,
-        account_type=user_data.account_type
+        account_type=user_data.account_type,
+        status="pending"  # Requires admin approval
     )
     
     user_dict = user.model_dump()
@@ -189,13 +206,12 @@ async def register(user_data: UserCreate):
     
     await db.users.insert_one(user_dict)
     
-    # Create token
-    token = create_access_token({"user_id": user.id, "email": user.email})
+    # Sync to Google Sheets
+    sync_user_to_sheets(user_dict)
     
     return {
-        "message": "User registered successfully",
-        "user": user,
-        "token": token
+        "message": "Registration successful! Your account is pending approval. Please wait for admin to approve.",
+        "status": "pending"
     }
 
 
@@ -209,6 +225,19 @@ async def login(credentials: UserLogin):
     # Verify password
     if not verify_password(credentials.password, user['password']):
         raise HTTPException(status_code=401, detail="Invalid email or password")
+    
+    # Check if user is approved
+    if user.get('status') == 'pending':
+        raise HTTPException(status_code=403, detail="Your account is pending approval. Please contact admin.")
+    
+    if user.get('status') == 'rejected':
+        raise HTTPException(status_code=403, detail="Your account has been rejected. Please contact admin.")
+    
+    if user.get('status') == 'deleted':
+        raise HTTPException(status_code=403, detail="Your account has been deleted. Please contact admin.")
+    
+    if user.get('status') != 'active':
+        raise HTTPException(status_code=403, detail="Your account is not active. Please contact admin.")
     
     # Convert datetime string back
     if isinstance(user.get('created_at'), str):
@@ -253,6 +282,31 @@ async def change_password(
     )
     
     return {"message": "Password changed successfully"}
+
+
+@api_router.post("/auth/reset-with-temp-password")
+async def reset_with_temp_password(reset_data: TempPasswordReset):
+    """Reset password using temporary password (from forgot password page)"""
+    # Find user with temp password
+    all_users = await db.users.find({"is_temp_password": True}).to_list(1000)
+    
+    user_found = None
+    for user in all_users:
+        if verify_password(reset_data.temp_password, user['password']):
+            user_found = user
+            break
+    
+    if not user_found:
+        raise HTTPException(status_code=400, detail="Invalid temporary password")
+    
+    # Update password
+    new_hashed_password = hash_password(reset_data.new_password)
+    await db.users.update_one(
+        {"id": user_found['id']},
+        {"$set": {"password": new_hashed_password, "is_temp_password": False}}
+    )
+    
+    return {"message": "Password reset successfully. You can now login with your new password."}
 
 
 # ==================== Password Reset Routes ====================
@@ -373,12 +427,14 @@ async def create_user(user_data: UserCreate, current_user: User = Depends(get_cu
     if user_data.account_type not in ["admin", "standard"]:
         raise HTTPException(status_code=400, detail="Invalid account type")
     
-    # Create user
+    # Create user (master admin created users are auto-approved)
     hashed_password = hash_password(user_data.password)
     user = User(
         first_name=user_data.first_name,
+        last_name=user_data.last_name,
         email=user_data.email,
-        account_type=user_data.account_type
+        account_type=user_data.account_type,
+        status="active"  # Master admin created users are auto-approved
     )
     
     user_dict = user.model_dump()
@@ -387,7 +443,92 @@ async def create_user(user_data: UserCreate, current_user: User = Depends(get_cu
     
     await db.users.insert_one(user_dict)
     
+    # Sync to Google Sheets
+    sync_user_to_sheets(user_dict)
+    
     return {"message": "User created successfully", "user": user}
+
+
+@api_router.post("/users/approve")
+async def approve_user(approval: UserApproval, current_user: User = Depends(get_current_user)):
+    """Approve a pending user (master admin only)"""
+    if current_user.account_type != "master_admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    user = await db.users.find_one({"id": approval.user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if user.get('status') != 'pending':
+        raise HTTPException(status_code=400, detail="User is not pending approval")
+    
+    # Update user status to active
+    await db.users.update_one(
+        {"id": approval.user_id},
+        {"$set": {"status": "active"}}
+    )
+    
+    # Sync to Google Sheets
+    user['status'] = 'active'
+    sync_user_to_sheets(user)
+    
+    return {"message": "User approved successfully"}
+
+
+@api_router.post("/users/reject")
+async def reject_user(approval: UserApproval, current_user: User = Depends(get_current_user)):
+    """Reject a pending user (master admin only)"""
+    if current_user.account_type != "master_admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    user = await db.users.find_one({"id": approval.user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if user.get('status') != 'pending':
+        raise HTTPException(status_code=400, detail="User is not pending approval")
+    
+    # Update user status to rejected
+    await db.users.update_one(
+        {"id": approval.user_id},
+        {"$set": {"status": "rejected"}}
+    )
+    
+    # Sync to Google Sheets
+    user['status'] = 'rejected'
+    sync_user_to_sheets(user)
+    
+    return {"message": "User rejected"}
+
+
+@api_router.post("/users/{user_id}/generate-temp-password")
+async def generate_temp_password_for_user(user_id: str, current_user: User = Depends(get_current_user)):
+    """Generate temporary password for a user (master admin only)"""
+    if current_user.account_type != "master_admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if user.get('account_type') == 'master_admin':
+        raise HTTPException(status_code=400, detail="Cannot reset master admin password")
+    
+    # Generate temporary password
+    temp_password = generate_temporary_password()
+    hashed_temp_password = hash_password(temp_password)
+    
+    # Update user's password
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {"password": hashed_temp_password, "is_temp_password": True}}
+    )
+    
+    return {
+        "message": "Temporary password generated",
+        "temporary_password": temp_password,
+        "user_email": user.get('email')
+    }
 
 
 @api_router.delete("/users/{user_id}")
@@ -404,7 +545,14 @@ async def delete_user(user_id: str, current_user: User = Depends(get_current_use
     if user_to_delete.get('account_type') == "master_admin":
         raise HTTPException(status_code=400, detail="Cannot delete master admin")
     
-    await db.users.delete_one({"id": user_id})
+    # Mark as deleted instead of actually deleting
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {"status": "deleted"}}
+    )
+    
+    # Update Google Sheets
+    delete_user_from_sheets(user_to_delete.get('email'))
     
     return {"message": "User deleted successfully"}
 
@@ -415,17 +563,35 @@ async def get_stats(current_user: User = Depends(get_current_user)):
     if current_user.account_type != "master_admin":
         raise HTTPException(status_code=403, detail="Not authorized")
     
-    total_users = await db.users.count_documents({})
-    admin_users = await db.users.count_documents({"account_type": "admin"})
-    standard_users = await db.users.count_documents({"account_type": "standard"})
+    total_users = await db.users.count_documents({"status": {"$ne": "deleted"}})
+    admin_users = await db.users.count_documents({"account_type": "admin", "status": {"$ne": "deleted"}})
+    standard_users = await db.users.count_documents({"account_type": "standard", "status": {"$ne": "deleted"}})
+    pending_users = await db.users.count_documents({"status": "pending"})
     pending_resets = await db.password_reset_requests.count_documents({"status": "pending"})
     
     return {
         "total_users": total_users,
         "admin_users": admin_users,
         "standard_users": standard_users,
+        "pending_users": pending_users,
         "pending_password_resets": pending_resets
     }
+
+
+@api_router.post("/users/sync-to-sheets")
+async def sync_all_users_to_sheets(current_user: User = Depends(get_current_user)):
+    """Manually sync all users to Google Sheets (master admin only)"""
+    if current_user.account_type != "master_admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    users = await db.users.find({}, {"_id": 0, "password": 0}).to_list(1000)
+    
+    success = bulk_sync_users_to_sheets(users)
+    
+    if success:
+        return {"message": "All users synced to Google Sheets successfully"}
+    else:
+        raise HTTPException(status_code=500, detail="Failed to sync users to Google Sheets. Check if Google Sheets integration is enabled.")
 
 
 # ==================== App Initialization ====================
