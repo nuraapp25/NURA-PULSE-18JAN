@@ -263,17 +263,38 @@ const UserManagement = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
+      const tempPassword = response.data.temporary_password;
+      const userEmail = response.data.user_email;
+      
       toast.success(
         <div>
           <p className="font-semibold">Password reset approved!</p>
-          <p className="text-sm mt-1 font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
-            {response.data.temporary_password}
-          </p>
-          <p className="text-xs mt-1 text-gray-600 dark:text-gray-400">
-            Share with: {response.data.user_email}
-          </p>
+          <div className="flex items-center space-x-2 mt-2">
+            <p className="text-sm font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded flex-1">
+              {tempPassword}
+            </p>
+            <button
+              onClick={() => copyToClipboard(tempPassword, "Password")}
+              className="p-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded"
+              title="Copy password"
+            >
+              <Copy size={14} />
+            </button>
+          </div>
+          <div className="flex items-center space-x-2 mt-2">
+            <p className="text-xs text-gray-600 dark:text-gray-400 flex-1">
+              Share with: {userEmail}
+            </p>
+            <button
+              onClick={() => copyToClipboard(userEmail, "Email")}
+              className="p-1.5 bg-gray-600 hover:bg-gray-700 text-white rounded"
+              title="Copy email"
+            >
+              <Mail size={14} />
+            </button>
+          </div>
         </div>,
-        { duration: 15000 }
+        { duration: 20000 }
       );
       
       fetchData();
