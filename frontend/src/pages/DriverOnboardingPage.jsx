@@ -56,6 +56,9 @@ const CUSTOMER_READINESS_OPTIONS = [
 ];
 
 const DriverOnboardingPage = () => {
+  const { user } = useAuth();
+  const isMasterAdmin = user?.account_type === "master_admin";
+  
   const [leads, setLeads] = useState([]);
   const [filteredLeads, setFilteredLeads] = useState([]);
   const [loading, setLoading] = useState(false);
