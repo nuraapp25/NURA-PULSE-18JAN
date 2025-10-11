@@ -1377,35 +1377,14 @@ async def import_montra_feed(file: UploadFile = File(...), current_user: User = 
             await db.montra_feed_data.insert_many(montra_docs)
             logger.info(f"Saved {len(montra_docs)} rows to MongoDB")
         
-        # Send to Google Sheets
-        # The sheets sync will handle adding to "Montra Feed Data" tab starting from D2
-        from sheets_multi_sync import send_to_sheets
-        
-        payload = {
-            'action': 'import_montra_feed',
-            'tab': 'Montra Feed Data',
-            'headers': headers,
-            'data': rows_to_import,
-            'vehicle_id': vehicle_id,
-            'day': day,
-            'month': month,
-            'registration_number': registration_number
+        logger.info(f"Successfully imported {len(rows_to_import)} rows to database")
+        return {
+            "message": f"Successfully imported {len(rows_to_import)} rows from {filename}",
+            "rows": len(rows_to_import),
+            "vehicle_id": vehicle_id,
+            "date": f"{day} {month}",
+            "synced_to_database": True
         }
-        
-        result = send_to_sheets(payload)
-        
-        if result.get('success'):
-            logger.info(f"Successfully imported {len(rows_to_import)} rows to Google Sheets")
-            return {
-                "message": f"Successfully imported {len(rows_to_import)} rows from {filename}",
-                "rows": len(rows_to_import),
-                "vehicle_id": vehicle_id,
-                "date": f"{day} {month}",
-                "synced_to_sheets": True
-            }
-        else:
-            logger.error(f"Failed to sync to Google Sheets: {result.get('error')}")
-            raise HTTPException(status_code=500, detail="Failed to sync to Google Sheets")
             
     except HTTPException:
         raise
