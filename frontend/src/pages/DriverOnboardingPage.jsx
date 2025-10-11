@@ -612,14 +612,15 @@ const DriverOnboardingPage = () => {
       {showDateFilter && (
         <Card className="dark:bg-gray-800 dark:border-gray-700">
           <CardContent className="pt-6">
-            <div className="flex items-center space-x-4">
+            <div className="flex flex-col sm:flex-row sm:items-end gap-4">
               <div className="flex-1">
-                <Label className="text-sm text-gray-700 dark:text-gray-300 mb-2">Start Date</Label>
+                <Label className="text-sm text-gray-700 dark:text-gray-300 mb-2 block">Start Date</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
-                      className="w-full justify-start text-left font-normal dark:bg-gray-700 dark:border-gray-600"
+                      className="w-full justify-start text-left font-normal dark:bg-gray-700 dark:border-gray-600 text-sm"
+                      size="sm"
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {startDate ? format(startDate, "PPP") : <span>Pick a date</span>}
@@ -637,12 +638,13 @@ const DriverOnboardingPage = () => {
               </div>
               
               <div className="flex-1">
-                <Label className="text-sm text-gray-700 dark:text-gray-300 mb-2">End Date</Label>
+                <Label className="text-sm text-gray-700 dark:text-gray-300 mb-2 block">End Date</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
-                      className="w-full justify-start text-left font-normal dark:bg-gray-700 dark:border-gray-600"
+                      className="w-full justify-start text-left font-normal dark:bg-gray-700 dark:border-gray-600 text-sm"
+                      size="sm"
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {endDate ? format(endDate, "PPP") : <span>Pick a date</span>}
@@ -659,14 +661,16 @@ const DriverOnboardingPage = () => {
                 </Popover>
               </div>
 
-              <div className="flex items-end">
+              <div className="flex-shrink-0">
                 <Button
                   onClick={clearDateFilter}
                   variant="outline"
-                  className="border-red-300 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                  className="border-red-300 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm w-full sm:w-auto"
+                  size="sm"
                 >
-                  <X size={18} className="mr-2" />
-                  Clear Filter
+                  <X size={16} className="mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Clear Filter</span>
+                  <span className="sm:hidden">Clear</span>
                 </Button>
               </div>
             </div>
