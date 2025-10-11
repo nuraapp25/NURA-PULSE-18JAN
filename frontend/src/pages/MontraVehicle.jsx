@@ -13,6 +13,11 @@ const MontraVehicle = () => {
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [importing, setImporting] = useState(false);
+  const [databaseDialogOpen, setDatabaseDialogOpen] = useState(false);
+  const [feedFiles, setFeedFiles] = useState([]);
+  const [selectedFileIds, setSelectedFileIds] = useState([]);
+  const [loadingDatabase, setLoadingDatabase] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const widgets = [
     {
