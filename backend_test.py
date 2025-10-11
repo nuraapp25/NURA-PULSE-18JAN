@@ -717,13 +717,16 @@ class NuraPulseBackendTester:
         # Step 4: Test DELETE with valid file identifiers (if we have existing files)
         print("\n--- Step 4: Testing DELETE with valid file identifiers ---")
         if existing_files:
+            # Debug: Print structure of existing files
+            print(f"DEBUG: First file structure: {existing_files[0] if existing_files else 'None'}")
+            
             # Use real file identifiers from existing data
             valid_data = []
             for file_info in existing_files:
                 valid_data.append({
-                    "vehicle_id": file_info["vehicle_id"],
-                    "date": file_info["date"], 
-                    "filename": file_info["filename"]
+                    "vehicle_id": file_info.get("vehicle_id", ""),
+                    "date": file_info.get("date", ""), 
+                    "filename": file_info.get("filename", file_info.get("file_name", ""))
                 })
             
             # Get count before deletion
