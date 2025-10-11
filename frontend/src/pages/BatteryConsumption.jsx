@@ -334,6 +334,7 @@ const BatteryConsumption = () => {
                 <p className="text-3xl font-bold text-green-600 dark:text-green-400">
                   {(() => {
                     const chargeCount = chartData.filter(d => d.chargeStatus === 1).length;
+                    console.log('Charge Count:', chargeCount);
                     return chargeCount;
                   })()}%
                 </p>
