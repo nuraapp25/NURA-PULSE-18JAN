@@ -670,9 +670,12 @@ class NuraPulseBackendTester:
             print(f"DEBUG: Response status: {response.status_code}")
             print(f"DEBUG: Response text: {response.text}")
         
+        print(f"DEBUG: Checking condition - response: {response is not None}, status: {response.status_code if response else 'None'}")
         if response and response.status_code == 400:
+            print("DEBUG: Condition matched - processing 400 response")
             try:
                 error_data = response.json()
+                print(f"DEBUG: Error data: {error_data}")
                 if "detail" in error_data and "No files specified" in error_data["detail"]:
                     self.log_test("DELETE Test - Empty Request Validation", True, 
                                 "Correctly rejects empty delete request (400): No files specified")
@@ -684,6 +687,7 @@ class NuraPulseBackendTester:
                 self.log_test("DELETE Test - Empty Request Validation", False, 
                             "Invalid JSON error response", response.text)
         else:
+            print("DEBUG: Condition NOT matched - going to else clause")
             status = response.status_code if response else "Network error"
             self.log_test("DELETE Test - Empty Request Validation", False, 
                         f"Expected 400, got {status}")
