@@ -1742,9 +1742,6 @@ async def delete_montra_feed_files(
         body = await request.json()
         file_identifiers = body if isinstance(body, list) else body.get("file_identifiers", [])
         
-        logger.info(f"DELETE request body: {body}")
-        logger.info(f"Parsed file_identifiers: {file_identifiers}")
-        
         if not file_identifiers:
             raise HTTPException(status_code=400, detail="No files specified for deletion")
         
@@ -1759,21 +1756,15 @@ async def delete_montra_feed_files(
                     "date": file_info["date"]
                 }
                 
-                logger.info(f"Delete query: {query}")
-                
-                # Check if any records match this query first
-                existing_count = await db.montra_feed_data.count_documents(query)
-                logger.info(f"Found {existing_count} records matching query")
-                
                 result = await db.montra_feed_data.delete_many(query)
                 deleted_count += result.deleted_count
                 
-                logger.info(f"Deleted {result.deleted_count} records for file: {file_info['filename']}")
+                logger.info(f"Deleted {result.deleted_count} records for vehicle {file_info['vehicle_id']} date {file_info['date']}")
                 
             except Exception as e:
-                logger.error(f"Error deleting file {file_info.get('filename', 'Unknown')}: {str(e)}")
+                logger.error(f"Error deleting records for {file_info.get('vehicle_id', 'Unknown')}: {str(e)}")
                 failed_deletions.append({
-                    "filename": file_info.get("filename", "Unknown"),
+                    "filename": file_info.get("filename", f"{file_info.get('vehicle_id', 'Unknown')}-{file_info.get('date', 'Unknown')}"),
                     "error": str(e)
                 })
         
