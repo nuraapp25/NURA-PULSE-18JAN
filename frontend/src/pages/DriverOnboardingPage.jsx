@@ -688,7 +688,7 @@ const DriverOnboardingPage = () => {
       {showStageFilters && (
         <Card className="dark:bg-gray-800 dark:border-gray-700">
           <CardContent className="pt-6">
-            <div className="grid grid-cols-5 gap-4 mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
               <div>
                 <Label className="text-sm text-gray-700 dark:text-gray-300 mb-2">Lead Stage</Label>
                 <Select value={leadStageFilter} onValueChange={setLeadStageFilter}>
