@@ -66,9 +66,13 @@ class NuraPulseBackendTester:
             else:
                 raise ValueError(f"Unsupported HTTP method: {method}")
             
+            print(f"DEBUG make_request: {method} {url} -> Status: {response.status_code}")
             return response
         except requests.exceptions.RequestException as e:
             print(f"Request error for {method} {url}: {e}")
+            return None
+        except Exception as e:
+            print(f"Unexpected error for {method} {url}: {e}")
             return None
     
     def test_authentication_flow(self):
