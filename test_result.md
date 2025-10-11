@@ -296,8 +296,8 @@ test_plan:
   current_focus:
     - "Battery Consumption Calculation Fix"
     - "Battery Consumption Widget UI"
-    - "Sidebar Navigation Update"
     - "Payment Reconciliation Implementation"
+    - "Enhanced Features Testing"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
