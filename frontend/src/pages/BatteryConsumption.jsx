@@ -68,6 +68,10 @@ const BatteryConsumption = () => {
       );
 
       if (response.data.success && response.data.data.length > 0) {
+        // Debug: Log raw data structure
+        console.log('Raw data sample:', response.data.data[0]);
+        console.log('Available columns:', Object.keys(response.data.data[0]));
+        
         // Process data for chart
         const processedData = processChartData(response.data.data);
         setChartData(processedData);
