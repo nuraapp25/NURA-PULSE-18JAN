@@ -736,8 +736,8 @@ class NuraPulseBackendTester:
 1,110,210,310,410,510,610,710,810,910,1010,1110,1210,1310,1410,1510,1610,1710,1810,1910,2010
 0,120,220,320,420,520,620,720,820,920,1020,1120,1220,1320,1420,1520,1620,1720,1820,1920,2020"""
         
-        # Import test data with proper filename
-        test_filename = f"TEST_DELETE_VEHICLE - 15 Dec 2024.csv"
+        # Import test data with proper filename (vehicle_id must be alphanumeric only)
+        test_filename = f"TESTDELETEVEHICLE - 15 Dec 2024.csv"
         files = {'file': (test_filename, sample_csv_content, 'text/csv')}
         
         import_response = self.make_request("POST", "/montra-vehicle/import-feed", files=files)
