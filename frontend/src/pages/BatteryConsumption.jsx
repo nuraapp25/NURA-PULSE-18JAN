@@ -171,69 +171,64 @@ const BatteryConsumption = () => {
           <CardTitle className="dark:text-white">Select Parameters</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-3 gap-6">
-            {/* Vehicle Selection */}
-            <div className="space-y-2">
-              <Label className="text-gray-700 dark:text-gray-300">Vehicle No.</Label>
+          <div className="grid grid-cols-1 gap-6">
+            <div>
+              <Label htmlFor="vehicle-select" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Vehicle No.
+              </Label>
               <Select value={selectedVehicle} onValueChange={setSelectedVehicle}>
-                <SelectTrigger className="dark:bg-gray-700 dark:border-gray-600">
-                  <SelectValue placeholder="Select vehicle" />
+                <SelectTrigger id="vehicle-select" className="mt-1.5 dark:bg-gray-700 dark:border-gray-600 text-sm">
+                  <SelectValue placeholder="Select a vehicle" />
                 </SelectTrigger>
-                <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                <SelectContent className="dark:bg-gray-800">
                   {vehicles.map((vehicle) => (
                     <SelectItem key={vehicle.vehicle_id} value={vehicle.vehicle_id}>
-                      {vehicle.registration_number} ({vehicle.vehicle_id})
+                      <span className="block sm:hidden">{vehicle.vehicle_id}</span>
+                      <span className="hidden sm:block">{vehicle.registration_number} ({vehicle.vehicle_id})</span>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-
-            {/* Date Selection */}
-            <div className="space-y-2">
-              <Label className="text-gray-700 dark:text-gray-300">Select Date</Label>
+            
+            <div>
+              <Label htmlFor="date-picker" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Date
+              </Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
+                    id="date-picker"
                     variant="outline"
-                    className="w-full justify-start text-left font-normal dark:bg-gray-700 dark:border-gray-600"
+                    className="w-full justify-start text-left font-normal mt-1.5 dark:bg-gray-700 dark:border-gray-600 text-sm"
+                    size="sm"
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {selectedDate ? format(selectedDate, "PPP") : "Pick a date"}
+                    {selectedDate ? format(selectedDate, "dd MMM yyyy") : <span>Pick a date</span>}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 dark:bg-gray-800 dark:border-gray-700">
+                <PopoverContent className="w-auto p-0 dark:bg-gray-800" align="start">
                   <Calendar
                     mode="single"
                     selected={selectedDate}
                     onSelect={setSelectedDate}
                     initialFocus
+                    className="dark:bg-gray-800"
                   />
                 </PopoverContent>
               </Popover>
             </div>
-
-            {/* View Button */}
-            <div className="space-y-2">
-              <Label className="text-gray-700 dark:text-gray-300">&nbsp;</Label>
-              <Button
-                onClick={handleViewData}
-                disabled={loading || !selectedVehicle || !selectedDate}
-                className="w-full bg-blue-600 hover:bg-blue-700"
-              >
-                {loading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Loading...
-                  </>
-                ) : (
-                  <>
-                    <Eye size={18} className="mr-2" />
-                    View
-                  </>
-                )}
-              </Button>
-            </div>
+          </div>
+          
+          <div className="flex justify-center pt-4">
+            <Button 
+              onClick={handleViewData}
+              disabled={!selectedVehicle || !selectedDate || loading}
+              className="bg-blue-600 hover:bg-blue-700 px-6 sm:px-8 text-sm w-full sm:w-auto"
+              size="sm"
+            >
+              {loading ? "Loading..." : "View Battery Data"}
+            </Button>
           </div>
         </CardContent>
       </Card>
