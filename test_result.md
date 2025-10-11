@@ -282,12 +282,12 @@ metadata:
 
 test_plan:
   current_focus:
-    - "User Authentication (Login/Register)"
-    - "User Management APIs"
-    - "Google Sheets Sync - Users"
-    - "Driver Onboarding - Leads Import"
+    - "Battery Consumption Calculation Fix"
+    - "Battery Consumption Widget UI"
+    - "Sidebar Navigation Update"
+    - "Payment Reconciliation Implementation"
   stuck_tasks: []
-  test_all: true
+  test_all: false
   test_priority: "high_first"
 
 agent_communication:
