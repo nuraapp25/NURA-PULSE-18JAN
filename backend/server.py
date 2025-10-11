@@ -1674,14 +1674,16 @@ async def get_vehicles_list(current_user: User = Depends(get_current_user)):
 async def get_montra_feed_database(current_user: User = Depends(get_current_user)):
     """Get all montra feed entries with file information for database management"""
     try:
-        # Aggregate to get unique files with their data counts
+        # Aggregate to get unique files with their data counts, grouped by month
         pipeline = [
             {
                 "$group": {
                     "_id": {
                         "vehicle_id": "$vehicle_id",
                         "date": "$date",
-                        "filename": "$filename"
+                        "filename": "$filename",
+                        "month": "$month",
+                        "year": "$year"
                     },
                     "count": {"$sum": 1},
                     "first_entry": {"$first": "$$ROOT"}
@@ -1692,6 +1694,9 @@ async def get_montra_feed_database(current_user: User = Depends(get_current_user
                     "vehicle_id": "$_id.vehicle_id",
                     "date": "$_id.date", 
                     "filename": "$_id.filename",
+                    "month": "$_id.month",
+                    "year": "$_id.year",
+                    "month_year": {"$concat": ["$_id.month", " ", {"$toString": "$_id.year"}]},
                     "record_count": "$count",
                     "uploaded_at": "$first_entry.imported_at",
                     "file_size": "$first_entry.file_size"
