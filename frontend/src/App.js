@@ -13,6 +13,7 @@ import DriverOnboarding from "@/pages/DriverOnboardingPage";
 import TelecallerQueue from "@/pages/TelecallerQueue";
 import MontraVehicle from "@/pages/MontraVehicle";
 import Files from "@/pages/Files";
+import BatteryConsumption from "@/pages/BatteryConsumption";
 import ManagePage from "@/pages/ManagePage";
 import SettingsPage from "@/pages/SettingsPage";
 
