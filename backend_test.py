@@ -18,7 +18,6 @@ class NuraPulseBackendTester:
     def __init__(self):
         self.base_url = BASE_URL
         self.token = None
-        self.session = requests.Session()
         self.test_results = []
         
     def log_test(self, test_name, success, message, response_data=None):
