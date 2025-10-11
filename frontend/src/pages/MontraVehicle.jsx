@@ -92,41 +92,78 @@ const MontraVehicle = () => {
   };
 
   const handleImport = async () => {
-    if (!selectedFile) {
-      toast.error("Please select a file to import");
+    if (!selectedFiles || selectedFiles.length === 0) {
+      toast.error("Please select files to import");
       return;
     }
 
     setImporting(true);
+    let successCount = 0;
+    let failedFiles = [];
 
     try {
-      const formData = new FormData();
-      formData.append('file', selectedFile);
-
       const token = localStorage.getItem("token");
-      const response = await axios.post(
-        `${API}/montra-vehicle/import-feed`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data'
-          }
-        }
-      );
+      
+      // Process files one by one to handle individual results
+      for (let i = 0; i < selectedFiles.length; i++) {
+        const file = selectedFiles[i];
+        
+        try {
+          const formData = new FormData();
+          formData.append('file', file);
 
-      toast.success(
-        <div>
-          <p className="font-semibold">Import Successful!</p>
-          <p className="text-sm mt-1">{response.data.message}</p>
-        </div>,
-        { duration: 5000 }
-      );
+          const response = await axios.post(
+            `${API}/montra-vehicle/import-feed`,
+            formData,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'multipart/form-data'
+              }
+            }
+          );
+          
+          successCount++;
+          console.log(`✅ ${file.name}: ${response.data.message}`);
+          
+        } catch (fileError) {
+          failedFiles.push({
+            name: file.name,
+            error: fileError.response?.data?.detail || "Unknown error"
+          });
+          console.error(`❌ ${file.name}: ${fileError.response?.data?.detail}`);
+        }
+      }
+
+      // Show results
+      if (successCount > 0) {
+        toast.success(
+          <div>
+            <p className="font-semibold">Bulk Import Results</p>
+            <p className="text-sm mt-1">Successfully imported {successCount} out of {selectedFiles.length} files</p>
+            {failedFiles.length > 0 && (
+              <p className="text-xs text-red-600 mt-1">
+                Failed: {failedFiles.map(f => f.name).join(', ')}
+              </p>
+            )}
+          </div>,
+          { duration: 7000 }
+        );
+      }
+
+      if (failedFiles.length > 0 && successCount === 0) {
+        toast.error(
+          <div>
+            <p className="font-semibold">Import Failed</p>
+            <p className="text-sm mt-1">All {failedFiles.length} files failed to import</p>
+          </div>
+        );
+      }
 
       setImportDialogOpen(false);
-      setSelectedFile(null);
+      setSelectedFiles([]);
     } catch (error) {
-      toast.error(error.response?.data?.detail || "Failed to import Montra feed");
+      toast.error("Failed to process bulk import");
     } finally {
       setImporting(false);
     }
