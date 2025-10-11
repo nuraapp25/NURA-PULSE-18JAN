@@ -1783,6 +1783,8 @@ async def delete_montra_feed_files(
             "deleted_count": deleted_count
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error deleting montra feed files: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to delete montra feed files")
