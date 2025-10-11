@@ -1600,6 +1600,68 @@ async def bulk_delete_files(file_ids: list, current_user: User = Depends(get_cur
         raise HTTPException(status_code=500, detail="Failed to delete files")
 
 
+@api_router.post("/admin/files/reload-fleet-mapping")
+async def reload_fleet_mapping(current_user: User = Depends(get_current_user)):
+    """Reload vehicle to registration number mapping from Nura Fleet Data.xlsx"""
+    try:
+        # Find the fleet data file
+        fleet_file = await db.admin_files.find_one(
+            {"original_filename": "Nura Fleet Data.xlsx"}, 
+            {"_id": 0}
+        )
+        
+        if not fleet_file:
+            raise HTTPException(
+                status_code=404, 
+                detail="Nura Fleet Data.xlsx not found. Please upload the file first."
+            )
+        
+        file_path = fleet_file["file_path"]
+        
+        if not os.path.exists(file_path):
+            raise HTTPException(status_code=404, detail="Fleet data file not found on disk")
+        
+        # Read Excel file
+        df = pd.read_excel(file_path)
+        
+        logger.info(f"Loading fleet mapping from {fleet_file['original_filename']}")
+        logger.info(f"Columns: {df.columns.tolist()}")
+        
+        # Create mapping from Column A (Vehicle ID) to Column B (Registration Number)
+        vehicle_mapping = {}
+        for idx, row in df.iterrows():
+            vehicle_id = str(row.iloc[0]) if pd.notna(row.iloc[0]) else None
+            reg_number = str(row.iloc[1]) if pd.notna(row.iloc[1]) else None
+            
+            if vehicle_id and reg_number:
+                vehicle_mapping[vehicle_id] = reg_number
+        
+        # Save to database
+        await db.vehicle_mapping.delete_many({})  # Clear old mapping
+        
+        mapping_docs = [
+            {"vehicle_id": vid, "registration_number": reg} 
+            for vid, reg in vehicle_mapping.items()
+        ]
+        
+        if mapping_docs:
+            await db.vehicle_mapping.insert_many(mapping_docs)
+        
+        logger.info(f"Loaded {len(vehicle_mapping)} vehicle mappings")
+        
+        return {
+            "message": f"Successfully loaded {len(vehicle_mapping)} vehicle mappings",
+            "count": len(vehicle_mapping),
+            "sample_mappings": list(vehicle_mapping.items())[:5]
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error reloading fleet mapping: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to reload fleet mapping: {str(e)}")
+
+
 def format_file_size(size_bytes):
     """Format file size in human readable format"""
     if size_bytes < 1024:
