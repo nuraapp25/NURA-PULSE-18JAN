@@ -1735,9 +1735,13 @@ async def delete_montra_feed_files(
     """Delete selected montra feed files from database
     
     Args:
-        file_identifiers: List of dicts with vehicle_id, date, and filename
+        request: Request containing file_identifiers in JSON body
     """
     try:
+        # Parse JSON body
+        body = await request.json()
+        file_identifiers = body if isinstance(body, list) else body.get("file_identifiers", [])
+        
         if not file_identifiers:
             raise HTTPException(status_code=400, detail="No files specified for deletion")
         
