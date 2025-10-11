@@ -336,14 +336,15 @@ const MontraVehicle = () => {
                   onClick={() => navigate(widget.route)}
                   className="group relative overflow-hidden rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-500 transition-all duration-300 hover:shadow-xl"
                 >
-                  <div className="p-6 text-center">
-                    <div className={`${widget.color} w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300`}>
-                      <IconComponent size={32} className="text-white" />
+                  <div className="p-4 sm:p-6 text-center">
+                    <div className={`${widget.color} w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 group-hover:scale-110 transition-transform duration-300`}>
+                      <IconComponent size={24} className="text-white sm:hidden" />
+                      <IconComponent size={32} className="text-white hidden sm:block" />
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-2">
                       {widget.title}
                     </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                       {widget.description}
                     </p>
                   </div>
