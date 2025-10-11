@@ -541,10 +541,10 @@ const DriverOnboardingPage = () => {
   return (
     <div className="space-y-6" data-testid="driver-onboarding-page">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Driver Onboarding</h1>
-          <div className="flex items-center space-x-4 mt-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Driver Onboarding</h1>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 mt-1 gap-1 sm:gap-0">
             <p className="text-gray-600 dark:text-gray-400">Manage driver leads and onboarding</p>
             {lastSyncTime && (
               <p className="text-xs text-gray-500 dark:text-gray-500">
@@ -553,47 +553,57 @@ const DriverOnboardingPage = () => {
             )}
           </div>
         </div>
-        <div className="flex items-center space-x-3">
+        <div className="flex flex-wrap gap-2 sm:gap-3">
           <Button
             onClick={() => setShowDateFilter(!showDateFilter)}
             variant="outline"
-            className="border-gray-300 dark:border-gray-600"
+            className="border-gray-300 dark:border-gray-600 text-sm"
+            size="sm"
           >
-            <Filter size={18} className="mr-2" />
-            Date
+            <Filter size={16} className="mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Date Filter</span>
+            <span className="sm:hidden">Date</span>
           </Button>
           <Button
             onClick={() => setShowStageFilters(!showStageFilters)}
             variant="outline"
-            className="border-purple-600 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20"
+            className="border-purple-600 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 text-sm"
+            size="sm"
           >
-            <Filter size={18} className="mr-2" />
-            Stages
+            <Filter size={16} className="mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Stage Filters</span>
+            <span className="sm:hidden">Stages</span>
           </Button>
           <Button
             onClick={fetchPerformanceData}
             variant="outline"
-            className="border-orange-600 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+            className="border-orange-600 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20 text-sm"
             disabled={loadingPerformance}
+            size="sm"
           >
-            <Users size={18} className="mr-2" />
-            Performance
+            <Users size={16} className="mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Performance</span>
+            <span className="sm:hidden">Perf</span>
           </Button>
           <Button
             onClick={handleSyncToSheets}
             variant="outline"
-            className="border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20"
+            className="border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 text-sm"
+            size="sm"
           >
-            <RefreshCw size={18} className="mr-2" />
-            Sync
+            <RefreshCw size={16} className="mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Sync</span>
+            <span className="sm:hidden">Sync</span>
           </Button>
           <Button
             onClick={() => setImportDialogOpen(true)}
-            className="bg-blue-600 hover:bg-blue-700"
+            className="bg-blue-600 hover:bg-blue-700 text-sm"
             data-testid="import-leads-button"
+            size="sm"
           >
-            <Plus size={18} className="mr-2" />
-            Import Leads
+            <Plus size={16} className="mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Import Leads</span>
+            <span className="sm:hidden">Import</span>
           </Button>
         </div>
       </div>
