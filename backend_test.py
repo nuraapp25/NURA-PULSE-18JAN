@@ -457,16 +457,20 @@ class NuraPulseBackendTester:
                         response.text if response else None)
         
         # Test 2: Authentication requirement for GET endpoint
-        response = self.make_request("GET", "/montra-vehicle/feed-database", use_auth=False)
-        
-        if response and response.status_code in [401, 403]:
-            self.log_test("Montra Feed Database - GET Authentication", True, 
-                        f"Correctly requires authentication ({response.status_code} without token)")
-            success_count += 1
-        else:
-            status = response.status_code if response else "Network error"
+        try:
+            response = self.make_request("GET", "/montra-vehicle/feed-database", use_auth=False)
+            
+            if response and response.status_code in [401, 403]:
+                self.log_test("Montra Feed Database - GET Authentication", True, 
+                            f"Correctly requires authentication ({response.status_code} without token)")
+                success_count += 1
+            else:
+                status = response.status_code if response else "Network error"
+                self.log_test("Montra Feed Database - GET Authentication", False, 
+                            f"Expected 401/403, got {status}")
+        except Exception as e:
             self.log_test("Montra Feed Database - GET Authentication", False, 
-                        f"Expected 401/403, got {status}")
+                        f"Exception during test: {e}")
         
         # Test 3: DELETE /montra-vehicle/feed-database - Test with empty request
         delete_data = []
