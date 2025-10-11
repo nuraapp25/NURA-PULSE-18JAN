@@ -1609,6 +1609,129 @@ const DriverOnboardingPage = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Duplicate Detection Dialog */}
+      <Dialog open={duplicateDialogOpen} onOpenChange={setDuplicateDialogOpen}>
+        <DialogContent className="dark:bg-gray-800 max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="dark:text-white flex items-center space-x-2">
+              <XCircle className="text-orange-600" size={24} />
+              <span>Duplicates Found</span>
+            </DialogTitle>
+            <DialogDescription className="dark:text-gray-400">
+              We found leads with duplicate phone numbers in the system
+            </DialogDescription>
+          </DialogHeader>
+          
+          {duplicateData && (
+            <div className="space-y-4 mt-4">
+              {/* Summary */}
+              <div className="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Total in File</p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                      {duplicateData.total_in_file}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Duplicates</p>
+                    <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                      {duplicateData.duplicate_count}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">New Leads</p>
+                    <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                      {duplicateData.new_leads_count}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Duplicate List */}
+              <div className="max-h-60 overflow-y-auto">
+                <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  Duplicate Leads (showing up to 10):
+                </p>
+                <div className="space-y-2">
+                  {duplicateData.duplicates.map((dup, index) => (
+                    <div 
+                      key={index} 
+                      className="p-3 bg-gray-50 dark:bg-gray-900/30 rounded border border-gray-200 dark:border-gray-700"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white">
+                            {dup.name}
+                          </p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {dup.phone_number}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs text-gray-500 dark:text-gray-500">Already exists as:</p>
+                          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            {dup.existing_name}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="space-y-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <p className="text-sm text-gray-700 dark:text-gray-300 font-medium">
+                  Choose an action:
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <Button
+                    onClick={() => handleDuplicateAction('skip')}
+                    disabled={importing}
+                    variant="outline"
+                    className="border-blue-600 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                  >
+                    {importing ? (
+                      <>
+                        <RefreshCw size={18} className="mr-2 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <XCircle size={18} className="mr-2" />
+                        Skip Duplicates
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    onClick={() => handleDuplicateAction('add_copy')}
+                    disabled={importing}
+                    className="bg-orange-600 hover:bg-orange-700"
+                  >
+                    {importing ? (
+                      <>
+                        <RefreshCw size={18} className="mr-2 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <Plus size={18} className="mr-2" />
+                        Add Copy
+                      </>
+                    )}
+                  </Button>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
+                  <strong>Skip:</strong> Import only {duplicateData.new_leads_count} new lead(s)<br />
+                  <strong>Add Copy:</strong> Import all {duplicateData.total_in_file} lead(s), duplicates will be renamed with "-copy" suffix
+                </p>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
