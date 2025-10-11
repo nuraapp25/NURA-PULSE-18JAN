@@ -262,6 +262,18 @@ frontend:
           agent: "main"
           comment: "✅ ENHANCED: Added 3 new features - (1) Removed 'residing_chennai' field from Format 2 CSV import (2) Click on lead to view details and update status with 8 status options (New, Contacted, Interested, Documents Pending, Scheduled, Onboarded, Rejected, Not Interested) (3) Date filter with calendar view for Start/End date filtering. All features tested and working."
 
+  - task: "Battery Consumption Widget UI"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/BatteryConsumption.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Fixed calculation logic to use Column A values (-1 for charge drop, +1 for charge). Updated summary stats to display: Charge Drop % (count of -1), Charge % (count of +1), Total Distance. Replaced battery consumption difference calculation."
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
