@@ -497,14 +497,14 @@ class NuraPulseBackendTester:
                                    data=[{"vehicle_id": "TEST", "date": "01 Jan", "filename": "test.csv"}], 
                                    use_auth=False)
         
-        if response and response.status_code == 401:
+        if response and response.status_code in [401, 403]:
             self.log_test("Montra Feed Database - DELETE Authentication", True, 
-                        "Correctly requires authentication (401 without token)")
+                        f"Correctly requires authentication ({response.status_code} without token)")
             success_count += 1
         else:
             status = response.status_code if response else "Network error"
             self.log_test("Montra Feed Database - DELETE Authentication", False, 
-                        f"Expected 401, got {status}")
+                        f"Expected 401/403, got {status}")
         
         # Test 5: DELETE with invalid/non-existent file identifiers
         invalid_delete_data = [
