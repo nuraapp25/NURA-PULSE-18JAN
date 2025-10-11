@@ -665,7 +665,7 @@ const MontraVehicle = () => {
                   {getAllFiles().reduce((sum, file) => sum + file.record_count, 0)} total records
                 </p>
               </div>
-            )}</div>
+            )}
 
             <div className="flex justify-end space-x-2 pt-4">
               <Button
