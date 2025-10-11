@@ -174,6 +174,84 @@ const MontraVehicle = () => {
     }
   };
 
+  const fetchFeedDatabase = async () => {
+    setLoadingDatabase(true);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(`${API}/montra-vehicle/feed-database`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.success) {
+        setFeedFiles(response.data.files || []);
+      }
+    } catch (error) {
+      toast.error("Failed to load feed database");
+      console.error("Fetch feed database error:", error);
+    } finally {
+      setLoadingDatabase(false);
+    }
+  };
+
+  const handleOpenDatabase = () => {
+    setDatabaseDialogOpen(true);
+    fetchFeedDatabase();
+  };
+
+  const handleSelectAll = (checked) => {
+    if (checked) {
+      const allIds = feedFiles.map((file, index) => index);
+      setSelectedFileIds(allIds);
+    } else {
+      setSelectedFileIds([]);
+    }
+  };
+
+  const handleSelectFile = (index, checked) => {
+    if (checked) {
+      setSelectedFileIds(prev => [...prev, index]);
+    } else {
+      setSelectedFileIds(prev => prev.filter(id => id !== index));
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedFileIds.length === 0) {
+      toast.error("No files selected for deletion");
+      return;
+    }
+
+    const selectedFiles = selectedFileIds.map(index => feedFiles[index]);
+    
+    setDeleting(true);
+    try {
+      const token = localStorage.getItem("token");
+      const fileIdentifiers = selectedFiles.map(file => ({
+        vehicle_id: file.vehicle_id,
+        date: file.date,
+        filename: file.filename
+      }));
+
+      const response = await axios.delete(`${API}/montra-vehicle/feed-database`, {
+        headers: { Authorization: `Bearer ${token}` },
+        data: { file_identifiers: fileIdentifiers }
+      });
+
+      if (response.data.success) {
+        toast.success(response.data.message);
+        setSelectedFileIds([]);
+        fetchFeedDatabase(); // Refresh the list
+      } else {
+        toast.error(response.data.message || "Failed to delete some files");
+      }
+    } catch (error) {
+      toast.error("Failed to delete selected files");
+      console.error("Delete files error:", error);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <div className="space-y-6" data-testid="montra-vehicle-page">
       <div className="flex items-center justify-between">
