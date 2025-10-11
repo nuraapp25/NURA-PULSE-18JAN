@@ -183,7 +183,18 @@ const MontraVehicle = () => {
       });
       
       if (response.data.success) {
-        setFeedFiles(response.data.files || []);
+        // Group files by month_year for folder structure
+        const files = response.data.files || [];
+        const groupedFiles = files.reduce((acc, file) => {
+          const monthYear = file.month_year || `${file.month || 'Unknown'} ${file.year || '2025'}`;
+          if (!acc[monthYear]) {
+            acc[monthYear] = [];
+          }
+          acc[monthYear].push(file);
+          return acc;
+        }, {});
+        
+        setFeedFiles(groupedFiles);
       }
     } catch (error) {
       toast.error("Failed to load feed database");
