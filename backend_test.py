@@ -795,7 +795,7 @@ class NuraPulseBackendTester:
                                         # Check if the specific test file was removed
                                         test_file_found = False
                                         for file_info in post_data.get("files", []):
-                                            if (file_info.get("vehicle_id") == "TEST_DELETE_VEHICLE" and 
+                                            if (file_info.get("vehicle_id") == "TESTDELETEVEHICLE" and 
                                                 file_info.get("date") == "15 Dec"):
                                                 test_file_found = True
                                                 break
