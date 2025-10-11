@@ -302,10 +302,10 @@ const BatteryConsumption = () => {
             </div>
 
             {/* Summary Stats */}
-            <div className="grid grid-cols-3 gap-6 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-              <div className="text-center p-4 bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-lg border border-red-200 dark:border-red-800">
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Charge Drop %</p>
-                <p className="text-3xl font-bold text-red-600 dark:text-red-400">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+              <div className="text-center p-3 sm:p-4 bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-2">Charge Drop %</p>
+                <p className="text-2xl sm:text-3xl font-bold text-red-600 dark:text-red-400">
                   {(() => {
                     // Sum all negative battery changes (discharge periods)
                     const totalDrop = chartData
@@ -315,9 +315,9 @@ const BatteryConsumption = () => {
                   })()}%
                 </p>
               </div>
-              <div className="text-center p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Charge %</p>
-                <p className="text-3xl font-bold text-green-600 dark:text-green-400">
+              <div className="text-center p-3 sm:p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-2">Charge %</p>
+                <p className="text-2xl sm:text-3xl font-bold text-green-600 dark:text-green-400">
                   {(() => {
                     // Sum all positive battery changes (charging periods)
                     const totalCharge = chartData
@@ -327,9 +327,12 @@ const BatteryConsumption = () => {
                   })()}%
                 </p>
               </div>
-              <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Total Distance Traveled</p>
-                <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+              <div className="text-center p-3 sm:p-4 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-2">
+                  <span className="hidden sm:inline">Total Distance Traveled</span>
+                  <span className="sm:hidden">Distance</span>
+                </p>
+                <p className="text-2xl sm:text-3xl font-bold text-blue-600 dark:text-blue-400">
                   {Math.max(...chartData.map(d => d.distance)).toFixed(2)} km
                 </p>
               </div>
