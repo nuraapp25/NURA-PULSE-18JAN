@@ -250,7 +250,11 @@ const MontraVehicle = () => {
       return;
     }
 
-    const selectedFiles = selectedFileIds.map(index => feedFiles[index]);
+    // Convert selected IDs back to file objects
+    const allFiles = getAllFiles();
+    const selectedFiles = allFiles.filter(file => 
+      selectedFileIds.includes(`${file.vehicle_id}-${file.date}-${file.filename}`)
+    );
     
     setDeleting(true);
     try {
