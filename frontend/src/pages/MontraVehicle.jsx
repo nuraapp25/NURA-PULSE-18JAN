@@ -253,9 +253,9 @@ const MontraVehicle = () => {
       <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
         <DialogContent className="dark:bg-gray-800">
           <DialogHeader>
-            <DialogTitle className="dark:text-white">Import Montra Feed</DialogTitle>
+            <DialogTitle className="dark:text-white">Import Montra Feed (Bulk)</DialogTitle>
             <DialogDescription className="dark:text-gray-400">
-              Upload a CSV or XLSX file with vehicle feed data. The data will be synced to Google Sheets tab "Montra Feed Data".
+              Upload multiple CSV or XLSX files with vehicle feed data. All files will be processed and synced to Google Sheets tab "Montra Feed Data".
             </DialogDescription>
           </DialogHeader>
           
