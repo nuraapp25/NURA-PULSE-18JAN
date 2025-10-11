@@ -654,8 +654,8 @@ class NuraPulseBackendTester:
         battery_analytics_success = self.test_battery_consumption_analytics()
         telecaller_assignments_success = self.test_telecaller_queue_assignments()
         
-        # NEW: Montra Feed Database Management (from current review request)
-        montra_feed_db_success = self.test_montra_feed_database_management()
+        # NEW: Corrected Montra Feed Functionality (from current review request)
+        montra_feed_corrected_success = self.test_montra_feed_corrected_functionality()
         
         # Remaining mini-apps
         mini_apps_success = self.test_mini_apps_endpoints()
