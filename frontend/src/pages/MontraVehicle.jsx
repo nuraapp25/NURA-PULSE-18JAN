@@ -563,57 +563,94 @@ const MontraVehicle = () => {
                 <div className="flex justify-center items-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                 </div>
-              ) : feedFiles.length === 0 ? (
+              ) : Object.keys(feedFiles).length === 0 ? (
                 <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                   No feed files found in database
                 </div>
               ) : (
                 <div className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {feedFiles.map((file, index) => (
-                    <div
-                      key={index}
-                      className={`p-4 hover:bg-gray-50 dark:hover:bg-gray-700 ${
-                        selectedFileIds.includes(index) ? 'bg-blue-50 dark:bg-blue-900/20' : ''
-                      }`}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <input
-                          type="checkbox"
-                          checked={selectedFileIds.includes(index)}
-                          onChange={(e) => handleSelectFile(index, e.target.checked)}
-                          className="rounded"
-                        />
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <h4 className="font-medium text-gray-900 dark:text-white">
-                                {file.filename}
-                              </h4>
-                              <div className="flex items-center space-x-4 mt-1">
-                                <span className="text-sm text-gray-600 dark:text-gray-400">
-                                  Vehicle: {file.vehicle_id}
-                                </span>
-                                <span className="text-sm text-gray-600 dark:text-gray-400">
-                                  Date: {file.date}
-                                </span>
-                                <span className="text-sm text-gray-600 dark:text-gray-400">
-                                  Records: {file.record_count}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <div className="text-sm text-gray-500 dark:text-gray-400">
-                                {file.uploaded_at ? new Date(file.uploaded_at).toLocaleDateString() : 'N/A'}
-                              </div>
-                              {file.file_size && (
-                                <div className="text-xs text-gray-400">
-                                  {(file.file_size / 1024).toFixed(2)} KB
-                                </div>
-                              )}
-                            </div>
-                          </div>
+                  {Object.entries(feedFiles).map(([monthYear, files]) => (
+                    <div key={monthYear}>
+                      {/* Folder Header */}
+                      <div 
+                        className="p-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 cursor-pointer flex items-center justify-between"
+                        onClick={() => toggleFolder(monthYear)}
+                      >
+                        <div className="flex items-center space-x-2">
+                          {expandedFolders[monthYear] ? (
+                            <ChevronDown size={16} className="text-gray-600 dark:text-gray-400" />
+                          ) : (
+                            <ChevronRight size={16} className="text-gray-600 dark:text-gray-400" />
+                          )}
+                          {expandedFolders[monthYear] ? (
+                            <FolderOpen size={18} className="text-blue-600 dark:text-blue-400" />
+                          ) : (
+                            <Folder size={18} className="text-blue-600 dark:text-blue-400" />
+                          )}
+                          <span className="font-medium text-gray-900 dark:text-white">
+                            {monthYear}
+                          </span>
                         </div>
+                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                          {files.length} file{files.length !== 1 ? 's' : ''}
+                        </span>
                       </div>
+                      
+                      {/* Files in Folder */}
+                      {expandedFolders[monthYear] && (
+                        <div className="divide-y divide-gray-100 dark:divide-gray-600">
+                          {files.map((file, index) => {
+                            const fileId = `${file.vehicle_id}-${file.date}-${file.filename}`;
+                            return (
+                              <div
+                                key={`${monthYear}-${index}`}
+                                className={`p-4 pl-12 hover:bg-gray-50 dark:hover:bg-gray-700 ${
+                                  selectedFileIds.includes(fileId) ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+                                }`}
+                              >
+                                <div className="flex items-center space-x-3">
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedFileIds.includes(fileId)}
+                                    onChange={(e) => handleSelectFile(file, e.target.checked)}
+                                    className="rounded"
+                                  />
+                                  <div className="flex-1">
+                                    <div className="flex items-center justify-between">
+                                      <div>
+                                        <h4 className="font-medium text-gray-900 dark:text-white">
+                                          {file.filename}
+                                        </h4>
+                                        <div className="flex items-center space-x-4 mt-1">
+                                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                                            Vehicle: {file.vehicle_id}
+                                          </span>
+                                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                                            Date: {file.date}
+                                          </span>
+                                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                                            Records: {file.record_count}
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <div className="text-right">
+                                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                                          {file.uploaded_at ? new Date(file.uploaded_at).toLocaleDateString() : 'N/A'}
+                                        </div>
+                                        {file.file_size && (
+                                          <div className="text-xs text-gray-400">
+                                            {(file.file_size / 1024).toFixed(2)} KB
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
