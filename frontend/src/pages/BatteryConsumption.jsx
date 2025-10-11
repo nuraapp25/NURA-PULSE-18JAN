@@ -84,6 +84,14 @@ const BatteryConsumption = () => {
   };
 
   const processChartData = (rawData) => {
+    // First pass: get all odometer values
+    const odometerValues = rawData.map(row => 
+      parseFloat(row['Odometer (km)'] || 0)
+    ).filter(val => val > 0);
+    
+    // Find starting odometer value (minimum)
+    const startingOdometer = Math.min(...odometerValues);
+    
     return rawData.map((row, index) => {
       // Extract hour from Portal Received Time (Column C)
       const timeStr = row['Portal Received Time'] || "";
@@ -104,10 +112,14 @@ const BatteryConsumption = () => {
         }
       }
 
+      const absoluteDistance = parseFloat(row['Odometer (km)'] || 0);
+      // Normalize distance - subtract starting odometer to get relative distance
+      const normalizedDistance = absoluteDistance - startingOdometer;
+
       return {
         time: hour,
         battery: parseFloat(row['Battery Soc(%)'] || row['Battery SOC (%)'] || 0),
-        distance: parseFloat(row['Odometer (km)'] || 0),
+        distance: normalizedDistance,
         rawIndex: index
       };
     });
