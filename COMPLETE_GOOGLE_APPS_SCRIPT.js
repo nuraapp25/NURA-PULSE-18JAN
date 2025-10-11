@@ -523,6 +523,56 @@ function handleTelecallerQueueTab(action, data) {
  */
 function handleMontraVehicleTab(action, data) {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  
+  // Handle Montra Feed Data import
+  if (action === 'import_montra_feed') {
+    let feedSheet = ss.getSheetByName('Montra Feed Data');
+    
+    // Create sheet if it doesn't exist
+    if (!feedSheet) {
+      feedSheet = ss.insertSheet('Montra Feed Data');
+      Logger.log('Created new sheet: Montra Feed Data');
+    }
+    
+    // Set up headers in row 1 (columns D to AB)
+    // Headers from CSV (columns A-U) go to D-X
+    // Additional: Y=Vehicle ID, Z=Separator, AA=Day, AB=Month
+    const headers = data.headers || [];
+    const startCol = 4; // Column D
+    
+    if (feedSheet.getLastRow() === 0) {
+      // First time setup - add headers
+      const headerRow = new Array(startCol - 1).fill(''); // Empty A, B, C
+      headerRow.push(...headers);
+      feedSheet.getRange(1, 1, 1, headerRow.length).setValues([headerRow]);
+      feedSheet.getRange(1, startCol, 1, headers.length).setFontWeight('bold');
+      Logger.log('Set up headers in row 1');
+    }
+    
+    // Import data starting from row 2, column D
+    const feedData = data.data || [];
+    
+    if (feedData.length > 0) {
+      const startRow = feedSheet.getLastRow() + 1; // Append after existing data
+      
+      // Prepare rows with empty columns A, B, C
+      const rowsToInsert = feedData.map(row => {
+        const emptyColumns = new Array(startCol - 1).fill('');
+        return [...emptyColumns, ...row];
+      });
+      
+      feedSheet.getRange(startRow, 1, rowsToInsert.length, rowsToInsert[0].length)
+        .setValues(rowsToInsert);
+      
+      Logger.log('Imported ' + feedData.length + ' rows to Montra Feed Data starting at row ' + startRow);
+      
+      return createResponse(true, 'Imported ' + feedData.length + ' rows to Montra Feed Data (Vehicle: ' + data.vehicle_id + ', Date: ' + data.day + ' ' + data.month + ')');
+    }
+    
+    return createResponse(false, 'No data to import');
+  }
+  
+  // Handle regular Montra Vehicle Insights tab
   let sheet = ss.getSheetByName('Montra Vehicle Insights');
   
   if (!sheet) {
