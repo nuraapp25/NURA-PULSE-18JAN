@@ -362,11 +362,7 @@ const BatteryConsumption = () => {
               <div className="text-center p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg border border-green-200 dark:border-green-800">
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Charge %</p>
                 <p className="text-3xl font-bold text-green-600 dark:text-green-400">
-                  {(() => {
-                    const chargeCount = chartData.filter(d => d.chargeStatus === 1).length;
-                    console.log('Charge Count:', chargeCount);
-                    return chargeCount;
-                  })()}%
+                  {chartData.filter(d => d.chargeStatus === 1).length}%
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
                   Count of +1 values in Column A
