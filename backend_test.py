@@ -667,42 +667,32 @@ class NuraPulseBackendTester:
         # Step 2: Test DELETE with empty request body (should return 400)
         print("\n--- Step 2: Testing DELETE with empty request body ---")
         empty_data = []
-        print(f"DEBUG: Making DELETE request with empty data: {empty_data}")
         response = self.make_request("DELETE", "/montra-vehicle/feed-database", data=empty_data)
-        print(f"DEBUG: Response object: {response}")
-        print(f"DEBUG: Response type: {type(response)}")
+        
         if response:
             try:
-                status = response.status_code
-                print(f"DEBUG: Response status immediately: {status}")
-                text = response.text
-                print(f"DEBUG: Response text: {text}")
-                status2 = response.status_code
-                print(f"DEBUG: Response status again: {status2}")
-            except Exception as e:
-                print(f"DEBUG: Error accessing response attributes: {e}")
-        
-        print(f"DEBUG: Checking condition - response: {response is not None}, status: {response.status_code if response else 'None'}")
-        if response and response.status_code == 400:
-            print("DEBUG: Condition matched - processing 400 response")
-            try:
-                error_data = response.json()
-                print(f"DEBUG: Error data: {error_data}")
-                if "detail" in error_data and "No files specified" in error_data["detail"]:
-                    self.log_test("DELETE Test - Empty Request Validation", True, 
-                                "Correctly rejects empty delete request (400): No files specified")
-                    success_count += 1
+                status_code = response.status_code
+                if status_code == 400:
+                    try:
+                        error_data = response.json()
+                        if "detail" in error_data and "No files specified" in error_data["detail"]:
+                            self.log_test("DELETE Test - Empty Request Validation", True, 
+                                        "Correctly rejects empty delete request (400): No files specified")
+                            success_count += 1
+                        else:
+                            self.log_test("DELETE Test - Empty Request Validation", False, 
+                                        f"Unexpected error message: {error_data}")
+                    except json.JSONDecodeError:
+                        self.log_test("DELETE Test - Empty Request Validation", False, 
+                                    "Invalid JSON error response", response.text)
                 else:
                     self.log_test("DELETE Test - Empty Request Validation", False, 
-                                f"Unexpected error message: {error_data}")
-            except json.JSONDecodeError:
+                                f"Expected 400, got {status_code}")
+            except Exception as e:
                 self.log_test("DELETE Test - Empty Request Validation", False, 
-                            "Invalid JSON error response", response.text)
+                            f"Error processing response: {e}")
         else:
-            print("DEBUG: Condition NOT matched - going to else clause")
-            status = response.status_code if response else "Network error"
-            self.log_test("DELETE Test - Empty Request Validation", False, 
-                        f"Expected 400, got {status}")
+            self.log_test("DELETE Test - Empty Request Validation", False, "Network error")
         
         # Step 3: Test DELETE with invalid/non-existent file identifiers
         print("\n--- Step 3: Testing DELETE with invalid file identifiers ---")
