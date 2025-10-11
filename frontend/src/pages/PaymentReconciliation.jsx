@@ -140,31 +140,34 @@ const PaymentReconciliation = () => {
   return (
     <div className="space-y-6" data-testid="payment-reconciliation-page">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center">
-            <DollarSign className="mr-3 text-green-600" size={32} />
-            Payment Reconciliation
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white flex items-center">
+            <DollarSign className="mr-2 sm:mr-3 text-green-600" size={28} />
+            <span className="hidden sm:inline">Payment Reconciliation</span>
+            <span className="sm:hidden">Payments</span>
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
             Manage and reconcile payment transactions
           </p>
         </div>
-        <div className="flex space-x-3">
+        <div className="flex flex-wrap gap-2 sm:gap-3">
           <Button 
             onClick={handleSyncToSheets}
             disabled={syncing}
             variant="outline"
-            className="flex items-center"
+            className="flex items-center text-sm"
+            size="sm"
           >
-            <RefreshCw size={18} className={`mr-2 ${syncing ? 'animate-spin' : ''}`} />
-            {syncing ? "Syncing..." : "Sync to Sheets"}
+            <RefreshCw size={16} className={`mr-1 sm:mr-2 ${syncing ? 'animate-spin' : ''}`} />
+            {syncing ? "Syncing..." : "Sync"}
           </Button>
           <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
             <DialogTrigger asChild>
-              <Button className="bg-blue-600 hover:bg-blue-700">
-                <Plus size={18} className="mr-2" />
-                Add Payment
+              <Button className="bg-blue-600 hover:bg-blue-700 text-sm" size="sm">
+                <Plus size={16} className="mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Add Payment</span>
+                <span className="sm:hidden">Add</span>
               </Button>
             </DialogTrigger>
             <DialogContent className="dark:bg-gray-800">
