@@ -294,72 +294,71 @@ class NuraPulseBackendTester:
         
         success_count = 0
         
-        # Test with sample vehicle IDs and dates
+        # Test cases with expected outcomes
         test_cases = [
-            {"vehicle_id": "P60G2512500002032", "date": "01 Sep"},
-            {"vehicle_id": "TEST_VEHICLE_001", "date": "15 Aug"},
-            {"vehicle_id": "P60G2512500002032", "date": "02 Sep"}
+            {"vehicle_id": "P60G2512500002032", "date": "01 Sep", "expect_data": True},
+            {"vehicle_id": "TEST_VEHICLE_001", "date": "15 Aug", "expect_data": False},
+            {"vehicle_id": "P60G2512500002032", "date": "02 Sep", "expect_data": False}
         ]
         
-        for i, test_case in enumerate(test_cases, 1):
-            vehicle_id = test_case["vehicle_id"]
-            date = test_case["date"]
+        for i, case in enumerate(test_cases, 1):
+            vehicle_id = case["vehicle_id"]
+            date = case["date"]
+            url = f"{self.base_url}/montra-vehicle/analytics/battery-data?vehicle_id={vehicle_id}&date={date}"
             
-            # Test GET /montra-vehicle/analytics/battery-data
-            response = self.make_request("GET", f"/montra-vehicle/analytics/battery-data?vehicle_id={vehicle_id}&date={date}")
-            
-            if response:
-                if response.status_code == 200:
-                    try:
-                        result = response.json()
-                        if result.get("success") and "data" in result:
-                            # Check if Column A data is present
-                            data_rows = result["data"]
-                            has_column_a = any("A" in str(row) for row in data_rows) if data_rows else False
-                            
-                            self.log_test(f"Battery Analytics - Test Case {i}", True, 
-                                        f"Vehicle {vehicle_id} on {date}: Retrieved {len(data_rows)} rows, Column A data: {'Yes' if has_column_a else 'No'}")
-                            success_count += 1
-                        else:
+            try:
+                headers = {"Authorization": f"Bearer {self.token}"} if self.token else {}
+                response = requests.get(url, headers=headers, timeout=10)
+                
+                if case["expect_data"]:
+                    if response.status_code == 200:
+                        try:
+                            data = response.json()
+                            if data.get("success") and "data" in data:
+                                data_rows = data["data"]
+                                has_column_a = any("A" in str(row) for row in data_rows) if data_rows else False
+                                self.log_test(f"Battery Analytics - Test Case {i}", True, 
+                                            f"Vehicle {vehicle_id} on {date}: Retrieved {len(data_rows)} rows, Column A data: {'Yes' if has_column_a else 'No'}")
+                                success_count += 1
+                            else:
+                                self.log_test(f"Battery Analytics - Test Case {i}", False, 
+                                            f"Invalid response structure for {vehicle_id}")
+                        except json.JSONDecodeError:
                             self.log_test(f"Battery Analytics - Test Case {i}", False, 
-                                        f"Invalid response structure for {vehicle_id}", result)
-                    except json.JSONDecodeError:
+                                        f"Invalid JSON response for {vehicle_id}")
+                    else:
                         self.log_test(f"Battery Analytics - Test Case {i}", False, 
-                                    f"Invalid JSON response for {vehicle_id}", response.text)
-                elif response.status_code == 404:
-                    # 404 is expected if no data exists for this vehicle/date combination
-                    try:
-                        error_detail = response.json()
-                        self.log_test(f"Battery Analytics - Test Case {i}", True, 
-                                    f"Vehicle {vehicle_id} on {date}: No data found (404) - API working correctly")
-                        success_count += 1
-                    except json.JSONDecodeError:
-                        self.log_test(f"Battery Analytics - Test Case {i}", True, 
-                                    f"Vehicle {vehicle_id} on {date}: No data found (404) - API working correctly")
-                        success_count += 1
+                                    f"Expected 200, got {response.status_code} for {vehicle_id}")
                 else:
-                    self.log_test(f"Battery Analytics - Test Case {i}", False, 
-                                f"Unexpected status {response.status_code} for {vehicle_id}", response.text)
-            else:
+                    if response.status_code == 404:
+                        self.log_test(f"Battery Analytics - Test Case {i}", True, 
+                                    f"Vehicle {vehicle_id} on {date}: Correctly returned 404 (no data)")
+                        success_count += 1
+                    else:
+                        self.log_test(f"Battery Analytics - Test Case {i}", False, 
+                                    f"Expected 404, got {response.status_code} for {vehicle_id}")
+                        
+            except Exception as e:
                 self.log_test(f"Battery Analytics - Test Case {i}", False, 
-                            f"Network error for {vehicle_id}")
+                            f"Exception for {vehicle_id}: {e}")
         
-        # Test with missing parameters (should fail gracefully)
-        response = self.make_request("GET", "/montra-vehicle/analytics/battery-data")
-        
-        if response:
-            if response.status_code == 422:  # FastAPI validation error
+        # Test parameter validation
+        try:
+            headers = {"Authorization": f"Bearer {self.token}"} if self.token else {}
+            response = requests.get(f"{self.base_url}/montra-vehicle/analytics/battery-data", 
+                                  headers=headers, timeout=10)
+            if response.status_code == 422:
                 self.log_test("Battery Analytics - Parameter Validation", True, 
-                            "Correctly rejected request with missing parameters (422)")
+                            "Correctly rejected missing parameters (422)")
                 success_count += 1
             else:
                 self.log_test("Battery Analytics - Parameter Validation", False, 
-                            f"Expected 422 validation error, got status {response.status_code}")
-        else:
+                            f"Expected 422, got {response.status_code}")
+        except Exception as e:
             self.log_test("Battery Analytics - Parameter Validation", False, 
-                        "Network error during parameter validation test")
+                        f"Exception during parameter validation: {e}")
         
-        return success_count >= 2  # At least 2 tests should pass
+        return success_count >= 3  # At least 3 tests should pass
     
     def test_telecaller_queue_assignments(self):
         """Test 7: Telecaller Queue Assignment Endpoints"""
