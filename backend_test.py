@@ -553,7 +553,7 @@ class NuraPulseBackendTester:
     
     def run_all_tests(self):
         """Run all backend tests"""
-        print("🚀 Starting Nura Pulse Backend Testing - Focus on Battery Consumption & Payment Reconciliation")
+        print("🚀 Starting Nura Pulse Backend Testing - Focus on Montra Feed Database Management")
         print(f"Backend URL: {self.base_url}")
         print(f"Master Admin: {MASTER_ADMIN_EMAIL}")
         
