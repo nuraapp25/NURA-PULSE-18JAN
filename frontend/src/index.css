@@ -84,3 +84,41 @@ code {
     @apply bg-background text-foreground;
     }
 }
+
+@layer utilities {
+  /* Mobile-responsive table utilities */
+  .mobile-table {
+    @apply overflow-x-auto;
+  }
+  
+  .mobile-table table {
+    @apply min-w-full;
+  }
+  
+  /* Touch-friendly buttons */
+  .touch-button {
+    @apply min-h-[44px] min-w-[44px] touch-manipulation;
+  }
+  
+  /* Mobile-optimized dialogs */
+  .mobile-dialog {
+    @apply mx-4 w-auto max-w-full;
+  }
+  
+  @screen sm {
+    .mobile-dialog {
+      @apply mx-auto w-full max-w-md;
+    }
+  }
+  
+  /* Responsive text truncation */
+  .mobile-truncate {
+    @apply truncate;
+  }
+  
+  @screen sm {
+    .mobile-truncate {
+      @apply text-clip overflow-visible;
+    }
+  }
+}
