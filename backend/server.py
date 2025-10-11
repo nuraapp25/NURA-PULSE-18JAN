@@ -1165,29 +1165,40 @@ async def get_performance_tracking(current_user: User = Depends(get_current_user
 # Telecaller Queue Manager - Lead Assignment
 @api_router.get("/telecaller-queue/daily-assignments")
 async def get_daily_assignments(current_user: User = Depends(get_current_user)):
-    """Get daily lead assignments for telecallers"""
-    # Status priority for calling
-    # High Priority: New, Interested, Scheduled
-    # Medium Priority: Contacted, Documents Pending
-    # Low Priority: Not Interested
-    # Excluded: Onboarded, Rejected
+    """Get daily lead assignments for telecallers - 20 NEW leads each (40 total)"""
+    # Priority: Assign only NEW leads (status = "New")
+    # Sorted by import date (oldest first)
     
-    # Get top 20 leads based on priority
-    high_priority = await db.driver_leads.find({
-        "status": {"$in": ["New", "Interested", "Scheduled"]}
-    }, {"_id": 0}).sort("import_date", 1).to_list(15)
+    logger.info("Fetching daily assignments for telecallers")
     
-    medium_priority = await db.driver_leads.find({
-        "status": {"$in": ["Contacted", "Documents Pending"]}
-    }, {"_id": 0}).sort("import_date", 1).to_list(10)
+    # Get 40 NEW leads (20 for each telecaller)
+    new_leads = await db.driver_leads.find({
+        "status": "New",
+        "lead_stage": "New"
+    }, {"_id": 0}).sort("import_date", 1).to_list(40)
     
-    # Combine and limit to 20
-    all_leads = high_priority + medium_priority
-    selected_leads = all_leads[:20]
+    logger.info(f"Found {len(new_leads)} NEW leads for assignment")
     
-    # Split between 2 telecallers (10 each)
-    telecaller1_leads = selected_leads[0:10]
-    telecaller2_leads = selected_leads[10:20]
+    # If we have fewer than 40 NEW leads, try to get more from other stages
+    if len(new_leads) < 40:
+        additional_needed = 40 - len(new_leads)
+        logger.info(f"Need {additional_needed} more leads, fetching from other statuses")
+        
+        # Get leads from other statuses (but not Onboarded or Rejected)
+        additional_leads = await db.driver_leads.find({
+            "status": {"$nin": ["New", "Onboarded", "Rejected"]},
+            "lead_stage": {"$ne": "In Progress"}
+        }, {"_id": 0}).sort("import_date", 1).to_list(additional_needed)
+        
+        new_leads.extend(additional_leads)
+        logger.info(f"Total leads after adding from other statuses: {len(new_leads)}")
+    
+    # Split leads equally between 2 telecallers (20 each)
+    telecaller1_leads = new_leads[0:20]
+    telecaller2_leads = new_leads[20:40]
+    
+    logger.info(f"Assigned {len(telecaller1_leads)} leads to Telecaller 1")
+    logger.info(f"Assigned {len(telecaller2_leads)} leads to Telecaller 2")
     
     return {
         "telecaller1": {
@@ -1200,7 +1211,7 @@ async def get_daily_assignments(current_user: User = Depends(get_current_user)):
             "leads": telecaller2_leads,
             "count": len(telecaller2_leads)
         },
-        "total_assigned": len(selected_leads),
+        "total_assigned": len(telecaller1_leads) + len(telecaller2_leads),
         "assignment_date": datetime.now(timezone.utc).isoformat()
     }
 
