@@ -714,20 +714,36 @@ class NuraPulseBackendTester:
             self.log_test("DELETE Test - Invalid File Identifiers", False, 
                         f"Expected 200, got {status}")
         
-        # Step 4: Test DELETE with valid file identifiers (if we have existing files)
+        # Step 4: Test DELETE with valid file identifiers 
         print("\n--- Step 4: Testing DELETE with valid file identifiers ---")
-        if existing_files:
-            # Debug: Print structure of existing files
-            print(f"DEBUG: First file structure: {existing_files[0] if existing_files else 'None'}")
-            
-            # Use real file identifiers from existing data
-            valid_data = []
-            for file_info in existing_files:
-                valid_data.append({
-                    "vehicle_id": file_info.get("vehicle_id", ""),
-                    "date": file_info.get("date", ""), 
-                    "filename": file_info.get("filename", file_info.get("file_name", ""))
-                })
+        
+        # Since existing data may not have filename field, let's create test data first
+        print("Creating test data with filename field for proper DELETE testing...")
+        
+        # Create sample CSV content for testing
+        sample_csv_content = """A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U
+-1,100,200,300,400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000
+1,110,210,310,410,510,610,710,810,910,1010,1110,1210,1310,1410,1510,1610,1710,1810,1910,2010
+0,120,220,320,420,520,620,720,820,920,1020,1120,1220,1320,1420,1520,1620,1720,1820,1920,2020"""
+        
+        # Import test data with proper filename
+        test_filename = f"TEST_DELETE_VEHICLE - 15 Dec 2024.csv"
+        files = {'file': (test_filename, sample_csv_content, 'text/csv')}
+        
+        import_response = self.make_request("POST", "/montra-vehicle/import-feed", files=files)
+        
+        if import_response and import_response.status_code == 200:
+            try:
+                import_result = import_response.json()
+                self.log_test("DELETE Test - Create Test Data", True, 
+                            f"Created test data: {import_result.get('rows', 0)} rows imported")
+                
+                # Now test deletion with the imported data
+                valid_data = [{
+                    "vehicle_id": "TEST_DELETE_VEHICLE",
+                    "date": "15 Dec",
+                    "filename": test_filename
+                }]
             
             # Get count before deletion
             pre_delete_response = self.make_request("GET", "/montra-vehicle/feed-database")
