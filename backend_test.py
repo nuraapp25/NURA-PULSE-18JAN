@@ -48,23 +48,24 @@ class NuraPulseBackendTester:
         
         try:
             if method.upper() == "GET":
-                response = self.session.get(url, headers=headers)
+                response = self.session.get(url, headers=headers, timeout=30)
             elif method.upper() == "POST":
                 if files:
                     # Remove Content-Type for file uploads
                     headers.pop("Content-Type", None)
-                    response = self.session.post(url, headers=headers, files=files)
+                    response = self.session.post(url, headers=headers, files=files, timeout=30)
                 else:
-                    response = self.session.post(url, headers=headers, json=data)
+                    response = self.session.post(url, headers=headers, json=data, timeout=30)
             elif method.upper() == "PUT":
-                response = self.session.put(url, headers=headers, json=data)
+                response = self.session.put(url, headers=headers, json=data, timeout=30)
             elif method.upper() == "DELETE":
-                response = self.session.delete(url, headers=headers)
+                response = self.session.delete(url, headers=headers, timeout=30)
             else:
                 raise ValueError(f"Unsupported HTTP method: {method}")
             
             return response
         except requests.exceptions.RequestException as e:
+            print(f"Request error for {method} {url}: {e}")
             return None
     
     def test_authentication_flow(self):
