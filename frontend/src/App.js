@@ -12,6 +12,7 @@ import PaymentReconciliation from "@/pages/PaymentReconciliation";
 import DriverOnboarding from "@/pages/DriverOnboardingPage";
 import TelecallerQueue from "@/pages/TelecallerQueue";
 import MontraVehicle from "@/pages/MontraVehicle";
+import Files from "@/pages/Files";
 import ManagePage from "@/pages/ManagePage";
 import SettingsPage from "@/pages/SettingsPage";
 
