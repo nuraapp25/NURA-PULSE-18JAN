@@ -343,7 +343,7 @@ const MontraVehicle = () => {
               <Button
                 onClick={() => {
                   setImportDialogOpen(false);
-                  setSelectedFile(null);
+                  setSelectedFiles([]);
                 }}
                 variant="outline"
                 className="flex-1 dark:border-gray-600"
@@ -353,18 +353,18 @@ const MontraVehicle = () => {
               </Button>
               <Button
                 onClick={handleImport}
-                disabled={!selectedFile || importing}
+                disabled={selectedFiles.length === 0 || importing}
                 className="flex-1 bg-purple-600 hover:bg-purple-700"
               >
                 {importing ? (
                   <>
                     <Upload size={18} className="mr-2 animate-pulse" />
-                    Importing...
+                    Importing {selectedFiles.length} file(s)...
                   </>
                 ) : (
                   <>
                     <Upload size={18} className="mr-2" />
-                    Import Feed
+                    Import {selectedFiles.length > 0 ? `${selectedFiles.length} ` : ''}Feed{selectedFiles.length > 1 ? 's' : ''}
                   </>
                 )}
               </Button>
