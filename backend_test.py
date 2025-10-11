@@ -672,9 +672,15 @@ class NuraPulseBackendTester:
         print(f"DEBUG: Response object: {response}")
         print(f"DEBUG: Response type: {type(response)}")
         if response:
-            print(f"DEBUG: Response status immediately: {response.status_code}")
-            print(f"DEBUG: Response text: {response.text}")
-            print(f"DEBUG: Response status again: {response.status_code}")
+            try:
+                status = response.status_code
+                print(f"DEBUG: Response status immediately: {status}")
+                text = response.text
+                print(f"DEBUG: Response text: {text}")
+                status2 = response.status_code
+                print(f"DEBUG: Response status again: {status2}")
+            except Exception as e:
+                print(f"DEBUG: Error accessing response attributes: {e}")
         
         print(f"DEBUG: Checking condition - response: {response is not None}, status: {response.status_code if response else 'None'}")
         if response and response.status_code == 400:
