@@ -135,22 +135,66 @@ const MontraVehicle = () => {
         </Button>
       </div>
 
+      {/* Analytics Widgets */}
       <Card className="dark:bg-gray-800 dark:border-gray-700">
         <CardHeader>
           <CardTitle className="flex items-center text-gray-900 dark:text-white">
             <BarChart3 size={20} className="mr-2" />
-            Vehicle Feed Data
+            Analytics Widgets
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-12">
-            <FileUp size={48} className="mx-auto text-gray-400 dark:text-gray-500 mb-4" />
+          <div className="grid grid-cols-3 gap-6">
+            {widgets.map((widget) => {
+              const IconComponent = widget.icon;
+              return (
+                <button
+                  key={widget.id}
+                  onClick={() => navigate(widget.route)}
+                  className="group relative overflow-hidden rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-500 transition-all duration-300 hover:shadow-xl"
+                >
+                  <div className="p-6 text-center">
+                    <div className={`${widget.color} w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300`}>
+                      <IconComponent size={32} className="text-white" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                      {widget.title}
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {widget.description}
+                    </p>
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                </button>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Feed Import Section */}
+      <Card className="dark:bg-gray-800 dark:border-gray-700">
+        <CardHeader>
+          <CardTitle className="flex items-center text-gray-900 dark:text-white">
+            <FileUp size={20} className="mr-2" />
+            Import Vehicle Feed Data
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
             <p className="text-gray-600 dark:text-gray-400 mb-4">
               Import Montra vehicle feed data to sync with Google Sheets
             </p>
-            <p className="text-sm text-gray-500 dark:text-gray-500">
+            <p className="text-sm text-gray-500 dark:text-gray-500 mb-6">
               Supported formats: CSV, XLSX
             </p>
+            <Button
+              onClick={() => setImportDialogOpen(true)}
+              className="bg-purple-600 hover:bg-purple-700"
+            >
+              <Upload size={18} className="mr-2" />
+              Import Feed
+            </Button>
           </div>
         </CardContent>
       </Card>
