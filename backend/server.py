@@ -1708,7 +1708,7 @@ async def get_montra_feed_database(current_user: User = Depends(get_current_user
                     "year": "$_id.year",
                     "month_year": {
                         "$cond": {
-                            "if": {"$ne": ["$_id.year", null]},
+                            "if": {"$ne": ["$_id.year", None]},
                             "then": {"$concat": ["$_id.month", " ", {"$toString": "$_id.year"}]},
                             "else": "$_id.month"
                         }
