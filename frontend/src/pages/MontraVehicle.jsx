@@ -11,7 +11,7 @@ import { useNavigate } from "react-router-dom";
 const MontraVehicle = () => {
   const navigate = useNavigate();
   const [importDialogOpen, setImportDialogOpen] = useState(false);
-  const [selectedFile, setSelectedFile] = useState(null);
+  const [selectedFiles, setSelectedFiles] = useState([]);
   const [importing, setImporting] = useState(false);
 
   const widgets = [
