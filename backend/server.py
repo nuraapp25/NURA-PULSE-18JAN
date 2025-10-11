@@ -1729,7 +1729,7 @@ async def get_montra_feed_database(current_user: User = Depends(get_current_user
 
 @api_router.delete("/montra-vehicle/feed-database")
 async def delete_montra_feed_files(
-    file_identifiers: List[dict],
+    request: Request,
     current_user: User = Depends(get_current_user)
 ):
     """Delete selected montra feed files from database
