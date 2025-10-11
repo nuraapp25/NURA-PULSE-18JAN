@@ -793,17 +793,88 @@ async def import_leads(
         else:
             raise HTTPException(status_code=400, detail=f"Unsupported format. Expected 4 or 8 columns, got {len(df.columns)}")
         
-        # Save to database
+        # Check for duplicates by phone number
         if leads:
-            await db.driver_leads.insert_many(leads)
-            logger.info(f"Imported {len(leads)} leads to database")
+            phone_numbers = [lead['phone_number'] for lead in leads if lead['phone_number']]
             
-            # Sync to Google Sheets
-            sync_all_records('leads', leads)
+            # Find existing leads with matching phone numbers
+            existing_leads = await db.driver_leads.find(
+                {"phone_number": {"$in": phone_numbers}},
+                {"_id": 0, "phone_number": 1, "name": 1, "id": 1}
+            ).to_list(10000)
+            
+            existing_phones = {lead['phone_number']: lead for lead in existing_leads}
+            
+            # Identify duplicates
+            duplicates = []
+            non_duplicates = []
+            
+            for lead in leads:
+                if lead['phone_number'] in existing_phones:
+                    duplicates.append({
+                        "name": lead['name'],
+                        "phone_number": lead['phone_number'],
+                        "existing_name": existing_phones[lead['phone_number']]['name']
+                    })
+                else:
+                    non_duplicates.append(lead)
+            
+            # If duplicates found and no action specified, ask user
+            if duplicates and not duplicate_action:
+                return {
+                    "duplicates_found": True,
+                    "duplicate_count": len(duplicates),
+                    "new_leads_count": len(non_duplicates),
+                    "total_in_file": len(leads),
+                    "duplicates": duplicates[:10],  # Show first 10 duplicates
+                    "message": f"Found {len(duplicates)} duplicate(s) based on phone number. Please choose an action."
+                }
+            
+            # Process based on user action
+            leads_to_insert = []
+            
+            if duplicate_action == "skip":
+                # Only insert non-duplicates
+                leads_to_insert = non_duplicates
+                skipped_count = len(duplicates)
+            elif duplicate_action == "add_copy":
+                # Add non-duplicates as is, and duplicates with "-copy" suffix
+                leads_to_insert = non_duplicates
+                for lead in leads:
+                    if lead['phone_number'] in existing_phones:
+                        lead['name'] = f"{lead['name']}-copy"
+                        leads_to_insert.append(lead)
+                skipped_count = 0
+            else:
+                # No duplicates or no action needed
+                leads_to_insert = leads
+                skipped_count = 0
+            
+            # Insert leads
+            if leads_to_insert:
+                await db.driver_leads.insert_many(leads_to_insert)
+                logger.info(f"Imported {len(leads_to_insert)} leads to database")
+                
+                # Sync to Google Sheets
+                sync_all_records('leads', leads_to_insert)
+            
+            message = f"Successfully imported {len(leads_to_insert)} lead(s)"
+            if duplicate_action == "skip" and skipped_count > 0:
+                message += f", skipped {skipped_count} duplicate(s)"
+            elif duplicate_action == "add_copy" and len(duplicates) > 0:
+                message += f", added {len(duplicates)} duplicate(s) as copies"
+            
+            return {
+                "message": message,
+                "count": len(leads_to_insert),
+                "skipped": skipped_count if duplicate_action == "skip" else 0,
+                "format_detected": "Format 1 (4 columns)" if len(df.columns) == 4 else "Format 2 (8 columns)",
+                "duplicates_found": False
+            }
         
         return {
-            "message": f"Successfully imported {len(leads)} leads",
-            "count": len(leads),
+            "message": "No leads found in file",
+            "count": 0,
             "format_detected": "Format 1 (4 columns)" if len(df.columns) == 4 else "Format 2 (8 columns)"
         }
         
