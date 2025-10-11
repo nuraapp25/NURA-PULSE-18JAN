@@ -404,8 +404,131 @@ class NuraPulseBackendTester:
         
         return success_count >= 1
     
+    def test_montra_feed_database_management(self):
+        """Test 8: Montra Feed Database Management Endpoints"""
+        print("\n=== Testing Montra Feed Database Management ===")
+        
+        success_count = 0
+        
+        # Test 1: GET /montra-vehicle/feed-database - Retrieve all uploaded feed files
+        response = self.make_request("GET", "/montra-vehicle/feed-database")
+        
+        if response and response.status_code == 200:
+            try:
+                data = response.json()
+                if "success" in data and "files" in data and "count" in data:
+                    files = data["files"]
+                    count = data["count"]
+                    
+                    self.log_test("Montra Feed Database - GET All Files", True, 
+                                f"Retrieved {count} feed files from database")
+                    
+                    # Verify response structure for each file
+                    if files and len(files) > 0:
+                        sample_file = files[0]
+                        required_fields = ["vehicle_id", "date", "record_count", "uploaded_at"]
+                        missing_fields = [field for field in required_fields if field not in sample_file]
+                        
+                        if not missing_fields:
+                            self.log_test("Montra Feed Database - File Metadata Structure", True, 
+                                        f"File metadata contains all required fields: {required_fields}")
+                            success_count += 1
+                        else:
+                            self.log_test("Montra Feed Database - File Metadata Structure", False, 
+                                        f"Missing required fields: {missing_fields}")
+                    else:
+                        self.log_test("Montra Feed Database - File Metadata Structure", True, 
+                                    "No files in database - structure validation skipped")
+                        success_count += 1
+                    
+                    success_count += 1
+                else:
+                    self.log_test("Montra Feed Database - GET All Files", False, 
+                                "Response missing required fields (success, files, count)", data)
+            except json.JSONDecodeError:
+                self.log_test("Montra Feed Database - GET All Files", False, "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Montra Feed Database - GET All Files", False, error_msg, 
+                        response.text if response else None)
+        
+        # Test 2: Authentication requirement for GET endpoint
+        response = self.make_request("GET", "/montra-vehicle/feed-database", use_auth=False)
+        
+        if response and response.status_code == 401:
+            self.log_test("Montra Feed Database - GET Authentication", True, 
+                        "Correctly requires authentication (401 without token)")
+            success_count += 1
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("Montra Feed Database - GET Authentication", False, 
+                        f"Expected 401, got {status}")
+        
+        # Test 3: DELETE /montra-vehicle/feed-database - Test with empty request
+        delete_data = []
+        response = self.make_request("DELETE", "/montra-vehicle/feed-database", data=delete_data)
+        
+        if response and response.status_code == 400:
+            try:
+                error_data = response.json()
+                if "detail" in error_data and "No files specified" in error_data["detail"]:
+                    self.log_test("Montra Feed Database - DELETE Empty Request", True, 
+                                "Correctly rejects empty delete request (400)")
+                    success_count += 1
+                else:
+                    self.log_test("Montra Feed Database - DELETE Empty Request", False, 
+                                f"Unexpected error message: {error_data}")
+            except json.JSONDecodeError:
+                self.log_test("Montra Feed Database - DELETE Empty Request", False, 
+                            "Invalid JSON error response", response.text)
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("Montra Feed Database - DELETE Empty Request", False, 
+                        f"Expected 400, got {status}")
+        
+        # Test 4: DELETE authentication requirement
+        response = self.make_request("DELETE", "/montra-vehicle/feed-database", 
+                                   data=[{"vehicle_id": "TEST", "date": "01 Jan", "filename": "test.csv"}], 
+                                   use_auth=False)
+        
+        if response and response.status_code == 401:
+            self.log_test("Montra Feed Database - DELETE Authentication", True, 
+                        "Correctly requires authentication (401 without token)")
+            success_count += 1
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("Montra Feed Database - DELETE Authentication", False, 
+                        f"Expected 401, got {status}")
+        
+        # Test 5: DELETE with invalid/non-existent file identifiers
+        invalid_delete_data = [
+            {"vehicle_id": "NONEXISTENT_VEHICLE", "date": "99 Xxx", "filename": "nonexistent.csv"}
+        ]
+        response = self.make_request("DELETE", "/montra-vehicle/feed-database", data=invalid_delete_data)
+        
+        if response and response.status_code == 200:
+            try:
+                result = response.json()
+                if "success" in result and "deleted_count" in result:
+                    deleted_count = result["deleted_count"]
+                    self.log_test("Montra Feed Database - DELETE Invalid Files", True, 
+                                f"Handled non-existent files gracefully (deleted {deleted_count} records)")
+                    success_count += 1
+                else:
+                    self.log_test("Montra Feed Database - DELETE Invalid Files", False, 
+                                "Response missing required fields", result)
+            except json.JSONDecodeError:
+                self.log_test("Montra Feed Database - DELETE Invalid Files", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("Montra Feed Database - DELETE Invalid Files", False, 
+                        f"Expected 200, got {status}")
+        
+        return success_count >= 4  # At least 4 out of 6 tests should pass
+    
     def test_mini_apps_endpoints(self):
-        """Test 8: Remaining Mini-Apps Endpoints"""
+        """Test 9: Remaining Mini-Apps Endpoints"""
         print("\n=== Testing Remaining Mini-Apps Endpoints ===")
         
         success_count = 0
