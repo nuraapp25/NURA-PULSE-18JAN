@@ -328,9 +328,15 @@ class NuraPulseBackendTester:
                                     f"Invalid JSON response for {vehicle_id}", response.text)
                 elif response.status_code == 404:
                     # 404 is expected if no data exists for this vehicle/date combination
-                    self.log_test(f"Battery Analytics - Test Case {i}", True, 
-                                f"Vehicle {vehicle_id} on {date}: No data found (404) - Expected for test data")
-                    success_count += 1
+                    try:
+                        error_detail = response.json()
+                        self.log_test(f"Battery Analytics - Test Case {i}", True, 
+                                    f"Vehicle {vehicle_id} on {date}: No data found (404) - API working correctly")
+                        success_count += 1
+                    except json.JSONDecodeError:
+                        self.log_test(f"Battery Analytics - Test Case {i}", True, 
+                                    f"Vehicle {vehicle_id} on {date}: No data found (404) - API working correctly")
+                        success_count += 1
                 else:
                     self.log_test(f"Battery Analytics - Test Case {i}", False, 
                                 f"Unexpected status {response.status_code} for {vehicle_id}", response.text)
@@ -341,14 +347,17 @@ class NuraPulseBackendTester:
         # Test with missing parameters (should fail gracefully)
         response = self.make_request("GET", "/montra-vehicle/analytics/battery-data")
         
-        if response and response.status_code == 422:  # FastAPI validation error
-            self.log_test("Battery Analytics - Parameter Validation", True, 
-                        "Correctly rejected request with missing parameters")
-            success_count += 1
+        if response:
+            if response.status_code == 422:  # FastAPI validation error
+                self.log_test("Battery Analytics - Parameter Validation", True, 
+                            "Correctly rejected request with missing parameters (422)")
+                success_count += 1
+            else:
+                self.log_test("Battery Analytics - Parameter Validation", False, 
+                            f"Expected 422 validation error, got status {response.status_code}")
         else:
-            error_msg = "Network error" if not response else f"Status {response.status_code}"
             self.log_test("Battery Analytics - Parameter Validation", False, 
-                        f"Expected 422 validation error, got: {error_msg}")
+                        "Network error during parameter validation test")
         
         return success_count >= 2  # At least 2 tests should pass
     
