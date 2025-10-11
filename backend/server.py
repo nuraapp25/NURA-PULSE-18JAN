@@ -1691,7 +1691,7 @@ async def get_montra_feed_database(current_user: User = Depends(get_current_user
                     "_id": {
                         "vehicle_id": "$vehicle_id",
                         "date": "$date",
-                        "filename": "$filename",
+                        "filename": {"$ifNull": ["$filename", "Unknown"]},
                         "month": "$month",
                         "year": {"$ifNull": ["$year", "2024"]}  # Default to 2024 if year is missing
                     },
