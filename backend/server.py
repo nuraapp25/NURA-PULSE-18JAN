@@ -1328,16 +1328,25 @@ async def import_montra_feed(file: UploadFile = File(...), current_user: User = 
                 detail=f"Expected 21 columns (A-U), but found {len(df.columns)} columns"
             )
         
+        # Look up registration number from vehicle mapping
+        vehicle_mapping = await db.vehicle_mapping.find_one(
+            {"vehicle_id": vehicle_id}, 
+            {"_id": 0, "registration_number": 1}
+        )
+        registration_number = vehicle_mapping.get("registration_number", "") if vehicle_mapping else ""
+        
+        logger.info(f"Vehicle {vehicle_id} → Registration: {registration_number if registration_number else 'Not found'}")
+        
         # Prepare data for Google Sheets
         # Sheet columns: D to X (CSV columns A to U)
-        # Additional columns: Y (vehicle_id), Z (separator), AA (day), AB (month)
+        # Additional columns: Y (vehicle_id), Z (separator), AA (day), AB (month), AC (registration_number)
         
         rows_to_import = []
         for idx, row in df.iterrows():
             # Convert row to list and add filename data
             row_data = row.tolist()
-            # Add vehicle_id, separator, day, month
-            row_data.extend([vehicle_id, separator, day, month])
+            # Add vehicle_id, separator, day, month, registration_number
+            row_data.extend([vehicle_id, separator, day, month, registration_number])
             rows_to_import.append(row_data)
         
         logger.info(f"Prepared {len(rows_to_import)} rows for import")
