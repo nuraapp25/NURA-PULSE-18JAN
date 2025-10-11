@@ -58,7 +58,11 @@ class NuraPulseBackendTester:
                 headers["Content-Type"] = "application/json"
                 response = requests.put(url, headers=headers, json=data, timeout=10)
             elif method.upper() == "DELETE":
-                response = requests.delete(url, headers=headers, timeout=10)
+                if data is not None:
+                    headers["Content-Type"] = "application/json"
+                    response = requests.delete(url, headers=headers, json=data, timeout=10)
+                else:
+                    response = requests.delete(url, headers=headers, timeout=10)
             else:
                 raise ValueError(f"Unsupported HTTP method: {method}")
             
