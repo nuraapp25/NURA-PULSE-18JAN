@@ -136,17 +136,18 @@ const TelecallerQueuePage = () => {
   return (
     <div className="space-y-6" data-testid="telecaller-queue-page">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Telecaller's Desk</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Telecaller's Desk</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">Daily lead assignments and call management</p>
         </div>
         <Button
           onClick={fetchAssignments}
           variant="outline"
-          className="border-blue-600 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+          className="border-blue-600 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-sm self-start sm:self-auto"
+          size="sm"
         >
-          <RefreshCw size={18} className="mr-2" />
+          <RefreshCw size={16} className="mr-1 sm:mr-2" />
           Refresh
         </Button>
       </div>
