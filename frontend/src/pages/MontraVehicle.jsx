@@ -290,26 +290,30 @@ const MontraVehicle = () => {
 
   return (
     <div className="space-y-6" data-testid="montra-vehicle-page">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Montra Vehicle Insights</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Montra Vehicle Insights</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">Track and analyze vehicle performance data</p>
         </div>
-        <div className="flex space-x-3">
+        <div className="flex flex-wrap gap-2 sm:gap-3">
           <Button
             onClick={handleOpenDatabase}
             variant="outline"
-            className="border-blue-600 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400"
+            className="border-blue-600 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 text-sm"
+            size="sm"
           >
-            <Database size={18} className="mr-2" />
-            Feed Database
+            <Database size={16} className="mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Feed Database</span>
+            <span className="sm:hidden">Database</span>
           </Button>
           <Button
             onClick={() => setImportDialogOpen(true)}
-            className="bg-purple-600 hover:bg-purple-700"
+            className="bg-purple-600 hover:bg-purple-700 text-sm"
+            size="sm"
           >
-            <Upload size={18} className="mr-2" />
-            Bulk Import Feeds
+            <Upload size={16} className="mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Bulk Import Feeds</span>
+            <span className="sm:hidden">Import</span>
           </Button>
         </div>
       </div>
