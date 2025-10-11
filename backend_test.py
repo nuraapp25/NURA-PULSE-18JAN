@@ -744,105 +744,76 @@ class NuraPulseBackendTester:
                     "date": "15 Dec",
                     "filename": test_filename
                 }]
-            
-            # Get count before deletion
-            pre_delete_response = self.make_request("GET", "/montra-vehicle/feed-database")
-            pre_delete_count = 0
-            if pre_delete_response and pre_delete_response.status_code == 200:
-                try:
-                    pre_data = pre_delete_response.json()
-                    pre_delete_count = pre_data.get("count", 0)
-                except:
-                    pass
-            
-            response = self.make_request("DELETE", "/montra-vehicle/feed-database", data=valid_data)
-            
-            if response and response.status_code == 200:
-                try:
-                    result = response.json()
-                    if "success" in result and "deleted_count" in result:
-                        deleted_count = result["deleted_count"]
-                        success_status = result.get("success", False)
-                        
-                        if success_status and deleted_count > 0:
-                            self.log_test("DELETE Test - Valid File Identifiers", True, 
-                                        f"Successfully deleted {deleted_count} records from {len(valid_data)} files")
-                            success_count += 1
+                
+                # Get count before deletion to verify database changes
+                pre_delete_response = self.make_request("GET", "/montra-vehicle/feed-database")
+                pre_delete_count = 0
+                if pre_delete_response and pre_delete_response.status_code == 200:
+                    try:
+                        pre_data = pre_delete_response.json()
+                        pre_delete_count = pre_data.get("count", 0)
+                    except:
+                        pass
+                
+                # Perform the DELETE operation
+                response = self.make_request("DELETE", "/montra-vehicle/feed-database", data=valid_data)
+                
+                if response and response.status_code == 200:
+                    try:
+                        result = response.json()
+                        if "success" in result and "deleted_count" in result:
+                            deleted_count = result["deleted_count"]
+                            success_status = result.get("success", False)
                             
-                            # Verify records were actually removed from database
-                            post_delete_response = self.make_request("GET", "/montra-vehicle/feed-database")
-                            if post_delete_response and post_delete_response.status_code == 200:
-                                try:
-                                    post_data = post_delete_response.json()
-                                    post_delete_count = post_data.get("count", 0)
-                                    
-                                    if post_delete_count < pre_delete_count:
-                                        self.log_test("DELETE Test - Database Verification", True, 
-                                                    f"Database count reduced from {pre_delete_count} to {post_delete_count}")
-                                        success_count += 1
-                                    else:
+                            if success_status and deleted_count > 0:
+                                self.log_test("DELETE Test - Valid File Identifiers", True, 
+                                            f"Successfully deleted {deleted_count} records from test file")
+                                success_count += 1
+                                
+                                # Verify records were actually removed from database
+                                post_delete_response = self.make_request("GET", "/montra-vehicle/feed-database")
+                                if post_delete_response and post_delete_response.status_code == 200:
+                                    try:
+                                        post_data = post_delete_response.json()
+                                        post_delete_count = post_data.get("count", 0)
+                                        
+                                        # Check if the specific test file was removed
+                                        test_file_found = False
+                                        for file_info in post_data.get("files", []):
+                                            if (file_info.get("vehicle_id") == "TEST_DELETE_VEHICLE" and 
+                                                file_info.get("date") == "15 Dec"):
+                                                test_file_found = True
+                                                break
+                                        
+                                        if not test_file_found:
+                                            self.log_test("DELETE Test - Database Verification", True, 
+                                                        f"Test file successfully removed from database (count: {pre_delete_count} -> {post_delete_count})")
+                                            success_count += 1
+                                        else:
+                                            self.log_test("DELETE Test - Database Verification", False, 
+                                                        "Test file still found in database after deletion")
+                                    except:
                                         self.log_test("DELETE Test - Database Verification", False, 
-                                                    f"Database count unchanged: {pre_delete_count} -> {post_delete_count}")
-                                except:
-                                    self.log_test("DELETE Test - Database Verification", False, 
-                                                "Could not verify database changes")
+                                                    "Could not verify database changes")
+                            else:
+                                self.log_test("DELETE Test - Valid File Identifiers", False, 
+                                            f"Delete operation failed or no records deleted (success: {success_status}, count: {deleted_count})")
                         else:
                             self.log_test("DELETE Test - Valid File Identifiers", False, 
-                                        f"Delete operation failed or no records deleted (success: {success_status}, count: {deleted_count})")
-                    else:
+                                        "Response missing required fields", result)
+                    except json.JSONDecodeError:
                         self.log_test("DELETE Test - Valid File Identifiers", False, 
-                                    "Response missing required fields", result)
-                except json.JSONDecodeError:
-                    self.log_test("DELETE Test - Valid File Identifiers", False, 
-                                "Invalid JSON response", response.text)
-            else:
-                status = response.status_code if response else "Network error"
-                self.log_test("DELETE Test - Valid File Identifiers", False, 
-                            f"Expected 200, got {status}")
-        else:
-            # Create test data first, then delete it
-            print("No existing files found - creating test data for deletion test")
-            
-            # Create sample CSV content for testing
-            sample_csv_content = """A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U
--1,100,200,300,400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000
-1,110,210,310,410,510,610,710,810,910,1010,1110,1210,1310,1410,1510,1610,1710,1810,1910,2010"""
-            
-            # Import test data
-            test_filename = f"TEST_VEHICLE_DELETE - 15 Dec 2024.csv"
-            files = {'file': (test_filename, sample_csv_content, 'text/csv')}
-            
-            import_response = self.make_request("POST", "/montra-vehicle/import-feed", files=files)
-            
-            if import_response and import_response.status_code == 200:
-                # Now test deletion of the imported data
-                test_delete_data = [{
-                    "vehicle_id": "TEST_VEHICLE_DELETE",
-                    "date": "15 Dec",
-                    "filename": test_filename
-                }]
-                
-                delete_response = self.make_request("DELETE", "/montra-vehicle/feed-database", data=test_delete_data)
-                
-                if delete_response and delete_response.status_code == 200:
-                    try:
-                        result = delete_response.json()
-                        if result.get("success") and result.get("deleted_count", 0) > 0:
-                            self.log_test("DELETE Test - Created Test Data", True, 
-                                        f"Successfully deleted {result['deleted_count']} test records")
-                            success_count += 1
-                        else:
-                            self.log_test("DELETE Test - Created Test Data", False, 
-                                        f"Failed to delete test data: {result}")
-                    except:
-                        self.log_test("DELETE Test - Created Test Data", False, 
-                                    "Invalid response from delete operation")
+                                    "Invalid JSON response", response.text)
                 else:
-                    self.log_test("DELETE Test - Created Test Data", False, 
-                                "Delete operation failed")
-            else:
-                self.log_test("DELETE Test - Created Test Data", False, 
-                            "Could not create test data for deletion test")
+                    status = response.status_code if response else "Network error"
+                    self.log_test("DELETE Test - Valid File Identifiers", False, 
+                                f"Expected 200, got {status}")
+                    
+            except json.JSONDecodeError:
+                self.log_test("DELETE Test - Create Test Data", False, "Invalid JSON response from import", import_response.text)
+        else:
+            self.log_test("DELETE Test - Create Test Data", False, 
+                        f"Failed to create test data for deletion test (status: {import_response.status_code if import_response else 'Network error'})")
         
         # Step 5: Test authentication requirements
         print("\n--- Step 5: Testing authentication requirements ---")
