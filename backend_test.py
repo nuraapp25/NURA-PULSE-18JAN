@@ -742,6 +742,11 @@ class NuraPulseBackendTester:
         
         import_response = self.make_request("POST", "/montra-vehicle/import-feed", files=files)
         
+        if import_response:
+            print(f"DEBUG: Import response status: {import_response.status_code}")
+            if import_response.status_code != 200:
+                print(f"DEBUG: Import error response: {import_response.text}")
+        
         if import_response and import_response.status_code == 200:
             try:
                 import_result = import_response.json()
