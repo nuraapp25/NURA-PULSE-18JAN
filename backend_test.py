@@ -755,7 +755,7 @@ class NuraPulseBackendTester:
                 
                 # Now test deletion with the imported data
                 valid_data = [{
-                    "vehicle_id": "TEST_DELETE_VEHICLE",
+                    "vehicle_id": "TESTDELETEVEHICLE",
                     "date": "15 Dec",
                     "filename": test_filename
                 }]
