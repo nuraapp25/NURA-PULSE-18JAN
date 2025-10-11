@@ -1287,9 +1287,9 @@ async def import_montra_feed(file: UploadFile = File(...), current_user: User = 
         filename = file.filename
         logger.info(f"Importing Montra feed from file: {filename}")
         
-        # Extract vehicle ID, day, and month from filename
+        # Extract vehicle ID, day, month, and year from filename
         # Expected format: "P60G2512500002032 - 01 Sep 2025.csv"
-        filename_pattern = r"^([A-Z0-9]+)\s*-\s*(\d{2})\s+([A-Za-z]+)\s+\d{4}\.(csv|xlsx)$"
+        filename_pattern = r"^([A-Z0-9]+)\s*-\s*(\d{2})\s+([A-Za-z]+)\s+(\d{4})\.(csv|xlsx)$"
         match = re.match(filename_pattern, filename)
         
         if not match:
@@ -1301,9 +1301,10 @@ async def import_montra_feed(file: UploadFile = File(...), current_user: User = 
         vehicle_id = match.group(1)
         day = match.group(2)
         month = match.group(3)
+        year = match.group(4)
         separator = "-"
         
-        logger.info(f"Extracted from filename - Vehicle ID: {vehicle_id}, Day: {day}, Month: {month}")
+        logger.info(f"Extracted from filename - Vehicle ID: {vehicle_id}, Day: {day}, Month: {month}, Year: {year}")
         
         # Read file content
         content = await file.read()
