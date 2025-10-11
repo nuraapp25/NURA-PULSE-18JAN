@@ -936,7 +936,11 @@ async def update_lead_status(lead_id: str, status_data: LeadStatusUpdate, curren
 
 @api_router.delete("/driver-onboarding/leads/{lead_id}")
 async def delete_lead(lead_id: str, current_user: User = Depends(get_current_user)):
-    """Delete a lead"""
+    """Delete a single lead (Master Admin only)"""
+    # Check if user is master admin
+    if current_user.account_type != "master_admin":
+        raise HTTPException(status_code=403, detail="Only Master Admin can delete leads")
+    
     # Find the lead
     lead = await db.driver_leads.find_one({"id": lead_id})
     if not lead:
