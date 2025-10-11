@@ -300,7 +300,6 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Battery Consumption Calculation Fix"
     - "Battery Consumption Widget UI"
     - "Payment Reconciliation Implementation"
     - "Enhanced Features Testing"
