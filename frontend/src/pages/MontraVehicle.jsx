@@ -66,16 +66,29 @@ const MontraVehicle = () => {
   ];
 
   const handleFileSelect = (event) => {
-    const file = event.target.files[0];
-    if (file) {
+    const files = Array.from(event.target.files);
+    const validFiles = [];
+    const invalidFiles = [];
+
+    files.forEach(file => {
       const fileExtension = file.name.split('.').pop().toLowerCase();
       if (fileExtension === 'csv' || fileExtension === 'xlsx') {
-        setSelectedFile(file);
+        validFiles.push(file);
       } else {
-        toast.error("Please select a CSV or XLSX file");
-        event.target.value = null;
+        invalidFiles.push(file.name);
       }
+    });
+
+    if (invalidFiles.length > 0) {
+      toast.error(`Invalid file types: ${invalidFiles.join(', ')}. Only CSV and XLSX files are allowed.`);
     }
+
+    if (validFiles.length > 0) {
+      setSelectedFiles(validFiles);
+      toast.success(`Selected ${validFiles.length} file(s) for import`);
+    }
+
+    event.target.value = null;
   };
 
   const handleImport = async () => {
