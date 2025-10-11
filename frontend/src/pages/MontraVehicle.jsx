@@ -658,14 +658,14 @@ const MontraVehicle = () => {
             </div>
 
             {/* Summary */}
-            {feedFiles.length > 0 && (
+            {Object.keys(feedFiles).length > 0 && (
               <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
                 <p className="text-sm text-blue-800 dark:text-blue-200">
-                  <strong>Database Summary:</strong> {feedFiles.length} files, {' '}
-                  {feedFiles.reduce((sum, file) => sum + file.record_count, 0)} total records
+                  <strong>Database Summary:</strong> {getAllFiles().length} files across {Object.keys(feedFiles).length} months, {' '}
+                  {getAllFiles().reduce((sum, file) => sum + file.record_count, 0)} total records
                 </p>
               </div>
-            )}
+            )}</div>
 
             <div className="flex justify-end space-x-2 pt-4">
               <Button
