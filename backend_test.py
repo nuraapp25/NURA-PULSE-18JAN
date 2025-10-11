@@ -827,17 +827,23 @@ class NuraPulseBackendTester:
         
         # Step 5: Test authentication requirements
         print("\n--- Step 5: Testing authentication requirements ---")
-        test_data = [{"vehicle_id": "TEST", "date": "01 Jan", "filename": "test.csv"}]
-        response = self.make_request("DELETE", "/montra-vehicle/feed-database", data=test_data, use_auth=False)
-        
-        if response and response.status_code in [401, 403]:
-            self.log_test("DELETE Test - Authentication Required", True, 
-                        f"Correctly requires authentication ({response.status_code} without token)")
-            success_count += 1
-        else:
-            status = response.status_code if response else "Network error"
-            self.log_test("DELETE Test - Authentication Required", False, 
-                        f"Expected 401/403, got {status}")
+        try:
+            import requests
+            url = f"{self.base_url}/montra-vehicle/feed-database"
+            headers = {"Content-Type": "application/json"}  # No Authorization header
+            test_data = [{"vehicle_id": "TEST", "date": "01 Jan", "filename": "test.csv"}]
+            
+            response = requests.delete(url, json=test_data, headers=headers, timeout=10)
+            
+            if response.status_code in [401, 403]:
+                self.log_test("DELETE Test - Authentication Required", True, 
+                            f"Correctly requires authentication ({response.status_code} without token)")
+                success_count += 1
+            else:
+                self.log_test("DELETE Test - Authentication Required", False, 
+                            f"Expected 401/403, got {response.status_code}")
+        except Exception as e:
+            self.log_test("DELETE Test - Authentication Required", False, f"Exception: {e}")
         
         return success_count >= 4  # At least 4 out of 6 tests should pass
 
