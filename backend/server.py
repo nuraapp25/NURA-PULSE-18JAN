@@ -1600,6 +1600,70 @@ async def bulk_delete_files(file_ids: list, current_user: User = Depends(get_cur
         raise HTTPException(status_code=500, detail="Failed to delete files")
 
 
+@api_router.get("/montra-vehicle/analytics/battery-data")
+async def get_battery_consumption_data(
+    vehicle_id: str = Query(...),
+    date: str = Query(...),
+    current_user: User = Depends(get_current_user)
+):
+    """Get battery consumption data for a specific vehicle and date from Google Sheets"""
+    try:
+        from sheets_multi_sync import send_to_sheets
+        
+        logger.info(f"Fetching battery data for vehicle {vehicle_id} on {date}")
+        
+        # Request data from Google Sheets
+        payload = {
+            'action': 'get_montra_feed_data',
+            'tab': 'Montra Feed Data',
+            'vehicle_id': vehicle_id,
+            'date': date
+        }
+        
+        result = send_to_sheets(payload)
+        
+        if result.get('success'):
+            data = result.get('data', [])
+            logger.info(f"Retrieved {len(data)} rows for vehicle {vehicle_id}")
+            
+            return {
+                "success": True,
+                "vehicle_id": vehicle_id,
+                "date": date,
+                "data": data,
+                "count": len(data)
+            }
+        else:
+            raise HTTPException(status_code=500, detail="Failed to fetch data from Google Sheets")
+            
+    except Exception as e:
+        logger.error(f"Error fetching battery data: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch battery data: {str(e)}")
+
+
+@api_router.get("/montra-vehicle/vehicles")
+async def get_vehicles_list(current_user: User = Depends(get_current_user)):
+    """Get list of all vehicles from vehicle mapping"""
+    try:
+        vehicles = await db.vehicle_mapping.find({}, {"_id": 0}).to_list(1000)
+        
+        vehicle_list = [
+            {
+                "vehicle_id": v["vehicle_id"],
+                "registration_number": v.get("registration_number", "")
+            }
+            for v in vehicles
+        ]
+        
+        return {
+            "vehicles": vehicle_list,
+            "count": len(vehicle_list)
+        }
+    except Exception as e:
+        logger.error(f"Error fetching vehicles: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch vehicles list")
+
+
 @api_router.post("/admin/files/reload-fleet-mapping")
 async def reload_fleet_mapping(current_user: User = Depends(get_current_user)):
     """Reload vehicle to registration number mapping from Nura Fleet Data.xlsx"""
