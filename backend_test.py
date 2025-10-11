@@ -663,7 +663,12 @@ class NuraPulseBackendTester:
         # Step 2: Test DELETE with empty request body (should return 400)
         print("\n--- Step 2: Testing DELETE with empty request body ---")
         empty_data = []
+        print(f"DEBUG: Making DELETE request with empty data: {empty_data}")
         response = self.make_request("DELETE", "/montra-vehicle/feed-database", data=empty_data)
+        print(f"DEBUG: Response object: {response}")
+        if response:
+            print(f"DEBUG: Response status: {response.status_code}")
+            print(f"DEBUG: Response text: {response.text}")
         
         if response and response.status_code == 400:
             try:
