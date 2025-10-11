@@ -1388,6 +1388,220 @@ async def sync_telecaller_queue(current_user: User = Depends(get_current_user)):
     raise HTTPException(status_code=500, detail="Failed to sync telecaller queue")
 
 
+# ==================== ADMIN FILES MANAGEMENT ====================
+
+# Create uploaded files directory if it doesn't exist
+UPLOAD_DIR = "/app/backend/uploaded_files"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+@api_router.post("/admin/files/upload")
+async def upload_file(file: UploadFile = File(...), current_user: User = Depends(get_current_user)):
+    """Upload a file to admin files storage (max 100MB)"""
+    try:
+        # Check file size (100MB limit)
+        MAX_SIZE = 100 * 1024 * 1024  # 100MB in bytes
+        
+        # Read file content
+        content = await file.read()
+        file_size = len(content)
+        
+        if file_size > MAX_SIZE:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"File size exceeds 100MB limit. File size: {file_size / 1024 / 1024:.2f}MB"
+            )
+        
+        # Generate unique file ID
+        file_id = str(uuid.uuid4())
+        
+        # Save file to disk
+        file_path = os.path.join(UPLOAD_DIR, f"{file_id}_{file.filename}")
+        with open(file_path, "wb") as f:
+            f.write(content)
+        
+        logger.info(f"File uploaded: {file.filename} ({file_size / 1024:.2f} KB)")
+        
+        # Save metadata to MongoDB
+        file_metadata = {
+            "id": file_id,
+            "filename": file.filename,
+            "original_filename": file.filename,
+            "file_path": file_path,
+            "file_size": file_size,
+            "content_type": file.content_type or "application/octet-stream",
+            "uploaded_by": current_user.email,
+            "uploaded_at": datetime.now(timezone.utc).isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.admin_files.insert_one(file_metadata)
+        
+        return {
+            "message": "File uploaded successfully",
+            "file_id": file_id,
+            "filename": file.filename,
+            "size": file_size,
+            "uploaded_at": file_metadata["uploaded_at"]
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error uploading file: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to upload file: {str(e)}")
+
+
+@api_router.get("/admin/files")
+async def list_files(current_user: User = Depends(get_current_user)):
+    """Get list of all uploaded files"""
+    try:
+        files = await db.admin_files.find({}, {"_id": 0}).sort("uploaded_at", -1).to_list(1000)
+        
+        # Format file sizes for display
+        for file in files:
+            file["size_display"] = format_file_size(file.get("file_size", 0))
+        
+        return {
+            "files": files,
+            "count": len(files)
+        }
+    except Exception as e:
+        logger.error(f"Error listing files: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to list files")
+
+
+@api_router.get("/admin/files/{file_id}/download")
+async def download_file(file_id: str, current_user: User = Depends(get_current_user)):
+    """Download a file"""
+    try:
+        file_metadata = await db.admin_files.find_one({"id": file_id}, {"_id": 0})
+        
+        if not file_metadata:
+            raise HTTPException(status_code=404, detail="File not found")
+        
+        file_path = file_metadata["file_path"]
+        
+        if not os.path.exists(file_path):
+            raise HTTPException(status_code=404, detail="File not found on disk")
+        
+        from fastapi.responses import FileResponse
+        
+        return FileResponse(
+            path=file_path,
+            filename=file_metadata["original_filename"],
+            media_type=file_metadata.get("content_type", "application/octet-stream")
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error downloading file: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to download file")
+
+
+@api_router.get("/admin/files/{file_id}/share-link")
+async def get_share_link(file_id: str, current_user: User = Depends(get_current_user)):
+    """Get shareable download link for a file"""
+    try:
+        file_metadata = await db.admin_files.find_one({"id": file_id}, {"_id": 0})
+        
+        if not file_metadata:
+            raise HTTPException(status_code=404, detail="File not found")
+        
+        # Get backend URL from environment
+        backend_url = os.environ.get('BACKEND_URL', 'https://leadflow-24.preview.emergentagent.com')
+        
+        share_link = f"{backend_url}/api/admin/files/{file_id}/download"
+        
+        return {
+            "share_link": share_link,
+            "filename": file_metadata["original_filename"]
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error generating share link: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to generate share link")
+
+
+@api_router.delete("/admin/files/{file_id}")
+async def delete_file(file_id: str, current_user: User = Depends(get_current_user)):
+    """Delete a file (Master Admin only)"""
+    # Check if user is master admin
+    if current_user.account_type != "master_admin":
+        raise HTTPException(status_code=403, detail="Only Master Admin can delete files")
+    
+    try:
+        file_metadata = await db.admin_files.find_one({"id": file_id}, {"_id": 0})
+        
+        if not file_metadata:
+            raise HTTPException(status_code=404, detail="File not found")
+        
+        # Delete file from disk
+        file_path = file_metadata["file_path"]
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            logger.info(f"Deleted file from disk: {file_path}")
+        
+        # Delete metadata from database
+        await db.admin_files.delete_one({"id": file_id})
+        
+        return {
+            "message": f"File '{file_metadata['original_filename']}' deleted successfully"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting file: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to delete file")
+
+
+@api_router.post("/admin/files/bulk-delete")
+async def bulk_delete_files(file_ids: list, current_user: User = Depends(get_current_user)):
+    """Bulk delete files (Master Admin only)"""
+    if current_user.account_type != "master_admin":
+        raise HTTPException(status_code=403, detail="Only Master Admin can delete files")
+    
+    try:
+        deleted_count = 0
+        
+        for file_id in file_ids:
+            file_metadata = await db.admin_files.find_one({"id": file_id}, {"_id": 0})
+            
+            if file_metadata:
+                # Delete file from disk
+                file_path = file_metadata["file_path"]
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                
+                # Delete from database
+                await db.admin_files.delete_one({"id": file_id})
+                deleted_count += 1
+        
+        return {
+            "message": f"Successfully deleted {deleted_count} file(s)",
+            "deleted_count": deleted_count
+        }
+        
+    except Exception as e:
+        logger.error(f"Error bulk deleting files: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to delete files")
+
+
+def format_file_size(size_bytes):
+    """Format file size in human readable format"""
+    if size_bytes < 1024:
+        return f"{size_bytes} B"
+    elif size_bytes < 1024 * 1024:
+        return f"{size_bytes / 1024:.2f} KB"
+    elif size_bytes < 1024 * 1024 * 1024:
+        return f"{size_bytes / (1024 * 1024):.2f} MB"
+    else:
+        return f"{size_bytes / (1024 * 1024 * 1024):.2f} GB"
+
+
 # Montra Vehicle Insights
 @api_router.post("/montra-vehicle-insights")
 async def create_vehicle(vehicle_data: VehicleRecordCreate, current_user: User = Depends(get_current_user)):
