@@ -293,21 +293,27 @@ const BatteryConsumption = () => {
 
             {/* Summary Stats */}
             <div className="grid grid-cols-2 gap-6 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-              <div className="text-center p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Battery Consumption</p>
+              <div className="text-center p-4 bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                  {(() => {
+                    const startBattery = chartData[0]?.battery || 0;
+                    const endBattery = chartData[chartData.length - 1]?.battery || 0;
+                    return endBattery > startBattery ? "Battery Charged" : "Battery Consumed";
+                  })()}
+                </p>
                 <p className="text-3xl font-bold text-red-600 dark:text-red-400">
                   {(() => {
                     const startBattery = chartData[0]?.battery || 0;
                     const endBattery = chartData[chartData.length - 1]?.battery || 0;
-                    const consumption = (startBattery - endBattery).toFixed(1);
-                    return consumption;
+                    const change = Math.abs(startBattery - endBattery).toFixed(1);
+                    return change;
                   })()}%
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
                   {chartData[0]?.battery.toFixed(1)}% → {chartData[chartData.length - 1]?.battery.toFixed(1)}%
                 </p>
               </div>
-              <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+              <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Total Distance Traveled</p>
                 <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
                   {Math.max(...chartData.map(d => d.distance)).toFixed(2)} km
