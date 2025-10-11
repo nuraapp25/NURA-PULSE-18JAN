@@ -1362,6 +1362,7 @@ async def import_montra_feed(file: UploadFile = File(...), current_user: User = 
                 "day": day,
                 "month": month,
                 "registration_number": registration_number,
+                "filename": filename,
                 "imported_at": datetime.now(timezone.utc).isoformat()
             }
             # Map all columns to document
