@@ -890,8 +890,9 @@ const DriverOnboardingPage = () => {
               size="sm"
               className="border-gray-300 dark:border-gray-600 text-sm"
             >
-              <Square size={16} className="mr-2" />
-              Clear
+              <Square size={14} className="mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Clear</span>
+              <span className="sm:hidden">Clear</span>
             </Button>
           )}
         </div>
