@@ -329,7 +329,7 @@ const MontraVehicle = () => {
         <CardContent>
           <div className="text-center py-8">
             <p className="text-gray-600 dark:text-gray-400 mb-4">
-              Import multiple Montra vehicle feed files to sync with Google Sheets
+              Import multiple Montra vehicle feed files to backend database
             </p>
             <p className="text-sm text-gray-500 dark:text-gray-500 mb-6">
               Supported formats: CSV, XLSX • Bulk import supported
