@@ -1296,16 +1296,18 @@ const DriverOnboardingPage = () => {
               </div>
 
               <div className="flex justify-between items-center pt-4 border-t border-gray-200 dark:border-gray-700">
-                <Button
-                  onClick={() => setDeleteDialogOpen(true)}
-                  variant="outline"
-                  className="border-red-500 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
-                >
-                  <XCircle size={18} className="mr-2" />
-                  Delete Lead
-                </Button>
+                {isMasterAdmin && (
+                  <Button
+                    onClick={() => setDeleteDialogOpen(true)}
+                    variant="outline"
+                    className="border-red-500 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                  >
+                    <XCircle size={18} className="mr-2" />
+                    Delete Lead
+                  </Button>
+                )}
                 
-                <div className="flex space-x-3">
+                <div className={`flex space-x-3 ${!isMasterAdmin ? 'ml-auto' : ''}`}>
                   {isEditMode && (
                     <Button
                       onClick={handleSaveChanges}
