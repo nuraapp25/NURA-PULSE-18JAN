@@ -212,15 +212,18 @@ backend:
 
   - task: "Battery Consumption Calculation Fix"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Fixed battery consumption calculation to use Column A values (-1 for charge drop, +1 for charge) instead of first/last battery difference. Updated /montra-vehicle/analytics/battery-data endpoint to return Column A data."
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTED: Battery consumption analytics endpoint working correctly. GET /montra-vehicle/analytics/battery-data tested with vehicle P60G2512500002032 on '01 Sep' - retrieved 402 rows with Column A data present. API correctly returns 404 for non-existent vehicle/date combinations and 422 for missing parameters. All validation working as expected."
 
 frontend:
   - task: "Login Page"
