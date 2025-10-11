@@ -233,17 +233,17 @@ const MontraVehicle = () => {
         <CardContent>
           <div className="text-center py-8">
             <p className="text-gray-600 dark:text-gray-400 mb-4">
-              Import Montra vehicle feed data to sync with Google Sheets
+              Import multiple Montra vehicle feed files to sync with Google Sheets
             </p>
             <p className="text-sm text-gray-500 dark:text-gray-500 mb-6">
-              Supported formats: CSV, XLSX
+              Supported formats: CSV, XLSX • Bulk import supported
             </p>
             <Button
               onClick={() => setImportDialogOpen(true)}
               className="bg-purple-600 hover:bg-purple-700"
             >
               <Upload size={18} className="mr-2" />
-              Import Feed
+              Bulk Import Feeds
             </Button>
           </div>
         </CardContent>
