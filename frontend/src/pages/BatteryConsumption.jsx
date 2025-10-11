@@ -116,10 +116,16 @@ const BatteryConsumption = () => {
       // Normalize distance - subtract starting odometer to get relative distance
       const normalizedDistance = absoluteDistance - startingOdometer;
 
+      // Get Column A value for charge drop/charge calculation
+      // Column A is the first column in the dataset
+      const columnAKeys = Object.keys(row);
+      const columnAValue = parseFloat(row[columnAKeys[0]] || 0);
+
       return {
         time: hour,
         battery: parseFloat(row['Battery Soc(%)'] || row['Battery SOC (%)'] || 0),
         distance: normalizedDistance,
+        chargeStatus: columnAValue, // -1 = charge drop, 1 = charge, 0 = neutral
         rawIndex: index
       };
     });
