@@ -1275,6 +1275,109 @@ async def get_telecaller_tasks(current_user: User = Depends(get_current_user)):
     return tasks
 
 
+# ==================== MONTRA VEHICLE INSIGHTS ====================
+
+@api_router.post("/montra-vehicle/import-feed")
+async def import_montra_feed(file: UploadFile = File(...), current_user: User = Depends(get_current_user)):
+    """Import Montra vehicle feed data and sync to Google Sheets"""
+    try:
+        import re
+        
+        # Get filename without extension
+        filename = file.filename
+        logger.info(f"Importing Montra feed from file: {filename}")
+        
+        # Extract vehicle ID, day, and month from filename
+        # Expected format: "P60G2512500002032 - 01 Sep 2025.csv"
+        filename_pattern = r"^([A-Z0-9]+)\s*-\s*(\d{2})\s+([A-Za-z]+)\s+\d{4}\.(csv|xlsx)$"
+        match = re.match(filename_pattern, filename)
+        
+        if not match:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Invalid filename format. Expected: 'VEHICLE_ID - DD MMM YYYY.csv'. Got: {filename}"
+            )
+        
+        vehicle_id = match.group(1)
+        day = match.group(2)
+        month = match.group(3)
+        separator = "-"
+        
+        logger.info(f"Extracted from filename - Vehicle ID: {vehicle_id}, Day: {day}, Month: {month}")
+        
+        # Read file content
+        content = await file.read()
+        
+        # Parse based on file type
+        file_extension = filename.split('.')[-1].lower()
+        
+        if file_extension == 'csv':
+            import io
+            df = pd.read_csv(io.BytesIO(content))
+        elif file_extension == 'xlsx':
+            df = pd.read_excel(io.BytesIO(content))
+        else:
+            raise HTTPException(status_code=400, detail="Unsupported file format")
+        
+        logger.info(f"Parsed file with {len(df)} rows and {len(df.columns)} columns")
+        
+        # Verify we have the expected columns (A to U = 21 columns)
+        if len(df.columns) != 21:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Expected 21 columns (A-U), but found {len(df.columns)} columns"
+            )
+        
+        # Prepare data for Google Sheets
+        # Sheet columns: D to X (CSV columns A to U)
+        # Additional columns: Y (vehicle_id), Z (separator), AA (day), AB (month)
+        
+        rows_to_import = []
+        for idx, row in df.iterrows():
+            # Convert row to list and add filename data
+            row_data = row.tolist()
+            # Add vehicle_id, separator, day, month
+            row_data.extend([vehicle_id, separator, day, month])
+            rows_to_import.append(row_data)
+        
+        logger.info(f"Prepared {len(rows_to_import)} rows for import")
+        
+        # Send to Google Sheets
+        # The sheets sync will handle adding to "Montra Feed Data" tab starting from D2
+        from sheets_multi_sync import send_to_sheets
+        
+        payload = {
+            'action': 'import_montra_feed',
+            'tab': 'Montra Feed Data',
+            'headers': df.columns.tolist() + ['Vehicle ID', 'Separator', 'Day', 'Month'],
+            'data': rows_to_import,
+            'vehicle_id': vehicle_id,
+            'day': day,
+            'month': month
+        }
+        
+        result = send_to_sheets(payload)
+        
+        if result.get('success'):
+            logger.info(f"Successfully imported {len(rows_to_import)} rows to Google Sheets")
+            return {
+                "message": f"Successfully imported {len(rows_to_import)} rows from {filename}",
+                "rows": len(rows_to_import),
+                "vehicle_id": vehicle_id,
+                "date": f"{day} {month}",
+                "synced_to_sheets": True
+            }
+        else:
+            logger.error(f"Failed to sync to Google Sheets: {result.get('error')}")
+            raise HTTPException(status_code=500, detail="Failed to sync to Google Sheets")
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error importing Montra feed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to import feed: {str(e)}")
+
+
 @api_router.post("/telecaller-queue/sync")
 async def sync_telecaller_queue(current_user: User = Depends(get_current_user)):
     """Sync all telecaller tasks to Google Sheets"""
