@@ -181,7 +181,7 @@ const MontraVehicle = () => {
           className="bg-purple-600 hover:bg-purple-700"
         >
           <Upload size={18} className="mr-2" />
-          Import Montra Feed
+          Bulk Import Feeds
         </Button>
       </div>
 
