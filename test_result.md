@@ -304,6 +304,18 @@ frontend:
           agent: "main"
           comment: "Enhanced Montra Feed import to support bulk CSV file uploads. Features: Multiple file selection, individual file removal, progress tracking for each file, success/failure reporting per file, clear all option. Updated UI to show file list with sizes, import progress, and bulk results summary. Uses existing backend API with sequential processing."
 
+  - task: "Montra Feed Database Management"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/MontraVehicle.jsx"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Added 'Feed Database' button and management interface. Features: View all uploaded CSV files with vehicle ID, date, record count, and upload timestamp; Multiple selection with tick boxes; Bulk delete functionality; Select all/none options; File summary statistics; Refresh capability. Backend APIs: GET /montra-vehicle/feed-database (list files), DELETE /montra-vehicle/feed-database (bulk delete). Complete database management for uploaded Montra feeds."
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
