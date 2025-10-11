@@ -786,17 +786,18 @@ const DriverOnboardingPage = () => {
       {selectedLeadIds.length > 0 && (
         <Card className="dark:bg-gray-800 dark:border-blue-500 border-2 border-blue-500">
           <CardContent className="py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <CheckSquare className="text-blue-600" size={20} />
-                <span className="font-medium text-gray-900 dark:text-white">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center space-x-3 sm:space-x-4">
+                <CheckSquare className="text-blue-600" size={18} />
+                <span className="font-medium text-gray-900 dark:text-white text-sm sm:text-base">
                   {selectedLeadIds.length} lead(s) selected
                 </span>
               </div>
-              <div className="flex items-center space-x-3">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                 <Button
                   onClick={() => setBulkStatusDialogOpen(true)}
-                  className="bg-blue-600 hover:bg-blue-700"
+                  className="bg-blue-600 hover:bg-blue-700 text-sm"
+                  size="sm"
                 >
                   Update Status
                 </Button>
@@ -804,18 +805,22 @@ const DriverOnboardingPage = () => {
                   <Button
                     onClick={() => setDeleteDialogOpen(true)}
                     variant="outline"
-                    className="border-red-500 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                    className="border-red-500 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm"
+                    size="sm"
                   >
-                    <XCircle size={18} className="mr-2" />
-                    Delete Selected
+                    <XCircle size={16} className="mr-1 sm:mr-2" />
+                    <span className="hidden sm:inline">Delete Selected</span>
+                    <span className="sm:hidden">Delete</span>
                   </Button>
                 )}
                 <Button
                   onClick={handleClearSelection}
                   variant="outline"
-                  className="border-gray-300 dark:border-gray-600"
+                  className="border-gray-300 dark:border-gray-600 text-sm"
+                  size="sm"
                 >
-                  Clear Selection
+                  <span className="hidden sm:inline">Clear Selection</span>
+                  <span className="sm:hidden">Clear</span>
                 </Button>
               </div>
             </div>
