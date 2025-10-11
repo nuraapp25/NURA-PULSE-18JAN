@@ -342,9 +342,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Battery Consumption Widget UI"
+    - "Corrected Montra Feed Import without Google Sheets"
+    - "Montra Feed Database Management"
     - "Payment Reconciliation Implementation"
-    - "Enhanced Features Testing"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
