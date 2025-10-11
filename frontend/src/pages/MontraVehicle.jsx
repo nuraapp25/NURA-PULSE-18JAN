@@ -327,7 +327,7 @@ const MontraVehicle = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {widgets.map((widget) => {
               const IconComponent = widget.icon;
               return (
