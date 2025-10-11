@@ -2,10 +2,11 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { BarChart3, Upload, FileUp, CheckCircle, XCircle } from "lucide-react";
+import { BarChart3, Upload, FileUp, CheckCircle, XCircle, Battery, TrendingUp, Gauge, Clock, Activity, Zap } from "lucide-react";
 import axios from "axios";
 import { API } from "@/App";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 const MontraVehicle = () => {
   const [importDialogOpen, setImportDialogOpen] = useState(false);
