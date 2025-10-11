@@ -106,7 +106,7 @@ const BatteryConsumption = () => {
 
       return {
         time: hour,
-        battery: parseFloat(row['Battery SOC (%)'] || 0),
+        battery: parseFloat(row['Battery Soc(%)'] || row['Battery SOC (%)'] || 0),
         distance: parseFloat(row['Odometer (km)'] || 0),
         rawIndex: index
       };
