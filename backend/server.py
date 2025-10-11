@@ -1713,7 +1713,7 @@ async def get_montra_feed_database(current_user: User = Depends(get_current_user
                     "date": "$_id.date", 
                     "filename": "$_id.filename",
                     "record_count": "$count",
-                    "uploaded_at": "$first_entry.uploaded_at",
+                    "uploaded_at": "$first_entry.imported_at",
                     "file_size": "$first_entry.file_size"
                 }
             },
