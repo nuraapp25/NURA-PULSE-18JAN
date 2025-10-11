@@ -283,18 +283,51 @@ const MontraVehicle = () => {
               </label>
             </div>
 
-            {selectedFile && (
-              <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded border border-green-200 dark:border-green-800">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <CheckCircle size={18} className="text-green-600 dark:text-green-400" />
-                    <span className="text-sm text-gray-900 dark:text-white font-medium">
-                      {selectedFile.name}
-                    </span>
-                  </div>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                    {(selectedFile.size / 1024).toFixed(2)} KB
-                  </span>
+            {selectedFiles.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-sm font-medium text-gray-900 dark:text-white">
+                    Selected Files ({selectedFiles.length})
+                  </h4>
+                  <Button
+                    onClick={() => setSelectedFiles([])}
+                    variant="ghost"
+                    size="sm"
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    <XCircle size={16} className="mr-1" />
+                    Clear All
+                  </Button>
+                </div>
+                <div className="max-h-40 overflow-y-auto space-y-1">
+                  {selectedFiles.map((file, index) => (
+                    <div
+                      key={index}
+                      className="p-3 bg-green-50 dark:bg-green-900/20 rounded border border-green-200 dark:border-green-800"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <CheckCircle size={16} className="text-green-600 dark:text-green-400 flex-shrink-0" />
+                          <span className="text-sm text-gray-900 dark:text-white font-medium truncate">
+                            {file.name}
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            {(file.size / 1024).toFixed(2)} KB
+                          </span>
+                          <Button
+                            onClick={() => setSelectedFiles(files => files.filter((_, i) => i !== index))}
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                          >
+                            <XCircle size={14} />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
