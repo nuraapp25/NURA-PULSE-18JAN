@@ -117,9 +117,25 @@ const BatteryConsumption = () => {
       const normalizedDistance = absoluteDistance - startingOdometer;
 
       // Get Column A value for charge drop/charge calculation
-      // Column A is the first column in the dataset
-      const columnAKeys = Object.keys(row);
-      const columnAValue = parseFloat(row[columnAKeys[0]] || 0);
+      // Try multiple possible column names for Column A
+      let columnAValue = 0;
+      const possibleColumnANames = [
+        'A', // Direct column name
+        Object.keys(row)[0], // First column
+        'Column A',
+        'col_A',
+        'charge_status'
+      ];
+      
+      for (const colName of possibleColumnANames) {
+        if (row[colName] !== undefined) {
+          const parsed = parseFloat(row[colName]);
+          if (!isNaN(parsed)) {
+            columnAValue = parsed;
+            break;
+          }
+        }
+      }
 
       return {
         time: hour,
