@@ -156,6 +156,23 @@ const Dashboard = () => {
                   <Users size={20} />
                   <span>User Management</span>
                 </button>
+                <button
+                  data-testid="sidebar-files"
+                  onClick={() => {
+                    navigate("/dashboard/admin/files");
+                    setSidebarOpen(false);
+                  }}
+                  className={`
+                    w-full flex items-center space-x-3 px-4 py-3 rounded-lg font-medium
+                    ${isActive("/dashboard/admin/files")
+                      ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    }
+                  `}
+                >
+                  <Folder size={20} />
+                  <span>Files</span>
+                </button>
               </div>
             )}
 
