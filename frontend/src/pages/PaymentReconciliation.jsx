@@ -174,14 +174,14 @@ const PaymentReconciliation = () => {
               <DialogHeader>
                 <DialogTitle className="dark:text-white">Add New Payment Record</DialogTitle>
               </DialogHeader>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label className="dark:text-gray-300">Transaction ID *</Label>
                   <Input
                     value={newPayment.transaction_id}
                     onChange={(e) => setNewPayment({...newPayment, transaction_id: e.target.value})}
                     placeholder="TXN123456"
-                    className="dark:bg-gray-700 dark:border-gray-600"
+                    className="dark:bg-gray-700 dark:border-gray-600 text-sm"
                   />
                 </div>
                 <div>
@@ -192,7 +192,7 @@ const PaymentReconciliation = () => {
                     value={newPayment.amount}
                     onChange={(e) => setNewPayment({...newPayment, amount: e.target.value})}
                     placeholder="1000.00"
-                    className="dark:bg-gray-700 dark:border-gray-600"
+                    className="dark:bg-gray-700 dark:border-gray-600 text-sm"
                   />
                 </div>
                 <div>
@@ -201,7 +201,7 @@ const PaymentReconciliation = () => {
                     value={newPayment.payment_method} 
                     onValueChange={(value) => setNewPayment({...newPayment, payment_method: value})}
                   >
-                    <SelectTrigger className="dark:bg-gray-700 dark:border-gray-600">
+                    <SelectTrigger className="dark:bg-gray-700 dark:border-gray-600 text-sm">
                       <SelectValue placeholder="Select method" />
                     </SelectTrigger>
                     <SelectContent className="dark:bg-gray-800">
@@ -218,7 +218,7 @@ const PaymentReconciliation = () => {
                     value={newPayment.status} 
                     onValueChange={(value) => setNewPayment({...newPayment, status: value})}
                   >
-                    <SelectTrigger className="dark:bg-gray-700 dark:border-gray-600">
+                    <SelectTrigger className="dark:bg-gray-700 dark:border-gray-600 text-sm">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="dark:bg-gray-800">
