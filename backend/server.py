@@ -637,9 +637,17 @@ async def get_payments(current_user: User = Depends(get_current_user)):
     payments = await db.payment_reconciliation.find({}, {"_id": 0}).to_list(1000)
     for payment in payments:
         if isinstance(payment.get('date'), str):
-            payment['date'] = datetime.fromisoformat(payment['date'])
+            try:
+                payment['date'] = datetime.fromisoformat(payment['date'])
+            except ValueError:
+                # Handle non-ISO date formats, keep as string
+                pass
         if isinstance(payment.get('created_at'), str):
-            payment['created_at'] = datetime.fromisoformat(payment['created_at'])
+            try:
+                payment['created_at'] = datetime.fromisoformat(payment['created_at'])
+            except ValueError:
+                # Handle non-ISO date formats, keep as string
+                pass
     return payments
 
 
