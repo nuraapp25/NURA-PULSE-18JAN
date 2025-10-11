@@ -524,6 +524,61 @@ function handleTelecallerQueueTab(action, data) {
 function handleMontraVehicleTab(action, data) {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   
+  // Handle Montra Feed Data retrieval
+  if (action === 'get_montra_feed_data') {
+    const feedSheet = ss.getSheetByName('Montra Feed Data');
+    
+    if (!feedSheet || feedSheet.getLastRow() <= 1) {
+      return createResponse(true, 'No data available', []);
+    }
+    
+    const vehicleId = data.vehicle_id;
+    const targetDate = data.date; // Format: "01 Sep" or similar
+    
+    // Get all data (starting from row 2, column D onwards)
+    const lastRow = feedSheet.getLastRow();
+    const lastCol = feedSheet.getLastColumn();
+    
+    // Get data from row 2 onwards, all columns
+    const allData = feedSheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
+    
+    // Get headers from row 1
+    const headers = feedSheet.getRange(1, 1, 1, lastCol).getValues()[0];
+    
+    // Find column indices
+    const vehicleIdCol = headers.indexOf('Vehicle ID'); // Column Y
+    const dayCol = headers.indexOf('Day'); // Column AA
+    const monthCol = headers.indexOf('Month'); // Column AB
+    
+    Logger.log('Looking for Vehicle: ' + vehicleId + ', Date: ' + targetDate);
+    Logger.log('Column indices - Vehicle: ' + vehicleIdCol + ', Day: ' + dayCol + ', Month: ' + monthCol);
+    
+    // Filter data by vehicle ID and date
+    const filteredData = [];
+    for (let i = 0; i < allData.length; i++) {
+      const row = allData[i];
+      const rowVehicleId = row[vehicleIdCol];
+      const rowDay = row[dayCol];
+      const rowMonth = row[monthCol];
+      const rowDate = rowDay + ' ' + rowMonth;
+      
+      if (rowVehicleId === vehicleId && rowDate === targetDate) {
+        // Convert row to object with headers
+        const rowObj = {};
+        for (let j = 0; j < headers.length; j++) {
+          if (headers[j]) {
+            rowObj[headers[j]] = row[j];
+          }
+        }
+        filteredData.push(rowObj);
+      }
+    }
+    
+    Logger.log('Found ' + filteredData.length + ' matching rows');
+    
+    return createResponse(true, 'Retrieved ' + filteredData.length + ' rows', filteredData);
+  }
+  
   // Handle Montra Feed Data import
   if (action === 'import_montra_feed') {
     let feedSheet = ss.getSheetByName('Montra Feed Data');
@@ -534,9 +589,9 @@ function handleMontraVehicleTab(action, data) {
       Logger.log('Created new sheet: Montra Feed Data');
     }
     
-    // Set up headers in row 1 (columns D to AB)
+    // Set up headers in row 1 (columns D to AC)
     // Headers from CSV (columns A-U) go to D-X
-    // Additional: Y=Vehicle ID, Z=Separator, AA=Day, AB=Month
+    // Additional: Y=Vehicle ID, Z=Separator, AA=Day, AB=Month, AC=Registration Number
     const headers = data.headers || [];
     const startCol = 4; // Column D
     
