@@ -116,6 +116,7 @@ function App() {
                 <Route path="driver-onboarding" element={<DriverOnboarding />} />
                 <Route path="telecaller-queue" element={<TelecallerQueue />} />
                 <Route path="montra-vehicle" element={<MontraVehicle />} />
+                <Route path="montra-vehicle/battery-consumption" element={<BatteryConsumption />} />
                 <Route path="admin/files" element={<Files />} />
                 <Route path="manage" element={<ManagePage />} />
                 <Route path="settings" element={<SettingsPage />} />
