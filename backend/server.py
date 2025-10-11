@@ -1753,14 +1753,11 @@ async def delete_montra_feed_files(
         
         for file_info in file_identifiers:
             try:
+                # Use vehicle_id and date as primary identifiers since filename might be null in older records
                 query = {
                     "vehicle_id": file_info["vehicle_id"],
                     "date": file_info["date"]
                 }
-                
-                # Only add filename to query if it exists and is not null
-                if file_info.get("filename") and file_info["filename"] not in [None, "null", ""]:
-                    query["filename"] = file_info["filename"]
                 
                 logger.info(f"Delete query: {query}")
                 
