@@ -141,20 +141,22 @@ const BatteryConsumption = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
           <Button
             onClick={() => navigate("/dashboard/montra-vehicle")}
             variant="outline"
             size="sm"
+            className="self-start"
           >
             <ArrowLeft size={18} className="mr-2" />
             Back
           </Button>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center">
-              <Battery className="mr-3 text-green-600" size={32} />
-              Battery Consumption Analysis
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white flex items-center">
+              <Battery className="mr-2 sm:mr-3 text-green-600" size={28} />
+              <span className="hidden sm:inline">Battery Consumption Analysis</span>
+              <span className="sm:hidden">Battery Analysis</span>
             </h1>
             <p className="text-gray-600 dark:text-gray-400 mt-1">
               Analyze battery usage patterns over time
