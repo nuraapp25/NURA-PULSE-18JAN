@@ -1706,13 +1706,7 @@ async def get_montra_feed_database(current_user: User = Depends(get_current_user
                     "filename": "$_id.filename",
                     "month": "$_id.month",
                     "year": "$_id.year",
-                    "month_year": {
-                        "$cond": {
-                            "if": {"$ne": ["$_id.year", None]},
-                            "then": {"$concat": ["$_id.month", " ", {"$toString": "$_id.year"}]},
-                            "else": "$_id.month"
-                        }
-                    },
+                    "month_year": {"$concat": ["$_id.month", " ", {"$toString": "$_id.year"}]},
                     "record_count": "$count",
                     "uploaded_at": "$first_entry.imported_at",
                     "file_size": "$first_entry.file_size"
