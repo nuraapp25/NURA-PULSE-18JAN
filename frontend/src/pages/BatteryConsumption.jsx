@@ -351,26 +351,17 @@ const BatteryConsumption = () => {
                 <p className="text-3xl font-bold text-red-600 dark:text-red-400">
                   {chartData.filter(d => d.chargeStatus === -1).length}%
                 </p>
-                <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                  Count of -1 values in Column A
-                </p>
               </div>
               <div className="text-center p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg border border-green-200 dark:border-green-800">
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Charge %</p>
                 <p className="text-3xl font-bold text-green-600 dark:text-green-400">
                   {chartData.filter(d => d.chargeStatus === 1).length}%
                 </p>
-                <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                  Count of +1 values in Column A
-                </p>
               </div>
               <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Total Distance Traveled</p>
                 <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
                   {Math.max(...chartData.map(d => d.distance)).toFixed(2)} km
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                  0 km → {Math.max(...chartData.map(d => d.distance)).toFixed(2)} km
                 </p>
               </div>
             </div>
