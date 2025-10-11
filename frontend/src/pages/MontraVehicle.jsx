@@ -9,9 +9,61 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
 const MontraVehicle = () => {
+  const navigate = useNavigate();
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [importing, setImporting] = useState(false);
+
+  const widgets = [
+    {
+      id: "battery-consumption",
+      title: "Battery Consumption",
+      icon: Battery,
+      color: "bg-green-500",
+      description: "Analyze battery usage patterns",
+      route: "/dashboard/montra-vehicle/battery-consumption"
+    },
+    {
+      id: "performance",
+      title: "Performance Metrics",
+      icon: TrendingUp,
+      color: "bg-blue-500",
+      description: "Vehicle performance analysis",
+      route: "/dashboard/montra-vehicle/performance"
+    },
+    {
+      id: "speed-analysis",
+      title: "Speed Analysis",
+      icon: Gauge,
+      color: "bg-purple-500",
+      description: "Speed trends and patterns",
+      route: "/dashboard/montra-vehicle/speed"
+    },
+    {
+      id: "usage-time",
+      title: "Usage Time",
+      icon: Clock,
+      color: "bg-orange-500",
+      description: "Vehicle usage duration",
+      route: "/dashboard/montra-vehicle/usage"
+    },
+    {
+      id: "health-status",
+      title: "Health Status",
+      icon: Activity,
+      color: "bg-red-500",
+      description: "Overall health monitoring",
+      route: "/dashboard/montra-vehicle/health"
+    },
+    {
+      id: "charging-stats",
+      title: "Charging Statistics",
+      icon: Zap,
+      color: "bg-yellow-500",
+      description: "Charging patterns and efficiency",
+      route: "/dashboard/montra-vehicle/charging"
+    }
+  ];
 
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
