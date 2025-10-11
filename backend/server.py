@@ -820,8 +820,12 @@ async def import_leads(
                 else:
                     non_duplicates.append(lead)
             
-            # If duplicates found and no action specified, ask user
-            if duplicates and not duplicate_action:
+            # If duplicates found and no valid action specified, ask user
+            # Check if duplicate_action is None, empty, or invalid
+            valid_action = duplicate_action in ['skip', 'add_copy'] if duplicate_action else False
+            
+            if duplicates and not valid_action:
+                logger.info(f"Found {len(duplicates)} duplicates, asking user for action")
                 return {
                     "duplicates_found": True,
                     "duplicate_count": len(duplicates),
