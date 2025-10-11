@@ -872,22 +872,23 @@ const DriverOnboardingPage = () => {
 
       {/* Selection Controls */}
       {filteredLeads.length > 0 && (
-        <div className="flex items-center space-x-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <Button
             onClick={handleSelectAll}
             variant="outline"
             size="sm"
-            className="border-blue-500 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+            className="border-blue-500 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-sm"
           >
-            <CheckSquare size={16} className="mr-2" />
-            Select All
+            <CheckSquare size={14} className="mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Select All</span>
+            <span className="sm:hidden">All</span>
           </Button>
           {selectedLeadIds.length > 0 && (
             <Button
               onClick={handleClearSelection}
               variant="outline"
               size="sm"
-              className="border-gray-300 dark:border-gray-600"
+              className="border-gray-300 dark:border-gray-600 text-sm"
             >
               <Square size={16} className="mr-2" />
               Clear
