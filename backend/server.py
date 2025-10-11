@@ -1690,6 +1690,103 @@ async def get_vehicles_list(current_user: User = Depends(get_current_user)):
         raise HTTPException(status_code=500, detail="Failed to fetch vehicles list")
 
 
+@api_router.get("/montra-vehicle/feed-database")
+async def get_montra_feed_database(current_user: User = Depends(get_current_user)):
+    """Get all montra feed entries with file information for database management"""
+    try:
+        # Aggregate to get unique files with their data counts
+        pipeline = [
+            {
+                "$group": {
+                    "_id": {
+                        "vehicle_id": "$vehicle_id",
+                        "date": "$date",
+                        "filename": "$filename"
+                    },
+                    "count": {"$sum": 1},
+                    "first_entry": {"$first": "$$ROOT"}
+                }
+            },
+            {
+                "$project": {
+                    "vehicle_id": "$_id.vehicle_id",
+                    "date": "$_id.date", 
+                    "filename": "$_id.filename",
+                    "record_count": "$count",
+                    "uploaded_at": "$first_entry.uploaded_at",
+                    "file_size": "$first_entry.file_size"
+                }
+            },
+            {"$sort": {"uploaded_at": -1}}
+        ]
+        
+        results = await db.montra_feed_data.aggregate(pipeline).to_list(1000)
+        
+        return {
+            "success": True,
+            "files": results,
+            "count": len(results)
+        }
+    except Exception as e:
+        logger.error(f"Error fetching montra feed database: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch montra feed database")
+
+
+@api_router.delete("/montra-vehicle/feed-database")
+async def delete_montra_feed_files(
+    file_identifiers: List[dict],
+    current_user: User = Depends(get_current_user)
+):
+    """Delete selected montra feed files from database
+    
+    Args:
+        file_identifiers: List of dicts with vehicle_id, date, and filename
+    """
+    try:
+        if not file_identifiers:
+            raise HTTPException(status_code=400, detail="No files specified for deletion")
+        
+        deleted_count = 0
+        failed_deletions = []
+        
+        for file_info in file_identifiers:
+            try:
+                query = {
+                    "vehicle_id": file_info["vehicle_id"],
+                    "date": file_info["date"],
+                    "filename": file_info["filename"]
+                }
+                
+                result = await db.montra_feed_data.delete_many(query)
+                deleted_count += result.deleted_count
+                
+                logger.info(f"Deleted {result.deleted_count} records for file: {file_info['filename']}")
+                
+            except Exception as e:
+                failed_deletions.append({
+                    "filename": file_info.get("filename", "Unknown"),
+                    "error": str(e)
+                })
+        
+        if failed_deletions:
+            return {
+                "success": False,
+                "message": f"Partially completed. Deleted {deleted_count} records.",
+                "deleted_count": deleted_count,
+                "failed_deletions": failed_deletions
+            }
+        
+        return {
+            "success": True,
+            "message": f"Successfully deleted {deleted_count} records from {len(file_identifiers)} files",
+            "deleted_count": deleted_count
+        }
+        
+    except Exception as e:
+        logger.error(f"Error deleting montra feed files: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to delete montra feed files")
+
+
 @api_router.post("/admin/files/reload-fleet-mapping")
 async def reload_fleet_mapping(current_user: User = Depends(get_current_user)):
     """Reload vehicle to registration number mapping from Nura Fleet Data.xlsx"""
