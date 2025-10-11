@@ -41,25 +41,25 @@ class NuraPulseBackendTester:
     def make_request(self, method, endpoint, data=None, files=None, use_auth=True):
         """Make HTTP request with proper headers"""
         url = f"{self.base_url}{endpoint}"
-        headers = {"Content-Type": "application/json"}
+        headers = {}
         
         if use_auth and self.token:
             headers["Authorization"] = f"Bearer {self.token}"
         
         try:
             if method.upper() == "GET":
-                response = self.session.get(url, headers=headers, timeout=30)
+                response = requests.get(url, headers=headers, timeout=10)
             elif method.upper() == "POST":
                 if files:
-                    # Remove Content-Type for file uploads
-                    headers.pop("Content-Type", None)
-                    response = self.session.post(url, headers=headers, files=files, timeout=30)
+                    response = requests.post(url, headers=headers, files=files, timeout=10)
                 else:
-                    response = self.session.post(url, headers=headers, json=data, timeout=30)
+                    headers["Content-Type"] = "application/json"
+                    response = requests.post(url, headers=headers, json=data, timeout=10)
             elif method.upper() == "PUT":
-                response = self.session.put(url, headers=headers, json=data, timeout=30)
+                headers["Content-Type"] = "application/json"
+                response = requests.put(url, headers=headers, json=data, timeout=10)
             elif method.upper() == "DELETE":
-                response = self.session.delete(url, headers=headers, timeout=30)
+                response = requests.delete(url, headers=headers, timeout=10)
             else:
                 raise ValueError(f"Unsupported HTTP method: {method}")
             
