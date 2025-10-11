@@ -422,7 +422,7 @@ class NuraPulseBackendTester:
     
     def run_all_tests(self):
         """Run all backend tests"""
-        print("🚀 Starting Nura Pulse Backend Testing")
+        print("🚀 Starting Nura Pulse Backend Testing - Focus on Battery Consumption & Payment Reconciliation")
         print(f"Backend URL: {self.base_url}")
         print(f"Master Admin: {MASTER_ADMIN_EMAIL}")
         
@@ -433,9 +433,17 @@ class NuraPulseBackendTester:
             print("\n❌ Authentication failed - cannot proceed with other tests")
             return False
         
+        # Core functionality tests
         user_mgmt_success = self.test_user_management()
         sheets_sync_success = self.test_google_sheets_sync()
         leads_success = self.test_driver_onboarding_leads()
+        
+        # NEW: Priority tests from review request
+        payment_reconciliation_success = self.test_payment_reconciliation_apis()
+        battery_analytics_success = self.test_battery_consumption_analytics()
+        telecaller_assignments_success = self.test_telecaller_queue_assignments()
+        
+        # Remaining mini-apps
         mini_apps_success = self.test_mini_apps_endpoints()
         
         # Summary
@@ -451,6 +459,18 @@ class NuraPulseBackendTester:
         print(f"Passed: {passed_tests}")
         print(f"Failed: {failed_tests}")
         print(f"Success Rate: {(passed_tests/total_tests)*100:.1f}%")
+        
+        # Priority test results
+        print("\n🎯 PRIORITY TEST RESULTS (Review Request Focus):")
+        priority_tests = [
+            ("Payment Reconciliation APIs", payment_reconciliation_success),
+            ("Battery Consumption Analytics", battery_analytics_success),
+            ("Telecaller Queue Assignments", telecaller_assignments_success)
+        ]
+        
+        for test_name, success in priority_tests:
+            status = "✅ PASS" if success else "❌ FAIL"
+            print(f"  {status} {test_name}")
         
         if failed_tests > 0:
             print("\n❌ FAILED TESTS:")
