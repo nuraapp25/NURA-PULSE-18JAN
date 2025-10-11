@@ -1351,6 +1351,31 @@ async def import_montra_feed(file: UploadFile = File(...), current_user: User = 
         
         logger.info(f"Prepared {len(rows_to_import)} rows for import")
         
+        # Also save to MongoDB for analytics queries
+        montra_docs = []
+        headers = df.columns.tolist() + ['Vehicle ID', 'Separator', 'Day', 'Month', 'Registration Number']
+        
+        for row_data in rows_to_import:
+            doc = {
+                "vehicle_id": vehicle_id,
+                "date": f"{day} {month}",
+                "day": day,
+                "month": month,
+                "registration_number": registration_number,
+                "imported_at": datetime.now(timezone.utc).isoformat()
+            }
+            # Map all columns to document
+            for i, header in enumerate(headers):
+                if i < len(row_data):
+                    doc[header] = row_data[i]
+            
+            montra_docs.append(doc)
+        
+        # Save to MongoDB
+        if montra_docs:
+            await db.montra_feed_data.insert_many(montra_docs)
+            logger.info(f"Saved {len(montra_docs)} rows to MongoDB")
+        
         # Send to Google Sheets
         # The sheets sync will handle adding to "Montra Feed Data" tab starting from D2
         from sheets_multi_sync import send_to_sheets
@@ -1358,7 +1383,7 @@ async def import_montra_feed(file: UploadFile = File(...), current_user: User = 
         payload = {
             'action': 'import_montra_feed',
             'tab': 'Montra Feed Data',
-            'headers': df.columns.tolist() + ['Vehicle ID', 'Separator', 'Day', 'Month', 'Registration Number'],
+            'headers': headers,
             'data': rows_to_import,
             'vehicle_id': vehicle_id,
             'day': day,
