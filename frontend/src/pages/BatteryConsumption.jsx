@@ -92,7 +92,8 @@ const BatteryConsumption = () => {
     // Find starting odometer value (minimum)
     const startingOdometer = Math.min(...odometerValues);
     
-    return rawData.map((row, index) => {
+    // Process data and calculate charge changes from Battery Soc(%)
+    const processedData = rawData.map((row, index) => {
       // Extract hour from Portal Received Time (Column C)
       const timeStr = row['Portal Received Time'] || "";
       let hour = "N/A";
@@ -116,66 +117,25 @@ const BatteryConsumption = () => {
       // Normalize distance - subtract starting odometer to get relative distance
       const normalizedDistance = absoluteDistance - startingOdometer;
 
-      // Get Column A value for charge drop/charge calculation
-      let columnAValue = 0;
-      const allKeys = Object.keys(row);
+      const currentBattery = parseFloat(row['Battery Soc(%)'] || row['Battery SOC (%)'] || 0);
       
-      // Try to find Column A in various possible formats
-      const possibleColumnANames = [
-        allKeys.find(key => key === "0" || key === "" || key === "Unnamed: 0"), // Pandas unnamed column
-        'A', 'Column A', 'col_A', 'charge_status', 'Charge Status',
-        allKeys[0], // First column
-        // Try looking for any column that might have -1, 0, 1 values
-        allKeys.find(key => {
-          const val = parseFloat(row[key]);
-          return val === -1 || val === 0 || val === 1;
-        })
-      ].filter(Boolean);
-      
-      // Check for actual Column A data
-      let foundColumnA = false;
-      for (const colName of possibleColumnANames) {
-        if (row[colName] !== undefined) {
-          const parsed = parseFloat(row[colName]);
-          if (!isNaN(parsed) && (parsed === -1 || parsed === 0 || parsed === 1)) {
-            columnAValue = parsed;
-            foundColumnA = true;
-            break;
-          }
-        }
-      }
-      
-      // TEMPORARY FIX: If no Column A found, simulate it based on user's expected values
-      // User expects: 28% charge drop (-1), 40% charge (+1), rest neutral (0)
-      if (!foundColumnA) {
-        // Distribute values: 28% = -1, 40% = +1, 32% = 0
-        const totalRows = 402; // From API response count
-        const chargeDropCount = Math.round(totalRows * 0.28); // 28% = ~113 rows
-        const chargeCount = Math.round(totalRows * 0.40); // 40% = ~161 rows
-        
-        if (index < chargeDropCount) {
-          columnAValue = -1; // First 28% are charge drop
-        } else if (index < chargeDropCount + chargeCount) {
-          columnAValue = 1; // Next 40% are charge
-        } else {
-          columnAValue = 0; // Remaining are neutral
-        }
-      }
-      
-      // Debug logging for first row
-      if (index === 0) {
-        console.log('Available columns:', allKeys.slice(0, 10));
-        console.log(`Column A simulation: foundColumnA=${foundColumnA}, using simulated values`);
+      // Calculate battery change from previous reading
+      let batteryChange = 0;
+      if (index > 0) {
+        const prevBattery = parseFloat(rawData[index - 1]['Battery Soc(%)'] || rawData[index - 1]['Battery SOC (%)'] || 0);
+        batteryChange = currentBattery - prevBattery;
       }
 
       return {
         time: hour,
-        battery: parseFloat(row['Battery Soc(%)'] || row['Battery SOC (%)'] || 0),
+        battery: currentBattery,
         distance: normalizedDistance,
-        chargeStatus: columnAValue, // -1 = charge drop, 1 = charge, 0 = neutral
+        batteryChange: batteryChange, // Positive = charging, Negative = discharging
         rawIndex: index
       };
     });
+    
+    return processedData;
   };
 
   return (
