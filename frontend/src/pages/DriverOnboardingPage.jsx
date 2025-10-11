@@ -944,22 +944,25 @@ const DriverOnboardingPage = () => {
                       onClick={(e) => handleLeadClick(lead, e)}
                       className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors"
                     >
-                      <td className="py-3 px-4" onClick={(e) => e.stopPropagation()}>
+                      <td className="py-2 sm:py-3 px-2 sm:px-4" onClick={(e) => e.stopPropagation()}>
                         <Checkbox
                           checked={selectedLeadIds.includes(lead.id)}
                           onCheckedChange={() => handleLeadCheckboxChange(lead.id)}
                         />
                       </td>
-                      <td className="py-3 px-4 text-sm text-gray-900 dark:text-white">{index + 1}</td>
-                      <td className="py-3 px-4 text-sm text-gray-900 dark:text-white font-medium">{lead.name}</td>
-                      <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">{lead.phone_number}</td>
-                      <td className="py-3 px-4 text-sm">
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(lead.status || "New")}`}>
+                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm text-gray-900 dark:text-white hidden sm:table-cell">{index + 1}</td>
+                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm text-gray-900 dark:text-white font-medium">
+                        <div className="sm:hidden text-xs text-gray-500 dark:text-gray-400">#{index + 1}</div>
+                        {lead.name}
+                      </td>
+                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm text-gray-600 dark:text-gray-400">{lead.phone_number}</td>
+                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm">
+                        <span className={`px-1 sm:px-2 py-1 rounded text-xs font-medium ${getStatusColor(lead.status || "New")}`}>
                           {lead.status || "New"}
                         </span>
                       </td>
-                      <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">{lead.current_location || '-'}</td>
-                      <td className="py-3 px-4 text-xs text-gray-500 dark:text-gray-500">
+                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm text-gray-600 dark:text-gray-400 hidden md:table-cell">{lead.current_location || '-'}</td>
+                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs text-gray-500 dark:text-gray-500 hidden lg:table-cell">
                         {lead.import_date ? new Date(lead.import_date).toLocaleDateString() : '-'}
                       </td>
                     </tr>
