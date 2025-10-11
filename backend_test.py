@@ -489,6 +489,8 @@ class NuraPulseBackendTester:
             status = response.status_code if response else "Network error"
             self.log_test("Montra Feed Database - DELETE Empty Request", False, 
                         f"Expected 400, got {status}")
+            if response:
+                print(f"   Actual response: {response.text}")
         
         # Test 4: DELETE authentication requirement
         response = self.make_request("DELETE", "/montra-vehicle/feed-database", 
