@@ -1358,11 +1358,12 @@ async def import_montra_feed(file: UploadFile = File(...), current_user: User = 
         payload = {
             'action': 'import_montra_feed',
             'tab': 'Montra Feed Data',
-            'headers': df.columns.tolist() + ['Vehicle ID', 'Separator', 'Day', 'Month'],
+            'headers': df.columns.tolist() + ['Vehicle ID', 'Separator', 'Day', 'Month', 'Registration Number'],
             'data': rows_to_import,
             'vehicle_id': vehicle_id,
             'day': day,
-            'month': month
+            'month': month,
+            'registration_number': registration_number
         }
         
         result = send_to_sheets(payload)
