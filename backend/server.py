@@ -1631,36 +1631,37 @@ async def get_battery_consumption_data(
     date: str = Query(...),
     current_user: User = Depends(get_current_user)
 ):
-    """Get battery consumption data for a specific vehicle and date from Google Sheets"""
+    """Get battery consumption data for a specific vehicle and date from MongoDB"""
     try:
-        from sheets_multi_sync import send_to_sheets
-        
         logger.info(f"Fetching battery data for vehicle {vehicle_id} on {date}")
         
-        # Request data from Google Sheets
-        payload = {
-            'action': 'get_montra_feed_data',
-            'tab': 'Montra Feed Data',
-            'vehicle_id': vehicle_id,
-            'date': date
+        # Query MongoDB for matching data
+        query = {
+            "vehicle_id": vehicle_id,
+            "date": date
         }
         
-        result = send_to_sheets(payload)
+        results = await db.montra_feed_data.find(query, {"_id": 0}).sort("Date", 1).to_list(10000)
         
-        if result.get('success'):
-            data = result.get('data', [])
-            logger.info(f"Retrieved {len(data)} rows for vehicle {vehicle_id}")
+        if not results:
+            logger.warning(f"No data found for vehicle {vehicle_id} on {date}")
+            raise HTTPException(
+                status_code=404, 
+                detail=f"No data found for vehicle {vehicle_id} on {date}. Please import the feed data first."
+            )
+        
+        logger.info(f"Retrieved {len(results)} rows for vehicle {vehicle_id}")
+        
+        return {
+            "success": True,
+            "vehicle_id": vehicle_id,
+            "date": date,
+            "data": results,
+            "count": len(results)
+        }
             
-            return {
-                "success": True,
-                "vehicle_id": vehicle_id,
-                "date": date,
-                "data": data,
-                "count": len(data)
-            }
-        else:
-            raise HTTPException(status_code=500, detail="Failed to fetch data from Google Sheets")
-            
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error fetching battery data: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch battery data: {str(e)}")
