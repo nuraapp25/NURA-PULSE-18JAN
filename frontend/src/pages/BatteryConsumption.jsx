@@ -292,21 +292,28 @@ const BatteryConsumption = () => {
             </div>
 
             {/* Summary Stats */}
-            <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-              <div className="text-center">
-                <p className="text-sm text-gray-600 dark:text-gray-400">Total Data Points</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{chartData.length}</p>
-              </div>
-              <div className="text-center">
-                <p className="text-sm text-gray-600 dark:text-gray-400">Battery Range</p>
-                <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                  {Math.min(...chartData.map(d => d.battery)).toFixed(1)}% - {Math.max(...chartData.map(d => d.battery)).toFixed(1)}%
+            <div className="grid grid-cols-2 gap-6 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+              <div className="text-center p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Battery Consumption</p>
+                <p className="text-3xl font-bold text-red-600 dark:text-red-400">
+                  {(() => {
+                    const startBattery = chartData[0]?.battery || 0;
+                    const endBattery = chartData[chartData.length - 1]?.battery || 0;
+                    const consumption = (startBattery - endBattery).toFixed(1);
+                    return consumption;
+                  })()}%
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                  {chartData[0]?.battery.toFixed(1)}% → {chartData[chartData.length - 1]?.battery.toFixed(1)}%
                 </p>
               </div>
-              <div className="text-center">
-                <p className="text-sm text-gray-600 dark:text-gray-400">Total Distance</p>
-                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                  {(Math.max(...chartData.map(d => d.distance)) - Math.min(...chartData.map(d => d.distance))).toFixed(2)} km
+              <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Total Distance Traveled</p>
+                <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+                  {Math.max(...chartData.map(d => d.distance)).toFixed(2)} km
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                  0 km → {Math.max(...chartData.map(d => d.distance)).toFixed(2)} km
                 </p>
               </div>
             </div>
