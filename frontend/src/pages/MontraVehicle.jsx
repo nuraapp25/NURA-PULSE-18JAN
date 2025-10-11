@@ -210,21 +210,38 @@ const MontraVehicle = () => {
     fetchFeedDatabase();
   };
 
+  const getAllFiles = () => {
+    const allFiles = [];
+    Object.values(feedFiles).forEach(folderFiles => {
+      folderFiles.forEach(file => allFiles.push(file));
+    });
+    return allFiles;
+  };
+
   const handleSelectAll = (checked) => {
     if (checked) {
-      const allIds = feedFiles.map((file, index) => index);
+      const allFiles = getAllFiles();
+      const allIds = allFiles.map((file, index) => `${file.vehicle_id}-${file.date}-${file.filename}`);
       setSelectedFileIds(allIds);
     } else {
       setSelectedFileIds([]);
     }
   };
 
-  const handleSelectFile = (index, checked) => {
+  const handleSelectFile = (file, checked) => {
+    const fileId = `${file.vehicle_id}-${file.date}-${file.filename}`;
     if (checked) {
-      setSelectedFileIds(prev => [...prev, index]);
+      setSelectedFileIds(prev => [...prev, fileId]);
     } else {
-      setSelectedFileIds(prev => prev.filter(id => id !== index));
+      setSelectedFileIds(prev => prev.filter(id => id !== fileId));
     }
+  };
+
+  const toggleFolder = (monthYear) => {
+    setExpandedFolders(prev => ({
+      ...prev,
+      [monthYear]: !prev[monthYear]
+    }));
   };
 
   const handleDeleteSelected = async () => {
