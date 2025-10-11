@@ -670,9 +670,11 @@ class NuraPulseBackendTester:
         print(f"DEBUG: Making DELETE request with empty data: {empty_data}")
         response = self.make_request("DELETE", "/montra-vehicle/feed-database", data=empty_data)
         print(f"DEBUG: Response object: {response}")
+        print(f"DEBUG: Response type: {type(response)}")
         if response:
-            print(f"DEBUG: Response status: {response.status_code}")
+            print(f"DEBUG: Response status immediately: {response.status_code}")
             print(f"DEBUG: Response text: {response.text}")
+            print(f"DEBUG: Response status again: {response.status_code}")
         
         print(f"DEBUG: Checking condition - response: {response is not None}, status: {response.status_code if response else 'None'}")
         if response and response.status_code == 400:
