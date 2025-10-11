@@ -1755,9 +1755,12 @@ async def delete_montra_feed_files(
             try:
                 query = {
                     "vehicle_id": file_info["vehicle_id"],
-                    "date": file_info["date"],
-                    "filename": file_info["filename"]
+                    "date": file_info["date"]
                 }
+                
+                # Only add filename to query if it exists and is not null
+                if file_info.get("filename") and file_info["filename"] not in [None, "null", ""]:
+                    query["filename"] = file_info["filename"]
                 
                 logger.info(f"Delete query: {query}")
                 
