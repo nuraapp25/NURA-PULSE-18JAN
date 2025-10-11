@@ -233,8 +233,11 @@ const MontraVehicle = () => {
       }));
 
       const response = await axios.delete(`${API}/montra-vehicle/feed-database`, {
-        headers: { Authorization: `Bearer ${token}` },
-        data: { file_identifiers: fileIdentifiers }
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        data: fileIdentifiers
       });
 
       if (response.data.success) {
