@@ -202,7 +202,7 @@ const DriverOnboardingPage = () => {
     }
   };
 
-  const handleImport = async () => {
+  const handleImport = async (duplicateAction = null) => {
     if (!selectedFile) {
       toast.error("Please select a file to import");
       return;
@@ -215,16 +215,27 @@ const DriverOnboardingPage = () => {
       formData.append('file', selectedFile);
 
       const token = localStorage.getItem("token");
-      const response = await axios.post(
-        `${API}/driver-onboarding/import-leads`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data'
-          }
+      
+      // Build URL with duplicate action if provided
+      let url = `${API}/driver-onboarding/import-leads`;
+      if (duplicateAction) {
+        url += `?duplicate_action=${duplicateAction}`;
+      }
+      
+      const response = await axios.post(url, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
         }
-      );
+      });
+
+      // Check if duplicates were found
+      if (response.data.duplicates_found) {
+        setDuplicateData(response.data);
+        setDuplicateDialogOpen(true);
+        setImporting(false);
+        return;
+      }
 
       toast.success(
         <div>
@@ -235,13 +246,19 @@ const DriverOnboardingPage = () => {
       );
 
       setImportDialogOpen(false);
+      setDuplicateDialogOpen(false);
       setSelectedFile(null);
+      setDuplicateData(null);
       await fetchLeads(); // This will also update last sync time
     } catch (error) {
       toast.error(error.response?.data?.detail || "Failed to import leads");
     } finally {
       setImporting(false);
     }
+  };
+
+  const handleDuplicateAction = async (action) => {
+    await handleImport(action);
   };
 
   const handleSyncToSheets = async () => {
