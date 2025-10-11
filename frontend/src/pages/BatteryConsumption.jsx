@@ -309,13 +309,25 @@ const BatteryConsumption = () => {
               <div className="text-center p-4 bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-lg border border-red-200 dark:border-red-800">
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Charge Drop %</p>
                 <p className="text-3xl font-bold text-red-600 dark:text-red-400">
-                  {chartData.filter(d => d.chargeStatus === -1).length}%
+                  {(() => {
+                    // Sum all negative battery changes (discharge periods)
+                    const totalDrop = chartData
+                      .filter(d => d.batteryChange < 0)
+                      .reduce((sum, d) => sum + Math.abs(d.batteryChange), 0);
+                    return totalDrop.toFixed(1);
+                  })()}%
                 </p>
               </div>
               <div className="text-center p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg border border-green-200 dark:border-green-800">
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Charge %</p>
                 <p className="text-3xl font-bold text-green-600 dark:text-green-400">
-                  {chartData.filter(d => d.chargeStatus === 1).length}%
+                  {(() => {
+                    // Sum all positive battery changes (charging periods)
+                    const totalCharge = chartData
+                      .filter(d => d.batteryChange > 0)
+                      .reduce((sum, d) => sum + d.batteryChange, 0);
+                    return totalCharge.toFixed(1);
+                  })()}%
                 </p>
               </div>
               <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
