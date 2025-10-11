@@ -123,22 +123,39 @@ const BatteryConsumption = () => {
       // Get Column A value for charge drop/charge calculation
       // Try multiple possible column names for Column A
       let columnAValue = 0;
+      const allKeys = Object.keys(row);
+      
+      // Find Column A - it could be unnamed (key like "0") or have various names
       const possibleColumnANames = [
+        allKeys.find(key => key === "0" || key === "" || key === "Unnamed: 0"), // Pandas unnamed column
         'A', // Direct column name
-        Object.keys(row)[0], // First column
+        allKeys[0], // First column in the object
         'Column A',
         'col_A',
-        'charge_status'
-      ];
+        'charge_status',
+        'Charge Status',
+        // Try looking for any column that might have -1, 0, 1 values
+        allKeys.find(key => {
+          const val = parseFloat(row[key]);
+          return val === -1 || val === 0 || val === 1;
+        })
+      ].filter(Boolean); // Remove undefined values
       
       for (const colName of possibleColumnANames) {
         if (row[colName] !== undefined) {
           const parsed = parseFloat(row[colName]);
-          if (!isNaN(parsed)) {
+          if (!isNaN(parsed) && (parsed === -1 || parsed === 0 || parsed === 1)) {
             columnAValue = parsed;
+            console.log(`Found Column A data in column: ${colName}, value: ${parsed}`);
             break;
           }
         }
+      }
+      
+      // Fallback: log available columns for debugging
+      if (columnAValue === 0 && index === 0) {
+        console.log('Available columns:', allKeys.slice(0, 10));
+        console.log('Sample values for first 5 columns:', allKeys.slice(0, 5).map(k => `${k}: ${row[k]}`));
       }
 
       return {
