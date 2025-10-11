@@ -318,6 +318,21 @@ frontend:
         - working: true
           agent: "testing"
           comment: "✅ TESTED: Both Montra Feed Database Management endpoints working correctly. GET /montra-vehicle/feed-database successfully retrieves 9 feed files with proper metadata (vehicle_id, date, record_count, uploaded_at). DELETE /montra-vehicle/feed-database handles bulk deletion properly - correctly rejects empty requests (400), requires authentication (403), and processes valid file identifiers. Fixed backend aggregation pipeline to use 'imported_at' field and added filename storage. Authentication and error handling working as expected. Core functionality fully operational."
+        - working: true
+          agent: "testing"
+          comment: "✅ CORRECTED FUNCTIONALITY TESTED: Successfully tested all corrected Montra Feed functionality as requested. 1) Import endpoint now returns 'synced_to_database: true' instead of Google Sheets sync. 2) Feed database endpoint includes proper month_year field (e.g., 'Dec 2024') for folder organization. 3) Aggregation pipeline correctly groups by month and year with updated data structure including filename, month, and year fields. 4) Bulk delete functionality works correctly with proper authentication requirements. Fixed backend issues: added year field extraction from filename, improved aggregation pipeline to handle month_year concatenation, and resolved payment reconciliation date parsing errors. All core corrected functionality operational."
+
+  - task: "Corrected Montra Feed Import without Google Sheets"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTED: POST /montra-vehicle/import-feed endpoint working correctly. Imports CSV data to backend database only (no Google Sheets sync). Response format shows 'synced_to_database: true' as requested. Data structure includes vehicle_id, date, month, year, and filename fields. Authentication requirements properly enforced. Import functionality processes 21-column CSV files with proper filename format validation (VEHICLE_ID - DD MMM YYYY.csv)."
 
 metadata:
   created_by: "main_agent"
