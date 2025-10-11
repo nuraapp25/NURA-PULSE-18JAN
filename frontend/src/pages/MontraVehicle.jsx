@@ -259,13 +259,23 @@ const MontraVehicle = () => {
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Montra Vehicle Insights</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">Track and analyze vehicle performance data</p>
         </div>
-        <Button
-          onClick={() => setImportDialogOpen(true)}
-          className="bg-purple-600 hover:bg-purple-700"
-        >
-          <Upload size={18} className="mr-2" />
-          Bulk Import Feeds
-        </Button>
+        <div className="flex space-x-3">
+          <Button
+            onClick={handleOpenDatabase}
+            variant="outline"
+            className="border-blue-600 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400"
+          >
+            <Database size={18} className="mr-2" />
+            Feed Database
+          </Button>
+          <Button
+            onClick={() => setImportDialogOpen(true)}
+            className="bg-purple-600 hover:bg-purple-700"
+          >
+            <Upload size={18} className="mr-2" />
+            Bulk Import Feeds
+          </Button>
+        </div>
       </div>
 
       {/* Analytics Widgets */}
