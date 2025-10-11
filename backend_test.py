@@ -677,7 +677,7 @@ class NuraPulseBackendTester:
         # Priority test results
         print("\n🎯 PRIORITY TEST RESULTS (Review Request Focus):")
         priority_tests = [
-            ("Montra Feed Database Management", montra_feed_db_success),
+            ("Corrected Montra Feed Functionality", montra_feed_corrected_success),
             ("Payment Reconciliation APIs", payment_reconciliation_success),
             ("Battery Consumption Analytics", battery_analytics_success),
             ("Telecaller Queue Assignments", telecaller_assignments_success)
