@@ -264,6 +264,7 @@ const MontraVehicle = () => {
               <input
                 type="file"
                 accept=".csv,.xlsx"
+                multiple
                 onChange={handleFileSelect}
                 className="hidden"
                 id="montra-file-input"
@@ -274,10 +275,10 @@ const MontraVehicle = () => {
               >
                 <Upload size={32} className="text-gray-400 dark:text-gray-500 mb-2" />
                 <span className="text-sm text-gray-600 dark:text-gray-400">
-                  Click to select a file
+                  Click to select files (bulk import supported)
                 </span>
                 <span className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                  CSV or XLSX files only
+                  CSV or XLSX files only • Multiple files supported
                 </span>
               </label>
             </div>
