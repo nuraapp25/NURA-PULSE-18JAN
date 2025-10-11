@@ -334,6 +334,18 @@ frontend:
           agent: "testing"
           comment: "✅ TESTED: POST /montra-vehicle/import-feed endpoint working correctly. Imports CSV data to backend database only (no Google Sheets sync). Response format shows 'synced_to_database: true' as requested. Data structure includes vehicle_id, date, month, year, and filename fields. Authentication requirements properly enforced. Import functionality processes 21-column CSV files with proper filename format validation (VEHICLE_ID - DD MMM YYYY.csv)."
 
+  - task: "DELETE Endpoint Fix for Montra Feed Database"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTED: DELETE /montra-vehicle/feed-database endpoint fix verified completely. All functionality working correctly: 1) Properly parses JSON request body with file identifiers (vehicle_id, date, filename). 2) Successfully deletes records from montra_feed_data collection using exact query matching. 3) Returns accurate deleted_count and success status. 4) Validates empty requests (400 error with 'No files specified'). 5) Handles invalid file identifiers correctly (0 deleted_count). 6) Requires authentication (403 without token). 7) Database verification confirms actual record removal. Created and deleted test data successfully (3 records). All 9 comprehensive tests passed (100% success rate). DELETE functionality fully operational and ready for production use."
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
