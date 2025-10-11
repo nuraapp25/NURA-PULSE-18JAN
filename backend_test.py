@@ -408,13 +408,59 @@ class NuraPulseBackendTester:
         
         return success_count >= 1
     
-    def test_montra_feed_database_management(self):
-        """Test 8: Montra Feed Database Management Endpoints"""
-        print("\n=== Testing Montra Feed Database Management ===")
+    def test_montra_feed_corrected_functionality(self):
+        """Test 8: Corrected Montra Feed Functionality - Import without Google Sheets, Updated Database with Month Grouping, Delete Functionality"""
+        print("\n=== Testing Corrected Montra Feed Functionality ===")
         
         success_count = 0
         
-        # Test 1: GET /montra-vehicle/feed-database - Retrieve all uploaded feed files
+        # Test 1: Montra Feed Import without Google Sheets
+        print("\n--- Testing Montra Feed Import (Database Only) ---")
+        
+        # Create a sample CSV content for testing
+        import io
+        sample_csv_content = """A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U
+1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21
+-1,100,200,300,400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000
+1,110,210,310,410,510,610,710,810,910,1010,1110,1210,1310,1410,1510,1610,1710,1810,1910,2010
+0,120,220,320,420,520,620,720,820,920,1020,1120,1220,1320,1420,1520,1620,1720,1820,1920,2020"""
+        
+        # Test import endpoint with proper filename format
+        test_filename = "P60G2512500002032 - 15 Dec 2024.csv"
+        files = {'file': (test_filename, sample_csv_content, 'text/csv')}
+        
+        response = self.make_request("POST", "/montra-vehicle/import-feed", files=files)
+        
+        if response and response.status_code == 200:
+            try:
+                result = response.json()
+                # Check for corrected response format
+                if "synced_to_database" in result and result["synced_to_database"] == True:
+                    self.log_test("Montra Feed Import - Database Only", True, 
+                                f"Import successful: {result.get('rows', 0)} rows, synced_to_database: {result['synced_to_database']}")
+                    success_count += 1
+                    
+                    # Verify data structure includes required fields
+                    if "vehicle_id" in result and "date" in result:
+                        self.log_test("Montra Feed Import - Data Structure", True, 
+                                    f"Response includes vehicle_id: {result['vehicle_id']}, date: {result['date']}")
+                        success_count += 1
+                    else:
+                        self.log_test("Montra Feed Import - Data Structure", False, 
+                                    "Response missing vehicle_id or date fields")
+                else:
+                    self.log_test("Montra Feed Import - Database Only", False, 
+                                f"Expected synced_to_database: true, got: {result}")
+            except json.JSONDecodeError:
+                self.log_test("Montra Feed Import - Database Only", False, "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Montra Feed Import - Database Only", False, error_msg, 
+                        response.text if response else None)
+        
+        # Test 2: Updated Feed Database with Month Grouping
+        print("\n--- Testing Feed Database with Month Grouping ---")
+        
         response = self.make_request("GET", "/montra-vehicle/feed-database")
         
         if response and response.status_code == 200:
@@ -427,22 +473,32 @@ class NuraPulseBackendTester:
                     self.log_test("Montra Feed Database - GET All Files", True, 
                                 f"Retrieved {count} feed files from database")
                     
-                    # Verify response structure for each file
+                    # Verify month grouping and required fields
                     if files and len(files) > 0:
                         sample_file = files[0]
-                        required_fields = ["vehicle_id", "date", "record_count", "uploaded_at"]
+                        required_fields = ["vehicle_id", "date", "record_count", "uploaded_at", "month_year"]
                         missing_fields = [field for field in required_fields if field not in sample_file]
                         
                         if not missing_fields:
-                            self.log_test("Montra Feed Database - File Metadata Structure", True, 
-                                        f"File metadata contains all required fields: {required_fields}")
+                            month_year = sample_file.get("month_year", "")
+                            self.log_test("Montra Feed Database - Month Grouping", True, 
+                                        f"File metadata includes month_year field: '{month_year}' and all required fields")
                             success_count += 1
                         else:
-                            self.log_test("Montra Feed Database - File Metadata Structure", False, 
-                                        f"Missing required fields: {missing_fields}")
+                            self.log_test("Montra Feed Database - Month Grouping", False, 
+                                        f"Missing required fields for month grouping: {missing_fields}")
+                        
+                        # Check if aggregation includes month and year fields
+                        if "month" in sample_file and "year" in sample_file:
+                            self.log_test("Montra Feed Database - Aggregation Pipeline", True, 
+                                        f"Aggregation includes month: '{sample_file.get('month')}', year: '{sample_file.get('year')}'")
+                            success_count += 1
+                        else:
+                            self.log_test("Montra Feed Database - Aggregation Pipeline", False, 
+                                        "Aggregation missing month or year fields")
                     else:
-                        self.log_test("Montra Feed Database - File Metadata Structure", True, 
-                                    "No files in database - structure validation skipped")
+                        self.log_test("Montra Feed Database - Month Grouping", True, 
+                                    "No files in database - month grouping validation skipped")
                         success_count += 1
                     
                     success_count += 1
@@ -456,23 +512,10 @@ class NuraPulseBackendTester:
             self.log_test("Montra Feed Database - GET All Files", False, error_msg, 
                         response.text if response else None)
         
-        # Test 2: Authentication requirement for GET endpoint
-        try:
-            response = self.make_request("GET", "/montra-vehicle/feed-database", use_auth=False)
-            
-            if response and response.status_code in [401, 403]:
-                self.log_test("Montra Feed Database - GET Authentication", True, 
-                            f"Correctly requires authentication ({response.status_code} without token)")
-                success_count += 1
-            else:
-                status = response.status_code if response else "Network error"
-                self.log_test("Montra Feed Database - GET Authentication", False, 
-                            f"Expected 401/403, got {status}")
-        except Exception as e:
-            self.log_test("Montra Feed Database - GET Authentication", False, 
-                        f"Exception during test: {e}")
+        # Test 3: Delete Functionality with Sample File Identifiers
+        print("\n--- Testing Delete Functionality ---")
         
-        # Test 3: DELETE /montra-vehicle/feed-database - Test with empty request
+        # Test with empty request first
         delete_data = []
         response = self.make_request("DELETE", "/montra-vehicle/feed-database", data=delete_data)
         
@@ -493,10 +536,49 @@ class NuraPulseBackendTester:
             status = response.status_code if response else "Network error"
             self.log_test("Montra Feed Database - DELETE Empty Request", False, 
                         f"Expected 400, got {status}")
-            if response:
-                print(f"   Actual response: {response.text}")
         
-        # Test 4: DELETE authentication requirement
+        # Test bulk delete with sample file identifiers
+        sample_delete_data = [
+            {"vehicle_id": "P60G2512500002032", "date": "15 Dec", "filename": "P60G2512500002032 - 15 Dec 2024.csv"},
+            {"vehicle_id": "NONEXISTENT_VEHICLE", "date": "99 Xxx", "filename": "nonexistent.csv"}
+        ]
+        response = self.make_request("DELETE", "/montra-vehicle/feed-database", data=sample_delete_data)
+        
+        if response and response.status_code == 200:
+            try:
+                result = response.json()
+                if "success" in result and "deleted_count" in result:
+                    deleted_count = result["deleted_count"]
+                    self.log_test("Montra Feed Database - Bulk Delete", True, 
+                                f"Bulk delete processed successfully (deleted {deleted_count} records)")
+                    success_count += 1
+                else:
+                    self.log_test("Montra Feed Database - Bulk Delete", False, 
+                                "Response missing required fields", result)
+            except json.JSONDecodeError:
+                self.log_test("Montra Feed Database - Bulk Delete", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("Montra Feed Database - Bulk Delete", False, 
+                        f"Expected 200, got {status}")
+        
+        # Test 4: Authentication Requirements
+        print("\n--- Testing Authentication Requirements ---")
+        
+        # Test GET without authentication
+        response = self.make_request("GET", "/montra-vehicle/feed-database", use_auth=False)
+        
+        if response and response.status_code in [401, 403]:
+            self.log_test("Montra Feed Database - GET Authentication", True, 
+                        f"Correctly requires authentication ({response.status_code} without token)")
+            success_count += 1
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("Montra Feed Database - GET Authentication", False, 
+                        f"Expected 401/403, got {status}")
+        
+        # Test DELETE without authentication
         response = self.make_request("DELETE", "/montra-vehicle/feed-database", 
                                    data=[{"vehicle_id": "TEST", "date": "01 Jan", "filename": "test.csv"}], 
                                    use_auth=False)
@@ -510,32 +592,20 @@ class NuraPulseBackendTester:
             self.log_test("Montra Feed Database - DELETE Authentication", False, 
                         f"Expected 401/403, got {status}")
         
-        # Test 5: DELETE with invalid/non-existent file identifiers
-        invalid_delete_data = [
-            {"vehicle_id": "NONEXISTENT_VEHICLE", "date": "99 Xxx", "filename": "nonexistent.csv"}
-        ]
-        response = self.make_request("DELETE", "/montra-vehicle/feed-database", data=invalid_delete_data)
+        # Test POST import without authentication
+        files = {'file': (test_filename, sample_csv_content, 'text/csv')}
+        response = self.make_request("POST", "/montra-vehicle/import-feed", files=files, use_auth=False)
         
-        if response and response.status_code == 200:
-            try:
-                result = response.json()
-                if "success" in result and "deleted_count" in result:
-                    deleted_count = result["deleted_count"]
-                    self.log_test("Montra Feed Database - DELETE Invalid Files", True, 
-                                f"Handled non-existent files gracefully (deleted {deleted_count} records)")
-                    success_count += 1
-                else:
-                    self.log_test("Montra Feed Database - DELETE Invalid Files", False, 
-                                "Response missing required fields", result)
-            except json.JSONDecodeError:
-                self.log_test("Montra Feed Database - DELETE Invalid Files", False, 
-                            "Invalid JSON response", response.text)
+        if response and response.status_code in [401, 403]:
+            self.log_test("Montra Feed Import - Authentication", True, 
+                        f"Correctly requires authentication ({response.status_code} without token)")
+            success_count += 1
         else:
             status = response.status_code if response else "Network error"
-            self.log_test("Montra Feed Database - DELETE Invalid Files", False, 
-                        f"Expected 200, got {status}")
+            self.log_test("Montra Feed Import - Authentication", False, 
+                        f"Expected 401/403, got {status}")
         
-        return success_count >= 4  # At least 4 out of 6 tests should pass
+        return success_count >= 6  # At least 6 out of 10 tests should pass
     
     def test_mini_apps_endpoints(self):
         """Test 9: Remaining Mini-Apps Endpoints"""
