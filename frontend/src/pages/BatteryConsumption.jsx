@@ -320,6 +320,8 @@ const BatteryConsumption = () => {
                 <p className="text-3xl font-bold text-red-600 dark:text-red-400">
                   {(() => {
                     const chargeDropCount = chartData.filter(d => d.chargeStatus === -1).length;
+                    console.log('Charge Drop Count:', chargeDropCount);
+                    console.log('Chart Data Sample:', chartData.slice(0, 5));
                     return chargeDropCount;
                   })()}%
                 </p>
