@@ -210,6 +210,18 @@ backend:
           agent: "testing"
           comment: "✅ TESTED: GET /montra-vehicle-insights returns 0 vehicle records (empty collection). API endpoint functional and ready for data."
 
+  - task: "Battery Consumption Calculation Fix"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Fixed battery consumption calculation to use Column A values (-1 for charge drop, +1 for charge) instead of first/last battery difference. Updated /montra-vehicle/analytics/battery-data endpoint to return Column A data."
+
 frontend:
   - task: "Login Page"
     implemented: true
