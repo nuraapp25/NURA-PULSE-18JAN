@@ -522,12 +522,12 @@ const MontraVehicle = () => {
                 <label className="flex items-center space-x-2">
                   <input
                     type="checkbox"
-                    checked={selectedFileIds.length === feedFiles.length && feedFiles.length > 0}
+                    checked={selectedFileIds.length === getAllFiles().length && getAllFiles().length > 0}
                     onChange={(e) => handleSelectAll(e.target.checked)}
                     className="rounded"
                   />
                   <span className="text-sm text-gray-700 dark:text-gray-300">
-                    Select All ({feedFiles.length} files)
+                    Select All ({getAllFiles().length} files)
                   </span>
                 </label>
                 {selectedFileIds.length > 0 && (
