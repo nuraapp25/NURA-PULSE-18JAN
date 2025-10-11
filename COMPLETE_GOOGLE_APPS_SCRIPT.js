@@ -31,7 +31,7 @@ function doPost(e) {
       return handleDriverOnboardingTab(action, data);
     } else if (tab === 'telecaller_queue') {
       return handleTelecallerQueueTab(action, data);
-    } else if (tab === 'montra_vehicle_insights') {
+    } else if (tab === 'montra_vehicle_insights' || tab === 'Montra Feed Data') {
       return handleMontraVehicleTab(action, data);
     }
     
