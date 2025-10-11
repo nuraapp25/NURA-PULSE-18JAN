@@ -465,6 +465,149 @@ const MontraVehicle = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Feed Database Dialog */}
+      <Dialog open={databaseDialogOpen} onOpenChange={setDatabaseDialogOpen}>
+        <DialogContent className="max-w-4xl dark:bg-gray-800">
+          <DialogHeader>
+            <DialogTitle className="dark:text-white flex items-center">
+              <Database size={20} className="mr-2" />
+              Montra Feed Database
+            </DialogTitle>
+            <DialogDescription className="dark:text-gray-400">
+              Manage uploaded CSV files and their data records. Select files to delete them from the database.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 mt-4">
+            {/* Control Bar */}
+            <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <div className="flex items-center space-x-4">
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={selectedFileIds.length === feedFiles.length && feedFiles.length > 0}
+                    onChange={(e) => handleSelectAll(e.target.checked)}
+                    className="rounded"
+                  />
+                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                    Select All ({feedFiles.length} files)
+                  </span>
+                </label>
+                {selectedFileIds.length > 0 && (
+                  <span className="text-sm text-blue-600 dark:text-blue-400">
+                    {selectedFileIds.length} selected
+                  </span>
+                )}
+              </div>
+              <div className="flex space-x-2">
+                <Button
+                  onClick={fetchFeedDatabase}
+                  variant="outline"
+                  size="sm"
+                  disabled={loadingDatabase}
+                >
+                  {loadingDatabase ? "Loading..." : "Refresh"}
+                </Button>
+                <Button
+                  onClick={handleDeleteSelected}
+                  disabled={selectedFileIds.length === 0 || deleting}
+                  variant="destructive"
+                  size="sm"
+                >
+                  <Trash2 size={16} className="mr-1" />
+                  {deleting ? "Deleting..." : `Delete Selected (${selectedFileIds.length})`}
+                </Button>
+              </div>
+            </div>
+
+            {/* Files List */}
+            <div className="max-h-96 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-lg">
+              {loadingDatabase ? (
+                <div className="flex justify-center items-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
+              ) : feedFiles.length === 0 ? (
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                  No feed files found in database
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {feedFiles.map((file, index) => (
+                    <div
+                      key={index}
+                      className={`p-4 hover:bg-gray-50 dark:hover:bg-gray-700 ${
+                        selectedFileIds.includes(index) ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <input
+                          type="checkbox"
+                          checked={selectedFileIds.includes(index)}
+                          onChange={(e) => handleSelectFile(index, e.target.checked)}
+                          className="rounded"
+                        />
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h4 className="font-medium text-gray-900 dark:text-white">
+                                {file.filename}
+                              </h4>
+                              <div className="flex items-center space-x-4 mt-1">
+                                <span className="text-sm text-gray-600 dark:text-gray-400">
+                                  Vehicle: {file.vehicle_id}
+                                </span>
+                                <span className="text-sm text-gray-600 dark:text-gray-400">
+                                  Date: {file.date}
+                                </span>
+                                <span className="text-sm text-gray-600 dark:text-gray-400">
+                                  Records: {file.record_count}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-sm text-gray-500 dark:text-gray-400">
+                                {file.uploaded_at ? new Date(file.uploaded_at).toLocaleDateString() : 'N/A'}
+                              </div>
+                              {file.file_size && (
+                                <div className="text-xs text-gray-400">
+                                  {(file.file_size / 1024).toFixed(2)} KB
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Summary */}
+            {feedFiles.length > 0 && (
+              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
+                <p className="text-sm text-blue-800 dark:text-blue-200">
+                  <strong>Database Summary:</strong> {feedFiles.length} files, {' '}
+                  {feedFiles.reduce((sum, file) => sum + file.record_count, 0)} total records
+                </p>
+              </div>
+            )}
+
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button
+                onClick={() => {
+                  setDatabaseDialogOpen(false);
+                  setSelectedFileIds([]);
+                }}
+                variant="outline"
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
