@@ -961,7 +961,11 @@ async def delete_lead(lead_id: str, current_user: User = Depends(get_current_use
 
 @api_router.post("/driver-onboarding/leads/bulk-delete")
 async def bulk_delete_leads(bulk_data: BulkLeadDelete, current_user: User = Depends(get_current_user)):
-    """Bulk delete leads"""
+    """Bulk delete leads (Master Admin only)"""
+    # Check if user is master admin
+    if current_user.account_type != "master_admin":
+        raise HTTPException(status_code=403, detail="Only Master Admin can delete leads")
+    
     if not bulk_data.lead_ids or len(bulk_data.lead_ids) == 0:
         raise HTTPException(status_code=400, detail="No leads selected for deletion")
     
