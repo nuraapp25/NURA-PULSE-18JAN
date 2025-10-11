@@ -229,13 +229,18 @@ const DriverOnboardingPage = () => {
         }
       });
 
+      console.log('Import response:', response.data);
+
       // Check if duplicates were found
       if (response.data.duplicates_found) {
+        console.log('Duplicates found! Opening dialog...');
         setDuplicateData(response.data);
         setDuplicateDialogOpen(true);
         setImporting(false);
         return;
       }
+
+      console.log('No duplicates, proceeding with success message');
 
       toast.success(
         <div>
