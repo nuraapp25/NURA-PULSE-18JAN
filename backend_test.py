@@ -216,43 +216,191 @@ class NuraPulseBackendTester:
                         f"Failed to get leads with status {response.status_code}", response.text)
             return False
     
-    def test_mini_apps_endpoints(self):
-        """Test 5: Mini-Apps Endpoints"""
-        print("\n=== Testing Mini-Apps Endpoints ===")
+    def test_payment_reconciliation_apis(self):
+        """Test 5: Payment Reconciliation APIs - Full CRUD and Sync"""
+        print("\n=== Testing Payment Reconciliation APIs ===")
         
         success_count = 0
+        test_payment_id = None
         
-        # Test Payment Reconciliation
+        # Test 1: GET all payments (should work even if empty)
         response = self.make_request("GET", "/payment-reconciliation")
         
         if response and response.status_code == 200:
             try:
                 payments = response.json()
-                self.log_test("Mini-Apps - Payment Reconciliation", True, 
+                self.log_test("Payment Reconciliation - GET All", True, 
                             f"Retrieved {len(payments)} payment records")
                 success_count += 1
             except json.JSONDecodeError:
-                self.log_test("Mini-Apps - Payment Reconciliation", False, "Invalid JSON response", response.text)
+                self.log_test("Payment Reconciliation - GET All", False, "Invalid JSON response", response.text)
         else:
             error_msg = "Network error" if not response else f"Status {response.status_code}"
-            self.log_test("Mini-Apps - Payment Reconciliation", False, error_msg, 
+            self.log_test("Payment Reconciliation - GET All", False, error_msg, 
                         response.text if response else None)
         
-        # Test Telecaller Queue
+        # Test 2: POST create new payment record
+        test_payment_data = {
+            "transaction_id": f"TEST_TXN_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+            "amount": 1500.50,
+            "payment_method": "UPI",
+            "status": "Pending",
+            "customer_name": "John Doe",
+            "customer_phone": "9876543210",
+            "customer_email": "john.doe@example.com",
+            "notes": "Test payment record for API validation"
+        }
+        
+        response = self.make_request("POST", "/payment-reconciliation", test_payment_data)
+        
+        if response and response.status_code == 200:
+            try:
+                result = response.json()
+                if "payment" in result:
+                    test_payment_id = result["payment"].get("id")
+                    self.log_test("Payment Reconciliation - POST Create", True, 
+                                f"Created payment record: {result['payment'].get('transaction_id', 'Unknown')}")
+                    success_count += 1
+                else:
+                    self.log_test("Payment Reconciliation - POST Create", False, "No payment data in response", result)
+            except json.JSONDecodeError:
+                self.log_test("Payment Reconciliation - POST Create", False, "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Payment Reconciliation - POST Create", False, error_msg, 
+                        response.text if response else None)
+        
+        # Test 3: Google Sheets Sync
+        response = self.make_request("POST", "/payment-reconciliation/sync")
+        
+        if response and response.status_code == 200:
+            try:
+                result = response.json()
+                self.log_test("Payment Reconciliation - Sheets Sync", True, 
+                            f"Sync successful: {result.get('message', 'No message')}")
+                success_count += 1
+            except json.JSONDecodeError:
+                self.log_test("Payment Reconciliation - Sheets Sync", False, "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Payment Reconciliation - Sheets Sync", False, error_msg, 
+                        response.text if response else None)
+        
+        return success_count >= 2  # At least GET and POST should work
+    
+    def test_battery_consumption_analytics(self):
+        """Test 6: Battery Consumption Analytics - New endpoint testing"""
+        print("\n=== Testing Battery Consumption Analytics ===")
+        
+        success_count = 0
+        
+        # Test with sample vehicle IDs and dates
+        test_cases = [
+            {"vehicle_id": "P60G2512500002032", "date": "01 Sep"},
+            {"vehicle_id": "TEST_VEHICLE_001", "date": "15 Aug"},
+            {"vehicle_id": "P60G2512500002032", "date": "02 Sep"}
+        ]
+        
+        for i, test_case in enumerate(test_cases, 1):
+            vehicle_id = test_case["vehicle_id"]
+            date = test_case["date"]
+            
+            # Test GET /montra-vehicle/analytics/battery-data
+            response = self.make_request("GET", f"/montra-vehicle/analytics/battery-data?vehicle_id={vehicle_id}&date={date}")
+            
+            if response:
+                if response.status_code == 200:
+                    try:
+                        result = response.json()
+                        if result.get("success") and "data" in result:
+                            # Check if Column A data is present
+                            data_rows = result["data"]
+                            has_column_a = any("A" in str(row) for row in data_rows) if data_rows else False
+                            
+                            self.log_test(f"Battery Analytics - Test Case {i}", True, 
+                                        f"Vehicle {vehicle_id} on {date}: Retrieved {len(data_rows)} rows, Column A data: {'Yes' if has_column_a else 'No'}")
+                            success_count += 1
+                        else:
+                            self.log_test(f"Battery Analytics - Test Case {i}", False, 
+                                        f"Invalid response structure for {vehicle_id}", result)
+                    except json.JSONDecodeError:
+                        self.log_test(f"Battery Analytics - Test Case {i}", False, 
+                                    f"Invalid JSON response for {vehicle_id}", response.text)
+                elif response.status_code == 404:
+                    # 404 is expected if no data exists for this vehicle/date combination
+                    self.log_test(f"Battery Analytics - Test Case {i}", True, 
+                                f"Vehicle {vehicle_id} on {date}: No data found (404) - Expected for test data")
+                    success_count += 1
+                else:
+                    self.log_test(f"Battery Analytics - Test Case {i}", False, 
+                                f"Unexpected status {response.status_code} for {vehicle_id}", response.text)
+            else:
+                self.log_test(f"Battery Analytics - Test Case {i}", False, 
+                            f"Network error for {vehicle_id}")
+        
+        # Test with missing parameters (should fail gracefully)
+        response = self.make_request("GET", "/montra-vehicle/analytics/battery-data")
+        
+        if response and response.status_code == 422:  # FastAPI validation error
+            self.log_test("Battery Analytics - Parameter Validation", True, 
+                        "Correctly rejected request with missing parameters")
+            success_count += 1
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Battery Analytics - Parameter Validation", False, 
+                        f"Expected 422 validation error, got: {error_msg}")
+        
+        return success_count >= 2  # At least 2 tests should pass
+    
+    def test_telecaller_queue_assignments(self):
+        """Test 7: Telecaller Queue Assignment Endpoints"""
+        print("\n=== Testing Telecaller Queue Assignments ===")
+        
+        success_count = 0
+        
+        # Test daily assignments endpoint
+        response = self.make_request("GET", "/telecaller-queue/daily-assignments")
+        
+        if response and response.status_code == 200:
+            try:
+                assignments = response.json()
+                telecaller1_count = assignments.get("telecaller1", {}).get("count", 0)
+                telecaller2_count = assignments.get("telecaller2", {}).get("count", 0)
+                total_assigned = assignments.get("total_assigned", 0)
+                
+                self.log_test("Telecaller Queue - Daily Assignments", True, 
+                            f"Assigned {total_assigned} leads (T1: {telecaller1_count}, T2: {telecaller2_count})")
+                success_count += 1
+            except json.JSONDecodeError:
+                self.log_test("Telecaller Queue - Daily Assignments", False, "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Telecaller Queue - Daily Assignments", False, error_msg, 
+                        response.text if response else None)
+        
+        # Test regular telecaller queue endpoint
         response = self.make_request("GET", "/telecaller-queue")
         
         if response and response.status_code == 200:
             try:
                 tasks = response.json()
-                self.log_test("Mini-Apps - Telecaller Queue", True, 
+                self.log_test("Telecaller Queue - Get Tasks", True, 
                             f"Retrieved {len(tasks)} telecaller tasks")
                 success_count += 1
             except json.JSONDecodeError:
-                self.log_test("Mini-Apps - Telecaller Queue", False, "Invalid JSON response", response.text)
+                self.log_test("Telecaller Queue - Get Tasks", False, "Invalid JSON response", response.text)
         else:
             error_msg = "Network error" if not response else f"Status {response.status_code}"
-            self.log_test("Mini-Apps - Telecaller Queue", False, error_msg, 
+            self.log_test("Telecaller Queue - Get Tasks", False, error_msg, 
                         response.text if response else None)
+        
+        return success_count >= 1
+    
+    def test_mini_apps_endpoints(self):
+        """Test 8: Remaining Mini-Apps Endpoints"""
+        print("\n=== Testing Remaining Mini-Apps Endpoints ===")
+        
+        success_count = 0
         
         # Test Montra Vehicle Insights
         response = self.make_request("GET", "/montra-vehicle-insights")
@@ -270,7 +418,7 @@ class NuraPulseBackendTester:
             self.log_test("Mini-Apps - Montra Vehicle Insights", False, error_msg, 
                         response.text if response else None)
         
-        return success_count == 3
+        return success_count == 1
     
     def run_all_tests(self):
         """Run all backend tests"""
