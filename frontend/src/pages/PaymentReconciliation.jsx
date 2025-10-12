@@ -16,6 +16,8 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/App";
 
 const PaymentReconciliation = () => {
+  const { user } = useAuth();
+  
   // Step management
   const [currentStep, setCurrentStep] = useState(1); // 1: Month/Year, 2: Driver Profile, 3: Main Interface
   
@@ -39,6 +41,12 @@ const PaymentReconciliation = () => {
   const [loadingData, setLoadingData] = useState(false);
   const [editingAmount, setEditingAmount] = useState(null);
   const [editValue, setEditValue] = useState("");
+  
+  // New states for enhanced features
+  const [selectedRecords, setSelectedRecords] = useState([]);
+  const [syncing, setSyncing] = useState(false);
+  const [lastSync, setLastSync] = useState(null);
+  const [deleting, setDeleting] = useState(false);
   
   // Popover states for searchable dropdowns
   const [driverPopoverOpen, setDriverPopoverOpen] = useState(false);
