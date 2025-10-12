@@ -1840,10 +1840,14 @@ async def get_drivers_and_vehicles(
             if file_path and os.path.exists(file_path):
                 try:
                     df = pd.read_excel(file_path)
-                    drivers = df.iloc[:, 0].dropna().astype(str).tolist()
-                    drivers = [name.strip() for name in drivers if name.strip() and name.strip().lower() != 'nan']
-                    result["drivers"] = drivers
-                    logger.info(f"Loaded {len(drivers)} drivers from {drivers_pattern}")
+                    # Read from Column B (second column, index 1) instead of Column A (index 0)
+                    if len(df.columns) > 1:
+                        drivers = df.iloc[:, 1].dropna().astype(str).tolist()
+                        drivers = [name.strip() for name in drivers if name.strip() and name.strip().lower() not in ['nan', 'name', 'driver name', 'driver']]
+                        result["drivers"] = drivers
+                        logger.info(f"Loaded {len(drivers)} drivers from Column B of {drivers_pattern}")
+                    else:
+                        logger.warning(f"Drivers file {drivers_pattern} does not have Column B")
                 except Exception as e:
                     logger.error(f"Error parsing drivers file: {str(e)}")
         else:
@@ -1855,10 +1859,14 @@ async def get_drivers_and_vehicles(
             if file_path and os.path.exists(file_path):
                 try:
                     df = pd.read_excel(file_path)
-                    vehicles = df.iloc[:, 0].dropna().astype(str).tolist()
-                    vehicles = [name.strip() for name in vehicles if name.strip() and name.strip().lower() != 'nan']
-                    result["vehicles"] = vehicles
-                    logger.info(f"Loaded {len(vehicles)} vehicles from {vehicles_pattern}")
+                    # Read from Column B (second column, index 1) instead of Column A (index 0)
+                    if len(df.columns) > 1:
+                        vehicles = df.iloc[:, 1].dropna().astype(str).tolist()
+                        vehicles = [name.strip() for name in vehicles if name.strip() and name.strip().lower() not in ['nan', 'name', 'vehicle number', 'vehicle']]
+                        result["vehicles"] = vehicles
+                        logger.info(f"Loaded {len(vehicles)} vehicles from Column B of {vehicles_pattern}")
+                    else:
+                        logger.warning(f"Vehicles file {vehicles_pattern} does not have Column B")
                 except Exception as e:
                     logger.error(f"Error parsing vehicles file: {str(e)}")
         else:
