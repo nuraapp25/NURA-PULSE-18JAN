@@ -2033,12 +2033,21 @@ If any information is not visible or available in the screenshot, use "N/A" as t
                     }
                 )
         
-        return {
-            "success": True,
-            "extracted_data": extracted_results,
-            "processed_files": len(files),
-            "message": f"Successfully processed {len(files)} screenshots"
-        }
+            return {
+                "success": True,
+                "extracted_data": extracted_results,
+                "processed_files": len(files),
+                "message": f"Successfully processed all {len(files)} screenshots"
+            }
+            
+        finally:
+            # Clean up all temporary files
+            for temp_file_path in temp_files:
+                try:
+                    if os.path.exists(temp_file_path):
+                        os.unlink(temp_file_path)
+                except Exception as e:
+                    logger.error(f"Failed to cleanup temp file {temp_file_path}: {str(e)}")
         
     except Exception as e:
         logger.error(f"Error in process_payment_screenshots: {str(e)}")
