@@ -258,9 +258,9 @@ const PaymentReconciliation = () => {
               <Button 
                 onClick={handleMonthYearSubmit}
                 className="w-full bg-blue-600 hover:bg-blue-700"
-                disabled={!selectedMonth || !selectedYear}
+                disabled={!selectedMonth || !selectedYear || loadingData}
               >
-                Continue
+                {loadingData ? "Loading Data..." : "Continue"}
               </Button>
             </CardContent>
           </Card>
