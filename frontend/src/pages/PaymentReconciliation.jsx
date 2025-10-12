@@ -172,14 +172,6 @@ const PaymentReconciliation = () => {
     setExistingFolders(savedFolders);
   };
 
-  const handleDriverProfileSubmit = () => {
-    if (!selectedDriver || !selectedVehicle || !selectedPlatform) {
-      toast.error("Please fill in all driver profile fields");
-      return;
-    }
-    setCurrentStep(3);
-  };
-
   const handleFileSelect = (event) => {
     const files = Array.from(event.target.files);
     const validFiles = files.filter(file => {
