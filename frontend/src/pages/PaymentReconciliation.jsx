@@ -106,9 +106,14 @@ const PaymentReconciliation = () => {
       return;
     }
     
-    // Fetch drivers and vehicles for the selected month/year
-    await fetchDriversAndVehicles(selectedMonth, selectedYear);
-    setCurrentStep(2);
+    setLoadingData(true);
+    try {
+      // Fetch drivers and vehicles for the selected month/year
+      await fetchDriversAndVehicles(selectedMonth, selectedYear);
+      setCurrentStep(2);
+    } finally {
+      setLoadingData(false);
+    }
   };
 
   const handleDriverProfileSubmit = () => {
