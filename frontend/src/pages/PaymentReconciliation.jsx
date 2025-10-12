@@ -36,6 +36,8 @@ const PaymentReconciliation = () => {
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [processing, setProcessing] = useState(false);
   const [loadingData, setLoadingData] = useState(false);
+  const [editingAmount, setEditingAmount] = useState(null);
+  const [editValue, setEditValue] = useState("");
   
   // Popover states for searchable dropdowns
   const [driverPopoverOpen, setDriverPopoverOpen] = useState(false);
