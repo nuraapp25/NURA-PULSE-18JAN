@@ -1902,6 +1902,7 @@ async def process_payment_screenshots(
 ):
     """Process uploaded screenshots using OpenAI GPT-4 Vision to extract payment data"""
     from dotenv import load_dotenv
+    from datetime import datetime
     load_dotenv()
     
     try:
