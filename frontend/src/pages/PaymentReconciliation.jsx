@@ -52,18 +52,18 @@ const PaymentReconciliation = () => {
   const [vehiclePopoverOpen, setVehiclePopoverOpen] = useState(false);
 
   const months = [
-    { value: "01", label: "January" },
-    { value: "02", label: "February" },
-    { value: "03", label: "March" },
-    { value: "04", label: "April" },
-    { value: "05", label: "May" },
-    { value: "06", label: "June" },
-    { value: "07", label: "July" },
-    { value: "08", label: "August" },
-    { value: "09", label: "September" },
-    { value: "10", label: "October" },
-    { value: "11", label: "November" },
-    { value: "12", label: "December" }
+    { value: "01", label: "Jan", fullName: "January" },
+    { value: "02", label: "Feb", fullName: "February" },
+    { value: "03", label: "Mar", fullName: "March" },
+    { value: "04", label: "Apr", fullName: "April" },
+    { value: "05", label: "May", fullName: "May" },
+    { value: "06", label: "Jun", fullName: "June" },
+    { value: "07", label: "Jul", fullName: "July" },
+    { value: "08", label: "Aug", fullName: "August" },
+    { value: "09", label: "Sep", fullName: "September" },
+    { value: "10", label: "Oct", fullName: "October" },
+    { value: "11", label: "Nov", fullName: "November" },
+    { value: "12", label: "Dec", fullName: "December" }
   ];
 
   const years = Array.from({ length: 10 }, (_, i) => {
