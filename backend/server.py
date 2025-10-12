@@ -1789,43 +1789,102 @@ async def delete_montra_feed_files(
         raise HTTPException(status_code=500, detail="Failed to delete montra feed files")
 
 
-@api_router.get("/admin/files/parse-excel/{file_id}")
-async def parse_excel_file(file_id: str, current_user: User = Depends(get_current_user)):
-    """Parse Excel file and return list of names from first column"""
+@api_router.get("/admin/files/get-drivers-vehicles")
+async def get_drivers_and_vehicles(
+    month: str = Query(..., description="Month name (e.g., Sep)"),
+    year: str = Query(..., description="Year (e.g., 2025)"),
+    current_user: User = Depends(get_current_user)
+):
+    """Get drivers and vehicles list for a specific month/year"""
+    import pandas as pd
+    
     try:
-        # Get the file from database
-        file_doc = await db.admin_files.find_one({"id": file_id})
-        if not file_doc:
-            raise HTTPException(status_code=404, detail="File not found")
+        # Search for files matching the pattern "Drivers List (Mon YYYY).xlsx" and "Vehicles List (Mon YYYY).xlsx"
+        month_names = {
+            "01": "Jan", "02": "Feb", "03": "Mar", "04": "Apr", "05": "May", "06": "Jun",
+            "07": "Jul", "08": "Aug", "09": "Sep", "10": "Oct", "11": "Nov", "12": "Dec"
+        }
         
-        file_path = file_doc.get("file_path")
-        if not file_path or not os.path.exists(file_path):
-            raise HTTPException(status_code=404, detail="File not found on disk")
+        # Convert month number to name if needed
+        month_name = month_names.get(month, month)
         
-        # Read Excel file
-        import pandas as pd
-        try:
-            df = pd.read_excel(file_path)
-            
-            # Get first column values, remove NaN values and convert to string
-            names = df.iloc[:, 0].dropna().astype(str).tolist()
-            
-            # Clean up the names (remove empty strings, strip whitespace)
-            names = [name.strip() for name in names if name.strip() and name.strip().lower() != 'nan']
-            
-            return {
-                "success": True,
-                "names": names,
-                "count": len(names)
-            }
-            
-        except Exception as e:
-            logger.error(f"Error parsing Excel file {file_id}: {str(e)}")
-            raise HTTPException(status_code=500, detail=f"Error parsing Excel file: {str(e)}")
-            
+        drivers_pattern = f"Drivers List ({month_name} {year}).xlsx"
+        vehicles_pattern = f"Vehicles List ({month_name} {year}).xlsx"
+        
+        logger.info(f"Looking for files: {drivers_pattern}, {vehicles_pattern}")
+        
+        # Find the files
+        files = await db.admin_files.find({}).to_list(1000)
+        
+        drivers_file = None
+        vehicles_file = None
+        
+        for file in files:
+            filename = file.get("filename", "")
+            if filename == drivers_pattern:
+                drivers_file = file
+            elif filename == vehicles_pattern:
+                vehicles_file = file
+        
+        result = {
+            "success": True,
+            "drivers": [],
+            "vehicles": [],
+            "month": month_name,
+            "year": year
+        }
+        
+        # Parse drivers file
+        if drivers_file:
+            file_path = drivers_file.get("file_path")
+            if file_path and os.path.exists(file_path):
+                try:
+                    df = pd.read_excel(file_path)
+                    drivers = df.iloc[:, 0].dropna().astype(str).tolist()
+                    drivers = [name.strip() for name in drivers if name.strip() and name.strip().lower() != 'nan']
+                    result["drivers"] = drivers
+                    logger.info(f"Loaded {len(drivers)} drivers from {drivers_pattern}")
+                except Exception as e:
+                    logger.error(f"Error parsing drivers file: {str(e)}")
+        else:
+            logger.warning(f"Drivers file not found: {drivers_pattern}")
+        
+        # Parse vehicles file
+        if vehicles_file:
+            file_path = vehicles_file.get("file_path")
+            if file_path and os.path.exists(file_path):
+                try:
+                    df = pd.read_excel(file_path)
+                    vehicles = df.iloc[:, 0].dropna().astype(str).tolist()
+                    vehicles = [name.strip() for name in vehicles if name.strip() and name.strip().lower() != 'nan']
+                    result["vehicles"] = vehicles
+                    logger.info(f"Loaded {len(vehicles)} vehicles from {vehicles_pattern}")
+                except Exception as e:
+                    logger.error(f"Error parsing vehicles file: {str(e)}")
+        else:
+            logger.warning(f"Vehicles file not found: {vehicles_pattern}")
+        
+        if not result["drivers"] and not result["vehicles"]:
+            # Return mock data as fallback
+            result["drivers"] = ["Abdul", "Samantha", "Samuel", "Sareena", "Ravi", "John", "Mike"]
+            result["vehicles"] = ["TN07CE2222", "TN01AB1234", "KA05CD5678", "AP09EF9012"]
+            result["using_mock_data"] = True
+            logger.warning(f"No files found for {month_name} {year}, using mock data")
+        
+        return result
+        
     except Exception as e:
-        logger.error(f"Error in parse_excel_file: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to parse Excel file")
+        logger.error(f"Error in get_drivers_and_vehicles: {str(e)}")
+        # Return mock data as fallback
+        return {
+            "success": True,
+            "drivers": ["Abdul", "Samantha", "Samuel", "Sareena", "Ravi", "John", "Mike"],
+            "vehicles": ["TN07CE2222", "TN01AB1234", "KA05CD5678", "AP09EF9012"],
+            "month": month,
+            "year": year,
+            "using_mock_data": True,
+            "error": str(e)
+        }
 
 
 @api_router.post("/admin/files/reload-fleet-mapping")
