@@ -18,14 +18,13 @@ import { useAuth } from "@/App";
 const PaymentReconciliation = () => {
   const { user } = useAuth();
   
-  // Step management
-  const [currentStep, setCurrentStep] = useState(1); // 1: Month/Year, 2: Driver Profile, 3: Main Interface
+  // New workflow states
+  const [currentView, setCurrentView] = useState("folder-selection"); // "folder-selection" | "main-interface"
+  const [selectedPeriod, setSelectedPeriod] = useState(""); // e.g., "Sep 2025"
+  const [existingFolders, setExistingFolders] = useState([]);
   
-  // Step 1: Month/Year Selection
-  const [selectedMonth, setSelectedMonth] = useState("");
-  const [selectedYear, setSelectedYear] = useState("");
-  
-  // Step 2: Driver Profile
+  // Driver profile (now shown during processing)
+  const [showDriverDialog, setShowDriverDialog] = useState(false);
   const [selectedDriver, setSelectedDriver] = useState("");
   const [selectedVehicle, setSelectedVehicle] = useState("");
   const [selectedPlatform, setSelectedPlatform] = useState("");
