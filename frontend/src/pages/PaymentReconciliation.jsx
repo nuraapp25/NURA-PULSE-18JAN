@@ -277,6 +277,98 @@ const PaymentReconciliation = () => {
     setEditValue("");
   };
 
+  const handleSelectRecord = (recordId, checked) => {
+    if (checked) {
+      setSelectedRecords(prev => [...prev, recordId]);
+    } else {
+      setSelectedRecords(prev => prev.filter(id => id !== recordId));
+    }
+  };
+
+  const handleSelectAll = (checked) => {
+    if (checked) {
+      setSelectedRecords(extractedData.map(row => row.id));
+    } else {
+      setSelectedRecords([]);
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedRecords.length === 0) {
+      toast.error("No records selected for deletion");
+      return;
+    }
+
+    if (!user || !["master_admin"].includes(user.account_type)) {
+      toast.error("Insufficient permissions. Only Master Admin can delete records.");
+      return;
+    }
+
+    setDeleting(true);
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`${API}/payment-reconciliation/delete-records`, {
+        headers: { Authorization: `Bearer ${token}` },
+        data: { record_ids: selectedRecords }
+      });
+
+      // Remove deleted records from local state
+      setExtractedData(prev => prev.filter(row => !selectedRecords.includes(row.id)));
+      setSelectedRecords([]);
+      toast.success(`Successfully deleted ${selectedRecords.length} records`);
+    } catch (error) {
+      toast.error("Failed to delete records");
+      console.error("Delete error:", error);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const syncToGoogleSheets = async () => {
+    if (extractedData.length === 0) {
+      toast.error("No data to sync");
+      return;
+    }
+
+    setSyncing(true);
+    try {
+      const token = localStorage.getItem("token");
+      const monthYear = `${months.find(m => m.value === selectedMonth)?.label} ${selectedYear}`;
+      
+      await axios.post(`${API}/payment-reconciliation/sync-to-sheets`, {
+        data: extractedData,
+        month_year: monthYear
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setLastSync(new Date().toISOString());
+      toast.success("Successfully synced to Google Sheets");
+    } catch (error) {
+      toast.error("Failed to sync to Google Sheets");
+      console.error("Sync error:", error);
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const openGoogleSheets = () => {
+    const sheetUrl = "https://docs.google.com/spreadsheets/d/1CLhARhllhqZuDzkzNRqFcOGqjrSDzPgmC6gd3-AWOTs/edit?usp=sharing";
+    window.open(sheetUrl, '_blank');
+  };
+
+  const fetchSyncStatus = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(`${API}/payment-reconciliation/sync-status`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setLastSync(response.data.last_sync);
+    } catch (error) {
+      console.error("Failed to fetch sync status:", error);
+    }
+  };
+
   // Step 1: Month/Year Selection
   if (currentStep === 1) {
     return (
