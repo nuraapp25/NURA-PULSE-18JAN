@@ -402,11 +402,10 @@ const PaymentReconciliation = () => {
     setSyncing(true);
     try {
       const token = localStorage.getItem("token");
-      const monthYear = `${months.find(m => m.value === selectedMonth)?.label} ${selectedYear}`;
       
       await axios.post(`${API}/payment-reconciliation/sync-to-sheets`, {
         data: extractedData,
-        month_year: monthYear
+        month_year: selectedPeriod
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
