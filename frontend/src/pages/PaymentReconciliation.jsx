@@ -759,7 +759,12 @@ const PaymentReconciliation = () => {
                 <thead>
                   <tr className="border-b border-gray-200 dark:border-gray-700">
                     <th className="text-left py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">
-                      <input type="checkbox" className="rounded" />
+                      <input 
+                        type="checkbox" 
+                        className="rounded"
+                        checked={selectedRecords.length === extractedData.length && extractedData.length > 0}
+                        onChange={(e) => handleSelectAll(e.target.checked)}
+                      />
                     </th>
                     <th className="text-left py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">Driver</th>
                     <th className="text-left py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">Vehicle</th>
