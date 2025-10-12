@@ -237,6 +237,28 @@ const PaymentReconciliation = () => {
     setUploadedFiles([]);
   };
 
+  const handleEditAmount = (rowId) => {
+    const row = extractedData.find(r => r.id === rowId);
+    setEditingAmount(rowId);
+    setEditValue(row.amount === "N/A" ? "" : row.amount);
+  };
+
+  const handleSaveAmount = (rowId) => {
+    setExtractedData(prev => prev.map(row => 
+      row.id === rowId 
+        ? { ...row, amount: editValue, hasAmountError: false }
+        : row
+    ));
+    setEditingAmount(null);
+    setEditValue("");
+    toast.success("Amount updated successfully");
+  };
+
+  const handleCancelEdit = () => {
+    setEditingAmount(null);
+    setEditValue("");
+  };
+
   // Step 1: Month/Year Selection
   if (currentStep === 1) {
     return (
