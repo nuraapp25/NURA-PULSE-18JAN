@@ -215,11 +215,20 @@ const PaymentReconciliation = () => {
   };
 
   const downloadCSV = () => {
-    const headers = ["Driver", "Vehicle", "Description", "Platform", "Date", "Time", "Amount", "Payment Mode", "Distance", "Duration", "Pickup KM", "Drop KM", "Pickup Location"];
+    const headers = [
+      "Driver", "Vehicle", "Description", "Date", "Time", "Amount", 
+      "Payment Mode", "Distance (km)", "Duration (min)", "Pickup KM", 
+      "Drop KM", "Pickup Location", "Drop Location", "Screenshot Filename"
+    ];
     const csvData = [
       headers.join(','),
       ...extractedData.map(row => 
-        [row.driver, row.vehicle, row.description, row.platform, row.date, row.time, row.amount, row.paymentMode, row.distance, row.duration, row.pickupKm, row.dropKm, row.pickupLocation].join(',')
+        [
+          row.driver, row.vehicle, row.description, row.date, row.time, 
+          row.amount, row.paymentMode, row.distance, row.duration, 
+          row.pickupKm, row.dropKm, row.pickupLocation, row.dropLocation, 
+          row.screenshotFilename
+        ].join(',')
       )
     ].join('\n');
     
