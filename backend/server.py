@@ -925,7 +925,7 @@ class LeadStatusUpdate(BaseModel):
 @api_router.patch("/driver-onboarding/leads/bulk-update-status")
 async def bulk_update_lead_status(bulk_data: BulkLeadStatusUpdate, current_user: User = Depends(get_current_user)):
     """Bulk update lead status for multiple leads"""
-    print(f"=== BULK UPDATE CALLED ===")
+    print("=== BULK UPDATE CALLED ===")
     print(f"Lead IDs count: {len(bulk_data.lead_ids) if bulk_data.lead_ids else 0}")
     print(f"Status: {bulk_data.status}")
     
