@@ -2144,7 +2144,7 @@ async def delete_payment_records(
     request: Request,
     current_user: User = Depends(get_current_user)
 ):
-    """Delete selected payment records (Master Admin/Admin only)"""
+    """Delete selected payment records (Master Admin only)"""
     try:
         # Check if user has delete permissions
         if current_user.account_type != "master_admin":
