@@ -598,16 +598,17 @@ const PaymentReconciliation = () => {
                     <th className="text-left py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">Driver</th>
                     <th className="text-left py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">Vehicle</th>
                     <th className="text-left py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">Description</th>
-                    <th className="text-left py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">Platform</th>
                     <th className="text-left py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">Date</th>
                     <th className="text-left py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">Time</th>
                     <th className="text-left py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">Amount</th>
                     <th className="text-left py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">Payment Mode</th>
-                    <th className="text-left py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">Distance</th>
-                    <th className="text-left py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">Duration</th>
+                    <th className="text-left py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">Distance (km)</th>
+                    <th className="text-left py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">Duration (min)</th>
                     <th className="text-left py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">Pickup KM</th>
                     <th className="text-left py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">Drop KM</th>
                     <th className="text-left py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">Pickup Location</th>
+                    <th className="text-left py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">Drop Location</th>
+                    <th className="text-left py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">Screenshot</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -619,16 +620,57 @@ const PaymentReconciliation = () => {
                       <td className="py-3 px-2 text-sm">{row.driver}</td>
                       <td className="py-3 px-2 text-sm">{row.vehicle}</td>
                       <td className="py-3 px-2 text-sm">{row.description}</td>
-                      <td className="py-3 px-2 text-sm">{row.platform}</td>
                       <td className="py-3 px-2 text-sm">{row.date}</td>
                       <td className="py-3 px-2 text-sm">{row.time}</td>
-                      <td className="py-3 px-2 text-sm font-semibold text-green-600">{row.amount}</td>
-                      <td className="py-3 px-2 text-sm text-gray-500">{row.paymentMode}</td>
-                      <td className="py-3 px-2 text-sm text-gray-500">{row.distance}</td>
-                      <td className="py-3 px-2 text-sm text-gray-500">{row.duration}</td>
-                      <td className="py-3 px-2 text-sm text-gray-500">{row.pickupKm}</td>
-                      <td className="py-3 px-2 text-sm text-gray-500">{row.dropKm}</td>
-                      <td className="py-3 px-2 text-sm">{row.pickupLocation}</td>
+                      <td className="py-3 px-2 text-sm">
+                        {editingAmount === row.id ? (
+                          <div className="flex items-center space-x-2">
+                            <Input
+                              value={editValue}
+                              onChange={(e) => setEditValue(e.target.value)}
+                              className="w-20 h-8 text-sm"
+                              placeholder="Amount"
+                              type="number"
+                            />
+                            <Button onClick={() => handleSaveAmount(row.id)} size="sm" className="h-6 px-2">
+                              <Check size={12} />
+                            </Button>
+                            <Button onClick={handleCancelEdit} variant="ghost" size="sm" className="h-6 px-2">
+                              ×
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center space-x-2">
+                            <span className={`font-semibold ${row.hasAmountError ? 'text-red-600' : 'text-green-600'}`}>
+                              {row.amount === "N/A" ? "N/A" : `₹${row.amount}`}
+                            </span>
+                            {row.hasAmountError && (
+                              <Button
+                                onClick={() => handleEditAmount(row.id)}
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0 text-blue-600 hover:text-blue-800"
+                              >
+                                <Edit size={12} />
+                              </Button>
+                            )}
+                          </div>
+                        )}
+                      </td>
+                      <td className="py-3 px-2 text-sm text-gray-600">{row.paymentMode}</td>
+                      <td className="py-3 px-2 text-sm text-gray-600">{row.distance}</td>
+                      <td className="py-3 px-2 text-sm text-gray-600">{row.duration}</td>
+                      <td className="py-3 px-2 text-sm text-gray-600">{row.pickupKm}</td>
+                      <td className="py-3 px-2 text-sm text-gray-600">{row.dropKm}</td>
+                      <td className="py-3 px-2 text-sm text-gray-600 max-w-32 truncate" title={row.pickupLocation}>
+                        {row.pickupLocation}
+                      </td>
+                      <td className="py-3 px-2 text-sm text-gray-600 max-w-32 truncate" title={row.dropLocation}>
+                        {row.dropLocation}
+                      </td>
+                      <td className="py-3 px-2 text-sm text-gray-500 max-w-24 truncate" title={row.screenshotFilename}>
+                        {row.screenshotFilename}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
