@@ -357,8 +357,6 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Corrected Montra Feed Import without Google Sheets"
-    - "Montra Feed Database Management"
     - "Payment Reconciliation Implementation"
   stuck_tasks: []
   test_all: false
