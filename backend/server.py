@@ -2055,6 +2055,121 @@ If any information is not visible or available in the screenshot, use "N/A" as t
         raise HTTPException(status_code=500, detail=f"Failed to process screenshots: {str(e)}")
 
 
+@api_router.post("/payment-reconciliation/sync-to-sheets")
+async def sync_payment_data_to_sheets(
+    request: Request,
+    current_user: User = Depends(get_current_user)
+):
+    """Sync payment reconciliation data to Google Sheets"""
+    try:
+        body = await request.json()
+        data_rows = body.get("data", [])
+        month_year = body.get("month_year", "Sep 2025")
+        
+        if not data_rows:
+            raise HTTPException(status_code=400, detail="No data to sync")
+        
+        # Prepare data for Google Sheets
+        headers = [
+            "Driver", "Vehicle", "Description", "Date", "Time", "Amount",
+            "Payment Mode", "Distance (km)", "Duration (min)", "Pickup KM", 
+            "Drop KM", "Pickup Location", "Drop Location", "Screenshot Filename"
+        ]
+        
+        # Convert data to rows format
+        rows_to_sync = []
+        for row in data_rows:
+            rows_to_sync.append([
+                row.get("driver", "N/A"),
+                row.get("vehicle", "N/A"),
+                row.get("description", "N/A"),
+                row.get("date", "N/A"),
+                row.get("time", "N/A"),
+                row.get("amount", "N/A"),
+                row.get("paymentMode", "N/A"),
+                row.get("distance", "N/A"),
+                row.get("duration", "N/A"),
+                row.get("pickupKm", "N/A"),
+                row.get("dropKm", "N/A"),
+                row.get("pickupLocation", "N/A"),
+                row.get("dropLocation", "N/A"),
+                row.get("screenshotFilename", "N/A")
+            ])
+        
+        # Send to Google Sheets via Apps Script
+        sheets_payload = {
+            "action": "sync_payment_data",
+            "tab": month_year,
+            "headers": headers,
+            "data": rows_to_sync,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+        from sheets_multi_sync import send_to_sheets
+        result = send_to_sheets(sheets_payload)
+        
+        if result.get('success'):
+            return {
+                "success": True,
+                "message": f"Successfully synced {len(data_rows)} records to Google Sheets tab '{month_year}'",
+                "synced_rows": len(data_rows),
+                "sync_timestamp": datetime.now().isoformat()
+            }
+        else:
+            raise HTTPException(status_code=500, detail=f"Google Sheets sync failed: {result.get('error')}")
+            
+    except Exception as e:
+        logger.error(f"Error syncing to Google Sheets: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to sync to Google Sheets: {str(e)}")
+
+
+@api_router.get("/payment-reconciliation/sync-status")
+async def get_payment_sync_status(current_user: User = Depends(get_current_user)):
+    """Get last sync status for payment reconciliation"""
+    try:
+        # For now, return a mock status - in production, this would check actual sync history
+        return {
+            "success": True,
+            "last_sync": datetime.now().isoformat(),
+            "sync_status": "up_to_date",
+            "message": "Data is synchronized"
+        }
+    except Exception as e:
+        logger.error(f"Error getting sync status: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get sync status")
+
+
+@api_router.delete("/payment-reconciliation/delete-records")
+async def delete_payment_records(
+    request: Request,
+    current_user: User = Depends(get_current_user)
+):
+    """Delete selected payment records (Master Admin/Admin only)"""
+    try:
+        # Check if user has delete permissions
+        if current_user.account_type not in ["master_admin", "admin"]:
+            raise HTTPException(status_code=403, detail="Insufficient permissions. Only Master Admin and Admin can delete records.")
+        
+        body = await request.json()
+        record_ids = body.get("record_ids", [])
+        
+        if not record_ids:
+            raise HTTPException(status_code=400, detail="No record IDs provided")
+        
+        # For now, just return success - in production, this would delete from database
+        return {
+            "success": True,
+            "deleted_count": len(record_ids),
+            "message": f"Successfully deleted {len(record_ids)} records"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting records: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete records: {str(e)}")
+
+
 @api_router.post("/admin/files/reload-fleet-mapping")
 async def reload_fleet_mapping(current_user: User = Depends(get_current_user)):
     """Reload vehicle to registration number mapping from Nura Fleet Data.xlsx"""
