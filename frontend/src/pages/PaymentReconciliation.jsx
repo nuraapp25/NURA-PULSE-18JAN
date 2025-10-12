@@ -536,9 +536,21 @@ const PaymentReconciliation = () => {
       {/* Header with session info */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Payment Reconciliation</h1>
+          <div className="flex items-center space-x-3">
+            <Button 
+              onClick={() => setCurrentView("folder-selection")}
+              variant="ghost"
+              size="sm"
+              className="text-gray-600 hover:text-gray-800 p-1"
+            >
+              ← Back to Folders
+            </Button>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+              {selectedPeriod}
+            </h1>
+          </div>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
-            {selectedDriver} • {selectedVehicle} • {selectedPlatform} • {months.find(m => m.value === selectedMonth)?.label} {selectedYear}
+            Upload screenshots and extract payment data
           </p>
           {lastSync && (
             <p className="text-xs text-green-600 dark:text-green-400 mt-1">
@@ -555,14 +567,6 @@ const PaymentReconciliation = () => {
           >
             <ExternalLink size={16} className="mr-1" />
             Open Sheets
-          </Button>
-          <Button 
-            onClick={() => setCurrentStep(2)}
-            variant="outline"
-            className="self-start sm:self-auto"
-            size="sm"
-          >
-            Change Profile
           </Button>
         </div>
       </div>
