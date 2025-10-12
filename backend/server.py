@@ -1933,26 +1933,30 @@ async def process_payment_screenshots(
         ).with_model("openai", "gpt-4o")
         
         extracted_results = []
+        processing_errors = []
+        temp_files = []
         
-        # Process each file
-        for i, file in enumerate(files):
-            try:
-                # Read file content
-                file_content = await file.read()
-                
-                # Create temporary file
-                with tempfile.NamedTemporaryFile(delete=False, suffix=f".{file.filename.split('.')[-1]}") as temp_file:
+        try:
+            # Process each file - collect all results first
+            for i, file in enumerate(files):
+                try:
+                    # Read file content
+                    file_content = await file.read()
+                    
+                    # Create temporary file
+                    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=f".{file.filename.split('.')[-1]}")
                     temp_file.write(file_content)
-                    temp_file_path = temp_file.name
-                
-                # Create file content for OpenAI
-                image_file = FileContentWithMimeType(
-                    file_path=temp_file_path,
-                    mime_type=file.content_type or "image/jpeg"
-                )
-                
-                # Create extraction prompt
-                extraction_prompt = """Extract ride payment details from this screenshot and return the information in the following JSON format:
+                    temp_file.close()
+                    temp_files.append(temp_file.name)
+                    
+                    # Create file content for OpenAI
+                    image_file = FileContentWithMimeType(
+                        file_path=temp_file.name,
+                        mime_type=file.content_type or "image/jpeg"
+                    )
+                    
+                    # Create extraction prompt
+                    extraction_prompt = """Extract ride payment details from this screenshot and return the information in the following JSON format:
 
 {
     "driver": "Driver name (if visible)",
@@ -1972,76 +1976,62 @@ async def process_payment_screenshots(
 
 If any information is not visible or available in the screenshot, use "N/A" as the value. Be precise and only extract what you can clearly see."""
 
-                # Send to OpenAI
-                user_message = UserMessage(
-                    text=extraction_prompt,
-                    file_contents=[image_file]
+                    # Send to OpenAI
+                    user_message = UserMessage(
+                        text=extraction_prompt,
+                        file_contents=[image_file]
+                    )
+                    
+                    response = await chat.send_message(user_message)
+                    
+                    # Parse JSON response
+                    import json
+                    try:
+                        # Clean response - remove markdown formatting if present
+                        clean_response = response.strip()
+                        if clean_response.startswith("```json"):
+                            clean_response = clean_response[7:]
+                        if clean_response.endswith("```"):
+                            clean_response = clean_response[:-3]
+                        clean_response = clean_response.strip()
+                        
+                        extracted_data = json.loads(clean_response)
+                        extracted_data["screenshot_filename"] = file.filename
+                        extracted_data["id"] = str(uuid.uuid4())
+                        extracted_data["processed_at"] = datetime.now().isoformat()
+                        extracted_results.append(extracted_data)
+                        
+                    except json.JSONDecodeError as e:
+                        error_msg = f"Failed to parse JSON response for file {file.filename}: {str(e)}"
+                        logger.error(error_msg)
+                        processing_errors.append(error_msg)
+                        break  # Stop processing on parse error
+                    
+                except Exception as e:
+                    error_msg = f"Error processing file {file.filename}: {str(e)}"
+                    logger.error(error_msg)
+                    processing_errors.append(error_msg)
+                    break  # Stop processing on any error
+            
+            # Check if all files processed successfully
+            if processing_errors:
+                raise HTTPException(
+                    status_code=422, 
+                    detail={
+                        "message": "Batch processing failed. Please try again with all 10 files.",
+                        "errors": processing_errors,
+                        "failed_batch": True
+                    }
                 )
-                
-                response = await chat.send_message(user_message)
-                
-                # Parse JSON response
-                import json
-                try:
-                    # Clean response - remove markdown formatting if present
-                    clean_response = response.strip()
-                    if clean_response.startswith("```json"):
-                        clean_response = clean_response[7:]
-                    if clean_response.endswith("```"):
-                        clean_response = clean_response[:-3]
-                    clean_response = clean_response.strip()
-                    
-                    extracted_data = json.loads(clean_response)
-                    extracted_data["screenshot_filename"] = file.filename
-                    extracted_data["id"] = str(uuid.uuid4())
-                    extracted_results.append(extracted_data)
-                    
-                except json.JSONDecodeError as e:
-                    logger.error(f"Failed to parse JSON response for file {file.filename}: {str(e)}")
-                    # Create fallback entry
-                    extracted_results.append({
-                        "id": str(uuid.uuid4()),
-                        "driver": "N/A",
-                        "vehicle": "N/A", 
-                        "description": "N/A",
-                        "date": "N/A",
-                        "time": "N/A",
-                        "amount": "N/A",
-                        "payment_mode": "N/A",
-                        "distance": "N/A",
-                        "duration": "N/A",
-                        "pickup_km": "N/A",
-                        "drop_km": "N/A",
-                        "pickup_location": "N/A",
-                        "drop_location": "N/A",
-                        "screenshot_filename": file.filename,
-                        "extraction_error": "Failed to parse response"
-                    })
-                
-                # Clean up temporary file
-                os.unlink(temp_file_path)
-                
-            except Exception as e:
-                logger.error(f"Error processing file {file.filename}: {str(e)}")
-                # Create error entry
-                extracted_results.append({
-                    "id": str(uuid.uuid4()),
-                    "driver": "N/A",
-                    "vehicle": "N/A",
-                    "description": "N/A", 
-                    "date": "N/A",
-                    "time": "N/A",
-                    "amount": "N/A",
-                    "payment_mode": "N/A",
-                    "distance": "N/A",
-                    "duration": "N/A",
-                    "pickup_km": "N/A",
-                    "drop_km": "N/A",
-                    "pickup_location": "N/A",
-                    "drop_location": "N/A",
-                    "screenshot_filename": file.filename,
-                    "processing_error": str(e)
-                })
+            
+            if len(extracted_results) != len(files):
+                raise HTTPException(
+                    status_code=422,
+                    detail={
+                        "message": f"Only {len(extracted_results)} out of {len(files)} files processed successfully. Please retry the complete batch.",
+                        "failed_batch": True
+                    }
+                )
         
         return {
             "success": True,
