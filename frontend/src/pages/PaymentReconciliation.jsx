@@ -786,6 +786,126 @@ const PaymentReconciliation = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Driver Profile Dialog */}
+      <Dialog open={showDriverDialog} onOpenChange={setShowDriverDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Enter Driver Profile</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="driver-name">Driver Name *</Label>
+              <Popover open={driverPopoverOpen} onOpenChange={setDriverPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={driverPopoverOpen}
+                    className="w-full justify-between"
+                  >
+                    {selectedDriver || "Select driver..."}
+                    <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0">
+                  <Command>
+                    <CommandInput placeholder="Search driver..." />
+                    <CommandEmpty>No driver found.</CommandEmpty>
+                    <CommandGroup className="max-h-64 overflow-auto">
+                      {driversList.map((driver) => (
+                        <CommandItem
+                          key={driver}
+                          value={driver}
+                          onSelect={(currentValue) => {
+                            setSelectedDriver(currentValue);
+                            setDriverPopoverOpen(false);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              selectedDriver === driver ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          {driver}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="vehicle-number">Vehicle Number *</Label>
+              <Popover open={vehiclePopoverOpen} onOpenChange={setVehiclePopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={vehiclePopoverOpen}
+                    className="w-full justify-between"
+                  >
+                    {selectedVehicle || "Select vehicle..."}
+                    <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0">
+                  <Command>
+                    <CommandInput placeholder="Search vehicle..." />
+                    <CommandEmpty>No vehicle found.</CommandEmpty>
+                    <CommandGroup className="max-h-64 overflow-auto">
+                      {vehiclesList.map((vehicle) => (
+                        <CommandItem
+                          key={vehicle}
+                          value={vehicle}
+                          onSelect={(currentValue) => {
+                            setSelectedVehicle(currentValue);
+                            setVehiclePopoverOpen(false);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              selectedVehicle === vehicle ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          {vehicle}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="platform">Platform *</Label>
+              <Select value={selectedPlatform} onValueChange={setSelectedPlatform}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select platform..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {platforms.map((platform) => (
+                    <SelectItem key={platform} value={platform}>
+                      {platform}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Button 
+              onClick={handleDriverProfileSubmitAndProcess}
+              className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+              disabled={!selectedDriver || !selectedVehicle || !selectedPlatform}
+            >
+              Submit and Process Files
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
