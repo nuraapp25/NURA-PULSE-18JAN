@@ -190,9 +190,19 @@ class PaymentReconciliationTester:
                                    params={"month": "Sep", "year": "2025"}, use_auth=False)
         
         if response and response.status_code in [401, 403]:
-            self.log_test("Get Drivers/Vehicles - Authentication", True, 
-                        f"Correctly requires authentication ({response.status_code})")
-            success_count += 1
+            try:
+                error_data = response.json()
+                if "Not authenticated" in error_data.get("detail", ""):
+                    self.log_test("Get Drivers/Vehicles - Authentication", True, 
+                                f"Correctly requires authentication ({response.status_code})")
+                    success_count += 1
+                else:
+                    self.log_test("Get Drivers/Vehicles - Authentication", False, 
+                                f"Unexpected auth error: {error_data}")
+            except json.JSONDecodeError:
+                self.log_test("Get Drivers/Vehicles - Authentication", True, 
+                            f"Correctly requires authentication ({response.status_code})")
+                success_count += 1
         else:
             status = response.status_code if response else "Network error"
             self.log_test("Get Drivers/Vehicles - Authentication", False, 
