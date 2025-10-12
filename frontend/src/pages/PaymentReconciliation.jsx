@@ -204,6 +204,17 @@ const PaymentReconciliation = () => {
       return;
     }
 
+    // Show driver profile dialog first
+    setShowDriverDialog(true);
+  };
+
+  const handleDriverProfileSubmitAndProcess = async () => {
+    if (!selectedDriver || !selectedVehicle || !selectedPlatform) {
+      toast.error("Please fill in all driver profile fields");
+      return;
+    }
+
+    setShowDriverDialog(false);
     setProcessing(true);
     try {
       const token = localStorage.getItem("token");
