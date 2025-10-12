@@ -786,7 +786,12 @@ const PaymentReconciliation = () => {
                   {extractedData.map((row) => (
                     <tr key={row.id} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50">
                       <td className="py-3 px-2">
-                        <input type="checkbox" className="rounded" />
+                        <input 
+                          type="checkbox" 
+                          className="rounded"
+                          checked={selectedRecords.includes(row.id)}
+                          onChange={(e) => handleSelectRecord(row.id, e.target.checked)}
+                        />
                       </td>
                       <td className="py-3 px-2 text-sm">{row.driver}</td>
                       <td className="py-3 px-2 text-sm">{row.vehicle}</td>
