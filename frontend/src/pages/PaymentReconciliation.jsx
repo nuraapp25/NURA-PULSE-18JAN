@@ -202,8 +202,16 @@ const PaymentReconciliation = () => {
           hasAmountError: item.amount === "N/A" || !item.amount || item.amount === ""
         }));
         
-        setExtractedData(processedData);
-        toast.success(`Successfully processed ${response.data.processed_files} screenshots!`);
+        // Append to existing data instead of replacing
+        setExtractedData(prev => [...prev, ...processedData]);
+        setUploadedFiles([]); // Clear uploaded files after successful processing
+        
+        toast.success(`Successfully processed all ${response.data.processed_files} screenshots!`);
+        
+        // Auto-sync to Google Sheets after successful processing
+        setTimeout(() => {
+          syncToGoogleSheets();
+        }, 1000);
       } else {
         toast.error("Failed to process screenshots");
       }
