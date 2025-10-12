@@ -2147,8 +2147,8 @@ async def delete_payment_records(
     """Delete selected payment records (Master Admin/Admin only)"""
     try:
         # Check if user has delete permissions
-        if current_user.account_type not in ["master_admin", "admin"]:
-            raise HTTPException(status_code=403, detail="Insufficient permissions. Only Master Admin and Admin can delete records.")
+        if current_user.account_type != "master_admin":
+            raise HTTPException(status_code=403, detail="Insufficient permissions. Only Master Admin can delete records.")
         
         body = await request.json()
         record_ids = body.get("record_ids", [])
