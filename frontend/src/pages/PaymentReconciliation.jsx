@@ -604,14 +604,31 @@ const PaymentReconciliation = () => {
           <p className="text-gray-600 dark:text-gray-400 mt-1">
             {selectedDriver} • {selectedVehicle} • {selectedPlatform} • {months.find(m => m.value === selectedMonth)?.label} {selectedYear}
           </p>
+          {lastSync && (
+            <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+              Last sync: {new Date(lastSync).toLocaleString()}
+            </p>
+          )}
         </div>
-        <Button 
-          onClick={() => setCurrentStep(2)}
-          variant="outline"
-          className="self-start sm:self-auto"
-        >
-          Change Profile
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            onClick={openGoogleSheets}
+            variant="outline"
+            className="text-blue-600 border-blue-600 hover:bg-blue-50"
+            size="sm"
+          >
+            <ExternalLink size={16} className="mr-1" />
+            Open Sheets
+          </Button>
+          <Button 
+            onClick={() => setCurrentStep(2)}
+            variant="outline"
+            className="self-start sm:self-auto"
+            size="sm"
+          >
+            Change Profile
+          </Button>
+        </div>
       </div>
 
       {/* Upload Receipt Screenshots */}
