@@ -62,36 +62,38 @@ const PaymentReconciliation = () => {
 
   const platforms = ["Rapido", "Uber", "Ola", "Nura", "Adhoc"];
 
-  useEffect(() => {
-    // Fetch driver and vehicle lists from the uploaded files
-    fetchDriversAndVehicles();
-  }, []);
-
-  const fetchDriversAndVehicles = async () => {
+  const fetchDriversAndVehicles = async (month, year) => {
     try {
       const token = localStorage.getItem("token");
       
-      // Note: User provided same link for both, need clarification
-      // For now, I'll use the provided link for both and assume they're Excel files with different sheets
-      const driverResponse = await axios.get(
-        "https://driver-insights-2.preview.emergentagent.com/api/admin/files/e79f2ffe-b71d-4e62-a061-2e741beeeca3/download",
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      // Convert month number to month name for API call
+      const monthNames = {
+        "01": "Jan", "02": "Feb", "03": "Mar", "04": "Apr", "05": "May", "06": "Jun",
+        "07": "Jul", "08": "Aug", "09": "Sep", "10": "Oct", "11": "Nov", "12": "Dec"
+      };
       
-      const vehicleResponse = await axios.get(
-        "https://driver-insights-2.preview.emergentagent.com/api/admin/files/e79f2ffe-b71d-4e62-a061-2e741beeeca3/download",
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const monthName = monthNames[month] || month;
       
-      // Parse the Excel files (assuming they return CSV or structured data)
-      // This will need to be adjusted based on the actual file format
-      setDriversList(["Abdul", "Samantha", "Samuel", "Sareena", "Ravi", "John", "Mike"]); // Mock data for now
-      setVehiclesList(["TN07CE2222", "TN01AB1234", "KA05CD5678", "AP09EF9012"]); // Mock data for now
+      const response = await axios.get(`${API}/admin/files/get-drivers-vehicles`, {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { month: monthName, year: year }
+      });
+      
+      if (response.data.success) {
+        setDriversList(response.data.drivers || []);
+        setVehiclesList(response.data.vehicles || []);
+        
+        if (response.data.using_mock_data) {
+          toast.warning(`No files found for ${monthName} ${year}. Using sample data. Please upload "Drivers List (${monthName} ${year}).xlsx" and "Vehicles List (${monthName} ${year}).xlsx"`);
+        } else {
+          toast.success(`Loaded ${response.data.drivers.length} drivers and ${response.data.vehicles.length} vehicles for ${monthName} ${year}`);
+        }
+      }
       
     } catch (error) {
       console.error("Error fetching drivers and vehicles:", error);
-      toast.error("Failed to load driver and vehicle data");
-      // Use mock data as fallback
+      toast.error("Failed to load driver and vehicle data. Using sample data.");
+      // Use fallback data
       setDriversList(["Abdul", "Samantha", "Samuel", "Sareena", "Ravi", "John", "Mike"]);
       setVehiclesList(["TN07CE2222", "TN01AB1234", "KA05CD5678", "AP09EF9012"]);
     }
