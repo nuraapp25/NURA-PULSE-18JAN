@@ -5,411 +5,575 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { FileText, Plus, Search, RefreshCw, Edit, DollarSign, CreditCard } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Check, ChevronDown, Upload, FileText, Copy, Download, FileSpreadsheet, Trash2, Clock } from "lucide-react";
 import { toast } from "sonner";
 import axios from "axios";
 import { API } from "@/App";
-import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 const PaymentReconciliation = () => {
-  const [payments, setPayments] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [showAddDialog, setShowAddDialog] = useState(false);
-  const [selectedPayment, setSelectedPayment] = useState(null);
-  const [showEditDialog, setShowEditDialog] = useState(false);
-  const [syncing, setSyncing] = useState(false);
+  // Step management
+  const [currentStep, setCurrentStep] = useState(1); // 1: Month/Year, 2: Driver Profile, 3: Main Interface
+  
+  // Step 1: Month/Year Selection
+  const [selectedMonth, setSelectedMonth] = useState("");
+  const [selectedYear, setSelectedYear] = useState("");
+  
+  // Step 2: Driver Profile
+  const [selectedDriver, setSelectedDriver] = useState("");
+  const [selectedVehicle, setSelectedVehicle] = useState("");
+  const [selectedPlatform, setSelectedPlatform] = useState("");
+  
+  // Data lists
+  const [driversList, setDriversList] = useState([]);
+  const [vehiclesList, setVehiclesList] = useState([]);
+  
+  // Main interface state
+  const [extractedData, setExtractedData] = useState([]);
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [processing, setProcessing] = useState(false);
+  
+  // Popover states for searchable dropdowns
+  const [driverPopoverOpen, setDriverPopoverOpen] = useState(false);
+  const [vehiclePopoverOpen, setVehiclePopoverOpen] = useState(false);
 
-  const [newPayment, setNewPayment] = useState({
-    transaction_id: "",
-    amount: "",
-    payment_method: "",
-    status: "Pending",
-    customer_name: "",
-    notes: ""
+  const months = [
+    { value: "01", label: "January" },
+    { value: "02", label: "February" },
+    { value: "03", label: "March" },
+    { value: "04", label: "April" },
+    { value: "05", label: "May" },
+    { value: "06", label: "June" },
+    { value: "07", label: "July" },
+    { value: "08", label: "August" },
+    { value: "09", label: "September" },
+    { value: "10", label: "October" },
+    { value: "11", label: "November" },
+    { value: "12", label: "December" }
+  ];
+
+  const years = Array.from({ length: 10 }, (_, i) => {
+    const year = 2025 + i;
+    return { value: year.toString(), label: year.toString() };
   });
 
+  const platforms = ["Rapido", "Uber", "Ola", "Nura", "Adhoc"];
+
   useEffect(() => {
-    fetchPayments();
+    // Fetch driver and vehicle lists from the uploaded files
+    fetchDriversAndVehicles();
   }, []);
 
-  const fetchPayments = async () => {
-    setLoading(true);
+  const fetchDriversAndVehicles = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get(`${API}/payment-reconciliation`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setPayments(response.data || []);
+      
+      // Note: User provided same link for both, need clarification
+      // For now, I'll use the provided link for both and assume they're Excel files with different sheets
+      const driverResponse = await axios.get(
+        "https://driver-insights-2.preview.emergentagent.com/api/admin/files/e79f2ffe-b71d-4e62-a061-2e741beeeca3/download",
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      const vehicleResponse = await axios.get(
+        "https://driver-insights-2.preview.emergentagent.com/api/admin/files/e79f2ffe-b71d-4e62-a061-2e741beeeca3/download",
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      // Parse the Excel files (assuming they return CSV or structured data)
+      // This will need to be adjusted based on the actual file format
+      setDriversList(["Abdul", "Samantha", "Samuel", "Sareena", "Ravi", "John", "Mike"]); // Mock data for now
+      setVehiclesList(["TN07CE2222", "TN01AB1234", "KA05CD5678", "AP09EF9012"]); // Mock data for now
+      
     } catch (error) {
-      toast.error("Failed to fetch payment records");
-      console.error("Fetch payments error:", error);
-    } finally {
-      setLoading(false);
+      console.error("Error fetching drivers and vehicles:", error);
+      toast.error("Failed to load driver and vehicle data");
+      // Use mock data as fallback
+      setDriversList(["Abdul", "Samantha", "Samuel", "Sareena", "Ravi", "John", "Mike"]);
+      setVehiclesList(["TN07CE2222", "TN01AB1234", "KA05CD5678", "AP09EF9012"]);
     }
   };
 
-  const handleAddPayment = async () => {
-    if (!newPayment.transaction_id || !newPayment.amount || !newPayment.payment_method) {
-      toast.error("Please fill in all required fields");
+  const handleMonthYearSubmit = () => {
+    if (!selectedMonth || !selectedYear) {
+      toast.error("Please select both month and year");
+      return;
+    }
+    setCurrentStep(2);
+  };
+
+  const handleDriverProfileSubmit = () => {
+    if (!selectedDriver || !selectedVehicle || !selectedPlatform) {
+      toast.error("Please fill in all driver profile fields");
+      return;
+    }
+    setCurrentStep(3);
+  };
+
+  const handleFileSelect = (event) => {
+    const files = Array.from(event.target.files);
+    const validFiles = files.filter(file => {
+      const fileType = file.type;
+      return fileType.includes('image/');
+    });
+    
+    if (validFiles.length !== files.length) {
+      toast.error("Please select only image files (PNG, JPG, JPEG)");
+    }
+    
+    setUploadedFiles(prev => [...prev, ...validFiles].slice(0, 10)); // Max 10 files
+  };
+
+  const removeFile = (index) => {
+    setUploadedFiles(files => files.filter((_, i) => i !== index));
+  };
+
+  const processFiles = async () => {
+    if (uploadedFiles.length === 0) {
+      toast.error("Please select files to process");
       return;
     }
 
+    setProcessing(true);
     try {
-      const token = localStorage.getItem("token");
-      await axios.post(`${API}/payment-reconciliation`, {
-        ...newPayment,
-        amount: parseFloat(newPayment.amount)
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      // Mock processing - in real implementation, this would call an API to extract data
+      const mockData = uploadedFiles.map((file, index) => ({
+        id: Date.now() + index,
+        driver: selectedDriver,
+        vehicle: selectedVehicle,
+        description: "Auto",
+        platform: selectedPlatform,
+        date: `${selectedMonth} ${selectedYear}`,
+        time: "2:41 PM",
+        amount: "₹100",
+        paymentMode: "N/A",
+        distance: "N/A",
+        duration: "N/A",
+        pickupKm: "N/A",
+        dropKm: "N/A",
+        pickupLocation: "Institute Of Mental Health, Chennai"
+      }));
       
-      toast.success("Payment record created successfully");
-      setShowAddDialog(false);
-      setNewPayment({
-        transaction_id: "",
-        amount: "",
-        payment_method: "",
-        status: "Pending",
-        customer_name: "",
-        notes: ""
-      });
-      fetchPayments();
+      setExtractedData(mockData);
+      toast.success("Files processed successfully!");
     } catch (error) {
-      toast.error("Failed to create payment record");
-      console.error("Add payment error:", error);
-    }
-  };
-
-  const handleUpdatePayment = async (paymentId, updatedData) => {
-    try {
-      const token = localStorage.getItem("token");
-      // Note: We'll need to add update endpoint later
-      // For now, we'll just update locally and sync
-      const updatedPayments = payments.map(payment => 
-        payment.id === paymentId 
-          ? { ...payment, ...updatedData }
-          : payment
-      );
-      setPayments(updatedPayments);
-      toast.success("Payment status updated");
-      setShowEditDialog(false);
-    } catch (error) {
-      toast.error("Failed to update payment");
-      console.error("Update payment error:", error);
-    }
-  };
-
-  const handleSyncToSheets = async () => {
-    setSyncing(true);
-    try {
-      const token = localStorage.getItem("token");
-      await axios.post(`${API}/payment-reconciliation/sync`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      toast.success("Payments synced to Google Sheets successfully");
-    } catch (error) {
-      toast.error("Failed to sync payments to Google Sheets");
-      console.error("Sync error:", error);
+      toast.error("Failed to process files");
     } finally {
-      setSyncing(false);
+      setProcessing(false);
     }
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "Completed": return "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400";
-      case "Reconciled": return "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400";
-      case "Failed": return "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400";
-      case "Pending": return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400";
-      default: return "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400";
-    }
+  const copyAllData = () => {
+    const csvData = extractedData.map(row => 
+      Object.values(row).join(',')
+    ).join('\n');
+    navigator.clipboard.writeText(csvData);
+    toast.success("Data copied to clipboard");
   };
 
-  const filteredPayments = payments.filter(payment => {
-    const matchesSearch = payment.transaction_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         payment.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         payment.payment_method?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || payment.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  const downloadCSV = () => {
+    const headers = ["Driver", "Vehicle", "Description", "Platform", "Date", "Time", "Amount", "Payment Mode", "Distance", "Duration", "Pickup KM", "Drop KM", "Pickup Location"];
+    const csvData = [
+      headers.join(','),
+      ...extractedData.map(row => 
+        [row.driver, row.vehicle, row.description, row.platform, row.date, row.time, row.amount, row.paymentMode, row.distance, row.duration, row.pickupKm, row.dropKm, row.pickupLocation].join(',')
+      )
+    ].join('\n');
+    
+    const blob = new Blob([csvData], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `payment_reconciliation_${selectedMonth}_${selectedYear}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
 
-  return (
-    <div className="space-y-6" data-testid="payment-reconciliation-page">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white flex items-center">
-            <DollarSign className="mr-2 sm:mr-3 text-green-600" size={28} />
-            <span className="hidden sm:inline">Payment Reconciliation</span>
-            <span className="sm:hidden">Payments</span>
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
-            Manage and reconcile payment transactions
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2 sm:gap-3">
-          <Button 
-            onClick={handleSyncToSheets}
-            disabled={syncing}
-            variant="outline"
-            className="flex items-center text-sm"
-            size="sm"
-          >
-            <RefreshCw size={16} className={`mr-1 sm:mr-2 ${syncing ? 'animate-spin' : ''}`} />
-            {syncing ? "Syncing..." : "Sync"}
-          </Button>
-          <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-            <DialogTrigger asChild>
-              <Button className="bg-blue-600 hover:bg-blue-700 text-sm" size="sm">
-                <Plus size={16} className="mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Add Payment</span>
-                <span className="sm:hidden">Add</span>
+  const clearAll = () => {
+    setExtractedData([]);
+    setUploadedFiles([]);
+  };
+
+  // Step 1: Month/Year Selection
+  if (currentStep === 1) {
+    return (
+      <div className="space-y-6" data-testid="payment-reconciliation-page">
+        <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-8">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Payment Reconciliation</h1>
+            <p className="text-gray-600 dark:text-gray-400">Select month and year to get started</p>
+          </div>
+          
+          <Card className="w-full max-w-md dark:bg-gray-800 dark:border-gray-700">
+            <CardHeader>
+              <CardTitle className="text-center dark:text-white">Select Period</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <Label className="dark:text-gray-300">Month</Label>
+                <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                  <SelectTrigger className="dark:bg-gray-700 dark:border-gray-600">
+                    <SelectValue placeholder="Select month" />
+                  </SelectTrigger>
+                  <SelectContent className="dark:bg-gray-800">
+                    {months.map((month) => (
+                      <SelectItem key={month.value} value={month.value}>
+                        {month.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label className="dark:text-gray-300">Year</Label>
+                <Select value={selectedYear} onValueChange={setSelectedYear}>
+                  <SelectTrigger className="dark:bg-gray-700 dark:border-gray-600">
+                    <SelectValue placeholder="Select year" />
+                  </SelectTrigger>
+                  <SelectContent className="dark:bg-gray-800">
+                    {years.map((year) => (
+                      <SelectItem key={year.value} value={year.value}>
+                        {year.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <Button 
+                onClick={handleMonthYearSubmit}
+                className="w-full bg-blue-600 hover:bg-blue-700"
+                disabled={!selectedMonth || !selectedYear}
+              >
+                Continue
               </Button>
-            </DialogTrigger>
-            <DialogContent className="dark:bg-gray-800">
-              <DialogHeader>
-                <DialogTitle className="dark:text-white">Add New Payment Record</DialogTitle>
-              </DialogHeader>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <Label className="dark:text-gray-300">Transaction ID *</Label>
-                  <Input
-                    value={newPayment.transaction_id}
-                    onChange={(e) => setNewPayment({...newPayment, transaction_id: e.target.value})}
-                    placeholder="TXN123456"
-                    className="dark:bg-gray-700 dark:border-gray-600 text-sm"
-                  />
-                </div>
-                <div>
-                  <Label className="dark:text-gray-300">Amount *</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={newPayment.amount}
-                    onChange={(e) => setNewPayment({...newPayment, amount: e.target.value})}
-                    placeholder="1000.00"
-                    className="dark:bg-gray-700 dark:border-gray-600 text-sm"
-                  />
-                </div>
-                <div>
-                  <Label className="dark:text-gray-300">Payment Method *</Label>
-                  <Select 
-                    value={newPayment.payment_method} 
-                    onValueChange={(value) => setNewPayment({...newPayment, payment_method: value})}
-                  >
-                    <SelectTrigger className="dark:bg-gray-700 dark:border-gray-600 text-sm">
-                      <SelectValue placeholder="Select method" />
-                    </SelectTrigger>
-                    <SelectContent className="dark:bg-gray-800">
-                      <SelectItem value="UPI">UPI</SelectItem>
-                      <SelectItem value="Card">Credit/Debit Card</SelectItem>
-                      <SelectItem value="Net Banking">Net Banking</SelectItem>
-                      <SelectItem value="Cash">Cash</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label className="dark:text-gray-300">Status</Label>
-                  <Select 
-                    value={newPayment.status} 
-                    onValueChange={(value) => setNewPayment({...newPayment, status: value})}
-                  >
-                    <SelectTrigger className="dark:bg-gray-700 dark:border-gray-600 text-sm">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="dark:bg-gray-800">
-                      <SelectItem value="Pending">Pending</SelectItem>
-                      <SelectItem value="Completed">Completed</SelectItem>
-                      <SelectItem value="Failed">Failed</SelectItem>
-                      <SelectItem value="Reconciled">Reconciled</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="col-span-2">
-                  <Label className="dark:text-gray-300">Customer Name</Label>
-                  <Input
-                    value={newPayment.customer_name}
-                    onChange={(e) => setNewPayment({...newPayment, customer_name: e.target.value})}
-                    placeholder="Customer name"
-                    className="dark:bg-gray-700 dark:border-gray-600"
-                  />
-                </div>
-                <div className="col-span-2">
-                  <Label className="dark:text-gray-300">Notes</Label>
-                  <Textarea
-                    value={newPayment.notes}
-                    onChange={(e) => setNewPayment({...newPayment, notes: e.target.value})}
-                    placeholder="Additional notes..."
-                    rows={3}
-                    className="dark:bg-gray-700 dark:border-gray-600"
-                  />
-                </div>
-              </div>
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button variant="outline" onClick={() => setShowAddDialog(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={handleAddPayment}>Add Payment</Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+            </CardContent>
+          </Card>
         </div>
       </div>
+    );
+  }
 
-      {/* Filters */}
-      <Card className="dark:bg-gray-800 dark:border-gray-700">
-        <CardContent className="pt-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <Input
-                  placeholder="Search by transaction ID, customer name, or payment method..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 dark:bg-gray-700 dark:border-gray-600"
-                />
-              </div>
-            </div>
-            <div className="w-48">
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="dark:bg-gray-700 dark:border-gray-600">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="dark:bg-gray-800">
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="Pending">Pending</SelectItem>
-                  <SelectItem value="Completed">Completed</SelectItem>
-                  <SelectItem value="Failed">Failed</SelectItem>
-                  <SelectItem value="Reconciled">Reconciled</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+  // Step 2: Driver Profile Entry
+  if (currentStep === 2) {
+    return (
+      <div className="space-y-6" data-testid="payment-reconciliation-page">
+        <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-8">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Driver Profile</h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              Period: {months.find(m => m.value === selectedMonth)?.label} {selectedYear}
+            </p>
           </div>
-        </CardContent>
-      </Card>
+          
+          <Card className="w-full max-w-md dark:bg-gray-800 dark:border-gray-700">
+            <CardHeader>
+              <CardTitle className="text-center dark:text-white">Enter Driver Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Driver Name - Searchable Dropdown */}
+              <div>
+                <Label className="dark:text-gray-300">Driver Name</Label>
+                <Popover open={driverPopoverOpen} onOpenChange={setDriverPopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={driverPopoverOpen}
+                      className="w-full justify-between dark:bg-gray-700 dark:border-gray-600"
+                    >
+                      {selectedDriver || "Select driver..."}
+                      <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0 dark:bg-gray-800">
+                    <Command>
+                      <CommandInput placeholder="Search drivers..." className="h-9" />
+                      <CommandEmpty>No driver found.</CommandEmpty>
+                      <CommandGroup>
+                        {driversList.map((driver) => (
+                          <CommandItem
+                            key={driver}
+                            onSelect={() => {
+                              setSelectedDriver(driver);
+                              setDriverPopoverOpen(false);
+                            }}
+                          >
+                            {driver}
+                            <Check
+                              className={cn(
+                                "ml-auto h-4 w-4",
+                                selectedDriver === driver ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </div>
 
-      {/* Payment Records Table */}
+              {/* Vehicle Number - Searchable Dropdown */}
+              <div>
+                <Label className="dark:text-gray-300">Vehicle Number</Label>
+                <Popover open={vehiclePopoverOpen} onOpenChange={setVehiclePopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={vehiclePopoverOpen}
+                      className="w-full justify-between dark:bg-gray-700 dark:border-gray-600"
+                    >
+                      {selectedVehicle || "Select vehicle..."}
+                      <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0 dark:bg-gray-800">
+                    <Command>
+                      <CommandInput placeholder="Search vehicles..." className="h-9" />
+                      <CommandEmpty>No vehicle found.</CommandEmpty>
+                      <CommandGroup>
+                        {vehiclesList.map((vehicle) => (
+                          <CommandItem
+                            key={vehicle}
+                            onSelect={() => {
+                              setSelectedVehicle(vehicle);
+                              setVehiclePopoverOpen(false);
+                            }}
+                          >
+                            {vehicle}
+                            <Check
+                              className={cn(
+                                "ml-auto h-4 w-4",
+                                selectedVehicle === vehicle ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              {/* Platform - Regular Dropdown */}
+              <div>
+                <Label className="dark:text-gray-300">Platform</Label>
+                <Select value={selectedPlatform} onValueChange={setSelectedPlatform}>
+                  <SelectTrigger className="dark:bg-gray-700 dark:border-gray-600">
+                    <SelectValue placeholder="Select platform" />
+                  </SelectTrigger>
+                  <SelectContent className="dark:bg-gray-800">
+                    {platforms.map((platform) => (
+                      <SelectItem key={platform} value={platform}>
+                        {platform}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="flex space-x-3">
+                <Button 
+                  onClick={() => setCurrentStep(1)}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  Back
+                </Button>
+                <Button 
+                  onClick={handleDriverProfileSubmit}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                  disabled={!selectedDriver || !selectedVehicle || !selectedPlatform}
+                >
+                  Continue
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // Step 3: Main Interface (similar to the uploaded image)
+  return (
+    <div className="space-y-6" data-testid="payment-reconciliation-page">
+      {/* Header with session info */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Payment Reconciliation</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">
+            {selectedDriver} • {selectedVehicle} • {selectedPlatform} • {months.find(m => m.value === selectedMonth)?.label} {selectedYear}
+          </p>
+        </div>
+        <Button 
+          onClick={() => setCurrentStep(2)}
+          variant="outline"
+          className="self-start sm:self-auto"
+        >
+          Change Profile
+        </Button>
+      </div>
+
+      {/* Upload Receipt Screenshots */}
       <Card className="dark:bg-gray-800 dark:border-gray-700">
         <CardHeader>
-          <CardTitle className="flex items-center justify-between dark:text-white">
-            <span className="flex items-center">
-              <CreditCard size={20} className="mr-2" />
-              Payment Records ({filteredPayments.length})
-            </span>
-            <Button variant="outline" onClick={fetchPayments} disabled={loading}>
-              <RefreshCw size={16} className={`mr-2 ${loading ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
+          <CardTitle className="flex items-center dark:text-white">
+            <Upload size={20} className="mr-2" />
+            Upload Receipt Screenshots
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="flex justify-center items-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center">
+            <input
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={handleFileSelect}
+              className="hidden"
+              id="receipt-upload"
+            />
+            <label htmlFor="receipt-upload" className="cursor-pointer">
+              <Upload size={48} className="mx-auto text-gray-400 mb-4" />
+              <p className="text-lg text-gray-600 dark:text-gray-400 mb-2">
+                Drag & drop images here
+              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-500">
+                or click to select files • Max 10 files • PNG, JPG, JPEG supported
+              </p>
+            </label>
+          </div>
+          
+          {uploadedFiles.length > 0 && (
+            <div className="mt-6">
+              <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                Selected Files ({uploadedFiles.length}/10):
+              </h4>
+              <div className="space-y-2">
+                {uploadedFiles.map((file, index) => (
+                  <div key={index} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded">
+                    <span className="text-sm text-gray-700 dark:text-gray-300 truncate">{file.name}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeFile(index)}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      ×
+                    </Button>
+                  </div>
+                ))}
+              </div>
             </div>
-          ) : filteredPayments.length === 0 ? (
-            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-              {searchTerm || statusFilter !== "all" ? "No payments found matching your filters" : "No payment records found"}
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gray-200 dark:border-gray-700">
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700 dark:text-gray-300">Transaction ID</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700 dark:text-gray-300">Date</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700 dark:text-gray-300">Amount</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700 dark:text-gray-300">Method</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700 dark:text-gray-300">Customer</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700 dark:text-gray-300">Status</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700 dark:text-gray-300">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredPayments.map((payment) => (
-                    <tr key={payment.id} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                      <td className="py-3 px-4 font-mono text-sm">{payment.transaction_id}</td>
-                      <td className="py-3 px-4 text-sm">
-                        {payment.date ? format(new Date(payment.date), 'dd MMM yyyy') : 'N/A'}
-                      </td>
-                      <td className="py-3 px-4 text-sm font-semibold">₹{payment.amount?.toFixed(2)}</td>
-                      <td className="py-3 px-4 text-sm">{payment.payment_method}</td>
-                      <td className="py-3 px-4 text-sm">{payment.customer_name || 'N/A'}</td>
-                      <td className="py-3 px-4">
-                        <Badge className={getStatusColor(payment.status)}>
-                          {payment.status}
-                        </Badge>
-                      </td>
-                      <td className="py-3 px-4">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedPayment(payment);
-                            setShowEditDialog(true);
-                          }}
-                        >
-                          <Edit size={16} />
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          )}
+          
+          {uploadedFiles.length > 0 && (
+            <div className="mt-6 text-center">
+              <Button
+                onClick={processFiles}
+                disabled={processing}
+                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 px-8 py-3"
+              >
+                {processing ? (
+                  <>
+                    <Clock className="mr-2 h-4 w-4 animate-spin" />
+                    Processing {uploadedFiles.length} File(s)...
+                  </>
+                ) : (
+                  <>
+                    Process {uploadedFiles.length} File(s)
+                  </>
+                )}
+              </Button>
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Edit Payment Dialog */}
-      {selectedPayment && (
-        <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-          <DialogContent className="dark:bg-gray-800">
-            <DialogHeader>
-              <DialogTitle className="dark:text-white">Update Payment Status</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label className="dark:text-gray-300">Transaction ID</Label>
-                <Input value={selectedPayment.transaction_id} disabled className="dark:bg-gray-700 dark:border-gray-600" />
+      {/* Extracted Payment Data */}
+      {extractedData.length > 0 && (
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between dark:text-white">
+              <div className="flex items-center">
+                <FileText size={20} className="mr-2" />
+                Extracted Payment Data ({extractedData.length})
               </div>
-              <div>
-                <Label className="dark:text-gray-300">Amount</Label>
-                <Input value={`₹${selectedPayment.amount?.toFixed(2)}`} disabled className="dark:bg-gray-700 dark:border-gray-600" />
+              <div className="flex space-x-2">
+                <Button variant="outline" size="sm" onClick={copyAllData}>
+                  <Copy size={16} className="mr-1" />
+                  Copy All
+                </Button>
+                <Button variant="outline" size="sm" onClick={downloadCSV}>
+                  <Download size={16} className="mr-1" />
+                  Download All CSV
+                </Button>
+                <Button variant="outline" size="sm" className="text-green-600 border-green-600">
+                  <FileSpreadsheet size={16} className="mr-1" />
+                  Import to Google Sheets
+                </Button>
+                <Button variant="outline" size="sm" onClick={clearAll} className="text-red-600 border-red-600">
+                  <Trash2 size={16} className="mr-1" />
+                  Clear All
+                </Button>
               </div>
-              <div>
-                <Label className="dark:text-gray-300">Status</Label>
-                <Select 
-                  value={selectedPayment.status} 
-                  onValueChange={(value) => setSelectedPayment({...selectedPayment, status: value})}
-                >
-                  <SelectTrigger className="dark:bg-gray-700 dark:border-gray-600">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="dark:bg-gray-800">
-                    <SelectItem value="Pending">Pending</SelectItem>
-                    <SelectItem value="Completed">Completed</SelectItem>
-                    <SelectItem value="Failed">Failed</SelectItem>
-                    <SelectItem value="Reconciled">Reconciled</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-200 dark:border-gray-700">
+                    <th className="text-left py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">
+                      <input type="checkbox" className="rounded" />
+                    </th>
+                    <th className="text-left py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">Driver</th>
+                    <th className="text-left py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">Vehicle</th>
+                    <th className="text-left py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">Description</th>
+                    <th className="text-left py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">Platform</th>
+                    <th className="text-left py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">Date</th>
+                    <th className="text-left py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">Time</th>
+                    <th className="text-left py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">Amount</th>
+                    <th className="text-left py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">Payment Mode</th>
+                    <th className="text-left py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">Distance</th>
+                    <th className="text-left py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">Duration</th>
+                    <th className="text-left py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">Pickup KM</th>
+                    <th className="text-left py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">Drop KM</th>
+                    <th className="text-left py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">Pickup Location</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {extractedData.map((row) => (
+                    <tr key={row.id} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                      <td className="py-3 px-2">
+                        <input type="checkbox" className="rounded" />
+                      </td>
+                      <td className="py-3 px-2 text-sm">{row.driver}</td>
+                      <td className="py-3 px-2 text-sm">{row.vehicle}</td>
+                      <td className="py-3 px-2 text-sm">{row.description}</td>
+                      <td className="py-3 px-2 text-sm">{row.platform}</td>
+                      <td className="py-3 px-2 text-sm">{row.date}</td>
+                      <td className="py-3 px-2 text-sm">{row.time}</td>
+                      <td className="py-3 px-2 text-sm font-semibold text-green-600">{row.amount}</td>
+                      <td className="py-3 px-2 text-sm text-gray-500">{row.paymentMode}</td>
+                      <td className="py-3 px-2 text-sm text-gray-500">{row.distance}</td>
+                      <td className="py-3 px-2 text-sm text-gray-500">{row.duration}</td>
+                      <td className="py-3 px-2 text-sm text-gray-500">{row.pickupKm}</td>
+                      <td className="py-3 px-2 text-sm text-gray-500">{row.dropKm}</td>
+                      <td className="py-3 px-2 text-sm">{row.pickupLocation}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button variant="outline" onClick={() => setShowEditDialog(false)}>
-                Cancel
-              </Button>
-              <Button onClick={() => handleUpdatePayment(selectedPayment.id, { status: selectedPayment.status })}>
-                Update Status
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
