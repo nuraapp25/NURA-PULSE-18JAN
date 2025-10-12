@@ -314,7 +314,7 @@ const PaymentReconciliation = () => {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `payment_reconciliation_${selectedMonth}_${selectedYear}.csv`;
+    a.download = `payment_reconciliation_${selectedPeriod.replace(' ', '_')}.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
   };
