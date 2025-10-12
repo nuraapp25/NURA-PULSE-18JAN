@@ -1789,6 +1789,45 @@ async def delete_montra_feed_files(
         raise HTTPException(status_code=500, detail="Failed to delete montra feed files")
 
 
+@api_router.get("/admin/files/parse-excel/{file_id}")
+async def parse_excel_file(file_id: str, current_user: User = Depends(get_current_user)):
+    """Parse Excel file and return list of names from first column"""
+    try:
+        # Get the file from database
+        file_doc = await db.admin_files.find_one({"id": file_id})
+        if not file_doc:
+            raise HTTPException(status_code=404, detail="File not found")
+        
+        file_path = file_doc.get("file_path")
+        if not file_path or not os.path.exists(file_path):
+            raise HTTPException(status_code=404, detail="File not found on disk")
+        
+        # Read Excel file
+        import pandas as pd
+        try:
+            df = pd.read_excel(file_path)
+            
+            # Get first column values, remove NaN values and convert to string
+            names = df.iloc[:, 0].dropna().astype(str).tolist()
+            
+            # Clean up the names (remove empty strings, strip whitespace)
+            names = [name.strip() for name in names if name.strip() and name.strip().lower() != 'nan']
+            
+            return {
+                "success": True,
+                "names": names,
+                "count": len(names)
+            }
+            
+        except Exception as e:
+            logger.error(f"Error parsing Excel file {file_id}: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Error parsing Excel file: {str(e)}")
+            
+    except Exception as e:
+        logger.error(f"Error in parse_excel_file: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to parse Excel file")
+
+
 @api_router.post("/admin/files/reload-fleet-mapping")
 async def reload_fleet_mapping(current_user: User = Depends(get_current_user)):
     """Reload vehicle to registration number mapping from Nura Fleet Data.xlsx"""
