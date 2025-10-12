@@ -217,7 +217,20 @@ const PaymentReconciliation = () => {
       }
     } catch (error) {
       console.error("Processing error:", error);
-      toast.error("Failed to process screenshots. Please try again.");
+      
+      // Check if it's a batch failure
+      if (error.response?.status === 422 && error.response?.data?.failed_batch) {
+        toast.error(
+          <div>
+            <p className="font-semibold">Batch Processing Failed</p>
+            <p className="text-sm mt-1">{error.response.data.message}</p>
+            <p className="text-xs mt-1 text-gray-600">Please retry with all 10 files.</p>
+          </div>,
+          { duration: 7000 }
+        );
+      } else {
+        toast.error("Failed to process screenshots. Please try again.");
+      }
     } finally {
       setProcessing(false);
     }
