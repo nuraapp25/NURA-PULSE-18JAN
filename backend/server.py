@@ -1895,6 +1895,166 @@ async def get_drivers_and_vehicles(
         }
 
 
+@api_router.post("/payment-reconciliation/process-screenshots")
+async def process_payment_screenshots(
+    request: Request,
+    current_user: User = Depends(get_current_user)
+):
+    """Process uploaded screenshots using OpenAI GPT-4 Vision to extract payment data"""
+    from dotenv import load_dotenv
+    load_dotenv()
+    
+    try:
+        from emergentintegrations.llm.chat import LlmChat, UserMessage, FileContentWithMimeType
+        import base64
+        import tempfile
+        import uuid
+        
+        # Parse form data
+        form = await request.form()
+        files = form.getlist("files")
+        
+        if not files:
+            raise HTTPException(status_code=400, detail="No files uploaded")
+        
+        if len(files) > 10:
+            raise HTTPException(status_code=400, detail="Maximum 10 files allowed per batch")
+        
+        # Get the emergent LLM key
+        api_key = os.environ.get("EMERGENT_LLM_KEY")
+        if not api_key:
+            raise HTTPException(status_code=500, detail="OpenAI API key not configured")
+        
+        # Initialize OpenAI chat with GPT-4 Vision
+        chat = LlmChat(
+            api_key=api_key,
+            session_id=f"payment-extraction-{uuid.uuid4()}",
+            system_message="You are an expert at extracting ride payment details from screenshots. Extract data accurately and return structured information."
+        ).with_model("openai", "gpt-4o")
+        
+        extracted_results = []
+        
+        # Process each file
+        for i, file in enumerate(files):
+            try:
+                # Read file content
+                file_content = await file.read()
+                
+                # Create temporary file
+                with tempfile.NamedTemporaryFile(delete=False, suffix=f".{file.filename.split('.')[-1]}") as temp_file:
+                    temp_file.write(file_content)
+                    temp_file_path = temp_file.name
+                
+                # Create file content for OpenAI
+                image_file = FileContentWithMimeType(
+                    file_path=temp_file_path,
+                    mime_type=file.content_type or "image/jpeg"
+                )
+                
+                # Create extraction prompt
+                extraction_prompt = """Extract ride payment details from this screenshot and return the information in the following JSON format:
+
+{
+    "driver": "Driver name (if visible)",
+    "vehicle": "Vehicle number/ID (if visible)", 
+    "description": "Ride description or service type",
+    "date": "Date in DD/MM/YYYY format",
+    "time": "Time in HH:MM format",
+    "amount": "Fare amount as number only (no currency symbol)",
+    "payment_mode": "Payment method (Cash/UPI/Card/etc)",
+    "distance": "Distance in km as number only",
+    "duration": "Duration in minutes as number only", 
+    "pickup_km": "Pickup odometer reading if visible",
+    "drop_km": "Drop odometer reading if visible",
+    "pickup_location": "Pickup location/address",
+    "drop_location": "Drop location/address"
+}
+
+If any information is not visible or available in the screenshot, use "N/A" as the value. Be precise and only extract what you can clearly see."""
+
+                # Send to OpenAI
+                user_message = UserMessage(
+                    text=extraction_prompt,
+                    file_contents=[image_file]
+                )
+                
+                response = await chat.send_message(user_message)
+                
+                # Parse JSON response
+                import json
+                try:
+                    # Clean response - remove markdown formatting if present
+                    clean_response = response.strip()
+                    if clean_response.startswith("```json"):
+                        clean_response = clean_response[7:]
+                    if clean_response.endswith("```"):
+                        clean_response = clean_response[:-3]
+                    clean_response = clean_response.strip()
+                    
+                    extracted_data = json.loads(clean_response)
+                    extracted_data["screenshot_filename"] = file.filename
+                    extracted_data["id"] = str(uuid.uuid4())
+                    extracted_results.append(extracted_data)
+                    
+                except json.JSONDecodeError as e:
+                    logger.error(f"Failed to parse JSON response for file {file.filename}: {str(e)}")
+                    # Create fallback entry
+                    extracted_results.append({
+                        "id": str(uuid.uuid4()),
+                        "driver": "N/A",
+                        "vehicle": "N/A", 
+                        "description": "N/A",
+                        "date": "N/A",
+                        "time": "N/A",
+                        "amount": "N/A",
+                        "payment_mode": "N/A",
+                        "distance": "N/A",
+                        "duration": "N/A",
+                        "pickup_km": "N/A",
+                        "drop_km": "N/A",
+                        "pickup_location": "N/A",
+                        "drop_location": "N/A",
+                        "screenshot_filename": file.filename,
+                        "extraction_error": "Failed to parse response"
+                    })
+                
+                # Clean up temporary file
+                os.unlink(temp_file_path)
+                
+            except Exception as e:
+                logger.error(f"Error processing file {file.filename}: {str(e)}")
+                # Create error entry
+                extracted_results.append({
+                    "id": str(uuid.uuid4()),
+                    "driver": "N/A",
+                    "vehicle": "N/A",
+                    "description": "N/A", 
+                    "date": "N/A",
+                    "time": "N/A",
+                    "amount": "N/A",
+                    "payment_mode": "N/A",
+                    "distance": "N/A",
+                    "duration": "N/A",
+                    "pickup_km": "N/A",
+                    "drop_km": "N/A",
+                    "pickup_location": "N/A",
+                    "drop_location": "N/A",
+                    "screenshot_filename": file.filename,
+                    "processing_error": str(e)
+                })
+        
+        return {
+            "success": True,
+            "extracted_data": extracted_results,
+            "processed_files": len(files),
+            "message": f"Successfully processed {len(files)} screenshots"
+        }
+        
+    except Exception as e:
+        logger.error(f"Error in process_payment_screenshots: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to process screenshots: {str(e)}")
+
+
 @api_router.post("/admin/files/reload-fleet-mapping")
 async def reload_fleet_mapping(current_user: User = Depends(get_current_user)):
     """Reload vehicle to registration number mapping from Nura Fleet Data.xlsx"""
