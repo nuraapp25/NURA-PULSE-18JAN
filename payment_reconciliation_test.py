@@ -167,9 +167,19 @@ class PaymentReconciliationTester:
         response = self.make_request("GET", "/admin/files/get-drivers-vehicles")
         
         if response and response.status_code == 422:
-            self.log_test("Get Drivers/Vehicles - Parameter Validation", True, 
-                        "Correctly rejected missing parameters (422)")
-            success_count += 1
+            try:
+                error_data = response.json()
+                if "Field required" in str(error_data):
+                    self.log_test("Get Drivers/Vehicles - Parameter Validation", True, 
+                                "Correctly rejected missing parameters (422)")
+                    success_count += 1
+                else:
+                    self.log_test("Get Drivers/Vehicles - Parameter Validation", False, 
+                                f"Unexpected 422 error: {error_data}")
+            except json.JSONDecodeError:
+                self.log_test("Get Drivers/Vehicles - Parameter Validation", True, 
+                            "Correctly rejected missing parameters (422)")
+                success_count += 1
         else:
             status = response.status_code if response else "Network error"
             self.log_test("Get Drivers/Vehicles - Parameter Validation", False, 
