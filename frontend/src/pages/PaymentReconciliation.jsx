@@ -722,13 +722,31 @@ const PaymentReconciliation = () => {
                 </Button>
                 <Button variant="outline" size="sm" onClick={downloadCSV}>
                   <Download size={16} className="mr-1" />
-                  Download All CSV
+                  Download CSV
                 </Button>
-                <Button variant="outline" size="sm" className="text-green-600 border-green-600">
-                  <FileSpreadsheet size={16} className="mr-1" />
-                  Import to Google Sheets
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={syncToGoogleSheets}
+                  disabled={syncing}
+                  className="text-green-600 border-green-600"
+                >
+                  <RefreshCw size={16} className={`mr-1 ${syncing ? 'animate-spin' : ''}`} />
+                  {syncing ? "Syncing..." : "Sync to Sheets"}
                 </Button>
-                <Button variant="outline" size="sm" onClick={clearAll} className="text-red-600 border-red-600">
+                {user && user.account_type === "master_admin" && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleDeleteSelected}
+                    disabled={selectedRecords.length === 0 || deleting}
+                    className="text-red-600 border-red-600"
+                  >
+                    <Trash2 size={16} className="mr-1" />
+                    {deleting ? "Deleting..." : `Delete Selected (${selectedRecords.length})`}
+                  </Button>
+                )}
+                <Button variant="outline" size="sm" onClick={clearAll} className="text-orange-600 border-orange-600">
                   <Trash2 size={16} className="mr-1" />
                   Clear All
                 </Button>
