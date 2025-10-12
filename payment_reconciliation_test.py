@@ -67,6 +67,8 @@ class PaymentReconciliationTester:
                 raise ValueError(f"Unsupported HTTP method: {method}")
             
             print(f"DEBUG: {method} {url} -> Status: {response.status_code}")
+            if response.status_code >= 400:
+                print(f"DEBUG: Error response: {response.text[:200]}")
             return response
         except requests.exceptions.RequestException as e:
             print(f"Request error for {method} {url}: {e}")
