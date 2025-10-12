@@ -99,11 +99,14 @@ const PaymentReconciliation = () => {
     }
   };
 
-  const handleMonthYearSubmit = () => {
+  const handleMonthYearSubmit = async () => {
     if (!selectedMonth || !selectedYear) {
       toast.error("Please select both month and year");
       return;
     }
+    
+    // Fetch drivers and vehicles for the selected month/year
+    await fetchDriversAndVehicles(selectedMonth, selectedYear);
     setCurrentStep(2);
   };
 
