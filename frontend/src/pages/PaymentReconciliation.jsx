@@ -74,6 +74,12 @@ const PaymentReconciliation = () => {
 
   const platforms = ["Rapido", "Uber", "Ola", "Nura", "Adhoc"];
 
+  useEffect(() => {
+    if (currentStep === 3) {
+      fetchSyncStatus();
+    }
+  }, [currentStep]);
+
   const fetchDriversAndVehicles = async (month, year) => {
     try {
       const token = localStorage.getItem("token");
