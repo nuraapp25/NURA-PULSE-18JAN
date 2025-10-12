@@ -74,10 +74,14 @@ const PaymentReconciliation = () => {
   const platforms = ["Rapido", "Uber", "Ola", "Nura", "Adhoc"];
 
   useEffect(() => {
-    if (currentStep === 3) {
+    loadExistingFolders();
+  }, []);
+
+  useEffect(() => {
+    if (currentView === "main-interface") {
       fetchSyncStatus();
     }
-  }, [currentStep]);
+  }, [currentView]);
 
   const fetchDriversAndVehicles = async (month, year) => {
     try {
