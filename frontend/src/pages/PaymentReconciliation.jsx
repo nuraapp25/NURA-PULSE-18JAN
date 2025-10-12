@@ -150,28 +150,55 @@ const PaymentReconciliation = () => {
 
     setProcessing(true);
     try {
-      // Mock processing - in real implementation, this would call an API to extract data
-      const mockData = uploadedFiles.map((file, index) => ({
-        id: Date.now() + index,
-        driver: selectedDriver,
-        vehicle: selectedVehicle,
-        description: "Auto",
-        platform: selectedPlatform,
-        date: `${selectedMonth} ${selectedYear}`,
-        time: "2:41 PM",
-        amount: "₹100",
-        paymentMode: "N/A",
-        distance: "N/A",
-        duration: "N/A",
-        pickupKm: "N/A",
-        dropKm: "N/A",
-        pickupLocation: "Institute Of Mental Health, Chennai"
-      }));
+      const token = localStorage.getItem("token");
+      const formData = new FormData();
       
-      setExtractedData(mockData);
-      toast.success("Files processed successfully!");
+      // Add all files to form data
+      uploadedFiles.forEach(file => {
+        formData.append("files", file);
+      });
+      
+      const response = await axios.post(
+        `${API}/payment-reconciliation/process-screenshots`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          },
+          timeout: 120000 // 2 minutes timeout for processing
+        }
+      );
+      
+      if (response.data.success) {
+        // Map the extracted data to our table format
+        const processedData = response.data.extracted_data.map(item => ({
+          id: item.id,
+          driver: item.driver === "N/A" ? selectedDriver : item.driver,
+          vehicle: item.vehicle === "N/A" ? selectedVehicle : item.vehicle,
+          description: item.description,
+          date: item.date,
+          time: item.time,
+          amount: item.amount,
+          paymentMode: item.payment_mode,
+          distance: item.distance,
+          duration: item.duration,
+          pickupKm: item.pickup_km,
+          dropKm: item.drop_km,
+          pickupLocation: item.pickup_location,
+          dropLocation: item.drop_location,
+          screenshotFilename: item.screenshot_filename,
+          hasAmountError: item.amount === "N/A" || !item.amount || item.amount === ""
+        }));
+        
+        setExtractedData(processedData);
+        toast.success(`Successfully processed ${response.data.processed_files} screenshots!`);
+      } else {
+        toast.error("Failed to process screenshots");
+      }
     } catch (error) {
-      toast.error("Failed to process files");
+      console.error("Processing error:", error);
+      toast.error("Failed to process screenshots. Please try again.");
     } finally {
       setProcessing(false);
     }
