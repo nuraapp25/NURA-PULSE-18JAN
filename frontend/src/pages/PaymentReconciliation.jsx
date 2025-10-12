@@ -446,206 +446,86 @@ const PaymentReconciliation = () => {
     }
   };
 
-  // Step 1: Month/Year Selection
-  if (currentStep === 1) {
+  // Folder Selection View
+  if (currentView === "folder-selection") {
     return (
       <div className="space-y-6" data-testid="payment-reconciliation-page">
-        <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-8">
-          <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Payment Reconciliation</h1>
-            <p className="text-gray-600 dark:text-gray-400">Select month and year to get started</p>
-          </div>
-          
-          <Card className="w-full max-w-md dark:bg-gray-800 dark:border-gray-700">
-            <CardHeader>
-              <CardTitle className="text-center dark:text-white">Select Period</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <Label className="dark:text-gray-300">Month</Label>
-                <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                  <SelectTrigger className="dark:bg-gray-700 dark:border-gray-600">
-                    <SelectValue placeholder="Select month" />
-                  </SelectTrigger>
-                  <SelectContent className="dark:bg-gray-800">
-                    {months.map((month) => (
-                      <SelectItem key={month.value} value={month.value}>
-                        {month.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <Label className="dark:text-gray-300">Year</Label>
-                <Select value={selectedYear} onValueChange={setSelectedYear}>
-                  <SelectTrigger className="dark:bg-gray-700 dark:border-gray-600">
-                    <SelectValue placeholder="Select year" />
-                  </SelectTrigger>
-                  <SelectContent className="dark:bg-gray-800">
-                    {years.map((year) => (
-                      <SelectItem key={year.value} value={year.value}>
-                        {year.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <Button 
-                onClick={handleMonthYearSubmit}
-                className="w-full bg-blue-600 hover:bg-blue-700"
-                disabled={!selectedMonth || !selectedYear || loadingData}
-              >
-                {loadingData ? "Loading Data..." : "Continue"}
-              </Button>
-            </CardContent>
-          </Card>
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Payment Reconciliation</h1>
+          <p className="text-gray-600 dark:text-gray-400">Select a period or create a new folder</p>
         </div>
-      </div>
-    );
-  }
 
-  // Step 2: Driver Profile Entry
-  if (currentStep === 2) {
-    return (
-      <div className="space-y-6" data-testid="payment-reconciliation-page">
-        <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-8">
-          <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Driver Profile</h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              Period: {months.find(m => m.value === selectedMonth)?.label} {selectedYear}
-            </p>
-          </div>
-          
-          <Card className="w-full max-w-md dark:bg-gray-800 dark:border-gray-700">
+        {/* Existing Folders */}
+        {existingFolders.length > 0 && (
+          <Card className="dark:bg-gray-800 dark:border-gray-700">
             <CardHeader>
-              <CardTitle className="text-center dark:text-white">Enter Driver Details</CardTitle>
+              <CardTitle className="dark:text-white">Your Folders</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Driver Name - Searchable Dropdown */}
-              <div>
-                <Label className="dark:text-gray-300">Driver Name</Label>
-                <Popover open={driverPopoverOpen} onOpenChange={setDriverPopoverOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={driverPopoverOpen}
-                      className="w-full justify-between dark:bg-gray-700 dark:border-gray-600"
-                    >
-                      {selectedDriver || "Select driver..."}
-                      <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-full p-0 dark:bg-gray-800">
-                    <Command>
-                      <CommandInput placeholder="Search drivers..." className="h-9" />
-                      <CommandEmpty>No driver found.</CommandEmpty>
-                      <CommandGroup>
-                        {driversList.map((driver) => (
-                          <CommandItem
-                            key={driver}
-                            onSelect={() => {
-                              setSelectedDriver(driver);
-                              setDriverPopoverOpen(false);
-                            }}
-                          >
-                            {driver}
-                            <Check
-                              className={cn(
-                                "ml-auto h-4 w-4",
-                                selectedDriver === driver ? "opacity-100" : "opacity-0"
-                              )}
-                            />
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              {/* Vehicle Number - Searchable Dropdown */}
-              <div>
-                <Label className="dark:text-gray-300">Vehicle Number</Label>
-                <Popover open={vehiclePopoverOpen} onOpenChange={setVehiclePopoverOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={vehiclePopoverOpen}
-                      className="w-full justify-between dark:bg-gray-700 dark:border-gray-600"
-                    >
-                      {selectedVehicle || "Select vehicle..."}
-                      <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-full p-0 dark:bg-gray-800">
-                    <Command>
-                      <CommandInput placeholder="Search vehicles..." className="h-9" />
-                      <CommandEmpty>No vehicle found.</CommandEmpty>
-                      <CommandGroup>
-                        {vehiclesList.map((vehicle) => (
-                          <CommandItem
-                            key={vehicle}
-                            onSelect={() => {
-                              setSelectedVehicle(vehicle);
-                              setVehiclePopoverOpen(false);
-                            }}
-                          >
-                            {vehicle}
-                            <Check
-                              className={cn(
-                                "ml-auto h-4 w-4",
-                                selectedVehicle === vehicle ? "opacity-100" : "opacity-0"
-                              )}
-                            />
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              {/* Platform - Regular Dropdown */}
-              <div>
-                <Label className="dark:text-gray-300">Platform</Label>
-                <Select value={selectedPlatform} onValueChange={setSelectedPlatform}>
-                  <SelectTrigger className="dark:bg-gray-700 dark:border-gray-600">
-                    <SelectValue placeholder="Select platform" />
-                  </SelectTrigger>
-                  <SelectContent className="dark:bg-gray-800">
-                    {platforms.map((platform) => (
-                      <SelectItem key={platform} value={platform}>
-                        {platform}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="flex space-x-3">
-                <Button 
-                  onClick={() => setCurrentStep(1)}
-                  variant="outline"
-                  className="flex-1"
-                >
-                  Back
-                </Button>
-                <Button 
-                  onClick={handleDriverProfileSubmit}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700"
-                  disabled={!selectedDriver || !selectedVehicle || !selectedPlatform}
-                >
-                  Continue
-                </Button>
+            <CardContent>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                {existingFolders.map((folder, index) => (
+                  <Button
+                    key={index}
+                    onClick={() => handleSelectExistingFolder(folder)}
+                    disabled={loadingData}
+                    className="h-24 flex-col bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-800 dark:bg-blue-900/20 dark:hover:bg-blue-900/40 dark:border-blue-800 dark:text-blue-200"
+                    variant="outline"
+                  >
+                    <FileText size={24} className="mb-2" />
+                    <span className="text-sm font-semibold">{folder.name}</span>
+                  </Button>
+                ))}
               </div>
             </CardContent>
           </Card>
-        </div>
+        )}
+
+        {/* Create New Folder */}
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
+          <CardHeader>
+            <CardTitle className="dark:text-white">Create New Folder</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {/* Years Grid */}
+            <div className="space-y-6">
+              {years.map((year) => (
+                <div key={year.value}>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">{year.label}</h3>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-12 gap-3">
+                    {months.map((month) => {
+                      const folderExists = existingFolders.some(f => f.name === `${month.label} ${year.value}`);
+                      return (
+                        <Button
+                          key={`${month.value}-${year.value}`}
+                          onClick={() => handleCreateNewFolder(month.value, year.value)}
+                          disabled={folderExists || loadingData}
+                          className={`h-16 flex-col text-sm ${
+                            folderExists 
+                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-800 dark:text-gray-600' 
+                              : 'bg-green-50 hover:bg-green-100 border-green-200 text-green-800 dark:bg-green-900/20 dark:hover:bg-green-900/40 dark:border-green-800 dark:text-green-200'
+                          }`}
+                          variant="outline"
+                        >
+                          <span className="font-semibold">{month.label}</span>
+                          <span className="text-xs">{folderExists ? 'Exists' : 'Create'}</span>
+                        </Button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {loadingData && (
+          <div className="text-center py-8">
+            <div className="inline-flex items-center space-x-2">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+              <span className="text-gray-600 dark:text-gray-400">Loading data...</span>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
