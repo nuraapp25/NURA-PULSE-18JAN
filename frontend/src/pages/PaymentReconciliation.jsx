@@ -116,20 +116,56 @@ const PaymentReconciliation = () => {
     }
   };
 
-  const handleMonthYearSubmit = async () => {
-    if (!selectedMonth || !selectedYear) {
-      toast.error("Please select both month and year");
-      return;
-    }
+  const handleCreateNewFolder = async (monthValue, year) => {
+    const monthObj = months.find(m => m.value === monthValue);
+    const folderName = `${monthObj.label} ${year}`;
     
     setLoadingData(true);
     try {
       // Fetch drivers and vehicles for the selected month/year
-      await fetchDriversAndVehicles(selectedMonth, selectedYear);
-      setCurrentStep(2);
+      await fetchDriversAndVehicles(monthValue, year);
+      
+      // Add to existing folders if not already present
+      const existsAlready = existingFolders.some(f => f.name === folderName);
+      if (!existsAlready) {
+        const newFolder = {
+          name: folderName,
+          month: monthValue,
+          year: year,
+          monthLabel: monthObj.label,
+          fullName: monthObj.fullName,
+          createdAt: new Date().toISOString()
+        };
+        setExistingFolders(prev => [...prev, newFolder]);
+        
+        // Save to localStorage for persistence
+        const savedFolders = JSON.parse(localStorage.getItem("paymentFolders") || "[]");
+        savedFolders.push(newFolder);
+        localStorage.setItem("paymentFolders", JSON.stringify(savedFolders));
+      }
+      
+      setSelectedPeriod(folderName);
+      setCurrentView("main-interface");
+      
     } finally {
       setLoadingData(false);
     }
+  };
+
+  const handleSelectExistingFolder = async (folder) => {
+    setLoadingData(true);
+    try {
+      await fetchDriversAndVehicles(folder.month, folder.year);
+      setSelectedPeriod(folder.name);
+      setCurrentView("main-interface");
+    } finally {
+      setLoadingData(false);
+    }
+  };
+
+  const loadExistingFolders = () => {
+    const savedFolders = JSON.parse(localStorage.getItem("paymentFolders") || "[]");
+    setExistingFolders(savedFolders);
   };
 
   const handleDriverProfileSubmit = () => {
