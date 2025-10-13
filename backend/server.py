@@ -1906,7 +1906,7 @@ async def process_payment_screenshots(
     load_dotenv()
     
     try:
-        from emergentintegrations.llm.chat import LlmChat, UserMessage, FileContentWithMimeType
+        from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
         import base64
         import tempfile
         import uuid
