@@ -1974,14 +1974,19 @@ async def process_payment_screenshots(
 
 **TAMIL TEXT MEANINGS:**
 - கேஷ் = Cash
-- கி.மீ = Kilometers
+- கி.மீ / km = Kilometers
 - நிமி = Minutes (நிமிடம்)
 - வி = Seconds (விநாடி)
 - ம.நே = Hours (மணிநேரம்)
+- மதிப்பிடப்பட்ட வருவாய் / மதிப்பிடப்பட்ட வரு... = Estimated Fare
+- பிக்கப் = Pickup
+- முரபி / டிராப் = Dropoff/Drop
 - அதிகரித்துள்ளது = Surge/Increased pricing
 - வாடிக்கையாளர் ரத்துசெய்தார் = Customer cancelled
 - வண்டிக்கையாளர் ரத்துசெய்தார் = Driver cancelled
 - பயணச் சவால் = Travel challenge (promotional)
+- ஆட்டோ ஆர்டர் = Auto Order
+- முடிந்த ஆர்டர்கள் = Completed orders/rides
 
 **EXTRACT EACH RIDE AS JSON:**
 
