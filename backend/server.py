@@ -2011,11 +2011,15 @@ async def process_payment_screenshots(
 **EXTRACTION RULES:**
 ✅ Extract EVERY visible ride (including ₹0.00 if cancelled/promotional)
 ✅ For duration: Convert hours to minutes (1 hour 11 min = 71 min)
+✅ Accept decimal distances: "2.36 km" → 2.36
+✅ Accept decimal durations: "16.67 min" → 16.67
 ✅ For surge pricing: Include in description (e.g., "Auto (Surge)")
 ✅ For cancellations: Set amount to 0, add to description (e.g., "Auto (Cancelled)")
 ✅ Skip only "Bank Transfer" entries or unrelated promotional banners
-✅ Extract distance/duration as numbers (remove Tamil text)
-✅ If screenshot shows "29 செப்." or "திங்கள்., 29 செப்.", convert to "29/09/2024"
+✅ Extract distance/duration as numbers (remove Tamil/English text)
+✅ If screenshot shows "26 September" or "செப்." convert to DD/MM/2024 format
+✅ Extract pickup/drop locations if visible (e.g., "Crown Residences", "Mogappair West")
+✅ For ride history lists: Extract each ride separately with its timestamp
 
 **EXAMPLE CONVERSIONS:**
 - "3.57 கி.மீ" → distance: "3.57"
