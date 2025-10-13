@@ -2270,7 +2270,7 @@ async def get_payment_records(
             query["month_year"] = month_year
         
         # Fetch records from MongoDB
-        records = await db.payment_records.find(query).to_list(length=None)
+        records = await db.payment_records.find(query, {"_id": 0}).to_list(length=None)
         
         return {
             "success": True,
