@@ -860,8 +860,8 @@ const PaymentReconciliation = () => {
               </div>
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
+          <CardContent className="p-0">
+            <div className="overflow-x-auto overflow-y-auto max-h-[600px] relative">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200 dark:border-gray-700">
