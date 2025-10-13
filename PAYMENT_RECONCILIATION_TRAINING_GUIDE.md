@@ -7,24 +7,41 @@ The Payment Reconciliation system now uses **Gemini Vision AI** to extract ride 
 
 ### Supported Receipt Formats
 
-The scanner is trained to recognize:
+The scanner is trained to recognize **5 different receipt types**:
 
-1. **Auto-rickshaw ride receipts** (Tamil language supported)
-2. **Multiple rides per screenshot**
-3. **Cash payments** (கேஷ் = Cash in Tamil)
-4. **Date formats**: "DD MMM" (e.g., "27 Sep", "29 Sep")
-5. **Time formats**: "HH:MM AM/PM" (e.g., "7:27 AM", "10:54 AM")
-6. **Amount formats**: ₹XXX (e.g., ₹126, ₹185)
+1. **Simple cash receipts**: "Auto", time, கேஷ் (Cash), ₹amount
+2. **Detailed app receipts**: "Auto", ₹amount, distance (கி.மீ), duration (நிமி, வி), time
+3. **Surge pricing receipts**: Upward arrow ↑ with "அதிகரித்துள்ளது" (increased)
+4. **Cancelled rides**: "வாடிக்கையாளர் ரத்துசெய்தார்" (customer) or "வண்டிக்கையாளர் ரத்துசெய்தார்" (driver)
+5. **Zero-fare/promotional rides**: ₹0.00 with challenge text or cancellation status
+
+### Tamil Text Recognition
+
+**The scanner understands these Tamil terms:**
+- கேஷ் = Cash
+- கி.மீ = Kilometers
+- நிமி (நிமிடம்) = Minutes
+- வி (விநாடி) = Seconds
+- ம.நே (மணிநேரம்) = Hours
+- அதிகரித்துள்ளது = Surge/Increased pricing
+- வாடிக்கையாளர் ரத்துசெய்தார் = Customer cancelled
+- வண்டிக்கையாளர் ரத்துசெய்தார் = Driver cancelled
+- பயணச் சவால் = Travel challenge (promotional)
 
 ### Extraction Rules
 
-The AI scanner follows these rules:
+The AI scanner follows these enhanced rules:
 
-- **Skip** entries showing "Bank Transfer" or ₹0 amounts
-- **Extract each individual ride** as a separate record
-- **Assume current year (2024)** if not specified in the date
-- **Handle Tamil text**: Automatically recognizes கேஷ் as "Cash"
-- **Multiple rides**: If one screenshot contains 5 rides, it extracts all 5 separately
+- **✅ Extract ALL rides** including ₹0.00 cancelled/promotional rides
+- **✅ Extract each individual ride** as a separate record (5 rides → 5 records)
+- **✅ Convert Tamil units to numbers**:
+  - "3.57 கி.மீ" → distance: 3.57
+  - "16 நிமி 55 வி" → duration: 16 minutes
+  - "1 ம.நே 11 நிமி" → duration: 71 minutes
+- **✅ Detect surge pricing**: Auto-labeled as "Auto (Surge)"
+- **✅ Detect cancellations**: Auto-labeled as "Auto (Cancelled)" with ₹0
+- **✅ Handle date formats**: "திங்கள்., 29 செப்." → "29/09/2024"
+- **✅ Extract amounts as numbers**: "₹126.45" → 126.45
 
 ### Sample Extraction
 
