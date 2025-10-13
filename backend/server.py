@@ -1958,14 +1958,25 @@ async def process_payment_screenshots(
                     )
                     
                     # Create extraction prompt - Enhanced for Tamil auto-rickshaw receipts with detailed metrics
-                    extraction_prompt = """You are analyzing a ride-sharing receipt screenshot. These receipts may show:
-- Auto-rickshaw rides with times and amounts
-- Text in Tamil (தமிழ்) and English
-- கேஷ் means "Cash" payment
-- Multiple rides may be shown in one screenshot
-- Date format: "DD MMM" (e.g., "27 Sep", "29 Sep")
-- Time format: "HH:MM AM/PM" (e.g., "7:27 AM")
-- Amount format: ₹XXX (e.g., ₹126, ₹185)
+                    extraction_prompt = """You are analyzing a ride-sharing receipt screenshot (Tamil/English). These receipts show:
+
+**FORMAT TYPES:**
+1. Simple cash receipts: "Auto", time, கேஷ், ₹amount
+2. Detailed app receipts: "Auto", ₹amount, distance (கி.மீ), duration (நிமி, வி), time
+3. Surge pricing: Upward arrow ↑ with "அதிகரித்துள்ளது" (increased)
+4. Cancellations: "வாடிக்கையாளர் ரத்துசெய்தார்" (customer cancelled) or "வண்டிக்கையாளர் ரத்துசெய்தார்" (driver cancelled)
+5. Zero-fare rides: ₹0.00 with promotional text or cancellation
+
+**TAMIL TEXT MEANINGS:**
+- கேஷ் = Cash
+- கி.மீ = Kilometers
+- நிமி = Minutes (நிமிடம்)
+- வி = Seconds (விநாடி)
+- ம.நே = Hours (மணிநேரம்)
+- அதிகரித்துள்ளது = Surge/Increased pricing
+- வாடிக்கையாளர் ரத்துசெய்தார் = Customer cancelled
+- வண்டிக்கையாளர் ரத்துசெய்தார் = Driver cancelled
+- பயணச் சவால் = Travel challenge (promotional)
 
 Extract EACH INDIVIDUAL RIDE from the screenshot and return as a JSON array:
 
