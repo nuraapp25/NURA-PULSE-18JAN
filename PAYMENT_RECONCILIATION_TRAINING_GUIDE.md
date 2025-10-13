@@ -7,13 +7,15 @@ The Payment Reconciliation system now uses **Gemini Vision AI** to extract ride 
 
 ### Supported Receipt Formats
 
-The scanner is trained to recognize **5 different receipt types**:
+The scanner is trained to recognize **7 different receipt types**:
 
 1. **Simple cash receipts**: "Auto", time, கேஷ் (Cash), ₹amount
 2. **Detailed app receipts**: "Auto", ₹amount, distance (கி.மீ), duration (நிமி, வி), time
-3. **Surge pricing receipts**: Upward arrow ↑ with "அதிகரித்துள்ளது" (increased)
-4. **Cancelled rides**: "வாடிக்கையாளர் ரத்துசெய்தார்" (customer) or "வண்டிக்கையாளர் ரத்துசெய்தார்" (driver)
-5. **Zero-fare/promotional rides**: ₹0.00 with challenge text or cancellation status
+3. **Paytm detailed receipts**: "மதிப்பிடப்பட்ட வருவாய்" (Estimated Fare), decimal distances (2.36 km), decimal durations (16.67 min), full pickup/drop addresses
+4. **Ride history summaries**: Multiple completed rides with individual timestamps (10:59 pm, 10:18 pm), locations, amounts
+5. **Surge pricing receipts**: Upward arrow ↑ with "அதிகரித்துள்ளது" (increased)
+6. **Cancelled rides**: "வாடிக்கையாளர் ரத்துசெய்தார்" (customer) or "வண்டிக்கையாளர் ரத்துசெய்தார்" (driver)
+7. **Zero-fare/promotional rides**: ₹0.00 with challenge text or cancellation status
 
 ### Tamil Text Recognition
 
