@@ -2210,7 +2210,7 @@ async def get_payment_records(
 ):
     """Get all payment records, optionally filtered by month/year"""
     try:
-        query = {"user_id": current_user.user_id}
+        query = {"user_id": current_user.id}
         
         # Add month_year filter if provided
         if month_year:
