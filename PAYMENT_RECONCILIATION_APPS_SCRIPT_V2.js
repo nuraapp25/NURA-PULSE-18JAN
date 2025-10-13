@@ -111,9 +111,9 @@ function syncFromBackend(data) {
       const sheetData = records.map(record => [
         record.driver || 'N/A',
         record.vehicle || 'N/A',
-        record.description || 'Auto',
         record.date || 'N/A',
         record.time || 'N/A',
+        record.description || 'Auto',
         record.amount || '0',
         record.payment_mode || 'N/A',
         record.distance || 'N/A',
