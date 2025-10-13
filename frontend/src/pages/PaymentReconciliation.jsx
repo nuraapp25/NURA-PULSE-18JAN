@@ -219,6 +219,9 @@ const PaymentReconciliation = () => {
         formData.append("files", file);
       });
       
+      // Add month_year for storage
+      formData.append("month_year", selectedPeriod);
+      
       const response = await axios.post(
         `${API}/payment-reconciliation/process-screenshots`,
         formData,
