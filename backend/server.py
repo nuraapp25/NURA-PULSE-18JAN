@@ -1984,17 +1984,17 @@ async def process_payment_screenshots(
   {
     "driver": "Driver name if visible, otherwise N/A",
     "vehicle": "Vehicle number if visible, otherwise N/A", 
-    "description": "Ride type (e.g., Auto, Bike, Car) or service description",
-    "date": "Date in DD/MM/YYYY format (convert from DD MMM to DD/MM/2024)",
-    "time": "Time in HH:MM format (with AM/PM)",
-    "amount": "Fare amount as number only (no ₹ symbol or commas)",
-    "payment_mode": "Cash (if கேஷ் or cash shown), UPI, Card, or N/A",
-    "distance": "Distance in km as number only, or N/A",
-    "duration": "Duration in minutes as number only, or N/A", 
-    "pickup_km": "Pickup odometer reading if visible, otherwise N/A",
-    "drop_km": "Drop odometer reading if visible, otherwise N/A",
-    "pickup_location": "Pickup location/address if visible, otherwise N/A",
-    "drop_location": "Drop location/address if visible, otherwise N/A"
+    "description": "Auto, Bike, Car, etc. If surge add (Surge), if cancelled add (Cancelled)",
+    "date": "DD/MM/YYYY format (convert DD MMM or date from screenshot)",
+    "time": "HH:MM AM/PM format",
+    "amount": "Fare amount as NUMBER only (no ₹, commas). Use 0 for ₹0.00 rides",
+    "payment_mode": "Cash/UPI/Card if visible, otherwise N/A",
+    "distance": "Extract km as NUMBER only (e.g., '3.57' from '3.57 கி.மீ'), or N/A",
+    "duration": "Convert to MINUTES as NUMBER (e.g., '16' for '16 நிமி', '71' for '1 ம.நே 11 நிமி'), or N/A", 
+    "pickup_km": "N/A",
+    "drop_km": "N/A",
+    "pickup_location": "N/A",
+    "drop_location": "N/A"
   }
 ]
 
