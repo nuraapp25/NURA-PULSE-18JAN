@@ -17,9 +17,9 @@ const CONFIG = {
 const COLUMNS = {
   DRIVER: 0,
   VEHICLE: 1,
-  DESCRIPTION: 2,
-  DATE: 3,
-  TIME: 4,
+  DATE: 2,
+  TIME: 3,
+  DESCRIPTION: 4,
   AMOUNT: 5,
   PAYMENT_MODE: 6,
   DISTANCE: 7,
@@ -36,9 +36,9 @@ const COLUMNS = {
 const HEADERS = [
   'Driver Name',
   'Vehicle Number',
-  'Description',
   'Date',
   'Time',
+  'Description',
   'Amount (₹)',
   'Payment Mode',
   'Distance (km)',
