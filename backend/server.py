@@ -2272,6 +2272,72 @@ async def update_payment_record(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@api_router.post("/payment-reconciliation/export-to-excel")
+async def export_payment_data_to_excel(
+    request: Request,
+    current_user: User = Depends(get_current_user)
+):
+    """Export payment reconciliation data to Excel file in backend storage"""
+    try:
+        body = await request.json()
+        month_year = body.get("month_year")  # e.g., "Sep 2025"
+        
+        if not month_year:
+            raise HTTPException(status_code=400, detail="month_year is required")
+        
+        # Fetch all records for this month from MongoDB
+        records = await db.payment_records.find({"month_year": month_year}).to_list(length=None)
+        
+        if not records:
+            raise HTTPException(status_code=404, detail=f"No records found for {month_year}")
+        
+        # Create DataFrame
+        import pandas as pd
+        df = pd.DataFrame([{
+            "Driver": record.get("driver", "N/A"),
+            "Vehicle": record.get("vehicle", "N/A"),
+            "Date": record.get("date", "N/A"),
+            "Time": record.get("time", "N/A"),
+            "Description": record.get("description", "Auto"),
+            "Amount": record.get("amount", "0"),
+            "Payment Mode": record.get("payment_mode", "N/A"),
+            "Distance (km)": record.get("distance", "N/A"),
+            "Duration (min)": record.get("duration", "N/A"),
+            "Pickup KM": record.get("pickup_km", "N/A"),
+            "Drop KM": record.get("drop_km", "N/A"),
+            "Pickup Location": record.get("pickup_location", "N/A"),
+            "Drop Location": record.get("drop_location", "N/A"),
+            "Screenshot": record.get("screenshot_filename", "N/A")
+        } for record in records])
+        
+        # Create directory structure: Payment Screenshots/Sep 2025/
+        base_dir = "/app/backend/payment_screenshots"
+        month_dir = os.path.join(base_dir, month_year)
+        os.makedirs(month_dir, exist_ok=True)
+        
+        # Generate filename
+        filename = f"{month_year.replace(' ', '_')}_data.xlsx"
+        filepath = os.path.join(month_dir, filename)
+        
+        # Save to Excel
+        df.to_excel(filepath, index=False, engine='openpyxl')
+        
+        logger.info(f"Exported {len(records)} records to {filepath}")
+        
+        return {
+            "success": True,
+            "message": f"Exported {len(records)} records to Excel",
+            "filepath": filepath,
+            "filename": filename
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error exporting to Excel: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error exporting to Excel: {str(e)}")
+
+
 @api_router.delete("/payment-reconciliation/delete-records")
 async def delete_payment_records(
     request: Request,
