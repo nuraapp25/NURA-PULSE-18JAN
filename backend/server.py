@@ -1957,7 +1957,7 @@ async def process_payment_screenshots(
                         mime_type=file.content_type or "image/jpeg"
                     )
                     
-                    # Create extraction prompt - Optimized for Tamil auto-rickshaw receipts
+                    # Create extraction prompt - Enhanced for Tamil auto-rickshaw receipts with detailed metrics
                     extraction_prompt = """You are analyzing a ride-sharing receipt screenshot. These receipts may show:
 - Auto-rickshaw rides with times and amounts
 - Text in Tamil (தமிழ்) and English
