@@ -2090,6 +2090,9 @@ Be precise and extract ALL rides shown in the screenshot.
                     for record in extracted_results:
                         record["user_id"] = current_user.id
                         record["month_year"] = month_year
+                        record["driver"] = driver_name or record.get("driver", "N/A")
+                        record["vehicle"] = vehicle_number or record.get("vehicle", "N/A")
+                        record["platform"] = platform or record.get("platform", "N/A")
                         record["uploaded_at"] = datetime.now().isoformat()
                         record["status"] = "pending"  # pending, reconciled, etc.
                     
@@ -2098,6 +2101,26 @@ Be precise and extract ALL rides shown in the screenshot.
                     logger.info(f"Saved {len(extracted_results)} payment records to MongoDB for {month_year}")
                 except Exception as e:
                     logger.error(f"Error saving to MongoDB: {str(e)}")
+                    # Don't fail the request, just log the error
+            
+            # Save screenshot files to organized folder structure
+            if driver_name and month_year:
+                try:
+                    # Create directory: payment_screenshots/Sep 2025/DriverName/
+                    base_dir = "/app/backend/payment_screenshots"
+                    driver_dir = os.path.join(base_dir, month_year, driver_name)
+                    os.makedirs(driver_dir, exist_ok=True)
+                    
+                    # Copy files to the driver folder
+                    for file in files:
+                        src_path = next((tf for tf in temp_files if file.filename in tf), None)
+                        if src_path and os.path.exists(src_path):
+                            dest_path = os.path.join(driver_dir, file.filename)
+                            import shutil
+                            shutil.copy2(src_path, dest_path)
+                            logger.info(f"Saved screenshot: {dest_path}")
+                except Exception as e:
+                    logger.error(f"Error saving screenshots to folder: {str(e)}")
                     # Don't fail the request, just log the error
         
             return {
