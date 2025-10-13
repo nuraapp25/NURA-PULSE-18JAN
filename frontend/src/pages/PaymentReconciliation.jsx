@@ -187,12 +187,21 @@ const PaymentReconciliation = () => {
           fullName: monthObj.fullName,
           createdAt: new Date().toISOString()
         };
-        setExistingFolders(prev => [...prev, newFolder]);
         
-        // Save to localStorage for persistence
-        const savedFolders = JSON.parse(localStorage.getItem("paymentFolders") || "[]");
-        savedFolders.push(newFolder);
-        localStorage.setItem("paymentFolders", JSON.stringify(savedFolders));
+        // Save to backend
+        try {
+          const token = localStorage.getItem("token");
+          await axios.post(`${API}/payment-reconciliation/folders`, newFolder, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          
+          setExistingFolders(prev => [...prev, newFolder]);
+          toast.success(`Created folder: ${folderName}`);
+        } catch (error) {
+          console.error("Error creating folder:", error);
+          toast.error("Failed to create folder");
+          return;
+        }
       }
       
       setSelectedPeriod(folderName);
