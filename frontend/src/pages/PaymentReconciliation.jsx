@@ -22,6 +22,8 @@ const PaymentReconciliation = () => {
   const [currentView, setCurrentView] = useState("folder-selection"); // "folder-selection" | "main-interface"
   const [selectedPeriod, setSelectedPeriod] = useState(""); // e.g., "Sep 2025"
   const [existingFolders, setExistingFolders] = useState([]);
+  const [selectedMonth, setSelectedMonth] = useState(""); // For dropdown selection
+  const [selectedYear, setSelectedYear] = useState(""); // For dropdown selection
   
   // Driver profile (now shown during processing)
   const [showDriverDialog, setShowDriverDialog] = useState(false);
