@@ -1924,7 +1924,7 @@ async def process_payment_screenshots(
         # Get the emergent LLM key
         api_key = os.environ.get("EMERGENT_LLM_KEY")
         if not api_key:
-            raise HTTPException(status_code=500, detail="OpenAI API key not configured")
+            raise HTTPException(status_code=500, detail="Emergent LLM API key not configured")
         
         # Initialize Gemini chat with Vision (file attachments only supported with Gemini)
         chat = LlmChat(
