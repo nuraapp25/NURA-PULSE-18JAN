@@ -133,29 +133,31 @@ const Dashboard = () => {
               )}
             </div>
 
-            {/* Master Admin - User Management */}
-            {user?.account_type === "master_admin" && (
+            {/* Admin Section - User Management (Master Admin only), Files & Payment Screenshots (All Admins) */}
+            {(user?.account_type === "master_admin" || user?.account_type === "admin") && (
               <div>
                 <div className="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Admin
                 </div>
-                <button
-                  data-testid="sidebar-user-management"
-                  onClick={() => {
-                    navigate("/dashboard/users");
-                    setSidebarOpen(false);
-                  }}
-                  className={`
-                    w-full flex items-center space-x-3 px-4 py-3 rounded-lg font-medium
-                    ${isActive("/dashboard/users")
-                      ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                    }
-                  `}
-                >
-                  <Users size={20} />
-                  <span>User Management</span>
-                </button>
+                {user?.account_type === "master_admin" && (
+                  <button
+                    data-testid="sidebar-user-management"
+                    onClick={() => {
+                      navigate("/dashboard/users");
+                      setSidebarOpen(false);
+                    }}
+                    className={`
+                      w-full flex items-center space-x-3 px-4 py-3 rounded-lg font-medium
+                      ${isActive("/dashboard/users")
+                        ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                      }
+                    `}
+                  >
+                    <Users size={20} />
+                    <span>User Management</span>
+                  </button>
+                )}
                 <button
                   data-testid="sidebar-files"
                   onClick={() => {
