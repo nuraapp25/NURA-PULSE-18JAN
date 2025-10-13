@@ -2124,7 +2124,7 @@ async def sync_payment_data_to_sheets(
     request: Request,
     current_user: User = Depends(get_current_user)
 ):
-    """Sync payment reconciliation data to Google Sheets"""
+    """Sync payment reconciliation data to Google Sheets using Apps Script V2"""
     try:
         body = await request.json()
         data_rows = body.get("data", [])
@@ -2133,58 +2133,60 @@ async def sync_payment_data_to_sheets(
         if not data_rows:
             raise HTTPException(status_code=400, detail="No data to sync")
         
-        # Prepare data for Google Sheets
-        headers = [
-            "Driver", "Vehicle", "Description", "Date", "Time", "Amount",
-            "Payment Mode", "Distance (km)", "Duration (min)", "Pickup KM", 
-            "Drop KM", "Pickup Location", "Drop Location", "Screenshot Filename"
-        ]
+        # Get Google Apps Script URL from environment
+        apps_script_url = os.environ.get("PAYMENT_SHEETS_APPS_SCRIPT_URL")
         
-        # Convert data to rows format
-        rows_to_sync = []
+        if not apps_script_url:
+            logger.warning("PAYMENT_SHEETS_APPS_SCRIPT_URL not configured, skipping sync")
+            return {"success": True, "message": "Sync skipped - Apps Script URL not configured"}
+        
+        # Prepare data for Apps Script V2 format
+        records_to_sync = []
         for row in data_rows:
-            rows_to_sync.append([
-                row.get("driver", "N/A"),
-                row.get("vehicle", "N/A"),
-                row.get("description", "N/A"),
-                row.get("date", "N/A"),
-                row.get("time", "N/A"),
-                row.get("amount", "N/A"),
-                row.get("paymentMode", "N/A"),
-                row.get("distance", "N/A"),
-                row.get("duration", "N/A"),
-                row.get("pickupKm", "N/A"),
-                row.get("dropKm", "N/A"),
-                row.get("pickupLocation", "N/A"),
-                row.get("dropLocation", "N/A"),
-                row.get("screenshotFilename", "N/A")
-            ])
+            records_to_sync.append({
+                "id": row.get("id", ""),
+                "driver": row.get("driver", "N/A"),
+                "vehicle": row.get("vehicle", "N/A"),
+                "description": row.get("description", "Auto"),
+                "date": row.get("date", "N/A"),
+                "time": row.get("time", "N/A"),
+                "amount": str(row.get("amount", "0")),
+                "payment_mode": row.get("paymentMode", "N/A"),
+                "distance": str(row.get("distance", "N/A")),
+                "duration": str(row.get("duration", "N/A")),
+                "pickup_km": row.get("pickupKm", "N/A"),
+                "drop_km": row.get("dropKm", "N/A"),
+                "pickup_location": row.get("pickupLocation", "N/A"),
+                "drop_location": row.get("dropLocation", "N/A"),
+                "screenshot_filename": row.get("screenshotFilename", "N/A"),
+                "status": row.get("status", "pending")
+            })
         
-        # Send to Google Sheets via Apps Script
-        sheets_payload = {
-            "action": "sync_payment_data",
-            "tab": month_year,
-            "headers": headers,
-            "data": rows_to_sync,
-            "timestamp": datetime.now().isoformat()
+        # Call Apps Script Web App
+        import requests
+        payload = {
+            "action": "sync_from_backend",
+            "month_year": month_year,
+            "records": records_to_sync
         }
         
-        from sheets_multi_sync import send_to_sheets
-        result = send_to_sheets(sheets_payload)
+        response = requests.post(apps_script_url, json=payload, timeout=30)
         
-        if result.get('success'):
-            return {
-                "success": True,
-                "message": f"Successfully synced {len(data_rows)} records to Google Sheets tab '{month_year}'",
-                "synced_rows": len(data_rows),
-                "sync_timestamp": datetime.now().isoformat()
-            }
+        if response.status_code == 200:
+            result = response.json()
+            if result.get("success"):
+                logger.info(f"Successfully synced {len(records_to_sync)} records to Google Sheets: {month_year}")
+                return {"success": True, "message": result.get("message", "Synced successfully")}
+            else:
+                raise HTTPException(status_code=500, detail=f"Apps Script error: {result.get('message')}")
         else:
-            raise HTTPException(status_code=500, detail=f"Google Sheets sync failed: {result.get('error')}")
-            
+            raise HTTPException(status_code=500, detail=f"Apps Script request failed: {response.status_code}")
+    
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error syncing to Google Sheets: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to sync to Google Sheets: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error syncing to Google Sheets: {str(e)}")
 
 
 @api_router.get("/payment-reconciliation/sync-status")
