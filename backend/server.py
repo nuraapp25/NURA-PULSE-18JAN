@@ -1966,9 +1966,11 @@ async def process_payment_screenshots(
 **FORMAT TYPES:**
 1. Simple cash receipts: "Auto", time, கேஷ், ₹amount
 2. Detailed app receipts: "Auto", ₹amount, distance (கி.மீ), duration (நிமி, வி), time
-3. Surge pricing: Upward arrow ↑ with "அதிகரித்துள்ளது" (increased)
-4. Cancellations: "வாடிக்கையாளர் ரத்துசெய்தார்" (customer cancelled) or "வண்டிக்கையாளர் ரத்துசெய்தார்" (driver cancelled)
-5. Zero-fare rides: ₹0.00 with promotional text or cancellation
+3. Paytm detailed receipts: "மதிப்பிடப்பட்ட வருவாய்" (Estimated Fare), distance with decimals (2.36 km), duration with decimals (16.67 min), pickup/drop locations
+4. Ride history list: Multiple rides with timestamps like "10:59 pm", "10:18 pm", pickup/drop locations, fare amounts
+5. Surge pricing: Upward arrow ↑ with "அதிகரித்துள்ளது" (increased)
+6. Cancellations: "வாடிக்கையாளர் ரத்துசெய்தார்" (customer cancelled) or "வண்டிக்கையாளர் ரத்துசெய்தார்" (driver cancelled)
+7. Zero-fare rides: ₹0.00 with promotional text or cancellation
 
 **TAMIL TEXT MEANINGS:**
 - கேஷ் = Cash
