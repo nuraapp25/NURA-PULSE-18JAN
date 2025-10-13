@@ -1926,12 +1926,12 @@ async def process_payment_screenshots(
         if not api_key:
             raise HTTPException(status_code=500, detail="OpenAI API key not configured")
         
-        # Initialize OpenAI chat with GPT-4 Vision
+        # Initialize Gemini chat with Vision (file attachments only supported with Gemini)
         chat = LlmChat(
             api_key=api_key,
             session_id=f"payment-extraction-{uuid.uuid4()}",
             system_message="You are an expert at extracting ride payment details from screenshots. Extract data accurately and return structured information."
-        ).with_model("openai", "gpt-4o")
+        ).with_model("gemini", "gemini-2.0-flash-exp")
         
         extracted_results = []
         processing_errors = []
