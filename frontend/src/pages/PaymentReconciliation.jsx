@@ -272,8 +272,11 @@ const PaymentReconciliation = () => {
         formData.append("files", file);
       });
       
-      // Add month_year for storage
+      // Add month_year and driver profile for storage
       formData.append("month_year", selectedPeriod);
+      formData.append("driver_name", selectedDriver);
+      formData.append("vehicle_number", selectedVehicle);
+      formData.append("platform", selectedPlatform);
       
       const response = await axios.post(
         `${API}/payment-reconciliation/process-screenshots`,
