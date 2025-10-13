@@ -1954,11 +1954,13 @@ async def process_payment_screenshots(
                     temp_file.close()
                     temp_files.append(temp_file.name)
                     
-                    # Create file content for Gemini
-                    image_file = FileContentWithMimeType(
-                        file_path=temp_file.name,
-                        mime_type=file.content_type or "image/jpeg"
-                    )
+                    # Read image and encode as base64 for Gemini
+                    with open(temp_file.name, 'rb') as img_file:
+                        image_bytes = img_file.read()
+                        image_base64 = base64.b64encode(image_bytes).decode('utf-8')
+                    
+                    # Create ImageContent with base64 encoding
+                    image_content = ImageContent(image_base64=image_base64)
                     
                     # Create extraction prompt - Enhanced for Tamil auto-rickshaw receipts (multiple formats)
                     extraction_prompt = """You are analyzing ride-sharing receipt screenshots (Tamil/English). These can be in multiple formats:
