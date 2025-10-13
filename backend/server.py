@@ -1796,25 +1796,23 @@ async def get_drivers_and_vehicles(
     year: str = Query(..., description="Year (e.g., 2025)"),
     current_user: User = Depends(get_current_user)
 ):
-    """Get drivers and vehicles list for a specific month/year"""
+    """Get drivers and vehicles list for a specific month/year from generic Excel files with monthly tabs"""
     import pandas as pd
     
     try:
-        # Search for files matching the pattern "Drivers List (Mon YYYY).xlsx" and "Vehicles List (Mon YYYY).xlsx"
+        # Convert month number to name if needed
         month_names = {
             "01": "Jan", "02": "Feb", "03": "Mar", "04": "Apr", "05": "May", "06": "Jun",
             "07": "Jul", "08": "Aug", "09": "Sep", "10": "Oct", "11": "Nov", "12": "Dec"
         }
-        
-        # Convert month number to name if needed
         month_name = month_names.get(month, month)
         
-        drivers_pattern = f"Drivers List ({month_name} {year}).xlsx"
-        vehicles_pattern = f"Vehicles List ({month_name} {year}).xlsx"
+        # Tab name format: "Sep 2025", "Oct 2025", etc.
+        tab_name = f"{month_name} {year}"
         
-        logger.info(f"Looking for files: {drivers_pattern}, {vehicles_pattern}")
+        logger.info(f"Looking for tab '{tab_name}' in Drivers List.xlsx and Vehicles List.xlsx")
         
-        # Find the files
+        # Find the generic files (not month-specific)
         files = await db.admin_files.find({}).to_list(1000)
         
         drivers_file = None
@@ -1822,9 +1820,10 @@ async def get_drivers_and_vehicles(
         
         for file in files:
             filename = file.get("filename", "")
-            if filename == drivers_pattern:
+            # Look for generic filenames
+            if filename == "Drivers List.xlsx":
                 drivers_file = file
-            elif filename == vehicles_pattern:
+            elif filename == "Vehicles List.xlsx":
                 vehicles_file = file
         
         result = {
@@ -1835,50 +1834,52 @@ async def get_drivers_and_vehicles(
             "year": year
         }
         
-        # Parse drivers file
+        # Parse drivers file - read from specific tab
         if drivers_file:
             file_path = drivers_file.get("file_path")
             if file_path and os.path.exists(file_path):
                 try:
-                    df = pd.read_excel(file_path)
-                    # Read from Column B (second column, index 1) instead of Column A (index 0)
+                    # Read specific sheet/tab by name
+                    df = pd.read_excel(file_path, sheet_name=tab_name)
+                    # Read from Column B (second column, index 1), skip first row (headers)
                     if len(df.columns) > 1:
-                        drivers = df.iloc[:, 1].dropna().astype(str).tolist()
+                        drivers = df.iloc[1:, 1].dropna().astype(str).tolist()  # Skip first row, read column B
                         drivers = [name.strip() for name in drivers if name.strip() and name.strip().lower() not in ['nan', 'name', 'driver name', 'driver']]
                         result["drivers"] = drivers
-                        logger.info(f"Loaded {len(drivers)} drivers from Column B of {drivers_pattern}")
+                        logger.info(f"Loaded {len(drivers)} drivers from tab '{tab_name}' Column B of Drivers List.xlsx")
                     else:
-                        logger.warning(f"Drivers file {drivers_pattern} does not have Column B")
+                        logger.warning(f"Drivers file tab '{tab_name}' does not have Column B")
                 except Exception as e:
-                    logger.error(f"Error parsing drivers file: {str(e)}")
+                    logger.error(f"Error parsing drivers file tab '{tab_name}': {str(e)}")
         else:
-            logger.warning(f"Drivers file not found: {drivers_pattern}")
+            logger.warning(f"Drivers List.xlsx file not found in admin files")
         
-        # Parse vehicles file
+        # Parse vehicles file - read from specific tab
         if vehicles_file:
             file_path = vehicles_file.get("file_path")
             if file_path and os.path.exists(file_path):
                 try:
-                    df = pd.read_excel(file_path)
-                    # Read from Column B (second column, index 1) instead of Column A (index 0)
+                    # Read specific sheet/tab by name
+                    df = pd.read_excel(file_path, sheet_name=tab_name)
+                    # Read from Column B (second column, index 1), skip first row (headers)
                     if len(df.columns) > 1:
-                        vehicles = df.iloc[:, 1].dropna().astype(str).tolist()
-                        vehicles = [name.strip() for name in vehicles if name.strip() and name.strip().lower() not in ['nan', 'name', 'vehicle number', 'vehicle']]
+                        vehicles = df.iloc[1:, 1].dropna().astype(str).tolist()  # Skip first row, read column B
+                        vehicles = [name.strip() for name in vehicles if name.strip() and name.strip().lower() not in ['nan', 'name', 'vehicle number', 'vehicle', 'registration number']]
                         result["vehicles"] = vehicles
-                        logger.info(f"Loaded {len(vehicles)} vehicles from Column B of {vehicles_pattern}")
+                        logger.info(f"Loaded {len(vehicles)} vehicles from tab '{tab_name}' Column B of Vehicles List.xlsx")
                     else:
-                        logger.warning(f"Vehicles file {vehicles_pattern} does not have Column B")
+                        logger.warning(f"Vehicles file tab '{tab_name}' does not have Column B")
                 except Exception as e:
-                    logger.error(f"Error parsing vehicles file: {str(e)}")
+                    logger.error(f"Error parsing vehicles file tab '{tab_name}': {str(e)}")
         else:
-            logger.warning(f"Vehicles file not found: {vehicles_pattern}")
+            logger.warning(f"Vehicles List.xlsx file not found in admin files")
         
         if not result["drivers"] and not result["vehicles"]:
             # Return mock data as fallback
             result["drivers"] = ["Abdul", "Samantha", "Samuel", "Sareena", "Ravi", "John", "Mike"]
             result["vehicles"] = ["TN07CE2222", "TN01AB1234", "KA05CD5678", "AP09EF9012"]
             result["using_mock_data"] = True
-            logger.warning(f"No files found for {month_name} {year}, using mock data")
+            logger.warning(f"No data found for tab '{tab_name}', using mock data")
         
         return result
         
