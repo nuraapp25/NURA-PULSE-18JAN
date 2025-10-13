@@ -237,6 +237,18 @@ backend:
           agent: "testing"
           comment: "✅ COMPREHENSIVE TESTING COMPLETE: All Payment Reconciliation backend APIs tested and working perfectly. 1) GET /admin/files/get-drivers-vehicles - Retrieves drivers/vehicles from Excel files (23 drivers, 10 vehicles for Sep 2025) with fallback to mock data, proper parameter validation. 2) POST /payment-reconciliation/process-screenshots - Validates file uploads (max 10 files), OpenAI GPT-4 Vision integration ready with EMERGENT_LLM_KEY, batch processing all-or-nothing logic working. 3) POST /payment-reconciliation/sync-to-sheets - Data validation working, Google Sheets integration structure correct. 4) GET /payment-reconciliation/sync-status - Returns sync status properly. 5) DELETE /payment-reconciliation/delete-records - Master Admin role restriction enforced, validates record IDs. All endpoints require authentication (403 without token). Complete workflow tested with 100% success rate (10/10 tests passed). Ready for production use."
 
+  - task: "Admin Access Control for Files and Payment Screenshots"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/Dashboard.jsx, /app/frontend/src/pages/PaymentScreenshots.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "IMPLEMENTATION COMPLETE: Updated access control to allow both Admin and Master Admin roles to access 'Files' and 'Payment Screenshots' sections. Changes: 1) Dashboard.jsx - Modified sidebar to show Files and Payment Screenshots for both admin and master_admin roles (User Management remains master_admin only). 2) PaymentScreenshots.jsx - Added useAuth import and isMasterAdmin check, wrapped delete button in conditional render (master_admin only). 3) Files.jsx - Already had correct delete restriction (master_admin only). 4) PaymentReconciliation.jsx - Already had correct delete restriction (master_admin only). Access summary: View/Upload/Download/Share = Both Admin & Master Admin; Delete = Master Admin only. Frontend restarted. Ready for testing."
+
 frontend:
   - task: "Login Page"
     implemented: true
