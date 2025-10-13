@@ -302,7 +302,7 @@ function formatSheet(sheet) {
   amountRange.setNumberFormat('₹#,##0.00');
   
   // Center align specific columns
-  const centerColumns = [COLUMNS.DATE + 1, COLUMNS.TIME + 1, COLUMNS.DISTANCE + 1, COLUMNS.DURATION + 1];
+  const centerColumns = [COLUMNS.DATE + 1, COLUMNS.TIME + 1, COLUMNS.DESCRIPTION + 1, COLUMNS.DISTANCE + 1, COLUMNS.DURATION + 1];
   centerColumns.forEach(col => {
     sheet.getRange(2, col, lastRow - 1, 1).setHorizontalAlignment('center');
   });
