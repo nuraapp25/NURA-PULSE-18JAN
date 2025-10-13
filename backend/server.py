@@ -2370,6 +2370,120 @@ async def delete_payment_records(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@api_router.get("/admin/payment-screenshots/browse")
+async def browse_payment_screenshots(
+    path: str = "",
+    current_user: User = Depends(get_current_user)
+):
+    """Browse payment screenshots directory structure"""
+    try:
+        # Only allow Master Admin access
+        if current_user.account_type not in ["master_admin", "admin"]:
+            raise HTTPException(status_code=403, detail="Access denied")
+        
+        base_dir = "/app/backend/payment_screenshots"
+        full_path = os.path.join(base_dir, path) if path else base_dir
+        
+        # Security check - prevent directory traversal
+        if not os.path.abspath(full_path).startswith(os.path.abspath(base_dir)):
+            raise HTTPException(status_code=403, detail="Invalid path")
+        
+        if not os.path.exists(full_path):
+            return {"folders": [], "files": []}
+        
+        folders = []
+        files = []
+        
+        for item in os.listdir(full_path):
+            item_path = os.path.join(full_path, item)
+            if os.path.isdir(item_path):
+                folders.append(item)
+            else:
+                files.append(item)
+        
+        return {
+            "folders": sorted(folders),
+            "files": sorted(files)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error browsing payment screenshots: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/admin/payment-screenshots/download")
+async def download_payment_screenshot(
+    path: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Download a file from payment screenshots directory"""
+    try:
+        # Only allow Master Admin access
+        if current_user.account_type not in ["master_admin", "admin"]:
+            raise HTTPException(status_code=403, detail="Access denied")
+        
+        base_dir = "/app/backend/payment_screenshots"
+        full_path = os.path.join(base_dir, path)
+        
+        # Security check
+        if not os.path.abspath(full_path).startswith(os.path.abspath(base_dir)):
+            raise HTTPException(status_code=403, detail="Invalid path")
+        
+        if not os.path.exists(full_path):
+            raise HTTPException(status_code=404, detail="File not found")
+        
+        from fastapi.responses import FileResponse
+        return FileResponse(full_path, filename=os.path.basename(full_path))
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error downloading file: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.delete("/admin/payment-screenshots/delete")
+async def delete_payment_screenshot(
+    request: Request,
+    current_user: User = Depends(get_current_user)
+):
+    """Delete a file or folder from payment screenshots directory"""
+    try:
+        # Only allow Master Admin access
+        if current_user.account_type not in ["master_admin", "admin"]:
+            raise HTTPException(status_code=403, detail="Access denied")
+        
+        body = await request.json()
+        path = body.get("path")
+        is_folder = body.get("is_folder", False)
+        
+        base_dir = "/app/backend/payment_screenshots"
+        full_path = os.path.join(base_dir, path)
+        
+        # Security check
+        if not os.path.abspath(full_path).startswith(os.path.abspath(base_dir)):
+            raise HTTPException(status_code=403, detail="Invalid path")
+        
+        if not os.path.exists(full_path):
+            raise HTTPException(status_code=404, detail="Item not found")
+        
+        if is_folder:
+            import shutil
+            shutil.rmtree(full_path)
+        else:
+            os.remove(full_path)
+        
+        return {"success": True, "message": "Item deleted successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting item: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @api_router.post("/admin/files/reload-fleet-mapping")
 async def reload_fleet_mapping(current_user: User = Depends(get_current_user)):
     """Reload vehicle to registration number mapping from Nura Fleet Data.xlsx"""
