@@ -1978,7 +1978,7 @@ async def process_payment_screenshots(
 - வண்டிக்கையாளர் ரத்துசெய்தார் = Driver cancelled
 - பயணச் சவால் = Travel challenge (promotional)
 
-Extract EACH INDIVIDUAL RIDE from the screenshot and return as a JSON array:
+**EXTRACT EACH RIDE AS JSON:**
 
 [
   {
