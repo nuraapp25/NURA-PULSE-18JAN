@@ -1233,10 +1233,10 @@ const PaymentReconciliation = () => {
               Submit and Process Files
             </Button>
           </div>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-};
+          </DialogContent>
+        </Dialog>
+      </div>
+    );
+  };
 
 export default PaymentReconciliation;
