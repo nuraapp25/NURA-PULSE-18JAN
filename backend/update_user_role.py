@@ -11,12 +11,12 @@ mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
 client = AsyncIOMotorClient(mongo_url)
 db = client['nura_pulse_db']
 
-async def update_user_to_master_admin(search_name):
+async def update_user_to_master_admin(search_email):
     """Update user role to master_admin"""
-    print(f"Searching for user: {search_name}")
+    print(f"Searching for user: {search_email}")
     
-    # Find user by name (case insensitive)
-    user = await db.users.find_one({'name': {'$regex': search_name, '$options': 'i'}})
+    # Find user by email (case insensitive)
+    user = await db.users.find_one({'email': {'$regex': search_email, '$options': 'i'}})
     
     if user:
         print(f"\nFound user:")
