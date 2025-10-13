@@ -49,6 +49,10 @@ const PaymentReconciliation = () => {
   const [lastSync, setLastSync] = useState(null);
   const [deleting, setDeleting] = useState(false);
   
+  // Edit dialog states
+  const [editingRecord, setEditingRecord] = useState(null);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  
   // Popover states for searchable dropdowns
   const [driverPopoverOpen, setDriverPopoverOpen] = useState(false);
   const [vehiclePopoverOpen, setVehiclePopoverOpen] = useState(false);
