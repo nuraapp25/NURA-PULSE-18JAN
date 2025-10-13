@@ -19,16 +19,21 @@ The scanner is trained to recognize **7 different receipt types**:
 
 ### Tamil Text Recognition
 
-**The scanner understands these Tamil terms:**
+**The scanner understands these Tamil/English terms:**
 - கேஷ் = Cash
-- கி.மீ = Kilometers
-- நிமி (நிமிடம்) = Minutes
+- கி.மீ / km = Kilometers (supports decimals: 2.36 km)
+- நிமி (நிமிடம்) / min = Minutes (supports decimals: 16.67 min)
 - வி (விநாடி) = Seconds
 - ம.நே (மணிநேரம்) = Hours
+- மதிப்பிடப்பட்ட வருவாய் / மதிப்பிடப்பட்ட வரு... = Estimated Fare
+- பிக்கப் = Pickup
+- முரபி / டிராப் = Dropoff/Drop
 - அதிகரித்துள்ளது = Surge/Increased pricing
 - வாடிக்கையாளர் ரத்துசெய்தார் = Customer cancelled
 - வண்டிக்கையாளர் ரத்துசெய்தார் = Driver cancelled
 - பயணச் சவால் = Travel challenge (promotional)
+- ஆட்டோ ஆர்டர் = Auto Order
+- முடிந்த ஆர்டர்கள் = Completed orders/rides
 
 ### Extraction Rules
 
