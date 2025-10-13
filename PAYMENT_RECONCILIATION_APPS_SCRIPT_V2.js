@@ -221,9 +221,9 @@ function getSheetData(data) {
     const records = values.map(row => ({
       driver: row[COLUMNS.DRIVER],
       vehicle: row[COLUMNS.VEHICLE],
-      description: row[COLUMNS.DESCRIPTION],
       date: row[COLUMNS.DATE],
       time: row[COLUMNS.TIME],
+      description: row[COLUMNS.DESCRIPTION],
       amount: row[COLUMNS.AMOUNT],
       payment_mode: row[COLUMNS.PAYMENT_MODE],
       distance: row[COLUMNS.DISTANCE],
