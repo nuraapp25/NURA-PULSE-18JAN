@@ -294,11 +294,11 @@ frontend:
 
   - task: "Payment Reconciliation Implementation"
     implemented: true
-    working: true
+    working: "NA"
     file: "/app/frontend/src/pages/PaymentReconciliation.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: "NA"
           agent: "main"
@@ -306,9 +306,9 @@ frontend:
         - working: "NA"
           agent: "main"
           comment: "COMPLETED UX REFINEMENTS: Fixed all pending issues: 1) Added missing Driver Profile Dialog component with searchable dropdowns for driver/vehicle selection and platform dropdown. 2) Removed orphaned handleDriverProfileSubmit function that referenced non-existent currentStep. 3) Fixed downloadCSV and syncToGoogleSheets functions to use selectedPeriod instead of non-existent selectedMonth/selectedYear variables. 4) Dialog appears after 'Process Files' button is clicked, before OpenAI Vision processing. 5) Header already shows selected period (e.g., 'Sep 2025') with back button and description. 6) No 'Change Profile' button found (already removed or never existed). Ready for comprehensive testing."
-        - working: true
-          agent: "testing"
-          comment: "✅ BACKEND APIS TESTED: Comprehensive testing of Payment Reconciliation complete workflow completed successfully. All 5 core APIs working: 1) GET /admin/files/get-drivers-vehicles - Retrieved 23 drivers, 10 vehicles from Excel files for Sep 2025, mock data for other months, proper parameter validation (422 for missing params). 2) POST /payment-reconciliation/process-screenshots - Correctly validates file uploads (rejects empty/too many files), batch processing logic working, OpenAI GPT-4 Vision integration ready (EMERGENT_LLM_KEY configured). 3) POST /payment-reconciliation/sync-to-sheets - Validates data requirements, Google Sheets integration structure correct. 4) GET /payment-reconciliation/sync-status - Returns proper sync status. 5) DELETE /payment-reconciliation/delete-records - Master Admin role restriction working, validates record IDs. All endpoints require authentication (403 without token). 100% test success rate (10/10 tests passed). Complete workflow ready for production use."
+        - working: "NA"
+          agent: "main"
+          comment: "MAJOR ENHANCEMENTS COMPLETE: 1) Fixed image processing - Changed from OpenAI to Gemini Vision AI (file attachments only supported with Gemini). 2) Enhanced extraction prompt to handle Tamil auto-rickshaw receipts with multiple rides per screenshot. 3) Added permanent MongoDB storage - all extracted records saved to payment_records collection. 4) Implemented full edit capability - edit ANY field via new edit dialog (driver, vehicle, date, time, amount, locations, etc.). 5) Added GET /records endpoint to fetch stored records by month_year. 6) Added PUT /update-record endpoint with audit trail. 7) Enhanced DELETE endpoint permissions (Admin + Master Admin). 8) Updated UX to dropdown-style folder creation with grid display of existing folders. 9) Auto-load existing records when opening folders. 10) Multiple rides from single screenshot now extracted separately. Ready for testing with actual Tamil receipt screenshots."
 
   - task: "Montra Feed Bulk Import"
     implemented: true
