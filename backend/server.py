@@ -2022,13 +2022,18 @@ async def process_payment_screenshots(
 ✅ For ride history lists: Extract each ride separately with its timestamp
 
 **EXAMPLE CONVERSIONS:**
-- "3.57 கி.மீ" → distance: "3.57"
+- "3.57 கி.மீ" / "2.36 km" → distance: "3.57" / "2.36"
 - "16 நிமி 55 வி" → duration: "16" (ignore seconds)
+- "16.67 min" → duration: "16.67"
 - "1 ம.நே 11 நிமி" → duration: "71"
-- "₹126.45" → amount: "126.45"
-- "திங்கள்., 29 செப்." → date: "29/09/2024"
+- "₹126.45" / "₹89" → amount: "126.45" / "89"
+- "திங்கள்., 29 செப்." / "26 September" → date: "29/09/2024" / "26/09/2024"
+- "10:59 pm" → time: "10:59 PM"
+- "Crown Residences" → pickup_location: "Crown Residences"
+- "8/25, Srinivasa Nagar, Virugambakkam" → drop_location: "8/25, Srinivasa Nagar, Virugambakkam"
+- "B1 Entrance, Thirumangalam Metro St..." → pickup_location: "B1 Entrance, Thirumangalam Metro Station"
 
-Be precise and extract ALL rides shown in the screenshot.
+Be precise and extract ALL rides shown in the screenshot. If a screenshot shows multiple rides (like a ride history list), extract each as a separate record.
 """
 
                     # Send to Gemini
