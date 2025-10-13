@@ -1118,7 +1118,7 @@ const PaymentReconciliation = () => {
 
         {/* Driver Profile Dialog */}
         <Dialog open={showDriverDialog} onOpenChange={setShowDriverDialog}>
-        <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Enter Driver Profile</DialogTitle>
           </DialogHeader>
