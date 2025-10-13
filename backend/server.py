@@ -2041,7 +2041,7 @@ Be precise and extract ALL rides shown in the screenshot. If a screenshot shows 
                     # Send to Gemini
                     user_message = UserMessage(
                         text=extraction_prompt,
-                        file_contents=[image_file]
+                        file_contents=[image_content]
                     )
                     
                     response = await chat.send_message(user_message)
