@@ -2012,11 +2012,23 @@ IMPORTANT:
                             clean_response = clean_response[:-3]
                         clean_response = clean_response.strip()
                         
-                        extracted_data = json.loads(clean_response)
-                        extracted_data["screenshot_filename"] = file.filename
-                        extracted_data["id"] = str(uuid.uuid4())
-                        extracted_data["processed_at"] = datetime.now().isoformat()
-                        extracted_results.append(extracted_data)
+                        # Parse the response - it should be an array of rides
+                        parsed_data = json.loads(clean_response)
+                        
+                        # Handle both single object and array responses
+                        if isinstance(parsed_data, list):
+                            # Multiple rides extracted from one screenshot
+                            for ride_data in parsed_data:
+                                ride_data["screenshot_filename"] = file.filename
+                                ride_data["id"] = str(uuid.uuid4())
+                                ride_data["processed_at"] = datetime.now().isoformat()
+                                extracted_results.append(ride_data)
+                        else:
+                            # Single ride
+                            parsed_data["screenshot_filename"] = file.filename
+                            parsed_data["id"] = str(uuid.uuid4())
+                            parsed_data["processed_at"] = datetime.now().isoformat()
+                            extracted_results.append(parsed_data)
                         
                     except json.JSONDecodeError as e:
                         error_msg = f"Failed to parse JSON response for file {file.filename}: {str(e)}"
