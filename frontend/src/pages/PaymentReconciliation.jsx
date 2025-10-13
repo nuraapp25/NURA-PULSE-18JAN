@@ -24,6 +24,11 @@ const PaymentReconciliation = () => {
   const [existingFolders, setExistingFolders] = useState([]);
   const [selectedMonth, setSelectedMonth] = useState(""); // For dropdown selection
   const [selectedYear, setSelectedYear] = useState(""); // For dropdown selection
+
+  // Load folders from backend on mount
+  useEffect(() => {
+    loadExistingFolders();
+  }, []);
   
   // Driver profile (now shown during processing)
   const [showDriverDialog, setShowDriverDialog] = useState(false);
