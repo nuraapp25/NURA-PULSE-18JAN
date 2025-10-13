@@ -1914,6 +1914,7 @@ async def process_payment_screenshots(
         # Parse form data
         form = await request.form()
         files = form.getlist("files")
+        month_year = form.get("month_year", "")  # e.g., "Sep 2025"
         
         if not files:
             raise HTTPException(status_code=400, detail="No files uploaded")
