@@ -151,6 +151,10 @@ const PaymentReconciliation = () => {
       }
       
       setSelectedPeriod(folderName);
+      
+      // Fetch existing records for this period
+      await fetchStoredRecords(folderName);
+      
       setCurrentView("main-interface");
       
     } finally {
