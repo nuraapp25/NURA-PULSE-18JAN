@@ -2053,20 +2053,31 @@ IMPORTANT:
                     }
                 )
             
-            if len(extracted_results) != len(files):
-                raise HTTPException(
-                    status_code=422,
-                    detail={
-                        "message": f"Only {len(extracted_results)} out of {len(files)} files processed successfully. Please retry the complete batch.",
-                        "failed_batch": True
-                    }
-                )
+            if len(extracted_results) < len(files):
+                logger.warning(f"Only {len(extracted_results)} rides extracted from {len(files)} files")
+            
+            # Save extracted records to MongoDB permanently
+            if extracted_results:
+                try:
+                    # Add additional metadata
+                    for record in extracted_results:
+                        record["user_id"] = current_user.user_id
+                        record["uploaded_at"] = datetime.now().isoformat()
+                        record["status"] = "pending"  # pending, reconciled, etc.
+                    
+                    # Insert into payment_records collection
+                    await db.payment_records.insert_many(extracted_results)
+                    logger.info(f"Saved {len(extracted_results)} payment records to MongoDB")
+                except Exception as e:
+                    logger.error(f"Error saving to MongoDB: {str(e)}")
+                    # Don't fail the request, just log the error
         
             return {
                 "success": True,
                 "extracted_data": extracted_results,
                 "processed_files": len(files),
-                "message": f"Successfully processed all {len(files)} screenshots"
+                "total_rides_extracted": len(extracted_results),
+                "message": f"Successfully processed {len(files)} screenshots and extracted {len(extracted_results)} ride(s)"
             }
             
         finally:
