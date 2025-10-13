@@ -157,7 +157,7 @@ const PaymentReconciliation = () => {
         setVehiclesList(response.data.vehicles || []);
         
         if (response.data.using_mock_data) {
-          toast.warning(`No files found for ${monthName} ${year}. Using sample data. Please upload "Drivers List (${monthName} ${year}).xlsx" and "Vehicles List (${monthName} ${year}).xlsx"`);
+          toast.warning(`No data found for ${monthName} ${year}. Using sample data. Please ensure "Drivers List.xlsx" and "Vehicles List.xlsx" are uploaded in Files section with tabs named "${monthName} ${year}"`);
         } else {
           toast.success(`Loaded ${response.data.drivers.length} drivers and ${response.data.vehicles.length} vehicles for ${monthName} ${year}`);
         }
