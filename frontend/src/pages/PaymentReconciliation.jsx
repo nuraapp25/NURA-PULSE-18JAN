@@ -222,9 +222,19 @@ const PaymentReconciliation = () => {
     }
   };
 
-  const loadExistingFolders = () => {
-    const savedFolders = JSON.parse(localStorage.getItem("paymentFolders") || "[]");
-    setExistingFolders(savedFolders);
+  const loadExistingFolders = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(`${API}/payment-reconciliation/folders`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.success) {
+        setExistingFolders(response.data.folders);
+      }
+    } catch (error) {
+      console.error("Error fetching folders:", error);
+    }
   };
 
   const handleFileSelect = (event) => {
