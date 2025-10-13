@@ -981,7 +981,6 @@ const PaymentReconciliation = () => {
             )}
           </CardContent>
         </Card>
-      )}
 
       {/* Full Edit Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
