@@ -863,7 +863,7 @@ const PaymentReconciliation = () => {
           <CardContent className="p-0">
             <div className="overflow-x-auto overflow-y-auto max-h-[600px] relative">
               <table className="w-full">
-                <thead>
+                <thead className="sticky top-0 bg-white dark:bg-gray-800 z-10">
                   <tr className="border-b border-gray-200 dark:border-gray-700">
                     <th className="text-left py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">
                       <input 
