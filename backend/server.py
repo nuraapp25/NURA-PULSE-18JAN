@@ -1950,7 +1950,7 @@ async def process_payment_screenshots(
                     temp_file.close()
                     temp_files.append(temp_file.name)
                     
-                    # Create file content for OpenAI
+                    # Create file content for Gemini
                     image_file = FileContentWithMimeType(
                         file_path=temp_file.name,
                         mime_type=file.content_type or "image/jpeg"
