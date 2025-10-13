@@ -45,5 +45,5 @@ async def update_user_to_master_admin(search_email):
         return False
 
 if __name__ == "__main__":
-    success = asyncio.run(update_user_to_master_admin("ashok"))
+    success = asyncio.run(update_user_to_master_admin("ashok.k@nuraemobility.co.in"))
     exit(0 if success else 1)
