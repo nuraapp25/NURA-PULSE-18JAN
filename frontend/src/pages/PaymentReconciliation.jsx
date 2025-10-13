@@ -873,9 +873,9 @@ const PaymentReconciliation = () => {
                       </td>
                       <td className="py-3 px-2 text-sm">{row.driver}</td>
                       <td className="py-3 px-2 text-sm">{row.vehicle}</td>
-                      <td className="py-3 px-2 text-sm">{row.description}</td>
                       <td className="py-3 px-2 text-sm">{row.date}</td>
                       <td className="py-3 px-2 text-sm">{row.time}</td>
+                      <td className="py-3 px-2 text-sm font-medium text-blue-600 dark:text-blue-400">{row.description}</td>
                       <td className="py-3 px-2 text-sm">
                         {editingAmount === row.id ? (
                           <div className="flex items-center space-x-2">
