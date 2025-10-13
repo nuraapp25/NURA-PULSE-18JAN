@@ -3,11 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { Folder, FileText, Image, ChevronRight, Download, Trash2, ArrowLeft } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
+import { useAuth } from '@/App';
 
 const API = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001/api';
 
 const PaymentScreenshots = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isMasterAdmin = user?.account_type === 'master_admin';
+  
   const [currentPath, setCurrentPath] = useState([]);
   const [folders, setFolders] = useState([]);
   const [files, setFiles] = useState([]);
