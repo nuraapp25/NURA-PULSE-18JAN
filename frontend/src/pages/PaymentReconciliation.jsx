@@ -388,15 +388,79 @@ const PaymentReconciliation = () => {
     setEditValue(row.amount === "N/A" ? "" : row.amount);
   };
 
-  const handleSaveAmount = (rowId) => {
-    setExtractedData(prev => prev.map(row => 
-      row.id === rowId 
-        ? { ...row, amount: editValue, hasAmountError: false }
-        : row
-    ));
-    setEditingAmount(null);
-    setEditValue("");
-    toast.success("Amount updated successfully");
+  const handleSaveAmount = async (rowId) => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.put(`${API}/payment-reconciliation/update-record`, {
+        record_id: rowId,
+        updates: { amount: editValue }
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setExtractedData(prev => prev.map(row => 
+        row.id === rowId 
+          ? { ...row, amount: editValue, hasAmountError: false }
+          : row
+      ));
+      setEditingAmount(null);
+      setEditValue("");
+      toast.success("Amount updated successfully");
+    } catch (error) {
+      console.error("Error updating amount:", error);
+      toast.error("Failed to update amount");
+    }
+  };
+  
+  const handleOpenEditDialog = (record) => {
+    setEditingRecord({ ...record });
+    setShowEditDialog(true);
+  };
+  
+  const handleSaveFullEdit = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      
+      // Prepare updates object
+      const updates = {
+        driver: editingRecord.driver,
+        vehicle: editingRecord.vehicle,
+        description: editingRecord.description,
+        date: editingRecord.date,
+        time: editingRecord.time,
+        amount: editingRecord.amount,
+        payment_mode: editingRecord.paymentMode,
+        distance: editingRecord.distance,
+        duration: editingRecord.duration,
+        pickup_km: editingRecord.pickupKm,
+        drop_km: editingRecord.dropKm,
+        pickup_location: editingRecord.pickupLocation,
+        drop_location: editingRecord.dropLocation
+      };
+      
+      await axios.put(`${API}/payment-reconciliation/update-record`, {
+        record_id: editingRecord.id,
+        updates: updates
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Update local state
+      setExtractedData(prev => prev.map(row => 
+        row.id === editingRecord.id ? {
+          ...row,
+          ...editingRecord,
+          hasAmountError: editingRecord.amount === "N/A" || !editingRecord.amount
+        } : row
+      ));
+      
+      setShowEditDialog(false);
+      setEditingRecord(null);
+      toast.success("Record updated successfully");
+    } catch (error) {
+      console.error("Error updating record:", error);
+      toast.error("Failed to update record");
+    }
   };
 
   const handleCancelEdit = () => {
