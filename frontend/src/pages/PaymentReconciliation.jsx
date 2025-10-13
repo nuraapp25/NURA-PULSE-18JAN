@@ -790,7 +790,7 @@ const PaymentReconciliation = () => {
             <CardTitle className="flex items-center justify-between dark:text-white">
               <div className="flex items-center">
                 <FileText size={20} className="mr-2" />
-                Extracted Payment Data ({extractedData.length})
+                Extracted Payment Data ({extractedData.length} records)
               </div>
               <div className="flex space-x-2">
                 <Button variant="outline" size="sm" onClick={copyAllData}>
