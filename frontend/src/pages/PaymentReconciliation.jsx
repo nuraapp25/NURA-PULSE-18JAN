@@ -163,6 +163,10 @@ const PaymentReconciliation = () => {
     try {
       await fetchDriversAndVehicles(folder.month, folder.year);
       setSelectedPeriod(folder.name);
+      
+      // Fetch existing records for this period
+      await fetchStoredRecords(folder.name);
+      
       setCurrentView("main-interface");
     } finally {
       setLoadingData(false);
