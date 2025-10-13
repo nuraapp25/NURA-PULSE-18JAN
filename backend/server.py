@@ -1956,26 +1956,42 @@ async def process_payment_screenshots(
                         mime_type=file.content_type or "image/jpeg"
                     )
                     
-                    # Create extraction prompt
-                    extraction_prompt = """Extract ride payment details from this screenshot and return the information in the following JSON format:
+                    # Create extraction prompt - Optimized for Tamil auto-rickshaw receipts
+                    extraction_prompt = """You are analyzing a ride-sharing receipt screenshot. These receipts may show:
+- Auto-rickshaw rides with times and amounts
+- Text in Tamil (தமிழ்) and English
+- கேஷ் means "Cash" payment
+- Multiple rides may be shown in one screenshot
+- Date format: "DD MMM" (e.g., "27 Sep", "29 Sep")
+- Time format: "HH:MM AM/PM" (e.g., "7:27 AM")
+- Amount format: ₹XXX (e.g., ₹126, ₹185)
 
-{
-    "driver": "Driver name (if visible)",
-    "vehicle": "Vehicle number/ID (if visible)", 
-    "description": "Ride description or service type",
-    "date": "Date in DD/MM/YYYY format",
-    "time": "Time in HH:MM format",
-    "amount": "Fare amount as number only (no currency symbol)",
-    "payment_mode": "Payment method (Cash/UPI/Card/etc)",
-    "distance": "Distance in km as number only",
-    "duration": "Duration in minutes as number only", 
-    "pickup_km": "Pickup odometer reading if visible",
-    "drop_km": "Drop odometer reading if visible",
-    "pickup_location": "Pickup location/address",
-    "drop_location": "Drop location/address"
-}
+Extract EACH INDIVIDUAL RIDE from the screenshot and return as a JSON array:
 
-If any information is not visible or available in the screenshot, use "N/A" as the value. Be precise and only extract what you can clearly see."""
+[
+  {
+    "driver": "Driver name if visible, otherwise N/A",
+    "vehicle": "Vehicle number if visible, otherwise N/A", 
+    "description": "Ride type (e.g., Auto, Bike, Car) or service description",
+    "date": "Date in DD/MM/YYYY format (convert from DD MMM to DD/MM/2024)",
+    "time": "Time in HH:MM format (with AM/PM)",
+    "amount": "Fare amount as number only (no ₹ symbol or commas)",
+    "payment_mode": "Cash (if கேஷ் or cash shown), UPI, Card, or N/A",
+    "distance": "Distance in km as number only, or N/A",
+    "duration": "Duration in minutes as number only, or N/A", 
+    "pickup_km": "Pickup odometer reading if visible, otherwise N/A",
+    "drop_km": "Drop odometer reading if visible, otherwise N/A",
+    "pickup_location": "Pickup location/address if visible, otherwise N/A",
+    "drop_location": "Drop location/address if visible, otherwise N/A"
+  }
+]
+
+IMPORTANT:
+- If multiple rides are shown, extract each one as a separate JSON object
+- Skip entries that say "Bank Transfer" or show ₹0
+- For dates, assume current year (2024) if not specified
+- Extract amounts as plain numbers without currency symbols
+- Be precise and only extract what you can clearly see
 
                     # Send to Gemini
                     user_message = UserMessage(
