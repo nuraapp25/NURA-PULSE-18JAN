@@ -1977,7 +1977,7 @@ async def process_payment_screenshots(
 
 If any information is not visible or available in the screenshot, use "N/A" as the value. Be precise and only extract what you can clearly see."""
 
-                    # Send to OpenAI
+                    # Send to Gemini
                     user_message = UserMessage(
                         text=extraction_prompt,
                         file_contents=[image_file]
