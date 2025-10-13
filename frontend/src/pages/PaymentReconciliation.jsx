@@ -925,6 +925,16 @@ const PaymentReconciliation = () => {
                       <td className="py-3 px-2 text-sm text-gray-500 max-w-24 truncate" title={row.screenshotFilename}>
                         {row.screenshotFilename}
                       </td>
+                      <td className="py-3 px-2">
+                        <Button
+                          onClick={() => handleOpenEditDialog(row)}
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                        >
+                          <Edit size={16} />
+                        </Button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
