@@ -857,6 +857,7 @@ const PaymentReconciliation = () => {
                     <th className="text-left py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">Pickup Location</th>
                     <th className="text-left py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">Drop Location</th>
                     <th className="text-left py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">Screenshot</th>
+                    <th className="text-left py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
