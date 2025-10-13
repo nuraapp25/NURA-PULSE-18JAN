@@ -982,8 +982,8 @@ const PaymentReconciliation = () => {
           </CardContent>
         </Card>
 
-      {/* Full Edit Dialog */}
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        {/* Full Edit Dialog */}
+        <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Payment Record</DialogTitle>
