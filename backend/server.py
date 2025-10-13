@@ -1954,7 +1954,7 @@ async def process_payment_screenshots(
                     temp_file.close()
                     temp_files.append(temp_file.name)
                     
-                    # Read image and encode as base64 for Gemini
+                    # Read image and encode as base64 for OpenAI GPT-4o Vision
                     with open(temp_file.name, 'rb') as img_file:
                         image_bytes = img_file.read()
                         image_base64 = base64.b64encode(image_bytes).decode('utf-8')
