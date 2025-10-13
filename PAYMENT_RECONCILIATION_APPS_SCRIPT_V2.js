@@ -9,8 +9,8 @@
 // ============================================
 
 const CONFIG = {
-  SHEET_ID: 'YOUR_SHEET_ID_HERE', // Replace with your Google Sheet ID
-  BACKEND_URL: 'YOUR_BACKEND_URL_HERE' // Replace with your backend URL (e.g., https://nurapulse-1.preview.emergentagent.com/api)
+  SHEET_ID: '1CLhARhllhqZuDzkzNRqFcOGqjrSDzPgmC6gd3-AWOTs',
+  BACKEND_URL: 'https://nurapulse-1.preview.emergentagent.com/api'
 };
 
 // Column mapping for payment records
