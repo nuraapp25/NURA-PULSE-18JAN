@@ -446,7 +446,69 @@ const PaymentReconciliation = () => {
           <p className="text-gray-600 dark:text-gray-400">Select a period or create a new folder</p>
         </div>
 
-        {/* Existing Folders */}
+        {/* Create New Folder - Dropdown Style */}
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
+          <CardHeader>
+            <CardTitle className="dark:text-white">Create New Folder</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col sm:flex-row gap-4 items-end">
+              <div className="flex-1 space-y-2">
+                <Label htmlFor="month-select">Month</Label>
+                <Select 
+                  value={selectedMonth} 
+                  onValueChange={(value) => setSelectedMonth(value)}
+                >
+                  <SelectTrigger id="month-select" className="w-full">
+                    <SelectValue placeholder="Select month" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {months.map((month) => (
+                      <SelectItem key={month.value} value={month.value}>
+                        {month.fullName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="flex-1 space-y-2">
+                <Label htmlFor="year-select">Year</Label>
+                <Select 
+                  value={selectedYear} 
+                  onValueChange={(value) => setSelectedYear(value)}
+                >
+                  <SelectTrigger id="year-select" className="w-full">
+                    <SelectValue placeholder="Select year" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {years.map((year) => (
+                      <SelectItem key={year.value} value={year.value}>
+                        {year.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <Button
+                onClick={() => {
+                  if (selectedMonth && selectedYear) {
+                    handleCreateNewFolder(selectedMonth, selectedYear);
+                  } else {
+                    toast.error("Please select both month and year");
+                  }
+                }}
+                disabled={loadingData || !selectedMonth || !selectedYear}
+                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+              >
+                Create Folder
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Existing Folders - Grid View */}
         {existingFolders.length > 0 && (
           <Card className="dark:bg-gray-800 dark:border-gray-700">
             <CardHeader>
@@ -470,44 +532,6 @@ const PaymentReconciliation = () => {
             </CardContent>
           </Card>
         )}
-
-        {/* Create New Folder */}
-        <Card className="dark:bg-gray-800 dark:border-gray-700">
-          <CardHeader>
-            <CardTitle className="dark:text-white">Create New Folder</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {/* Years Grid */}
-            <div className="space-y-6">
-              {years.map((year) => (
-                <div key={year.value}>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">{year.label}</h3>
-                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-12 gap-3">
-                    {months.map((month) => {
-                      const folderExists = existingFolders.some(f => f.name === `${month.label} ${year.value}`);
-                      return (
-                        <Button
-                          key={`${month.value}-${year.value}`}
-                          onClick={() => handleCreateNewFolder(month.value, year.value)}
-                          disabled={folderExists || loadingData}
-                          className={`h-16 flex-col text-sm ${
-                            folderExists 
-                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-800 dark:text-gray-600' 
-                              : 'bg-green-50 hover:bg-green-100 border-green-200 text-green-800 dark:bg-green-900/20 dark:hover:bg-green-900/40 dark:border-green-800 dark:text-green-200'
-                          }`}
-                          variant="outline"
-                        >
-                          <span className="font-semibold">{month.label}</span>
-                          <span className="text-xs">{folderExists ? 'Exists' : 'Create'}</span>
-                        </Button>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
 
         {loadingData && (
           <div className="text-center py-8">
