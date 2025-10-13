@@ -211,13 +211,15 @@ const PaymentScreenshots = () => {
                         >
                           <Download size={16} />
                         </button>
-                        <button
-                          onClick={() => handleDelete(file, false)}
-                          className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
-                          title="Delete"
-                        >
-                          <Trash2 size={16} />
-                        </button>
+                        {isMasterAdmin && (
+                          <button
+                            onClick={() => handleDelete(file, false)}
+                            className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                            title="Delete"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))}
