@@ -74,7 +74,46 @@ Auto · 24 நிமி 26 வி · 8.83 கி.மீ  PM 4:21
 - Record 1: Surge pricing, 16 min duration, 3.57 km distance
 - Record 2: Regular fare, 24 min duration, 8.83 km distance
 
-**Example 3: Cancellations & Zero-Fare**
+**Example 3: Paytm Detailed Receipt**
+```
+மதிப்பிடப்பட்ட வரு...
+₹89
+2.36 km · 16.67 min
+9:49 pm | 26 September
+
+மதிப்பிடப்பட்ட பாதை
+• பிக்கப் 0.28 km
+Crown Residences
+↓ முரபி 2.36 km
+8/25, Srinivasa Nagar, Virugambakkam, Chennai
+```
+**Extracts:** 1 record
+- Date: 26/09/2024, Time: 9:49 PM, Amount: ₹89
+- Distance: 2.36 km, Duration: 16.67 min
+- Pickup: Crown Residences
+- Drop: 8/25, Srinivasa Nagar, Virugambakkam, Chennai
+
+**Example 4: Ride History List**
+```
+26 September, 2025
+முடிந்த ஆர்டர்கள்: 10
+ஆர்டர் வருவாய்: ₹869
+
+10:59 pm
+B1 Entrance, Thirumangalam Metro St...
+730, 4th Block, Mogappair West
+₹75
+
+10:18 pm
+B1 Entrance, Thirumangalam Metro St...
+30A, TS Krishna Nagar, J J Nagar, Moga...
+₹71
+```
+**Extracts:** 2 records (from list of 10)
+- Record 1: 10:59 PM, ₹75, Thirumangalam to Mogappair
+- Record 2: 10:18 PM, ₹71, Thirumangalam to J J Nagar
+
+**Example 5: Cancellations & Zero-Fare**
 ```
 ₹0.00
 Auto · வாடிக்கையாளர் ரத்துசெய்தார்  AM 11:11
