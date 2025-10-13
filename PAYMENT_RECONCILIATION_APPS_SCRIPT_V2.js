@@ -58,10 +58,28 @@ const HEADERS = [
 
 function doPost(e) {
   try {
+    // Log the entire request for debugging
+    Logger.log('Received doPost request');
+    
+    // Check if e exists
+    if (!e) {
+      Logger.log('Error: e parameter is undefined');
+      return createResponse(false, 'No request data received');
+    }
+    
+    // Check if postData exists
+    if (!e.postData) {
+      Logger.log('Error: e.postData is undefined');
+      Logger.log('e object: ' + JSON.stringify(e));
+      return createResponse(false, 'No POST data in request');
+    }
+    
+    // Parse the request data
     const data = JSON.parse(e.postData.contents);
     const action = data.action;
     
     Logger.log('Received request - Action: ' + action);
+    Logger.log('Request data: ' + JSON.stringify(data).substring(0, 200)); // Log first 200 chars
     
     switch(action) {
       case 'sync_from_backend':
@@ -75,8 +93,22 @@ function doPost(e) {
     }
   } catch (error) {
     Logger.log('Error in doPost: ' + error.toString());
+    Logger.log('Error stack: ' + error.stack);
     return createResponse(false, 'Error: ' + error.toString());
   }
+}
+
+// Add a doGet function for testing
+function doGet(e) {
+  return ContentService.createTextOutput(JSON.stringify({
+    success: true,
+    message: 'Payment Reconciliation Apps Script is running',
+    timestamp: new Date().toISOString(),
+    config: {
+      sheet_id: CONFIG.SHEET_ID,
+      backend_url: CONFIG.BACKEND_URL
+    }
+  })).setMimeType(ContentService.MimeType.JSON);
 }
 
 // ============================================
