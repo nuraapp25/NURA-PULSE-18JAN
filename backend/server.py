@@ -2064,12 +2064,13 @@ IMPORTANT:
                     # Add additional metadata
                     for record in extracted_results:
                         record["user_id"] = current_user.user_id
+                        record["month_year"] = month_year
                         record["uploaded_at"] = datetime.now().isoformat()
                         record["status"] = "pending"  # pending, reconciled, etc.
                     
                     # Insert into payment_records collection
                     await db.payment_records.insert_many(extracted_results)
-                    logger.info(f"Saved {len(extracted_results)} payment records to MongoDB")
+                    logger.info(f"Saved {len(extracted_results)} payment records to MongoDB for {month_year}")
                 except Exception as e:
                     logger.error(f"Error saving to MongoDB: {str(e)}")
                     # Don't fail the request, just log the error
