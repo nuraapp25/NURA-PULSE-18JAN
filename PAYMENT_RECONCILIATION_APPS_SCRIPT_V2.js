@@ -397,3 +397,28 @@ function testGetSheetData() {
   const result = getSheetData(testData);
   Logger.log(result.getContent());
 }
+
+function testConfiguration() {
+  Logger.log('Testing Payment Reconciliation Apps Script Configuration');
+  Logger.log('===============================================');
+  Logger.log('Sheet ID: ' + CONFIG.SHEET_ID);
+  Logger.log('Backend URL: ' + CONFIG.BACKEND_URL);
+  
+  // Test sheet access
+  try {
+    const ss = SpreadsheetApp.openById(CONFIG.SHEET_ID);
+    Logger.log('✅ Successfully opened spreadsheet: ' + ss.getName());
+    
+    // List existing sheets
+    const sheets = ss.getSheets();
+    Logger.log('Found ' + sheets.length + ' sheets:');
+    sheets.forEach(function(sheet) {
+      Logger.log('  - ' + sheet.getName());
+    });
+    
+    return 'Configuration test PASSED';
+  } catch (error) {
+    Logger.log('❌ Error accessing spreadsheet: ' + error.toString());
+    return 'Configuration test FAILED: ' + error.toString();
+  }
+}
