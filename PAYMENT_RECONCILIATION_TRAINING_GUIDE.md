@@ -191,11 +191,16 @@ To train the scanner for additional receipt formats:
 
 ### Current Training Status
 
-✅ Tamil auto-rickshaw receipts
-✅ Cash payment indicators (கேஷ்)
-✅ Multiple rides per screenshot
-✅ Date/Time extraction
-✅ Amount parsing (₹ symbol handling)
+✅ **Tamil auto-rickshaw receipts** (all 5 format types)
+✅ **Cash payment indicators** (கேஷ்)
+✅ **Distance extraction** (கி.மீ to kilometers)
+✅ **Duration extraction** (நிமி/வி/ம.நே to minutes)
+✅ **Surge pricing detection** (அதிகரித்துள்ளது)
+✅ **Cancellation detection** (customer/driver cancelled)
+✅ **Zero-fare rides** (promotional challenges, cancellations)
+✅ **Multiple rides per screenshot**
+✅ **Date/Time extraction** (Tamil dates converted to DD/MM/YYYY)
+✅ **Amount parsing** (₹ symbol handling with decimals)
 
 ### Future Enhancements
 
