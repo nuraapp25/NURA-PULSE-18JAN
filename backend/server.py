@@ -1992,6 +1992,7 @@ IMPORTANT:
 - For dates, assume current year (2024) if not specified
 - Extract amounts as plain numbers without currency symbols
 - Be precise and only extract what you can clearly see
+"""
 
                     # Send to Gemini
                     user_message = UserMessage(
