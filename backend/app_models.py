@@ -33,6 +33,27 @@ class PaymentRecordCreate(BaseModel):
     notes: Optional[str] = None
 
 
+class PaymentFolder(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str  # e.g., "Sep 2025"
+    month: str  # e.g., "09"
+    year: str  # e.g., "2025"
+    monthLabel: str  # e.g., "Sep"
+    fullName: str  # e.g., "September"
+    createdAt: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_by: str  # user_id who created the folder
+
+
+class PaymentFolderCreate(BaseModel):
+    name: str
+    month: str
+    year: str
+    monthLabel: str
+    fullName: str
+
+
 # ==================== Driver Onboarding ====================
 
 class DriverRecord(BaseModel):
