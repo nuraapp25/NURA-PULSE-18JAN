@@ -43,17 +43,41 @@ The AI scanner follows these enhanced rules:
 - **✅ Handle date formats**: "திங்கள்., 29 செப்." → "29/09/2024"
 - **✅ Extract amounts as numbers**: "₹126.45" → 126.45
 
-### Sample Extraction
+### Sample Extractions
 
-From a screenshot showing:
+**Example 1: Simple Cash Receipts**
 ```
 29 Sep
 Auto  11:29 AM · கேஷ்  ₹99
 Auto  10:51 AM · கேஷ்  ₹111
 Auto  10:13 AM · கேஷ்  ₹109
 ```
+**Extracts:** 3 records with date: 29/09/2024, payment: Cash, amounts as numbers
 
-The scanner extracts 3 separate records with full details.
+**Example 2: Detailed App Receipts with Metrics**
+```
+திங்கள்., 29 செ.பி.
+₹92.44  ↑ அதிகரித்துள்ளது
+Auto · 16 நிமி 55 வி · 3.57 கி.மீ  PM 8:48
+
+₹189.80
+Auto · 24 நிமி 26 வி · 8.83 கி.மீ  PM 4:21
+```
+**Extracts:** 2 records
+- Record 1: Surge pricing, 16 min duration, 3.57 km distance
+- Record 2: Regular fare, 24 min duration, 8.83 km distance
+
+**Example 3: Cancellations & Zero-Fare**
+```
+₹0.00
+Auto · வாடிக்கையாளர் ரத்துசெய்தார்  AM 11:11
+
+₹0.00
+7 பயணச் சவால் · நீங்கள் 5 பயணங்களை மட்டுமே முடித்துள்ளீர்கள்  PM 10:00
+```
+**Extracts:** 2 records
+- Record 1: Cancelled by customer, ₹0
+- Record 2: Travel challenge promotional, ₹0
 
 ## New Features Implemented
 
