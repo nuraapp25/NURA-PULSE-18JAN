@@ -1932,7 +1932,7 @@ async def process_payment_screenshots(
             api_key=api_key,
             session_id=f"payment-extraction-{uuid.uuid4()}",
             system_message="You are an expert at extracting ride payment details from screenshots. Extract data accurately and return structured information."
-        ).with_model("gemini", "gemini-2.0-flash-exp")
+        ).with_model("gemini", "gemini-2.0-flash")
         
         extracted_results = []
         processing_errors = []
