@@ -2085,7 +2085,7 @@ Be precise and extract ALL rides shown in the screenshot.
                 try:
                     # Add additional metadata
                     for record in extracted_results:
-                        record["user_id"] = current_user.user_id
+                        record["user_id"] = current_user.id
                         record["month_year"] = month_year
                         record["uploaded_at"] = datetime.now().isoformat()
                         record["status"] = "pending"  # pending, reconciled, etc.
