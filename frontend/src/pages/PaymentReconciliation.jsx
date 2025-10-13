@@ -89,6 +89,47 @@ const PaymentReconciliation = () => {
     }
   }, [currentView]);
 
+  const fetchStoredRecords = async (monthYear) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(`${API}/payment-reconciliation/records`, {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { month_year: monthYear }
+      });
+      
+      if (response.data.success) {
+        // Map records to match frontend format
+        const records = response.data.records.map(record => ({
+          id: record.id,
+          driver: record.driver,
+          vehicle: record.vehicle,
+          description: record.description,
+          date: record.date,
+          time: record.time,
+          amount: record.amount,
+          paymentMode: record.payment_mode,
+          distance: record.distance,
+          duration: record.duration,
+          pickupKm: record.pickup_km,
+          dropKm: record.drop_km,
+          pickupLocation: record.pickup_location,
+          dropLocation: record.drop_location,
+          screenshotFilename: record.screenshot_filename,
+          hasAmountError: record.amount === "N/A" || !record.amount || record.amount === "",
+          status: record.status
+        }));
+        
+        setExtractedData(records);
+        if (records.length > 0) {
+          toast.success(`Loaded ${records.length} existing record(s) for ${monthYear}`);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching stored records:", error);
+      // Don't show error toast - just start fresh if no records exist
+    }
+  };
+
   const fetchDriversAndVehicles = async (month, year) => {
     try {
       const token = localStorage.getItem("token");
