@@ -811,8 +811,7 @@ const PaymentReconciliation = () => {
       </Card>
 
       {/* Extracted Payment Data */}
-      {extractedData.length > 0 && (
-        <Card className="dark:bg-gray-800 dark:border-gray-700">
+      <Card className="dark:bg-gray-800 dark:border-gray-700">
           <CardHeader>
             <CardTitle className="flex items-center justify-between dark:text-white">
               <div className="flex items-center">
