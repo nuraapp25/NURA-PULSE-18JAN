@@ -940,9 +940,16 @@ const PaymentReconciliation = () => {
                 </tbody>
               </table>
             </div>
+            
+            {extractedData.length === 0 && (
+              <div className="text-center py-12">
+                <FileText size={48} className="mx-auto text-gray-400 mb-4" />
+                <p className="text-gray-600 dark:text-gray-400 text-lg">No payment records found for {selectedPeriod}</p>
+                <p className="text-gray-500 dark:text-gray-500 text-sm mt-2">Upload and process screenshots to extract payment data</p>
+              </div>
+            )}
           </CardContent>
         </Card>
-      )}
 
       {/* Full Edit Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
