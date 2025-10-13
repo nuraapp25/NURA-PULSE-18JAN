@@ -610,7 +610,7 @@ async def sync_all_users_to_sheets(current_user: User = Depends(get_current_user
 # ==================== Multi-App Endpoints ====================
 
 from app_models import (
-    PaymentRecord, PaymentRecordCreate,
+    PaymentRecord, PaymentRecordCreate, PaymentFolder, PaymentFolderCreate,
     DriverRecord, DriverRecordCreate,
     TelecallerTask, TelecallerTaskCreate,
     VehicleRecord, VehicleRecordCreate,
