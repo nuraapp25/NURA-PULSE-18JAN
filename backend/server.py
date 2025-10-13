@@ -2248,7 +2248,7 @@ async def update_payment_record(
         
         # Add updated_at timestamp
         updates["updated_at"] = datetime.now().isoformat()
-        updates["updated_by"] = current_user.user_id
+        updates["updated_by"] = current_user.id
         
         # Update record in payment_records collection
         result = await db.payment_records.update_one(
