@@ -1915,6 +1915,9 @@ async def process_payment_screenshots(
         form = await request.form()
         files = form.getlist("files")
         month_year = form.get("month_year", "")  # e.g., "Sep 2025"
+        driver_name = form.get("driver_name", "")  # Driver name for folder organization
+        vehicle_number = form.get("vehicle_number", "")
+        platform = form.get("platform", "")
         
         if not files:
             raise HTTPException(status_code=400, detail="No files uploaded")
