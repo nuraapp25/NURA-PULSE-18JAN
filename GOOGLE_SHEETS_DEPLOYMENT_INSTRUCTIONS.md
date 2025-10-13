@@ -73,7 +73,9 @@ Web app URL: https://script.google.com/macros/s/XXXXX/exec
 
 ## Step 3: Update Backend Configuration
 
-Once you have the Web App URL, provide it so I can update the backend to use it for syncing.
+Once you have the Web App URL (e.g., `https://script.google.com/macros/s/XXXXX/exec`), provide it to me and I'll add it to the backend environment variables.
+
+The URL will be stored in: `/app/backend/.env` as `PAYMENT_SHEETS_APPS_SCRIPT_URL`
 
 ## Step 4: Test the Integration
 
