@@ -167,9 +167,9 @@ function syncToBackend(data) {
     const records = values.map(row => ({
       driver: row[COLUMNS.DRIVER] || 'N/A',
       vehicle: row[COLUMNS.VEHICLE] || 'N/A',
-      description: row[COLUMNS.DESCRIPTION] || 'Auto',
       date: row[COLUMNS.DATE] || 'N/A',
       time: row[COLUMNS.TIME] || 'N/A',
+      description: row[COLUMNS.DESCRIPTION] || 'Auto',
       amount: row[COLUMNS.AMOUNT] || '0',
       payment_mode: row[COLUMNS.PAYMENT_MODE] || 'N/A',
       distance: row[COLUMNS.DISTANCE] || 'N/A',
