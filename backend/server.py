@@ -1998,12 +1998,23 @@ async def process_payment_screenshots(
   }
 ]
 
-IMPORTANT:
-- If multiple rides are shown, extract each one as a separate JSON object
-- Skip entries that say "Bank Transfer" or show ₹0
-- For dates, assume current year (2024) if not specified
-- Extract amounts as plain numbers without currency symbols
-- Be precise and only extract what you can clearly see
+**EXTRACTION RULES:**
+✅ Extract EVERY visible ride (including ₹0.00 if cancelled/promotional)
+✅ For duration: Convert hours to minutes (1 hour 11 min = 71 min)
+✅ For surge pricing: Include in description (e.g., "Auto (Surge)")
+✅ For cancellations: Set amount to 0, add to description (e.g., "Auto (Cancelled)")
+✅ Skip only "Bank Transfer" entries or unrelated promotional banners
+✅ Extract distance/duration as numbers (remove Tamil text)
+✅ If screenshot shows "29 செப்." or "திங்கள்., 29 செப்.", convert to "29/09/2024"
+
+**EXAMPLE CONVERSIONS:**
+- "3.57 கி.மீ" → distance: "3.57"
+- "16 நிமி 55 வி" → duration: "16" (ignore seconds)
+- "1 ம.நே 11 நிமி" → duration: "71"
+- "₹126.45" → amount: "126.45"
+- "திங்கள்., 29 செப்." → date: "29/09/2024"
+
+Be precise and extract ALL rides shown in the screenshot.
 """
 
                     # Send to Gemini
