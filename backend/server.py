@@ -1900,7 +1900,7 @@ async def process_payment_screenshots(
     request: Request,
     current_user: User = Depends(get_current_user)
 ):
-    """Process uploaded screenshots using Gemini Vision to extract payment data"""
+    """Process uploaded screenshots using OpenAI GPT-4o Vision to extract payment data"""
     from dotenv import load_dotenv
     from datetime import datetime
     load_dotenv()
