@@ -2116,8 +2116,13 @@ Be precise and extract ALL rides shown in the screenshot. If a screenshot shows 
                         record["status"] = "pending"  # pending, reconciled, etc.
                     
                     # Insert into payment_records collection
-                    await db.payment_records.insert_many(extracted_results)
+                    result = await db.payment_records.insert_many(extracted_results)
                     logger.info(f"Saved {len(extracted_results)} payment records to MongoDB for {month_year}")
+                    
+                    # Remove MongoDB _id from records for response (not JSON serializable)
+                    for record in extracted_results:
+                        if "_id" in record:
+                            del record["_id"]
                 except Exception as e:
                     logger.error(f"Error saving to MongoDB: {str(e)}")
                     # Don't fail the request, just log the error
