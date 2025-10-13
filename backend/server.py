@@ -2179,6 +2179,32 @@ async def get_payment_sync_status(current_user: User = Depends(get_current_user)
         raise HTTPException(status_code=500, detail="Failed to get sync status")
 
 
+@api_router.get("/payment-reconciliation/records")
+async def get_payment_records(
+    month_year: str = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Get all payment records, optionally filtered by month/year"""
+    try:
+        query = {"user_id": current_user.user_id}
+        
+        # Add month_year filter if provided
+        if month_year:
+            query["month_year"] = month_year
+        
+        # Fetch records from MongoDB
+        records = await db.payment_records.find(query).to_list(length=None)
+        
+        return {
+            "success": True,
+            "records": records,
+            "count": len(records)
+        }
+    except Exception as e:
+        logger.error(f"Error fetching payment records: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @api_router.put("/payment-reconciliation/update-record")
 async def update_payment_record(
     request: Request,
