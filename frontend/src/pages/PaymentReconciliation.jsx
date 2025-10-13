@@ -944,6 +944,140 @@ const PaymentReconciliation = () => {
         </Card>
       )}
 
+      {/* Full Edit Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Payment Record</DialogTitle>
+          </DialogHeader>
+          {editingRecord && (
+            <div className="grid grid-cols-2 gap-4 py-4">
+              <div className="space-y-2">
+                <Label>Driver Name</Label>
+                <Input
+                  value={editingRecord.driver}
+                  onChange={(e) => setEditingRecord({...editingRecord, driver: e.target.value})}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Vehicle Number</Label>
+                <Input
+                  value={editingRecord.vehicle}
+                  onChange={(e) => setEditingRecord({...editingRecord, vehicle: e.target.value})}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Description</Label>
+                <Input
+                  value={editingRecord.description}
+                  onChange={(e) => setEditingRecord({...editingRecord, description: e.target.value})}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Date (DD/MM/YYYY)</Label>
+                <Input
+                  value={editingRecord.date}
+                  onChange={(e) => setEditingRecord({...editingRecord, date: e.target.value})}
+                  placeholder="DD/MM/YYYY"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Time</Label>
+                <Input
+                  value={editingRecord.time}
+                  onChange={(e) => setEditingRecord({...editingRecord, time: e.target.value})}
+                  placeholder="HH:MM AM/PM"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Amount (₹)</Label>
+                <Input
+                  type="number"
+                  value={editingRecord.amount}
+                  onChange={(e) => setEditingRecord({...editingRecord, amount: e.target.value})}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Payment Mode</Label>
+                <Input
+                  value={editingRecord.paymentMode}
+                  onChange={(e) => setEditingRecord({...editingRecord, paymentMode: e.target.value})}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Distance (km)</Label>
+                <Input
+                  value={editingRecord.distance}
+                  onChange={(e) => setEditingRecord({...editingRecord, distance: e.target.value})}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Duration (min)</Label>
+                <Input
+                  value={editingRecord.duration}
+                  onChange={(e) => setEditingRecord({...editingRecord, duration: e.target.value})}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Pickup KM</Label>
+                <Input
+                  value={editingRecord.pickupKm}
+                  onChange={(e) => setEditingRecord({...editingRecord, pickupKm: e.target.value})}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Drop KM</Label>
+                <Input
+                  value={editingRecord.dropKm}
+                  onChange={(e) => setEditingRecord({...editingRecord, dropKm: e.target.value})}
+                />
+              </div>
+              
+              <div className="space-y-2 col-span-2">
+                <Label>Pickup Location</Label>
+                <Input
+                  value={editingRecord.pickupLocation}
+                  onChange={(e) => setEditingRecord({...editingRecord, pickupLocation: e.target.value})}
+                />
+              </div>
+              
+              <div className="space-y-2 col-span-2">
+                <Label>Drop Location</Label>
+                <Input
+                  value={editingRecord.dropLocation}
+                  onChange={(e) => setEditingRecord({...editingRecord, dropLocation: e.target.value})}
+                />
+              </div>
+              
+              <div className="col-span-2 flex gap-2 justify-end pt-4">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowEditDialog(false)}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleSaveFullEdit}
+                  className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+                >
+                  Save Changes
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Driver Profile Dialog */}
       <Dialog open={showDriverDialog} onOpenChange={setShowDriverDialog}>
         <DialogContent className="sm:max-w-md">
