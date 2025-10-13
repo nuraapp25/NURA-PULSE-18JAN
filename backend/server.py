@@ -2420,6 +2420,60 @@ async def delete_payment_records(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@api_router.get("/payment-reconciliation/folders")
+async def get_payment_folders(current_user: User = Depends(get_current_user)):
+    """Get all payment reconciliation folders"""
+    try:
+        folders = await db.payment_folders.find({}, {"_id": 0}).to_list(1000)
+        return {
+            "success": True,
+            "folders": folders
+        }
+    except Exception as e:
+        logger.error(f"Error fetching payment folders: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/payment-reconciliation/folders")
+async def create_payment_folder(
+    request: Request,
+    current_user: User = Depends(get_current_user)
+):
+    """Create a new payment reconciliation folder"""
+    try:
+        data = await request.json()
+        
+        # Check if folder already exists
+        existing_folder = await db.payment_folders.find_one({"name": data["name"]})
+        if existing_folder:
+            raise HTTPException(status_code=400, detail="Folder already exists")
+        
+        # Create new folder
+        folder_data = {
+            "id": str(uuid.uuid4()),
+            "name": data["name"],
+            "month": data["month"],
+            "year": data["year"],
+            "monthLabel": data["monthLabel"],
+            "fullName": data["fullName"],
+            "createdAt": data["createdAt"],
+            "created_by": current_user.id
+        }
+        
+        await db.payment_folders.insert_one(folder_data)
+        
+        return {
+            "success": True,
+            "folder": folder_data,
+            "message": f"Folder '{data['name']}' created successfully"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating payment folder: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @api_router.get("/admin/payment-screenshots/browse")
 async def browse_payment_screenshots(
     path: str = "",
