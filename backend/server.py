@@ -2038,7 +2038,7 @@ async def process_payment_screenshots(
 Be precise and extract ALL rides shown in the screenshot. If a screenshot shows multiple rides (like a ride history list), extract each as a separate record.
 """
 
-                    # Send to Gemini
+                    # Send to OpenAI GPT-4o Vision
                     user_message = UserMessage(
                         text=extraction_prompt,
                         file_contents=[image_content]
