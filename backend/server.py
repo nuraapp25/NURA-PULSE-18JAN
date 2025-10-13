@@ -2178,6 +2178,47 @@ async def get_payment_sync_status(current_user: User = Depends(get_current_user)
         raise HTTPException(status_code=500, detail="Failed to get sync status")
 
 
+@api_router.put("/payment-reconciliation/update-record")
+async def update_payment_record(
+    request: Request,
+    current_user: User = Depends(get_current_user)
+):
+    """Update any field in a payment record"""
+    try:
+        data = await request.json()
+        record_id = data.get("record_id")
+        updates = data.get("updates", {})
+        
+        if not record_id:
+            raise HTTPException(status_code=400, detail="No record ID provided")
+        
+        if not updates:
+            raise HTTPException(status_code=400, detail="No updates provided")
+        
+        # Add updated_at timestamp
+        updates["updated_at"] = datetime.now().isoformat()
+        updates["updated_by"] = current_user.user_id
+        
+        # Update record in payment_records collection
+        result = await db.payment_records.update_one(
+            {"id": record_id},
+            {"$set": updates}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Record not found")
+        
+        return {
+            "success": True,
+            "message": "Record updated successfully"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating payment record: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @api_router.delete("/payment-reconciliation/delete-records")
 async def delete_payment_records(
     request: Request,
@@ -2185,28 +2226,29 @@ async def delete_payment_records(
 ):
     """Delete selected payment records (Master Admin only)"""
     try:
-        # Check if user has delete permissions
-        if current_user.account_type != "master_admin":
-            raise HTTPException(status_code=403, detail="Insufficient permissions. Only Master Admin can delete records.")
+        # Check if user has permission
+        if current_user.account_type not in ["master_admin", "admin"]:
+            raise HTTPException(status_code=403, detail="Only Admin or Master Admin can delete records")
         
-        body = await request.json()
-        record_ids = body.get("record_ids", [])
+        data = await request.json()
+        record_ids = data.get("record_ids", [])
         
         if not record_ids:
             raise HTTPException(status_code=400, detail="No record IDs provided")
         
-        # For now, just return success - in production, this would delete from database
+        # Delete records from payment_records collection
+        result = await db.payment_records.delete_many({"id": {"$in": record_ids}})
+        
         return {
             "success": True,
-            "deleted_count": len(record_ids),
-            "message": f"Successfully deleted {len(record_ids)} records"
+            "deleted_count": result.deleted_count,
+            "message": f"Successfully deleted {result.deleted_count} records"
         }
-        
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error deleting records: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to delete records: {str(e)}")
+        logger.error(f"Error deleting payment records: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @api_router.post("/admin/files/reload-fleet-mapping")
