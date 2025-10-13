@@ -1960,8 +1960,8 @@ async def process_payment_screenshots(
                         mime_type=file.content_type or "image/jpeg"
                     )
                     
-                    # Create extraction prompt - Enhanced for Tamil auto-rickshaw receipts with detailed metrics
-                    extraction_prompt = """You are analyzing a ride-sharing receipt screenshot (Tamil/English). These receipts show:
+                    # Create extraction prompt - Enhanced for Tamil auto-rickshaw receipts (multiple formats)
+                    extraction_prompt = """You are analyzing ride-sharing receipt screenshots (Tamil/English). These can be in multiple formats:
 
 **FORMAT TYPES:**
 1. Simple cash receipts: "Auto", time, கேஷ், ₹amount
