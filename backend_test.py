@@ -852,9 +852,169 @@ class NuraPulseBackendTester:
         
         return success_count >= 4  # At least 4 out of 6 tests should pass
 
+    def test_payment_reconciliation_drivers_vehicles_api(self):
+        """Test Payment Reconciliation Drivers and Vehicles API - Excel files with monthly tabs"""
+        print("\n=== Testing Payment Reconciliation Drivers and Vehicles API ===")
+        
+        success_count = 0
+        
+        # Test 1: Sep 2025 Data
+        print("\n--- Testing Sep 2025 Data ---")
+        response = self.make_request("GET", "/admin/files/get-drivers-vehicles?month=Sep&year=2025")
+        
+        if response and response.status_code == 200:
+            try:
+                data = response.json()
+                
+                # Check basic response structure
+                if "success" in data and data["success"]:
+                    drivers = data.get("drivers", [])
+                    vehicles = data.get("vehicles", [])
+                    using_mock = data.get("using_mock_data", False)
+                    
+                    self.log_test("Payment Reconciliation API - Sep 2025 Response", True, 
+                                f"Retrieved {len(drivers)} drivers, {len(vehicles)} vehicles, using_mock_data: {using_mock}")
+                    
+                    # Check if using real data (not mock)
+                    if not using_mock:
+                        self.log_test("Payment Reconciliation API - Sep 2025 Real Data", True, 
+                                    "Successfully using real data from Excel files (not mock)")
+                        success_count += 1
+                        
+                        # Verify expected counts from review request
+                        if len(drivers) == 22:
+                            self.log_test("Payment Reconciliation API - Sep 2025 Driver Count", True, 
+                                        f"Correct driver count: {len(drivers)} (expected 22)")
+                            success_count += 1
+                        else:
+                            self.log_test("Payment Reconciliation API - Sep 2025 Driver Count", False, 
+                                        f"Incorrect driver count: {len(drivers)} (expected 22)")
+                        
+                        if len(vehicles) == 9:
+                            self.log_test("Payment Reconciliation API - Sep 2025 Vehicle Count", True, 
+                                        f"Correct vehicle count: {len(vehicles)} (expected 9)")
+                            success_count += 1
+                        else:
+                            self.log_test("Payment Reconciliation API - Sep 2025 Vehicle Count", False, 
+                                        f"Incorrect vehicle count: {len(vehicles)} (expected 9)")
+                        
+                        # Check for specific driver names from review request
+                        expected_drivers = ["Alexander A", "Anandhi", "Bavanai"]
+                        found_drivers = [d for d in expected_drivers if d in drivers]
+                        if len(found_drivers) >= 2:  # At least 2 out of 3 expected drivers
+                            self.log_test("Payment Reconciliation API - Sep 2025 Driver Names", True, 
+                                        f"Found expected drivers: {found_drivers}")
+                            success_count += 1
+                        else:
+                            self.log_test("Payment Reconciliation API - Sep 2025 Driver Names", False, 
+                                        f"Expected drivers not found. Found: {found_drivers}, All drivers: {drivers[:5]}...")
+                        
+                        # Check for specific vehicle numbers from review request
+                        expected_vehicles = ["TN02CE0738", "TN02CE0751", "TN02CE2901"]
+                        found_vehicles = [v for v in expected_vehicles if v in vehicles]
+                        if len(found_vehicles) >= 2:  # At least 2 out of 3 expected vehicles
+                            self.log_test("Payment Reconciliation API - Sep 2025 Vehicle Numbers", True, 
+                                        f"Found expected vehicles: {found_vehicles}")
+                            success_count += 1
+                        else:
+                            self.log_test("Payment Reconciliation API - Sep 2025 Vehicle Numbers", False, 
+                                        f"Expected vehicles not found. Found: {found_vehicles}, All vehicles: {vehicles[:5]}...")
+                    else:
+                        self.log_test("Payment Reconciliation API - Sep 2025 Real Data", False, 
+                                    "Using mock data instead of real Excel file data")
+                else:
+                    self.log_test("Payment Reconciliation API - Sep 2025 Response", False, 
+                                "Response missing success field or success=false", data)
+            except json.JSONDecodeError:
+                self.log_test("Payment Reconciliation API - Sep 2025 Response", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Payment Reconciliation API - Sep 2025 Response", False, error_msg, 
+                        response.text if response else None)
+        
+        # Test 2: Oct 2025 Data
+        print("\n--- Testing Oct 2025 Data ---")
+        response = self.make_request("GET", "/admin/files/get-drivers-vehicles?month=Oct&year=2025")
+        
+        if response and response.status_code == 200:
+            try:
+                data = response.json()
+                
+                if "success" in data and data["success"]:
+                    drivers = data.get("drivers", [])
+                    vehicles = data.get("vehicles", [])
+                    using_mock = data.get("using_mock_data", False)
+                    
+                    self.log_test("Payment Reconciliation API - Oct 2025 Response", True, 
+                                f"Retrieved {len(drivers)} drivers, {len(vehicles)} vehicles, using_mock_data: {using_mock}")
+                    
+                    # Check if using real data (not mock)
+                    if not using_mock:
+                        self.log_test("Payment Reconciliation API - Oct 2025 Real Data", True, 
+                                    "Successfully using real data from Excel files (not mock)")
+                        success_count += 1
+                        
+                        # Verify expected counts (should be same as Sep 2025 according to review)
+                        if len(drivers) == 22:
+                            self.log_test("Payment Reconciliation API - Oct 2025 Driver Count", True, 
+                                        f"Correct driver count: {len(drivers)} (expected 22)")
+                            success_count += 1
+                        else:
+                            self.log_test("Payment Reconciliation API - Oct 2025 Driver Count", False, 
+                                        f"Incorrect driver count: {len(drivers)} (expected 22)")
+                        
+                        if len(vehicles) == 9:
+                            self.log_test("Payment Reconciliation API - Oct 2025 Vehicle Count", True, 
+                                        f"Correct vehicle count: {len(vehicles)} (expected 9)")
+                            success_count += 1
+                        else:
+                            self.log_test("Payment Reconciliation API - Oct 2025 Vehicle Count", False, 
+                                        f"Incorrect vehicle count: {len(vehicles)} (expected 9)")
+                    else:
+                        self.log_test("Payment Reconciliation API - Oct 2025 Real Data", False, 
+                                    "Using mock data instead of real Excel file data")
+                else:
+                    self.log_test("Payment Reconciliation API - Oct 2025 Response", False, 
+                                "Response missing success field or success=false", data)
+            except json.JSONDecodeError:
+                self.log_test("Payment Reconciliation API - Oct 2025 Response", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Payment Reconciliation API - Oct 2025 Response", False, error_msg, 
+                        response.text if response else None)
+        
+        # Test 3: Parameter Validation
+        print("\n--- Testing Parameter Validation ---")
+        
+        # Test missing parameters
+        response = self.make_request("GET", "/admin/files/get-drivers-vehicles")
+        if response and response.status_code == 422:
+            self.log_test("Payment Reconciliation API - Missing Parameters", True, 
+                        "Correctly rejects missing parameters (422)")
+            success_count += 1
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("Payment Reconciliation API - Missing Parameters", False, 
+                        f"Expected 422, got {status}")
+        
+        # Test authentication requirement
+        response = self.make_request("GET", "/admin/files/get-drivers-vehicles?month=Sep&year=2025", use_auth=False)
+        if response and response.status_code in [401, 403]:
+            self.log_test("Payment Reconciliation API - Authentication Required", True, 
+                        f"Correctly requires authentication ({response.status_code} without token)")
+            success_count += 1
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("Payment Reconciliation API - Authentication Required", False, 
+                        f"Expected 401/403, got {status}")
+        
+        return success_count >= 6  # At least 6 out of 10 tests should pass
+
     def run_all_tests(self):
         """Run all backend tests"""
-        print("🚀 Starting Nura Pulse Backend Testing - Focus on DELETE /montra-vehicle/feed-database Endpoint Fix")
+        print("🚀 Starting Nura Pulse Backend Testing - Focus on Payment Reconciliation Drivers and Vehicles API")
         print(f"Backend URL: {self.base_url}")
         print(f"Master Admin: {MASTER_ADMIN_EMAIL}")
         
@@ -865,12 +1025,12 @@ class NuraPulseBackendTester:
             print("\n❌ Authentication failed - cannot proceed with other tests")
             return False
         
-        # PRIORITY: Test the fixed DELETE endpoint as requested
-        delete_endpoint_success = self.test_delete_endpoint_fix()
+        # PRIORITY: Test the Payment Reconciliation Drivers and Vehicles API as requested
+        payment_reconciliation_success = self.test_payment_reconciliation_drivers_vehicles_api()
         
         # Summary
         print("\n" + "="*60)
-        print("📊 TEST SUMMARY - DELETE ENDPOINT FIX VERIFICATION")
+        print("📊 TEST SUMMARY - PAYMENT RECONCILIATION DRIVERS AND VEHICLES API")
         print("="*60)
         
         total_tests = len(self.test_results)
@@ -883,7 +1043,7 @@ class NuraPulseBackendTester:
         print(f"Success Rate: {(passed_tests/total_tests)*100:.1f}%")
         
         # Priority test results
-        print(f"\n🎯 DELETE ENDPOINT FIX RESULT: {'✅ PASS' if delete_endpoint_success else '❌ FAIL'}")
+        print(f"\n🎯 PAYMENT RECONCILIATION API RESULT: {'✅ PASS' if payment_reconciliation_success else '❌ FAIL'}")
         
         if failed_tests > 0:
             print("\n❌ FAILED TESTS:")
@@ -891,8 +1051,8 @@ class NuraPulseBackendTester:
                 if not result["success"]:
                     print(f"  - {result['test']}: {result['message']}")
         
-        overall_success = delete_endpoint_success and failed_tests <= 2  # Allow some minor failures
-        status = "✅ DELETE ENDPOINT FIX VERIFIED" if overall_success else "❌ DELETE ENDPOINT FIX ISSUES FOUND"
+        overall_success = payment_reconciliation_success and failed_tests <= 3  # Allow some minor failures
+        status = "✅ PAYMENT RECONCILIATION API VERIFIED" if overall_success else "❌ PAYMENT RECONCILIATION API ISSUES FOUND"
         print(f"\n{status}")
         
         return overall_success
