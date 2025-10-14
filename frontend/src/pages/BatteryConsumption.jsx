@@ -225,7 +225,7 @@ const BatteryConsumption = () => {
           <CardTitle className="dark:text-white">Select Parameters</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <Label htmlFor="vehicle-select" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Vehicle No.
@@ -246,26 +246,54 @@ const BatteryConsumption = () => {
             </div>
             
             <div>
-              <Label htmlFor="date-picker" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Date
+              <Label htmlFor="start-date-picker" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Start Date
               </Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
-                    id="date-picker"
+                    id="start-date-picker"
                     variant="outline"
                     className="w-full justify-start text-left font-normal mt-1.5 dark:bg-gray-700 dark:border-gray-600 text-sm"
                     size="sm"
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {selectedDate ? format(selectedDate, "dd MMM yyyy") : <span>Pick a date</span>}
+                    {startDate ? format(startDate, "dd MMM yyyy") : <span>Pick start date</span>}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0 dark:bg-gray-800" align="start">
                   <Calendar
                     mode="single"
-                    selected={selectedDate}
-                    onSelect={setSelectedDate}
+                    selected={startDate}
+                    onSelect={setStartDate}
+                    initialFocus
+                    className="dark:bg-gray-800"
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div>
+              <Label htmlFor="end-date-picker" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                End Date
+              </Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    id="end-date-picker"
+                    variant="outline"
+                    className="w-full justify-start text-left font-normal mt-1.5 dark:bg-gray-700 dark:border-gray-600 text-sm"
+                    size="sm"
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {endDate ? format(endDate, "dd MMM yyyy") : <span>Pick end date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 dark:bg-gray-800" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={endDate}
+                    onSelect={setEndDate}
                     initialFocus
                     className="dark:bg-gray-800"
                   />
@@ -277,7 +305,7 @@ const BatteryConsumption = () => {
           <div className="flex justify-center pt-4">
             <Button 
               onClick={handleViewData}
-              disabled={!selectedVehicle || !selectedDate || loading}
+              disabled={!selectedVehicle || !startDate || !endDate || loading}
               className="bg-blue-600 hover:bg-blue-700 px-6 sm:px-8 text-sm w-full sm:w-auto"
               size="sm"
             >
