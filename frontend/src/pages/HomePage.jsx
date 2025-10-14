@@ -1,7 +1,5 @@
 import React from "react";
 import { useAuth } from "@/App";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, BarChart3, TrendingUp, Activity } from "lucide-react";
 
 const HomePage = () => {
   const { user } = useAuth();
