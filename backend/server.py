@@ -2256,7 +2256,7 @@ async def get_battery_charge_audit(current_user: User = Depends(get_current_user
             
             # Sort records by time
             try:
-                day_records.sort(key=lambda x: x.get("time", "00:00:00") if x.get("time") else "00:00:00")
+                day_records.sort(key=lambda x: x.get("Portal Received Time", x.get("time", "00:00:00")) if x.get("Portal Received Time") or x.get("time") else "00:00:00")
             except Exception as e:
                 logger.error(f"Error sorting records for {vehicle_id} on {date}: {str(e)}")
                 continue
