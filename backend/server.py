@@ -2890,30 +2890,16 @@ Be precise and extract ALL rides shown in the screenshot. If a screenshot shows 
             if len(extracted_results) < len(files):
                 logger.warning(f"Only {len(extracted_results)} rides extracted from {len(files)} files")
             
-            # Save extracted records to MongoDB permanently
+            # Add metadata to results (but don't save to MongoDB - keep in memory only)
             if extracted_results:
-                try:
-                    # Add additional metadata
-                    for record in extracted_results:
-                        record["user_id"] = current_user.id
-                        record["month_year"] = month_year
-                        record["driver"] = driver_name or record.get("driver", "N/A")
-                        record["vehicle"] = vehicle_number or record.get("vehicle", "N/A")
-                        record["platform"] = platform or record.get("platform", "N/A")
-                        record["uploaded_at"] = datetime.now().isoformat()
-                        record["status"] = "pending"  # pending, reconciled, etc.
-                    
-                    # Insert into payment_records collection
-                    result = await db.payment_records.insert_many(extracted_results)
-                    logger.info(f"Saved {len(extracted_results)} payment records to MongoDB for {month_year}")
-                    
-                    # Remove MongoDB _id from records for response (not JSON serializable)
-                    for record in extracted_results:
-                        if "_id" in record:
-                            del record["_id"]
-                except Exception as e:
-                    logger.error(f"Error saving to MongoDB: {str(e)}")
-                    # Don't fail the request, just log the error
+                for record in extracted_results:
+                    record["user_id"] = current_user.id
+                    record["month_year"] = month_year
+                    record["driver"] = driver_name or record.get("driver", "N/A")
+                    record["vehicle"] = vehicle_number or record.get("vehicle", "N/A")
+                    record["platform"] = platform or record.get("platform", "N/A")
+                    record["uploaded_at"] = datetime.now().isoformat()
+                    record["status"] = "pending"
             
             # Save screenshot files to organized folder structure
             if driver_name and month_year:
