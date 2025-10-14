@@ -2729,6 +2729,7 @@ async def process_payment_screenshots(
         extracted_results = []
         processing_errors = []
         temp_files = []
+        file_mapping = {}  # Map original filename to temp file path
         
         try:
             # Process each file - collect all results first
@@ -2742,6 +2743,9 @@ async def process_payment_screenshots(
                     temp_file.write(file_content)
                     temp_file.close()
                     temp_files.append(temp_file.name)
+                    
+                    # Map original filename to temp file path
+                    file_mapping[file.filename] = temp_file.name
                     
                     # Read image and encode as base64 for OpenAI GPT-4o Vision
                     with open(temp_file.name, 'rb') as img_file:
