@@ -299,7 +299,7 @@ const MontraVehicle = () => {
   const handleDownloadMapping = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get(`${API}/montra-vehicle/download-mapping`, {
+      const response = await axios.get(`${API}/montra-vehicle/download-mode-mapping`, {
         headers: { Authorization: `Bearer ${token}` },
         responseType: 'blob'
       });
@@ -307,15 +307,15 @@ const MontraVehicle = () => {
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', 'montra-vehicle-mapping.xlsx');
+      link.setAttribute('download', 'Mode Details.xlsx');
       document.body.appendChild(link);
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
       
-      toast.success("Mapping file downloaded successfully");
+      toast.success("Mode mapping file downloaded successfully");
     } catch (error) {
-      toast.error("Failed to download mapping file");
+      toast.error("Failed to download mode mapping file");
       console.error("Download mapping error:", error);
     }
   };
@@ -335,7 +335,7 @@ const MontraVehicle = () => {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await axios.post(`${API}/montra-vehicle/upload-mapping`, formData, {
+      const response = await axios.post(`${API}/montra-vehicle/upload-mode-mapping`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
@@ -343,12 +343,12 @@ const MontraVehicle = () => {
       });
 
       if (response.data.success) {
-        toast.success(response.data.message || "Mapping file uploaded successfully");
+        toast.success(response.data.message || "Mode mapping file uploaded successfully");
       } else {
-        toast.error(response.data.message || "Failed to upload mapping file");
+        toast.error(response.data.message || "Failed to upload mode mapping file");
       }
     } catch (error) {
-      toast.error("Failed to upload mapping file");
+      toast.error("Failed to upload mode mapping file");
       console.error("Upload mapping error:", error);
     }
 
