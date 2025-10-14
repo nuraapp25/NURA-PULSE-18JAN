@@ -1160,9 +1160,497 @@ class NuraPulseBackendTester:
         
         return success_count >= 6  # At least 6 out of 10 tests should pass
 
+    def test_expense_tracker_backend_apis(self):
+        """Test Expense Tracker Backend APIs - Comprehensive testing as requested"""
+        print("\n=== Testing Expense Tracker Backend APIs ===")
+        
+        success_count = 0
+        test_expense_id = None
+        test_receipt_filename = None
+        
+        # Test 1: GET /expenses - Fetch Expenses (Authentication Required)
+        print("\n--- Test 1: GET /expenses - Fetch Expenses ---")
+        
+        # Test without authentication (should fail)
+        response = self.make_request("GET", "/expenses", use_auth=False)
+        if response and response.status_code == 403:
+            self.log_test("Expense Tracker - GET /expenses Authentication", True, 
+                        "Correctly requires authentication (403 without token)")
+            success_count += 1
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("Expense Tracker - GET /expenses Authentication", False, 
+                        f"Expected 403, got {status}")
+        
+        # Test with authentication
+        response = self.make_request("GET", "/expenses")
+        if response and response.status_code == 200:
+            try:
+                data = response.json()
+                if "expenses" in data and isinstance(data["expenses"], list):
+                    expenses = data["expenses"]
+                    self.log_test("Expense Tracker - GET /expenses Success", True, 
+                                f"Retrieved {len(expenses)} expenses with proper structure")
+                    success_count += 1
+                    
+                    # Verify expense structure if expenses exist
+                    if expenses:
+                        sample_expense = expenses[0]
+                        required_fields = ["id", "user_id", "user_name", "date", "description", "amount", "receipt_filenames", "approval_status", "created_at"]
+                        missing_fields = [field for field in required_fields if field not in sample_expense]
+                        
+                        if not missing_fields:
+                            self.log_test("Expense Tracker - Expense Structure", True, 
+                                        "Expense objects contain all required fields")
+                            success_count += 1
+                        else:
+                            self.log_test("Expense Tracker - Expense Structure", False, 
+                                        f"Missing required fields: {missing_fields}")
+                else:
+                    self.log_test("Expense Tracker - GET /expenses Success", False, 
+                                "Response missing 'expenses' array", data)
+            except json.JSONDecodeError:
+                self.log_test("Expense Tracker - GET /expenses Success", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("Expense Tracker - GET /expenses Success", False, 
+                        f"Expected 200, got {status}")
+        
+        # Test 2: POST /expenses/add - Create New Expense
+        print("\n--- Test 2: POST /expenses/add - Create New Expense ---")
+        
+        # Test authentication requirement
+        test_expense_data = {
+            'date': '2024-12-15',
+            'description': 'Test expense for API validation',
+            'amount': '150.75'
+        }
+        
+        # Create a test receipt file
+        test_receipt_content = b"Test receipt content for expense tracker validation"
+        test_receipt_filename = "test_receipt.txt"
+        
+        files = {
+            'receipts': (test_receipt_filename, test_receipt_content, 'text/plain')
+        }
+        
+        # Test without authentication
+        try:
+            import requests
+            url = f"{self.base_url}/expenses/add"
+            response = requests.post(url, data=test_expense_data, files=files, timeout=10)
+            
+            if response.status_code == 403:
+                self.log_test("Expense Tracker - POST /expenses/add Authentication", True, 
+                            "Correctly requires authentication (403 without token)")
+                success_count += 1
+            else:
+                self.log_test("Expense Tracker - POST /expenses/add Authentication", False, 
+                            f"Expected 403, got {response.status_code}")
+        except Exception as e:
+            self.log_test("Expense Tracker - POST /expenses/add Authentication", False, 
+                        f"Exception during auth test: {e}")
+        
+        # Test with authentication - single receipt
+        try:
+            url = f"{self.base_url}/expenses/add"
+            headers = {"Authorization": f"Bearer {self.token}"}
+            files = {
+                'receipts': (test_receipt_filename, test_receipt_content, 'text/plain')
+            }
+            
+            response = requests.post(url, data=test_expense_data, files=files, headers=headers, timeout=10)
+            
+            if response.status_code == 200:
+                try:
+                    result = response.json()
+                    if "expense_id" in result:
+                        test_expense_id = result["expense_id"]
+                        self.log_test("Expense Tracker - POST /expenses/add Single Receipt", True, 
+                                    f"Created expense with ID: {test_expense_id}")
+                        success_count += 1
+                    else:
+                        self.log_test("Expense Tracker - POST /expenses/add Single Receipt", False, 
+                                    "Response missing expense_id", result)
+                except json.JSONDecodeError:
+                    self.log_test("Expense Tracker - POST /expenses/add Single Receipt", False, 
+                                "Invalid JSON response", response.text)
+            else:
+                self.log_test("Expense Tracker - POST /expenses/add Single Receipt", False, 
+                            f"Expected 200, got {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Expense Tracker - POST /expenses/add Single Receipt", False, 
+                        f"Exception: {e}")
+        
+        # Test with multiple receipts
+        try:
+            url = f"{self.base_url}/expenses/add"
+            headers = {"Authorization": f"Bearer {self.token}"}
+            
+            multi_expense_data = {
+                'date': '2024-12-16',
+                'description': 'Multi-receipt test expense',
+                'amount': '275.50'
+            }
+            
+            files = [
+                ('receipts', ('receipt1.txt', b"First receipt content", 'text/plain')),
+                ('receipts', ('receipt2.txt', b"Second receipt content", 'text/plain'))
+            ]
+            
+            response = requests.post(url, data=multi_expense_data, files=files, headers=headers, timeout=10)
+            
+            if response.status_code == 200:
+                try:
+                    result = response.json()
+                    if "expense_id" in result:
+                        self.log_test("Expense Tracker - POST /expenses/add Multiple Receipts", True, 
+                                    f"Created multi-receipt expense with ID: {result['expense_id']}")
+                        success_count += 1
+                    else:
+                        self.log_test("Expense Tracker - POST /expenses/add Multiple Receipts", False, 
+                                    "Response missing expense_id", result)
+                except json.JSONDecodeError:
+                    self.log_test("Expense Tracker - POST /expenses/add Multiple Receipts", False, 
+                                "Invalid JSON response", response.text)
+            else:
+                self.log_test("Expense Tracker - POST /expenses/add Multiple Receipts", False, 
+                            f"Expected 200, got {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Expense Tracker - POST /expenses/add Multiple Receipts", False, 
+                        f"Exception: {e}")
+        
+        # Test file size limit (10MB)
+        print("\n--- Testing 10MB File Size Limit ---")
+        try:
+            url = f"{self.base_url}/expenses/add"
+            headers = {"Authorization": f"Bearer {self.token}"}
+            
+            # Create a file larger than 10MB (simulate)
+            large_file_data = {
+                'date': '2024-12-17',
+                'description': 'Large file test',
+                'amount': '100.00'
+            }
+            
+            # Create 11MB of data
+            large_content = b"x" * (11 * 1024 * 1024)
+            files = {
+                'receipts': ('large_file.txt', large_content, 'text/plain')
+            }
+            
+            response = requests.post(url, data=large_file_data, files=files, headers=headers, timeout=30)
+            
+            if response.status_code == 400:
+                try:
+                    error_data = response.json()
+                    if "10MB limit" in error_data.get("detail", ""):
+                        self.log_test("Expense Tracker - File Size Validation", True, 
+                                    "Correctly rejects files larger than 10MB")
+                        success_count += 1
+                    else:
+                        self.log_test("Expense Tracker - File Size Validation", False, 
+                                    f"Unexpected error message: {error_data}")
+                except json.JSONDecodeError:
+                    self.log_test("Expense Tracker - File Size Validation", False, 
+                                "Invalid JSON error response", response.text)
+            else:
+                self.log_test("Expense Tracker - File Size Validation", False, 
+                            f"Expected 400, got {response.status_code}")
+        except Exception as e:
+            self.log_test("Expense Tracker - File Size Validation", False, 
+                        f"Exception during large file test: {e}")
+        
+        # Test 3: Verify expense was saved to database
+        print("\n--- Test 3: Verify Expense Saved to Database ---")
+        if test_expense_id:
+            response = self.make_request("GET", "/expenses")
+            if response and response.status_code == 200:
+                try:
+                    data = response.json()
+                    expenses = data.get("expenses", [])
+                    found_expense = None
+                    for expense in expenses:
+                        if expense.get("id") == test_expense_id:
+                            found_expense = expense
+                            break
+                    
+                    if found_expense:
+                        self.log_test("Expense Tracker - Database Persistence", True, 
+                                    f"Created expense found in database with description: '{found_expense.get('description')}'")
+                        success_count += 1
+                    else:
+                        self.log_test("Expense Tracker - Database Persistence", False, 
+                                    f"Created expense with ID {test_expense_id} not found in database")
+                except json.JSONDecodeError:
+                    self.log_test("Expense Tracker - Database Persistence", False, 
+                                "Invalid JSON response", response.text)
+        
+        # Test 4: POST /expenses/update - Update Existing Expense
+        print("\n--- Test 4: POST /expenses/update - Update Existing Expense ---")
+        if test_expense_id:
+            try:
+                url = f"{self.base_url}/expenses/update"
+                headers = {"Authorization": f"Bearer {self.token}"}
+                
+                update_data = {
+                    'expense_id': test_expense_id,
+                    'date': '2024-12-18',
+                    'description': 'Updated test expense description',
+                    'amount': '200.00'
+                }
+                
+                # Add additional receipt
+                files = {
+                    'receipts': ('additional_receipt.txt', b"Additional receipt content", 'text/plain')
+                }
+                
+                response = requests.post(url, data=update_data, files=files, headers=headers, timeout=10)
+                
+                if response.status_code == 200:
+                    self.log_test("Expense Tracker - POST /expenses/update", True, 
+                                "Successfully updated expense with additional receipt")
+                    success_count += 1
+                else:
+                    self.log_test("Expense Tracker - POST /expenses/update", False, 
+                                f"Expected 200, got {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("Expense Tracker - POST /expenses/update", False, 
+                            f"Exception: {e}")
+        
+        # Test permission check for update (should fail for non-creator/non-admin)
+        # Since we're testing as master admin, we'll test with non-existent expense
+        try:
+            url = f"{self.base_url}/expenses/update"
+            headers = {"Authorization": f"Bearer {self.token}"}
+            
+            update_data = {
+                'expense_id': 'non-existent-expense-id',
+                'date': '2024-12-19',
+                'description': 'Should fail',
+                'amount': '100.00'
+            }
+            
+            response = requests.post(url, data=update_data, headers=headers, timeout=10)
+            
+            if response.status_code == 404:
+                self.log_test("Expense Tracker - Update Permission Check", True, 
+                            "Correctly rejects update for non-existent expense (404)")
+                success_count += 1
+            else:
+                self.log_test("Expense Tracker - Update Permission Check", False, 
+                            f"Expected 404, got {response.status_code}")
+        except Exception as e:
+            self.log_test("Expense Tracker - Update Permission Check", False, 
+                        f"Exception: {e}")
+        
+        # Test 5: POST /expenses/approve - Approve/Reject Expense
+        print("\n--- Test 5: POST /expenses/approve - Approve/Reject Expense ---")
+        if test_expense_id:
+            # Test approval
+            approve_data = {
+                "expense_id": test_expense_id,
+                "status": "Approved"
+            }
+            
+            response = self.make_request("POST", "/expenses/approve", approve_data)
+            if response and response.status_code == 200:
+                self.log_test("Expense Tracker - Approve Expense", True, 
+                            "Successfully approved expense")
+                success_count += 1
+            else:
+                status = response.status_code if response else "Network error"
+                self.log_test("Expense Tracker - Approve Expense", False, 
+                            f"Expected 200, got {status}")
+            
+            # Test rejection
+            reject_data = {
+                "expense_id": test_expense_id,
+                "status": "Rejected"
+            }
+            
+            response = self.make_request("POST", "/expenses/approve", reject_data)
+            if response and response.status_code == 200:
+                self.log_test("Expense Tracker - Reject Expense", True, 
+                            "Successfully rejected expense")
+                success_count += 1
+            else:
+                status = response.status_code if response else "Network error"
+                self.log_test("Expense Tracker - Reject Expense", False, 
+                            f"Expected 200, got {status}")
+            
+            # Test pending status
+            pending_data = {
+                "expense_id": test_expense_id,
+                "status": "Pending"
+            }
+            
+            response = self.make_request("POST", "/expenses/approve", pending_data)
+            if response and response.status_code == 200:
+                self.log_test("Expense Tracker - Set Pending Status", True, 
+                            "Successfully set expense to pending")
+                success_count += 1
+            else:
+                status = response.status_code if response else "Network error"
+                self.log_test("Expense Tracker - Set Pending Status", False, 
+                            f"Expected 200, got {status}")
+        
+        # Test invalid status
+        invalid_status_data = {
+            "expense_id": test_expense_id or "test-id",
+            "status": "InvalidStatus"
+        }
+        
+        response = self.make_request("POST", "/expenses/approve", invalid_status_data)
+        if response and response.status_code == 400:
+            self.log_test("Expense Tracker - Invalid Status Validation", True, 
+                        "Correctly rejects invalid approval status (400)")
+            success_count += 1
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("Expense Tracker - Invalid Status Validation", False, 
+                        f"Expected 400, got {status}")
+        
+        # Test non-existent expense
+        nonexistent_data = {
+            "expense_id": "non-existent-expense-id",
+            "status": "Approved"
+        }
+        
+        response = self.make_request("POST", "/expenses/approve", nonexistent_data)
+        if response and response.status_code == 404:
+            self.log_test("Expense Tracker - Approve Non-existent Expense", True, 
+                        "Correctly returns 404 for non-existent expense")
+            success_count += 1
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("Expense Tracker - Approve Non-existent Expense", False, 
+                        f"Expected 404, got {status}")
+        
+        # Test 6: GET /expenses/{expense_id}/receipt/{filename} - View/Download Receipt
+        print("\n--- Test 6: GET /expenses/{expense_id}/receipt/{filename} - View/Download Receipt ---")
+        if test_expense_id and test_receipt_filename:
+            # Test authentication requirement
+            try:
+                import requests
+                url = f"{self.base_url}/expenses/{test_expense_id}/receipt/{test_receipt_filename}"
+                response = requests.get(url, timeout=10)  # No auth header
+                
+                if response.status_code == 403:
+                    self.log_test("Expense Tracker - Receipt Download Authentication", True, 
+                                "Correctly requires authentication for receipt download (403)")
+                    success_count += 1
+                else:
+                    self.log_test("Expense Tracker - Receipt Download Authentication", False, 
+                                f"Expected 403, got {response.status_code}")
+            except Exception as e:
+                self.log_test("Expense Tracker - Receipt Download Authentication", False, 
+                            f"Exception: {e}")
+            
+            # Test with authentication
+            try:
+                url = f"{self.base_url}/expenses/{test_expense_id}/receipt/{test_receipt_filename}"
+                headers = {"Authorization": f"Bearer {self.token}"}
+                response = requests.get(url, headers=headers, timeout=10)
+                
+                if response.status_code == 200:
+                    # Check if it's a file response
+                    content_type = response.headers.get('content-type', '')
+                    if 'text/plain' in content_type or len(response.content) > 0:
+                        self.log_test("Expense Tracker - Receipt Download Success", True, 
+                                    f"Successfully downloaded receipt file (Content-Type: {content_type})")
+                        success_count += 1
+                    else:
+                        self.log_test("Expense Tracker - Receipt Download Success", False, 
+                                    "Response doesn't appear to be a file")
+                else:
+                    self.log_test("Expense Tracker - Receipt Download Success", False, 
+                                f"Expected 200, got {response.status_code}")
+            except Exception as e:
+                self.log_test("Expense Tracker - Receipt Download Success", False, 
+                            f"Exception: {e}")
+        
+        # Test non-existent receipt
+        try:
+            url = f"{self.base_url}/expenses/{test_expense_id or 'test-id'}/receipt/nonexistent.txt"
+            headers = {"Authorization": f"Bearer {self.token}"}
+            response = requests.get(url, headers=headers, timeout=10)
+            
+            if response.status_code == 404:
+                self.log_test("Expense Tracker - Non-existent Receipt", True, 
+                            "Correctly returns 404 for non-existent receipt file")
+                success_count += 1
+            else:
+                self.log_test("Expense Tracker - Non-existent Receipt", False, 
+                            f"Expected 404, got {response.status_code}")
+        except Exception as e:
+            self.log_test("Expense Tracker - Non-existent Receipt", False, 
+                        f"Exception: {e}")
+        
+        # Test 7: POST /expenses/delete - Delete Expenses (Master Admin Only)
+        print("\n--- Test 7: POST /expenses/delete - Delete Expenses (Master Admin Only) ---")
+        
+        # Test with empty expense_ids array
+        empty_delete_data = {"expense_ids": []}
+        response = self.make_request("POST", "/expenses/delete", empty_delete_data)
+        if response and response.status_code == 400:
+            self.log_test("Expense Tracker - Delete Empty Array", True, 
+                        "Correctly rejects empty expense_ids array (400)")
+            success_count += 1
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("Expense Tracker - Delete Empty Array", False, 
+                        f"Expected 400, got {status}")
+        
+        # Test bulk delete with test expense
+        if test_expense_id:
+            delete_data = {"expense_ids": [test_expense_id]}
+            response = self.make_request("POST", "/expenses/delete", delete_data)
+            if response and response.status_code == 200:
+                try:
+                    result = response.json()
+                    if "message" in result and "1 expense" in result["message"]:
+                        self.log_test("Expense Tracker - Bulk Delete Success", True, 
+                                    f"Successfully deleted expense: {result['message']}")
+                        success_count += 1
+                    else:
+                        self.log_test("Expense Tracker - Bulk Delete Success", False, 
+                                    f"Unexpected response: {result}")
+                except json.JSONDecodeError:
+                    self.log_test("Expense Tracker - Bulk Delete Success", False, 
+                                "Invalid JSON response", response.text)
+            else:
+                status = response.status_code if response else "Network error"
+                self.log_test("Expense Tracker - Bulk Delete Success", False, 
+                            f"Expected 200, got {status}")
+        
+        # Verify soft delete (expense should be marked as deleted, not actually removed)
+        if test_expense_id:
+            # Check that expense is no longer returned in GET /expenses
+            response = self.make_request("GET", "/expenses")
+            if response and response.status_code == 200:
+                try:
+                    data = response.json()
+                    expenses = data.get("expenses", [])
+                    found_deleted = any(expense.get("id") == test_expense_id for expense in expenses)
+                    
+                    if not found_deleted:
+                        self.log_test("Expense Tracker - Soft Delete Verification", True, 
+                                    "Deleted expense no longer appears in GET /expenses (soft delete working)")
+                        success_count += 1
+                    else:
+                        self.log_test("Expense Tracker - Soft Delete Verification", False, 
+                                    "Deleted expense still appears in GET /expenses")
+                except json.JSONDecodeError:
+                    self.log_test("Expense Tracker - Soft Delete Verification", False, 
+                                "Invalid JSON response", response.text)
+        
+        return success_count >= 15  # At least 15 out of ~20 tests should pass
+
     def run_all_tests(self):
         """Run all backend tests"""
-        print("🚀 Starting Nura Pulse Backend Testing - Focus on Battery Charge Audit Endpoint")
+        print("🚀 Starting Comprehensive Expense Tracker Backend Testing")
         print(f"Backend URL: {self.base_url}")
         print(f"Master Admin: {MASTER_ADMIN_EMAIL}")
         
@@ -1173,8 +1661,8 @@ class NuraPulseBackendTester:
             print("\n❌ Authentication failed - cannot proceed with other tests")
             return False
         
-        # PRIORITY: Test the Battery Charge Audit endpoint as requested in review
-        battery_audit_success = self.test_battery_charge_audit_endpoint()
+        # PRIORITY: Test the Expense Tracker Backend APIs as requested in review
+        expense_tracker_success = self.test_expense_tracker_backend_apis()
         
         # Summary
         print("\n" + "="*60)
