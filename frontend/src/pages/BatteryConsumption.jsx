@@ -11,16 +11,17 @@ import axios from "axios";
 import { API } from "@/App";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { format } from "date-fns";
+import { format, eachDayOfInterval, parseISO } from "date-fns";
 
 const BatteryConsumption = () => {
   const navigate = useNavigate();
   const [vehicles, setVehicles] = useState([]);
   const [selectedVehicle, setSelectedVehicle] = useState("");
-  const [selectedDate, setSelectedDate] = useState(null);
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [chartData, setChartData] = useState([]);
-  const [showChart, setShowChart] = useState(false);
+  const [chartsData, setChartsData] = useState([]); // Array of {date, chartData, summary}
+  const [showCharts, setShowCharts] = useState(false);
 
   useEffect(() => {
     fetchVehicles();
