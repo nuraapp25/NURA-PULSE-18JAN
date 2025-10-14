@@ -3318,7 +3318,7 @@ async def browse_payment_screenshots(
 ):
     """Browse payment screenshots directory structure"""
     try:
-        # Only allow Master Admin access
+        # Only allow Master Admin and Admin access
         if current_user.account_type not in ["master_admin", "admin"]:
             raise HTTPException(status_code=403, detail="Access denied")
         
@@ -3330,6 +3330,8 @@ async def browse_payment_screenshots(
             raise HTTPException(status_code=403, detail="Invalid path")
         
         if not os.path.exists(full_path):
+            # Create the directory if it doesn't exist
+            os.makedirs(full_path, exist_ok=True)
             return {"folders": [], "files": []}
         
         folders = []
@@ -3338,13 +3340,17 @@ async def browse_payment_screenshots(
         for item in os.listdir(full_path):
             item_path = os.path.join(full_path, item)
             if os.path.isdir(item_path):
-                folders.append(item)
+                # Count files in this folder recursively
+                file_count = sum(1 for _, _, f in os.walk(item_path) for _ in f)
+                folders.append({"name": item, "file_count": file_count})
             else:
-                files.append(item)
+                # Get file size
+                file_size = os.path.getsize(item_path)
+                files.append({"name": item, "size": file_size})
         
         return {
-            "folders": sorted(folders),
-            "files": sorted(files)
+            "folders": sorted(folders, key=lambda x: x["name"]),
+            "files": sorted(files, key=lambda x: x["name"])
         }
         
     except HTTPException:
