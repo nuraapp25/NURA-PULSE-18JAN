@@ -168,6 +168,7 @@ const BatteryAudit = () => {
                     <TableRow>
                       <TableHead className="font-semibold">Date</TableHead>
                       <TableHead className="font-semibold">Vehicle Name</TableHead>
+                      <TableHead className="font-semibold">Charge at 7 AM</TableHead>
                       <TableHead className="font-semibold">Timestamp</TableHead>
                       <TableHead className="font-semibold">Battery %</TableHead>
                       <TableHead className="font-semibold">KM Driven (from start of day)</TableHead>
@@ -178,6 +179,15 @@ const BatteryAudit = () => {
                       <TableRow key={index} className="hover:bg-gray-50">
                         <TableCell className="font-medium">{item.date}</TableCell>
                         <TableCell>{item.vehicle_name}</TableCell>
+                        <TableCell>
+                          {item.charge_at_7am === "N/A" ? (
+                            <span className="text-gray-400">N/A</span>
+                          ) : (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              {item.charge_at_7am}%
+                            </span>
+                          )}
+                        </TableCell>
                         <TableCell className="font-mono">{item.timestamp}</TableCell>
                         <TableCell>
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
