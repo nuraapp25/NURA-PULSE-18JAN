@@ -17,6 +17,7 @@ import PaymentScreenshots from "@/pages/PaymentScreenshots";
 import BatteryConsumption from "@/pages/BatteryConsumption";
 import BatteryMilestones from "@/pages/BatteryMilestones";
 import BatteryAudit from "@/pages/BatteryAudit";
+import MorningChargeAudit from "@/pages/MorningChargeAudit";
 import ManagePage from "@/pages/ManagePage";
 import SettingsPage from "@/pages/SettingsPage";
 
