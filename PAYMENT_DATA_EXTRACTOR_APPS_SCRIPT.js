@@ -80,11 +80,6 @@ function doPost(e) {
       sheet.getRange(2, 1, rowsData.length, rowsData[0].length).setValues(rowsData);
     }
     
-    // Auto-resize columns for better readability
-    for (var col = 1; col <= sheet.getLastColumn(); col++) {
-      sheet.autoResizeColumn(col);
-    }
-    
     return ContentService.createTextOutput(JSON.stringify({
       success: true,
       message: "Successfully synced " + records.length + " records to " + monthYear + " tab",
