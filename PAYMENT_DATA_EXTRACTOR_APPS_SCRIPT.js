@@ -63,14 +63,14 @@ function doPost(e) {
         record.date || "",
         record.time || "",
         record.amount || "",
-        record.paymentMode || "",
+        record.payment_mode || record.paymentMode || "",
         record.distance || "",
         record.duration || "",
-        record.pickupKm || "",
-        record.dropKm || "",
-        record.pickupLocation || "",
-        record.dropLocation || "",
-        record.screenshotFilename || "",
+        record.pickup_km || record.pickupKm || "",
+        record.drop_km || record.dropKm || "",
+        record.pickup_location || record.pickupLocation || "",
+        record.drop_location || record.dropLocation || "",
+        record.screenshot_filename || record.screenshotFilename || "",
         timestamp
       ]);
     }
