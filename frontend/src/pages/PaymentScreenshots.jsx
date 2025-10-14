@@ -53,7 +53,7 @@ const PaymentScreenshots = () => {
     setCurrentPath(currentPath.slice(0, -1));
   };
 
-  const handleViewImages = () => {
+  const handleViewImages = async () => {
     if (files.length === 0) {
       toast.error('No images to view');
       return;
@@ -62,12 +62,32 @@ const PaymentScreenshots = () => {
     const token = localStorage.getItem('token');
     const path = currentPath.join('/');
     
-    // Create URLs for all image files
-    const urls = files.map(file => 
-      `${API}/admin/payment-screenshots/download?path=${encodeURIComponent(path ? `${path}/${file.name}` : file.name)}&token=${token}`
-    );
+    // Fetch and create blob URLs for all image files
+    const urlPromises = files.map(async (file) => {
+      try {
+        const filePath = path ? `${path}/${file.name}` : file.name;
+        const response = await axios.get(`${API}/admin/payment-screenshots/download`, {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { path: filePath },
+          responseType: 'blob'
+        });
+        
+        return URL.createObjectURL(response.data);
+      } catch (error) {
+        console.error(`Error loading image ${file.name}:`, error);
+        return null;
+      }
+    });
     
-    setImageUrls(urls);
+    const urls = await Promise.all(urlPromises);
+    const validUrls = urls.filter(url => url !== null);
+    
+    if (validUrls.length === 0) {
+      toast.error('Failed to load images');
+      return;
+    }
+    
+    setImageUrls(validUrls);
     setCurrentImageIndex(0);
     setViewerOpen(true);
   };
