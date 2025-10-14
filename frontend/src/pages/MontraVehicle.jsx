@@ -296,6 +296,66 @@ const MontraVehicle = () => {
     }
   };
 
+  const handleDownloadMapping = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(`${API}/montra-vehicle/download-mapping`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob'
+      });
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'montra-vehicle-mapping.xlsx');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      toast.success("Mapping file downloaded successfully");
+    } catch (error) {
+      toast.error("Failed to download mapping file");
+      console.error("Download mapping error:", error);
+    }
+  };
+
+  const handleMappingUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const fileExtension = file.name.split('.').pop().toLowerCase();
+    if (fileExtension !== 'xlsx') {
+      toast.error("Please select an XLSX file");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await axios.post(`${API}/montra-vehicle/upload-mapping`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      if (response.data.success) {
+        toast.success(response.data.message || "Mapping file uploaded successfully");
+      } else {
+        toast.error(response.data.message || "Failed to upload mapping file");
+      }
+    } catch (error) {
+      toast.error("Failed to upload mapping file");
+      console.error("Upload mapping error:", error);
+    }
+
+    // Clear the input
+    event.target.value = null;
+  };
+
   return (
     <div className="space-y-6" data-testid="montra-vehicle-page">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
