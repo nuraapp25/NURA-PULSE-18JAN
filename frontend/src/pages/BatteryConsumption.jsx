@@ -146,62 +146,74 @@ const BatteryConsumption = () => {
     // Find starting odometer value (minimum)
     const startingOdometer = Math.min(...odometerValues);
     
-    // Process data and calculate charge changes from Battery Soc(%)
-    const processedData = rawData.map((row, index) => {
-      // Extract hour from Portal Received Time (Column C)
+    // Group data by hour first
+    const hourlyData = {};
+    
+    rawData.forEach((row) => {
       const timeStr = row['Portal Received Time'] || "";
-      let hour = "N/A";
+      let hourKey = "N/A";
       
       if (timeStr) {
         try {
-          // Time format might be "2025-09-01 13:45:30" or "13:45:30"
           const timeMatch = timeStr.match(/(\d{1,2}):(\d{2})/);
           if (timeMatch) {
             const hourNum = parseInt(timeMatch[1]);
             const ampm = hourNum >= 12 ? 'PM' : 'AM';
             const displayHour = hourNum > 12 ? hourNum - 12 : (hourNum === 0 ? 12 : hourNum);
-            hour = `${displayHour} ${ampm}`;
+            hourKey = `${displayHour} ${ampm}`;
           }
         } catch (e) {
-          hour = index.toString();
+          // ignore
         }
       }
-
-      const absoluteDistance = parseFloat(row['Odometer (km)'] || 0);
-      // Normalize distance - subtract starting odometer to get relative distance
+      
+      if (!hourlyData[hourKey]) {
+        hourlyData[hourKey] = [];
+      }
+      hourlyData[hourKey].push(row);
+    });
+    
+    // Process hourly data - take last reading of each hour
+    const processedData = [];
+    const hourKeys = Object.keys(hourlyData).filter(k => k !== "N/A");
+    
+    hourKeys.forEach((hourKey, index) => {
+      const hourReadings = hourlyData[hourKey];
+      const lastReading = hourReadings[hourReadings.length - 1];
+      
+      const absoluteDistance = parseFloat(lastReading['Odometer (km)'] || 0);
       const normalizedDistance = absoluteDistance - startingOdometer;
-
-      const currentBattery = parseFloat(row['Battery Soc(%)'] || row['Battery SOC (%)'] || 0);
+      const currentBattery = parseFloat(lastReading['Battery Soc(%)'] || lastReading['Battery SOC (%)'] || 0);
       
-      // Calculate battery change and distance traveled from previous reading
-      let batteryChange = 0;
-      let distanceTraveled = 0;
       let chargeDrop = 0;
+      let distanceTraveled = 0;
       
+      // Compare with previous hour
       if (index > 0) {
-        const prevBattery = parseFloat(rawData[index - 1]['Battery Soc(%)'] || rawData[index - 1]['Battery SOC (%)'] || 0);
-        const prevAbsoluteDistance = parseFloat(rawData[index - 1]['Odometer (km)'] || 0);
+        const prevHourKey = hourKeys[index - 1];
+        const prevHourReadings = hourlyData[prevHourKey];
+        const prevLastReading = prevHourReadings[prevHourReadings.length - 1];
         
-        batteryChange = currentBattery - prevBattery;
-        distanceTraveled = Math.abs(absoluteDistance - prevAbsoluteDistance);
+        const prevBattery = parseFloat(prevLastReading['Battery Soc(%)'] || prevLastReading['Battery SOC (%)'] || 0);
+        const prevAbsoluteDistance = parseFloat(prevLastReading['Odometer (km)'] || 0);
         
-        // Charge drop is always absolute value of battery change
-        // Negative batteryChange means discharge (charge drop)
-        // Positive batteryChange means charging (still show as 0 charge drop)
+        const batteryChange = currentBattery - prevBattery;
+        distanceTraveled = absoluteDistance - prevAbsoluteDistance;
+        
+        // Charge drop when battery decreases
         if (batteryChange < 0) {
           chargeDrop = Math.abs(batteryChange);
         }
       }
-
-      return {
-        time: hour,
+      
+      processedData.push({
+        time: hourKey,
         battery: currentBattery,
         distance: normalizedDistance,
-        batteryChange: batteryChange,
-        chargeDrop: chargeDrop.toFixed(2), // Charge % used up this hour
-        distanceTraveled: distanceTraveled.toFixed(2), // KM traveled this hour
+        chargeDrop: chargeDrop.toFixed(2),
+        distanceTraveled: distanceTraveled.toFixed(2),
         rawIndex: index
-      };
+      });
     });
     
     return processedData;
