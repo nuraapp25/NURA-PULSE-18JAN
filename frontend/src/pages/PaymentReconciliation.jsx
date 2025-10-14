@@ -377,29 +377,7 @@ const PaymentReconciliation = () => {
     toast.success("Data copied to clipboard");
   };
 
-  const exportToExcelBackend = async () => {
-    if (extractedData.length === 0) {
-      toast.error("No data to export");
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem("token");
-      const response = await axios.post(
-        `${API}/payment-reconciliation/export-to-excel`,
-        { month_year: selectedPeriod },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      if (response.data.success) {
-        toast.success(`Exported ${extractedData.length} records to ${response.data.filename}`);
-        toast.info(`File saved in: Payment Screenshots > ${selectedPeriod}`, { autoClose: 5000 });
-      }
-    } catch (error) {
-      console.error("Error exporting to Excel:", error);
-      toast.error("Failed to export to Excel");
-    }
-  };
+  // exportToExcelBackend function removed
 
   const downloadCSV = () => {
     const headers = [
