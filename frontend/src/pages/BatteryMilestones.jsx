@@ -113,16 +113,16 @@ const BatteryMilestones = () => {
     const rows = milestoneData.map(row => [
       row.date,
       row.vehicle,
-      row.charge_at_6am,
-      row.time_at_80,
-      row.km_at_80,
-      row.time_at_50,
-      row.km_at_50,
-      row.time_at_30,
-      row.time_at_20,
-      row.km_at_20,
-      row.derived_mileage,
-      row.midday_charge
+      row.charge_at_6am || "",
+      row.time_at_80 || "",
+      row.km_at_80 || "",
+      row.time_at_50 || "",
+      row.km_at_50 || "",
+      row.time_at_30 || "",
+      row.time_at_20 || "",
+      row.km_at_20 || "",
+      row.derived_mileage ? `${row.derived_mileage} km/%` : "",
+      row.midday_charge || ""
     ]);
     
     const csvContent = [
