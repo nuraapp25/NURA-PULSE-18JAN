@@ -550,6 +550,20 @@ const PaymentReconciliation = () => {
       return;
     }
 
+    // Validate that no Amount or Date is N/A
+    const invalidRecords = extractedData.filter(record => 
+      record.amount === "N/A" || record.amount === "" || !record.amount ||
+      record.date === "N/A" || record.date === "" || !record.date
+    );
+
+    if (invalidRecords.length > 0) {
+      toast.error("Please Check & Fill required values manually", {
+        description: `${invalidRecords.length} record(s) have missing Amount or Date values. Please fill all required fields before syncing.`,
+        duration: 5000
+      });
+      return;
+    }
+
     setSyncing(true);
     try {
       const token = localStorage.getItem("token");
