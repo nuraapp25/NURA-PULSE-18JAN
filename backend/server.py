@@ -3418,8 +3418,8 @@ async def delete_payment_screenshot(
 ):
     """Delete a file or folder from payment screenshots directory"""
     try:
-        # Only allow Master Admin access
-        if current_user.account_type not in ["master_admin", "admin"]:
+        # Allow all authenticated users to delete
+        if current_user.account_type not in ["master_admin", "admin", "standard", "ops_team"]:
             raise HTTPException(status_code=403, detail="Access denied")
         
         body = await request.json()
