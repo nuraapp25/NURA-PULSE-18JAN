@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { BarChart3, Upload, FileUp, CheckCircle, XCircle, Battery, TrendingUp, Gauge, Clock, Activity, Zap, Database, Trash2, FolderOpen, Folder, ChevronDown, ChevronRight } from "lucide-react";
+import { BarChart3, Upload, FileUp, CheckCircle, XCircle, Battery, TrendingUp, Gauge, Clock, Activity, Zap, Database, Trash2, FolderOpen, Folder, ChevronDown, ChevronRight, Download } from "lucide-react";
 import axios from "axios";
 import { API } from "@/App";
 import { toast } from "sonner";
