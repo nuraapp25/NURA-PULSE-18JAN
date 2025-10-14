@@ -20,6 +20,17 @@ const PaymentScreenshots = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [imageUrls, setImageUrls] = useState([]);
 
+  // Cleanup blob URLs when modal closes
+  const handleCloseViewer = () => {
+    imageUrls.forEach(url => {
+      if (url.startsWith('blob:')) {
+        URL.revokeObjectURL(url);
+      }
+    });
+    setImageUrls([]);
+    setViewerOpen(false);
+  };
+
   useEffect(() => {
     fetchContents();
   }, [currentPath]);
