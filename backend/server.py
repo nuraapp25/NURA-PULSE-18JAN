@@ -2646,12 +2646,12 @@ async def get_drivers_and_vehicles(
             file_path = vehicles_file.get("file_path")
             if file_path and os.path.exists(file_path):
                 try:
-                    # Read specific sheet/tab by name
-                    df = pd.read_excel(file_path, sheet_name=tab_name)
-                    # Read from Column B (second column, index 1), skip first row (headers)
+                    # Read specific sheet/tab by name (header=None to not treat B1 as column names)
+                    df = pd.read_excel(file_path, sheet_name=tab_name, header=None)
+                    # Read from Column B (index 1), skip first row (B1 which has headers)
                     if len(df.columns) > 1:
-                        vehicles = df.iloc[1:, 1].dropna().astype(str).tolist()  # Skip first row, read column B
-                        vehicles = [name.strip() for name in vehicles if name.strip() and name.strip().lower() not in ['nan', 'name', 'vehicle number', 'vehicle', 'registration number']]
+                        vehicles = df.iloc[1:, 1].dropna().astype(str).tolist()  # Start from row 1 (B2), column 1 (B)
+                        vehicles = [name.strip() for name in vehicles if name.strip() and name.strip().lower() not in ['nan', 'name', 'vehicle number', 'vehicle', 'registration number', 'vehicles']]
                         result["vehicles"] = vehicles
                         logger.info(f"Loaded {len(vehicles)} vehicles from tab '{tab_name}' Column B of Vehicles List.xlsx")
                     else:
