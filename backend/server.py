@@ -139,6 +139,61 @@ def generate_temporary_password(length: int = 12) -> str:
     return ''.join(secrets.choice(characters) for _ in range(length))
 
 
+
+def load_mode_mapping_tables():
+    """Load Model Mapping and Ride Mode Mapping from Excel file"""
+    import pandas as pd
+    
+    mapping_file_path = "/app/backend/uploaded_files/mode_details.xlsx"
+    
+    try:
+        # Read Model Mapping
+        model_mapping = pd.read_excel(mapping_file_path, sheet_name='Model Mapping')
+        model_dict = {}
+        for _, row in model_mapping.iterrows():
+            vehicle_num = str(row['Vehicle Number']).strip()
+            model = str(row['Model']).strip()
+            model_dict[vehicle_num] = model
+        
+        # Read Ride Mode Mapping
+        ride_mode_mapping = pd.read_excel(mapping_file_path, sheet_name='Ride Mode Mapping')
+        mode_dict = {}
+        for _, row in ride_mode_mapping.iterrows():
+            concat_key = str(row['Vehicle-Mode Concatenation']).strip()
+            mode_name = str(row['Mode Name']).strip()
+            mode_type = str(row['Mode Type']).strip()
+            mode_dict[concat_key] = {
+                'mode_name': mode_name,
+                'mode_type': mode_type
+            }
+        
+        logger.info(f"Loaded {len(model_dict)} vehicle models and {len(mode_dict)} ride modes")
+        return model_dict, mode_dict
+    except Exception as e:
+        logger.error(f"Error loading mode mapping tables: {str(e)}")
+        return {}, {}
+
+
+def enrich_with_mode_data(vehicle_id: str, ride_mode: str, model_dict: dict, mode_dict: dict):
+    """Enrich a single record with Mode Name and Mode Type"""
+    # Get model for this vehicle
+    model = model_dict.get(vehicle_id, "Unknown")
+    
+    if model == "Unknown":
+        return "Unknown Model", "Unknown"
+    
+    # Create concatenation key
+    concat_key = f"{model} {ride_mode}"
+    
+    # Look up mode details
+    mode_details = mode_dict.get(concat_key)
+    
+    if mode_details:
+        return mode_details['mode_name'], mode_details['mode_type']
+    else:
+        return "Unknown Mode", "Unknown"
+
+
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     try:
