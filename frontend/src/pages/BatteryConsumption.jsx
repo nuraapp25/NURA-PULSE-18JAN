@@ -44,44 +44,97 @@ const BatteryConsumption = () => {
       toast.error("Please select a vehicle");
       return;
     }
-    if (!selectedDate) {
-      toast.error("Please select a date");
+    if (!startDate || !endDate) {
+      toast.error("Please select start and end dates");
+      return;
+    }
+
+    if (startDate > endDate) {
+      toast.error("Start date must be before end date");
       return;
     }
 
     setLoading(true);
-    setShowChart(false);
+    setShowCharts(false);
 
     try {
-      // Format date as "DD MMM" (e.g., "01 Sep")
-      const formattedDate = format(selectedDate, "dd MMM");
+      // Get all dates in the range
+      const dateRange = eachDayOfInterval({ start: startDate, end: endDate });
       
-      const token = localStorage.getItem("token");
-      const response = await axios.get(
-        `${API}/montra-vehicle/analytics/battery-data`,
-        {
-          params: {
-            vehicle_id: selectedVehicle,
-            date: formattedDate
-          },
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
+      const allChartsData = [];
+      let totalDataPoints = 0;
+      
+      // Fetch data for each date
+      for (const date of dateRange) {
+        const formattedDate = format(date, "dd MMM");
+        
+        const token = localStorage.getItem("token");
+        const response = await axios.get(
+          `${API}/montra-vehicle/analytics/battery-data`,
+          {
+            params: {
+              vehicle_id: selectedVehicle,
+              date: formattedDate
+            },
+            headers: { Authorization: `Bearer ${token}` }
+          }
+        );
 
-      if (response.data.success && response.data.data.length > 0) {
-        // Process data for chart
-        const processedData = processChartData(response.data.data);
-        setChartData(processedData);
-        setShowChart(true);
-        toast.success(`Loaded ${response.data.count} data points`);
+        if (response.data.success && response.data.data.length > 0) {
+          // Process data for this date
+          const processedData = processChartData(response.data.data);
+          
+          // Calculate summary stats
+          const summary = calculateSummary(processedData);
+          
+          allChartsData.push({
+            date: format(date, "PPP"),
+            formattedDate: formattedDate,
+            chartData: processedData,
+            summary: summary,
+            count: response.data.count
+          });
+          
+          totalDataPoints += response.data.count;
+        }
+      }
+
+      if (allChartsData.length > 0) {
+        setChartsData(allChartsData);
+        setShowCharts(true);
+        toast.success(`Loaded data for ${allChartsData.length} day(s) with ${totalDataPoints} total data points`);
       } else {
-        toast.error("No data found for selected vehicle and date");
+        toast.error("No data found for selected vehicle and date range");
       }
     } catch (error) {
       toast.error(error.response?.data?.detail || "Failed to fetch battery data");
     } finally {
       setLoading(false);
     }
+  };
+
+  const calculateSummary = (data) => {
+    let chargeDrop = 0;
+    let charge = 0;
+    let totalDistance = 0;
+
+    data.forEach((point) => {
+      if (point.batteryChange < 0) {
+        chargeDrop += Math.abs(point.batteryChange);
+      } else if (point.batteryChange > 0) {
+        charge += point.batteryChange;
+      }
+    });
+
+    if (data.length > 0) {
+      totalDistance = data[data.length - 1].distance;
+    }
+
+    return {
+      chargeDrop: chargeDrop.toFixed(2),
+      charge: charge.toFixed(2),
+      kmTravelled: totalDistance.toFixed(2)
+    };
   };
 
   const processChartData = (rawData) => {
