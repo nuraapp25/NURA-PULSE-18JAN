@@ -2390,7 +2390,8 @@ async def get_battery_charge_audit(current_user: User = Depends(get_current_user
                                 "vehicle_name": display_name,
                                 "timestamp": time_str,
                                 "km_driven_upto_point": round(km_driven, 2) if km_driven is not None else "N/A",
-                                "battery_percentage": round(battery_value, 1)
+                                "battery_percentage": round(battery_value, 1),
+                                "charge_at_7am": round(charge_at_7am, 1) if charge_at_7am is not None else "N/A"
                             }
                             logger.info(f"Found low charge: {vehicle_id} on {date} at {time_str} - {battery_value}%")
                             break  # Found first instance, stop checking this day
