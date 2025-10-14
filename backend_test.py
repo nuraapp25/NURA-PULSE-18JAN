@@ -1157,7 +1157,7 @@ class NuraPulseBackendTester:
 
     def run_all_tests(self):
         """Run all backend tests"""
-        print("🚀 Starting Nura Pulse Backend Testing - Focus on Payment Reconciliation Drivers and Vehicles API")
+        print("🚀 Starting Nura Pulse Backend Testing - Focus on Battery Charge Audit Endpoint")
         print(f"Backend URL: {self.base_url}")
         print(f"Master Admin: {MASTER_ADMIN_EMAIL}")
         
@@ -1168,8 +1168,8 @@ class NuraPulseBackendTester:
             print("\n❌ Authentication failed - cannot proceed with other tests")
             return False
         
-        # PRIORITY: Test the Payment Reconciliation Drivers and Vehicles API as requested
-        payment_reconciliation_success = self.test_payment_reconciliation_drivers_vehicles_api()
+        # PRIORITY: Test the Battery Charge Audit endpoint as requested in review
+        battery_audit_success = self.test_battery_charge_audit_endpoint()
         
         # Summary
         print("\n" + "="*60)
