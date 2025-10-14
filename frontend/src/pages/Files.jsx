@@ -249,15 +249,17 @@ const Files = () => {
                 >
                   Clear
                 </Button>
-                <Button
-                  onClick={handleBulkDelete}
-                  variant="outline"
-                  size="sm"
-                  className="border-red-500 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
-                >
-                  <Trash2 size={16} className="mr-2" />
-                  Delete Selected
-                </Button>
+                {isMasterAdmin && (
+                  <Button
+                    onClick={handleBulkDelete}
+                    variant="outline"
+                    size="sm"
+                    className="border-red-500 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                  >
+                    <Trash2 size={16} className="mr-2" />
+                    Delete Selected
+                  </Button>
+                )}
               </div>
             </div>
           </CardContent>
