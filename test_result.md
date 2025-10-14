@@ -296,6 +296,12 @@ backend:
         - working: true
           agent: "main"
           comment: "✅ FIXED: Payment Screenshots page now fully functional. Root cause: Component was using locally defined API constant instead of importing from App.js. Fixed by changing 'const API = process.env.REACT_APP_BACKEND_URL' to 'import { API, useAuth } from @/App'. Page now displays: 1) Folder navigation (Month Year / Driver Name structure). 2) File listing with download/delete options. 3) Image viewer modal with slider (next/prev buttons). 4) Breadcrumb navigation. 5) File count badges. Tested workflow: Login → Navigate to Payment Screenshots → View folders (Sep 2025, Oct 2025) → Click folder → View driver subfolders → Click driver folder → View files → Click 'View All Images' → Image viewer modal opens with navigation. All features working correctly including Master Admin delete restrictions."
+        - working: false
+          agent: "user"
+          comment: "User reported image viewer not working in payment screenshots tab."
+        - working: true
+          agent: "main"
+          comment: "✅ FIXED IMAGE VIEWER: Root cause - Images weren't loading in modal because img tags with src attribute can't send Authorization headers. Solution: Changed handleViewImages to fetch images using axios with proper authentication headers, convert response to blob, and create blob URLs. Added handleCloseViewer to cleanup blob URLs and prevent memory leaks. Modal now successfully displays images with proper authentication. Tested workflow: Sep 2025 → Anandhi folder → View All Images → Modal opens showing auto-rickshaw receipt image (55KB) with ride details, amounts (₹93, ₹138, ₹98), locations clearly visible. Image viewer fully functional with next/prev navigation and close button."
 
 frontend:
   - task: "Login Page"
