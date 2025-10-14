@@ -305,6 +305,33 @@ const MontraVehicle = () => {
         </div>
         <div className="flex flex-wrap gap-2 sm:gap-3">
           <Button
+            onClick={() => handleDownloadMapping()}
+            variant="outline"
+            className="border-green-600 text-green-600 hover:bg-green-50 dark:border-green-400 dark:text-green-400 text-sm"
+            size="sm"
+          >
+            <Download size={16} className="mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Download Mapping</span>
+            <span className="sm:hidden">Mapping</span>
+          </Button>
+          <Button
+            onClick={() => document.getElementById('mapping-upload').click()}
+            variant="outline"
+            className="border-orange-600 text-orange-600 hover:bg-orange-50 dark:border-orange-400 dark:text-orange-400 text-sm"
+            size="sm"
+          >
+            <Upload size={16} className="mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Upload Mapping</span>
+            <span className="sm:hidden">Update</span>
+          </Button>
+          <input
+            id="mapping-upload"
+            type="file"
+            accept=".xlsx"
+            onChange={handleMappingUpload}
+            style={{ display: 'none' }}
+          />
+          <Button
             onClick={handleOpenDatabase}
             variant="outline"
             className="border-blue-600 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 text-sm"
