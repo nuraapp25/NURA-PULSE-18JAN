@@ -241,7 +241,7 @@ const BatteryConsumption = () => {
             <p className="text-red-400 text-sm">Charge Drop: {data.chargeDrop}%</p>
             <p className="text-blue-300 text-sm">Distance Travelled: {data.distanceTraveled} km</p>
             <p className="text-yellow-400 text-sm font-semibold">
-              Efficiency: {efficiencyDisplay} {efficiencyDisplay !== "N/A" ? "km/%" : ""}
+              Efficiency: {efficiencyDisplay}
             </p>
           </div>
         </div>
