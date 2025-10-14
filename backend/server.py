@@ -65,7 +65,7 @@ class User(BaseModel):
     first_name: str
     last_name: Optional[str] = None
     email: str
-    account_type: str  # "master_admin", "admin", "standard"
+    account_type: str  # "master_admin", "admin", "standard", "ops_team"
     status: str = "pending"  # "pending", "active", "rejected", "deleted"
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     is_temp_password: bool = False
