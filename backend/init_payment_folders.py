@@ -11,8 +11,9 @@ from datetime import datetime
 
 # MongoDB connection
 mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
+db_name = os.environ.get('DB_NAME', 'nura_pulse_db')
 client = AsyncIOMotorClient(mongo_url)
-db = client['nura_pulse_db']
+db = client[db_name]
 
 # Permanent folders to create
 PERMANENT_FOLDERS = [
