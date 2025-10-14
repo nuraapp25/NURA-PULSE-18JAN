@@ -1625,16 +1625,6 @@ async def sync_telecaller_queue(current_user: User = Depends(get_current_user)):
 UPLOAD_DIR = "/app/backend/uploaded_files"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-@api_router.post("/admin/files/upload")
-async def upload_file(file: UploadFile = File(...), current_user: User = Depends(get_current_user)):
-    """Upload a file to admin files storage (max 100MB)"""
-    try:
-        # Check file size (100MB limit)
-        MAX_SIZE = 100 * 1024 * 1024  # 100MB in bytes
-        
-
-
-
 @api_router.post("/montra-vehicle/view-file-data")
 async def view_montra_file_data(
     request: Request,
