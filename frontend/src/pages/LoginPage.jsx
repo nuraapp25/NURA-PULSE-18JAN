@@ -41,12 +41,12 @@ const LoginPage = () => {
             <img 
               src="/nura-black.png" 
               alt="Nura Pulse Logo" 
-              className="h-16 w-auto dark:hidden"
+              className="h-24 w-auto dark:hidden"
             />
             <img 
               src="/nura-white.png" 
               alt="Nura Pulse Logo" 
-              className="h-16 w-auto hidden dark:block"
+              className="h-24 w-auto hidden dark:block"
             />
           </div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">Nura Pulse</h1>
