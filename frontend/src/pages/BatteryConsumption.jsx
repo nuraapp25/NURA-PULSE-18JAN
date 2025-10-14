@@ -213,7 +213,7 @@ const BatteryConsumption = () => {
           <p className="text-gray-300 font-semibold mb-2">{label}</p>
           <p className="text-green-400 text-sm">Battery %: {data.battery}</p>
           <p className="text-blue-400 text-sm">Distance (km): {data.distance.toFixed(2)}</p>
-          {data.efficiency && (
+          {data.efficiency && data.efficiency !== "0.00" && (
             <p className="text-yellow-400 text-sm font-semibold">
               Efficiency: {data.efficiency} km/%
             </p>
