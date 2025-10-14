@@ -558,7 +558,7 @@ const PaymentReconciliation = () => {
   };
 
   const openGoogleSheets = () => {
-    const sheetUrl = "https://docs.google.com/spreadsheets/d/1CLhARhllhqZuDzkzNRqFcOGqjrSDzPgmC6gd3-AWOTs/edit?usp=sharing";
+    const sheetUrl = process.env.REACT_APP_GOOGLE_SHEETS_URL || "https://docs.google.com/spreadsheets/d/1CLhARhllhqZuDzkzNRqFcOGqjrSDzPgmC6gd3-AWOTs/edit?usp=sharing";
     window.open(sheetUrl, '_blank');
   };
 
