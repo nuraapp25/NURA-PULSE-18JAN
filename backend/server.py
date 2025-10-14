@@ -1879,6 +1879,7 @@ async def get_battery_milestones(
                     # Find milestones (80%, 50%, 30%, 20%) - first occurrence during driving
                     milestones = {80: False, 50: False, 30: False, 20: False}
                     prev_battery = None
+                    has_any_milestone = False
                     
                     for record in day_records:
                         battery_pct = record.get("battery_soc_percentage")
@@ -1897,19 +1898,27 @@ async def get_battery_milestones(
                                 if not milestones[milestone]:
                                     if battery_pct <= milestone:
                                         milestones[milestone] = True
+                                        has_any_milestone = True
                                         if milestone == 80:
                                             analysis["time_at_80"] = record_time
-                                            analysis["km_at_80"] = km if km else "N/A"
+                                            if km:
+                                                analysis["km_at_80"] = km
                                         elif milestone == 50:
                                             analysis["time_at_50"] = record_time
-                                            analysis["km_at_50"] = km if km else "N/A"
+                                            if km:
+                                                analysis["km_at_50"] = km
                                         elif milestone == 30:
                                             analysis["time_at_30"] = record_time
                                         elif milestone == 20:
                                             analysis["time_at_20"] = record_time
-                                            analysis["km_at_20"] = km if km else "N/A"
+                                            if km:
+                                                analysis["km_at_20"] = km
                         
                         prev_battery = battery_pct
+                    
+                    # Skip if no meaningful milestones reached
+                    if not has_any_milestone:
+                        continue
                     
                     # Calculate derived mileage (km per % charge drop during driving periods)
                     # Only consider periods where battery is decreasing (driving)
