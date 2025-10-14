@@ -1,5 +1,14 @@
 function doPost(e) {
   try {
+    // Check if e is defined and has postData
+    if (!e || !e.postData || !e.postData.contents) {
+      return ContentService.createTextOutput(JSON.stringify({
+        success: false,
+        error: "Invalid request",
+        message: "No data received. Make sure this endpoint is being called via POST with JSON data."
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+    
     // Parse incoming data
     var requestData = JSON.parse(e.postData.contents);
     var records = requestData.data || [];
