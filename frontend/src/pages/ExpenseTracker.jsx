@@ -322,26 +322,31 @@ const ExpenseTracker = () => {
                       <td className="px-4 py-3 text-sm text-gray-900 dark:text-white">{expense.description}</td>
                       <td className="px-4 py-3 text-sm text-gray-900 dark:text-white">₹{expense.amount}</td>
                       <td className="px-4 py-3">
-                        <div className="flex gap-2">
+                        <div className="space-y-2">
                           {expense.receipt_filenames && expense.receipt_filenames.length > 0 ? (
                             expense.receipt_filenames.map((filename, idx) => (
-                              <div key={idx} className="flex gap-1">
-                                <Button
-                                  onClick={() => handleViewReceipt(expense.id, filename)}
-                                  variant="outline"
-                                  size="sm"
-                                  title="View"
-                                >
-                                  <Eye size={14} />
-                                </Button>
-                                <Button
-                                  onClick={() => handleDownloadReceipt(expense.id, filename)}
-                                  variant="outline"
-                                  size="sm"
-                                  title="Download"
-                                >
-                                  <Download size={14} />
-                                </Button>
+                              <div key={idx} className="flex items-center gap-2">
+                                <span className="text-sm text-gray-700 dark:text-gray-300 break-all flex-1">
+                                  {filename}
+                                </span>
+                                <div className="flex gap-1 flex-shrink-0">
+                                  <Button
+                                    onClick={() => handleViewReceipt(expense.id, filename)}
+                                    variant="outline"
+                                    size="sm"
+                                    title="View"
+                                  >
+                                    <Eye size={14} />
+                                  </Button>
+                                  <Button
+                                    onClick={() => handleDownloadReceipt(expense.id, filename)}
+                                    variant="outline"
+                                    size="sm"
+                                    title="Download"
+                                  >
+                                    <Download size={14} />
+                                  </Button>
+                                </div>
                               </div>
                             ))
                           ) : (
