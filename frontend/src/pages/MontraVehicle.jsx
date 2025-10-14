@@ -698,15 +698,17 @@ const MontraVehicle = () => {
                 >
                   {loadingDatabase ? "Loading..." : "Refresh"}
                 </Button>
-                <Button
-                  onClick={handleDeleteSelected}
-                  disabled={selectedFileIds.length === 0 || deleting}
-                  variant="destructive"
-                  size="sm"
-                >
-                  <Trash2 size={16} className="mr-1" />
-                  {deleting ? "Deleting..." : `Delete Selected (${selectedFileIds.length})`}
-                </Button>
+                {isMasterAdmin && (
+                  <Button
+                    onClick={handleDeleteSelected}
+                    disabled={selectedFileIds.length === 0 || deleting}
+                    variant="destructive"
+                    size="sm"
+                  >
+                    <Trash2 size={16} className="mr-1" />
+                    {deleting ? "Deleting..." : `Delete Selected (${selectedFileIds.length})`}
+                  </Button>
+                )}
               </div>
             </div>
 
