@@ -181,23 +181,6 @@ const Dashboard = () => {
                   <Folder size={20} />
                   <span>Files</span>
                 </button>
-                <button
-                  data-testid="sidebar-payment-screenshots"
-                  onClick={() => {
-                    navigate("/dashboard/admin/payment-screenshots");
-                    setSidebarOpen(false);
-                  }}
-                  className={`
-                    w-full flex items-center space-x-3 px-4 py-3 rounded-lg font-medium
-                    ${isActive("/dashboard/admin/payment-screenshots")
-                      ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                    }
-                  `}
-                >
-                  <FileText size={20} />
-                  <span>Payment Screenshots</span>
-                </button>
               </div>
             )}
 
