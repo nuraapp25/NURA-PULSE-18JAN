@@ -3601,8 +3601,6 @@ async def startup_event():
 
 # ==================== EXPENSE TRACKER ====================
 
-from fastapi import UploadFile, File
-
 # Expenses directory
 EXPENSES_DIR = ROOT_DIR / "expense_receipts"
 EXPENSES_DIR.mkdir(exist_ok=True)
