@@ -435,7 +435,7 @@ const BatteryConsumption = () => {
                         type="monotone" 
                         dataKey="battery" 
                         stroke="#10B981" 
-                        strokeWidth={2}
+                        strokeWidth={3}
                         name="Battery %"
                         dot={false}
                         activeDot={false}
@@ -445,7 +445,7 @@ const BatteryConsumption = () => {
                         type="monotone" 
                         dataKey="distance" 
                         stroke="#3B82F6" 
-                        strokeWidth={2}
+                        strokeWidth={3}
                         name="Distance (km)"
                         dot={false}
                         activeDot={false}
