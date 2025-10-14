@@ -10,17 +10,23 @@ function doPost(e) {
     var records = data.data || [];
     var monthYear = data.month_year || "";
     
+    // Log received data for debugging
+    Logger.log("Received month_year: " + monthYear);
+    Logger.log("Received records count: " + records.length);
+    
     if (!monthYear) {
       return ContentService.createTextOutput(JSON.stringify({
         success: false,
-        error: "month_year is required"
+        error: "month_year is required",
+        message: "month_year parameter is missing from request"
       })).setMimeType(ContentService.MimeType.JSON);
     }
     
     if (!records || records.length === 0) {
       return ContentService.createTextOutput(JSON.stringify({
         success: false,
-        error: "No data provided"
+        error: "No data provided",
+        message: "No records found in data array"
       })).setMimeType(ContentService.MimeType.JSON);
     }
     
@@ -28,8 +34,11 @@ function doPost(e) {
     
     // Get or create the sheet for this month
     var sheet = ss.getSheetByName(monthYear);
+    Logger.log("Looking for sheet: " + monthYear);
+    
     if (!sheet) {
       // Create new sheet if it does not exist
+      Logger.log("Creating new sheet: " + monthYear);
       sheet = ss.insertSheet(monthYear);
       
       // Add headers
