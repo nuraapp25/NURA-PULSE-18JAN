@@ -3338,8 +3338,8 @@ async def browse_payment_screenshots(
 ):
     """Browse payment screenshots directory structure"""
     try:
-        # Only allow Master Admin and Admin access
-        if current_user.account_type not in ["master_admin", "admin"]:
+        # Allow all authenticated users to browse
+        if current_user.account_type not in ["master_admin", "admin", "standard", "ops_team"]:
             raise HTTPException(status_code=403, detail="Access denied")
         
         base_dir = "/app/backend/payment_screenshots"
