@@ -123,6 +123,7 @@ function App() {
                 <Route path="montra-vehicle/battery-consumption" element={<BatteryConsumption />} />
                 <Route path="montra-vehicle/battery-milestones" element={<BatteryMilestones />} />
                 <Route path="montra-vehicle/battery-audit" element={<BatteryAudit />} />
+                <Route path="montra-vehicle/morning-charge-audit" element={<MorningChargeAudit />} />
                 <Route path="admin/files" element={<Files />} />
                 <Route path="admin/payment-screenshots" element={<PaymentScreenshots />} />
                 <Route path="manage" element={<ManagePage />} />
