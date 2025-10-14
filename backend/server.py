@@ -1608,25 +1608,6 @@ async def upload_mode_mapping(file: UploadFile = File(...), current_user: User =
         logger.error(f"Error uploading mode mapping: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to upload mapping file: {str(e)}")
 
-        if montra_docs:
-            await db.montra_feed_data.insert_many(montra_docs)
-            logger.info(f"Saved {len(montra_docs)} rows to MongoDB")
-        
-        logger.info(f"Successfully imported {len(rows_to_import)} rows to database")
-        return {
-            "message": f"Successfully imported {len(rows_to_import)} rows from {filename}",
-            "rows": len(rows_to_import),
-            "vehicle_id": vehicle_id,
-            "date": f"{day} {month}",
-            "synced_to_database": True
-        }
-            
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error importing Montra feed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to import feed: {str(e)}")
-
 
 @api_router.post("/telecaller-queue/sync")
 async def sync_telecaller_queue(current_user: User = Depends(get_current_user)):
