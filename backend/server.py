@@ -2919,11 +2919,22 @@ Be precise and extract ALL rides shown in the screenshot. If a screenshot shows 
                     driver_dir = os.path.join(base_dir, month_year, driver_name)
                     os.makedirs(driver_dir, exist_ok=True)
                     
-                    # Copy files to the driver folder
+                    # Copy files to the driver folder with duplicate handling
                     for file in files:
                         src_path = next((tf for tf in temp_files if file.filename in tf), None)
                         if src_path and os.path.exists(src_path):
-                            dest_path = os.path.join(driver_dir, file.filename)
+                            # Handle duplicate filenames
+                            base_filename = file.filename
+                            filename_without_ext, ext = os.path.splitext(base_filename)
+                            dest_path = os.path.join(driver_dir, base_filename)
+                            
+                            counter = 2
+                            while os.path.exists(dest_path):
+                                # File exists, add (2), (3), etc.
+                                new_filename = f"{filename_without_ext} ({counter}){ext}"
+                                dest_path = os.path.join(driver_dir, new_filename)
+                                counter += 1
+                            
                             import shutil
                             shutil.copy2(src_path, dest_path)
                             logger.info(f"Saved screenshot: {dest_path}")
