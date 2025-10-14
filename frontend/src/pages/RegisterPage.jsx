@@ -70,11 +70,17 @@ const RegisterPage = () => {
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center mb-4">
             <img 
-              src="https://nuraemobility.co.in/assets/Asset%205@4x-DaHkW2HF.png" 
-              alt="Nura Logo" 
-              className="h-16 w-auto"
+              src="/nura-black.png" 
+              alt="Nura Pulse Logo" 
+              className="h-16 w-auto dark:hidden"
+            />
+            <img 
+              src="/nura-white.png" 
+              alt="Nura Pulse Logo" 
+              className="h-16 w-auto hidden dark:block"
             />
           </div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">Nura Pulse</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-2">Create Your Account</p>
         </div>
 
