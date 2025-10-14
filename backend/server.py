@@ -634,6 +634,7 @@ async def get_stats(current_user: User = Depends(get_current_user)):
     total_users = await db.users.count_documents({"status": {"$ne": "deleted"}})
     admin_users = await db.users.count_documents({"account_type": "admin", "status": {"$ne": "deleted"}})
     standard_users = await db.users.count_documents({"account_type": "standard", "status": {"$ne": "deleted"}})
+    ops_team_users = await db.users.count_documents({"account_type": "ops_team", "status": {"$ne": "deleted"}})
     pending_users = await db.users.count_documents({"status": "pending"})
     pending_resets = await db.password_reset_requests.count_documents({"status": "pending"})
     
@@ -641,6 +642,7 @@ async def get_stats(current_user: User = Depends(get_current_user)):
         "total_users": total_users,
         "admin_users": admin_users,
         "standard_users": standard_users,
+        "ops_team_users": ops_team_users,
         "pending_users": pending_users,
         "pending_password_resets": pending_resets
     }
