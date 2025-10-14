@@ -1457,6 +1457,140 @@ async def import_montra_feed(file: UploadFile = File(...), current_user: User = 
             montra_docs.append(doc)
         
         # Save to MongoDB
+
+
+
+@api_router.post("/montra-vehicle/enrich-existing-data")
+async def enrich_existing_montra_data(current_user: User = Depends(get_current_user)):
+    """Re-process all existing Montra feed data to add Mode Name and Mode Type"""
+    try:
+        # Load mode mapping tables
+        model_dict, mode_dict = load_mode_mapping_tables()
+        
+        if not model_dict or not mode_dict:
+            raise HTTPException(status_code=400, detail="Mode mapping tables not available. Please upload Mode Details.xlsx")
+        
+        # Get all records
+        all_records = await db.montra_feed_data.find({}).to_list(100000)
+        
+        logger.info(f"Processing {len(all_records)} existing records for mode enrichment")
+        
+        updated_count = 0
+        for record in all_records:
+            vehicle_id = record.get("vehicle_id")
+            registration = record.get("registration_number")
+            ride_mode = record.get("Ride Mode")
+            
+            if not ride_mode:
+                continue
+            
+            # Use registration number if available, otherwise vehicle ID
+            lookup_id = registration if registration else vehicle_id
+            
+            mode_name, mode_type = enrich_with_mode_data(
+                lookup_id,
+                str(ride_mode),
+                model_dict,
+                mode_dict
+            )
+            
+            # Update record in MongoDB
+            await db.montra_feed_data.update_one(
+                {"_id": record["_id"]},
+                {"$set": {
+                    "mode_name": mode_name,
+                    "mode_type": mode_type
+                }}
+            )
+            updated_count += 1
+        
+        logger.info(f"Successfully enriched {updated_count} records")
+        
+        return {
+            "success": True,
+            "message": f"Successfully enriched {updated_count} records with mode data",
+            "updated_count": updated_count
+        }
+        
+    except Exception as e:
+        logger.error(f"Error enriching existing data: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to enrich data: {str(e)}")
+
+
+@api_router.get("/montra-vehicle/download-mode-mapping")
+async def download_mode_mapping(current_user: User = Depends(get_current_user)):
+    """Download the current Mode Details.xlsx mapping file"""
+    from fastapi.responses import FileResponse
+    
+    mapping_file_path = "/app/backend/uploaded_files/mode_details.xlsx"
+    
+    if not os.path.exists(mapping_file_path):
+        raise HTTPException(status_code=404, detail="Mode mapping file not found")
+    
+    return FileResponse(
+        path=mapping_file_path,
+        filename="Mode Details.xlsx",
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
+
+@api_router.post("/montra-vehicle/upload-mode-mapping")
+async def upload_mode_mapping(file: UploadFile = File(...), current_user: User = Depends(get_current_user)):
+    """Upload updated Mode Details.xlsx mapping file"""
+    try:
+        import pandas as pd
+        import io
+        
+        # Verify it's an Excel file
+        if not file.filename.endswith('.xlsx'):
+            raise HTTPException(status_code=400, detail="File must be .xlsx format")
+        
+        # Read and validate the file
+        content = await file.read()
+        
+        try:
+            excel_file = pd.ExcelFile(io.BytesIO(content))
+            
+            # Verify required sheets exist
+            if 'Model Mapping' not in excel_file.sheet_names:
+                raise HTTPException(status_code=400, detail="Missing 'Model Mapping' sheet")
+            if 'Ride Mode Mapping' not in excel_file.sheet_names:
+                raise HTTPException(status_code=400, detail="Missing 'Ride Mode Mapping' sheet")
+            
+            # Validate Model Mapping structure
+            model_df = pd.read_excel(io.BytesIO(content), sheet_name='Model Mapping')
+            required_model_cols = ['Vehicle Number', 'VIN', 'Model']
+            if not all(col in model_df.columns for col in required_model_cols):
+                raise HTTPException(status_code=400, detail=f"Model Mapping must have columns: {required_model_cols}")
+            
+            # Validate Ride Mode Mapping structure
+            mode_df = pd.read_excel(io.BytesIO(content), sheet_name='Ride Mode Mapping')
+            required_mode_cols = ['Vehicle-Mode Concatenation', 'Vehicle Model', 'Ride Mode', 'Mode Name', 'Mode Type']
+            if not all(col in mode_df.columns for col in required_mode_cols):
+                raise HTTPException(status_code=400, detail=f"Ride Mode Mapping must have columns: {required_mode_cols}")
+            
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Invalid Excel file structure: {str(e)}")
+        
+        # Save the file
+        mapping_file_path = "/app/backend/uploaded_files/mode_details.xlsx"
+        with open(mapping_file_path, "wb") as f:
+            f.write(content)
+        
+        logger.info(f"Updated mode mapping file: {file.filename}")
+        
+        return {
+            "success": True,
+            "message": "Mode mapping file updated successfully",
+            "filename": file.filename
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error uploading mode mapping: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to upload mapping file: {str(e)}")
+
         if montra_docs:
             await db.montra_feed_data.insert_many(montra_docs)
             logger.info(f"Saved {len(montra_docs)} rows to MongoDB")
