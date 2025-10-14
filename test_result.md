@@ -500,7 +500,12 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Expense Tracker Backend APIs"
+    - "Expense Tracker - Add Expense Dialog"
+    - "Expense Tracker - Expense List Table"
+    - "Expense Tracker - Approval Status Management"
+    - "Expense Tracker - Edit/Delete with Role Permissions"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
