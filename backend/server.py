@@ -2320,8 +2320,11 @@ async def get_battery_charge_audit(current_user: User = Depends(get_current_user
                     if dt_time(7, 0) <= record_time <= dt_time(19, 0):
                         # Check if charge is at or below 20%
                         try:
-                            battery_value = float(battery_pct) if not isinstance(battery_pct, (int, float)) else battery_pct
-                        except:
+                            # Handle string values like "20", "0", "-"
+                            if battery_pct == '-' or battery_pct is None:
+                                continue
+                            battery_value = float(str(battery_pct))
+                        except (ValueError, TypeError):
                             continue
                         
                         # Changed from < to <= to include 20%
