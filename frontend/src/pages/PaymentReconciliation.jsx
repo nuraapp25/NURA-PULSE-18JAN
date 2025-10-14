@@ -444,31 +444,8 @@ const PaymentReconciliation = () => {
   
   const handleSaveFullEdit = async () => {
     try {
-      const token = localStorage.getItem("token");
-      
-      // Prepare updates object
-      const updates = {
-        driver: editingRecord.driver,
-        vehicle: editingRecord.vehicle,
-        description: editingRecord.description,
-        date: editingRecord.date,
-        time: editingRecord.time,
-        amount: editingRecord.amount,
-        payment_mode: editingRecord.paymentMode,
-        distance: editingRecord.distance,
-        duration: editingRecord.duration,
-        pickup_km: editingRecord.pickupKm,
-        drop_km: editingRecord.dropKm,
-        pickup_location: editingRecord.pickupLocation,
-        drop_location: editingRecord.dropLocation
-      };
-      
-      await axios.put(`${API}/payment-reconciliation/update-record`, {
-        record_id: editingRecord.id,
-        updates: updates
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      // Since we don't store records in MongoDB anymore, just update the frontend state
+      // No backend call needed - data is temporary until synced to Google Sheets
       
       // Update local state
       setExtractedData(prev => prev.map(row => 
