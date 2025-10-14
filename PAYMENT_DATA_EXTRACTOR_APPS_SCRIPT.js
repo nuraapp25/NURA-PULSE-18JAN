@@ -1,14 +1,14 @@
 /**
  * Payment Data Extractor - Google Apps Script
  * Syncs payment data to appropriate monthly tabs
- * URL: https://docs.google.com/spreadsheets/d/1CLhARhllhqZuDzkzNRqFcOGqjrSDzPgmC6gd3-AWOTs/edit?usp=sharing
+ * Spreadsheet URL: https://docs.google.com/spreadsheets/d/1CLhARhllhqZuDzkzNRqFcOGqjrSDzPgmC6gd3-AWOTs/edit
  */
 
 function doPost(e) {
   try {
-    const data = JSON.parse(e.postData.contents);
-    const records = data.data || [];
-    const monthYear = data.month_year || ""; // e.g., "Sep 2025", "Oct 2025"
+    var data = JSON.parse(e.postData.contents);
+    var records = data.data || [];
+    var monthYear = data.month_year || "";
     
     if (!monthYear) {
       return ContentService.createTextOutput(JSON.stringify({
@@ -24,16 +24,16 @@ function doPost(e) {
       })).setMimeType(ContentService.MimeType.JSON);
     }
     
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
     
     // Get or create the sheet for this month
-    let sheet = ss.getSheetByName(monthYear);
+    var sheet = ss.getSheetByName(monthYear);
     if (!sheet) {
-      // Create new sheet if it doesn't exist
+      // Create new sheet if it does not exist
       sheet = ss.insertSheet(monthYear);
       
       // Add headers
-      const headers = [
+      var headers = [
         "Driver", "Vehicle", "Description", "Date", "Time", "Amount",
         "Payment Mode", "Distance (km)", "Duration (min)", "Pickup KM",
         "Drop KM", "Pickup Location", "Drop Location", "Screenshot Filename",
@@ -45,30 +45,35 @@ function doPost(e) {
     }
     
     // Clear existing data (keep headers)
-    const lastRow = sheet.getLastRow();
+    var lastRow = sheet.getLastRow();
     if (lastRow > 1) {
       sheet.getRange(2, 1, lastRow - 1, sheet.getLastColumn()).clearContent();
     }
     
     // Prepare data for insertion
-    const timestamp = new Date().toISOString();
-    const rowsData = records.map(record => [
-      record.driver || "",
-      record.vehicle || "",
-      record.description || "",
-      record.date || "",
-      record.time || "",
-      record.amount || "",
-      record.paymentMode || "",
-      record.distance || "",
-      record.duration || "",
-      record.pickupKm || "",
-      record.dropKm || "",
-      record.pickupLocation || "",
-      record.dropLocation || "",
-      record.screenshotFilename || "",
-      timestamp
-    ]);
+    var timestamp = new Date().toISOString();
+    var rowsData = [];
+    
+    for (var i = 0; i < records.length; i++) {
+      var record = records[i];
+      rowsData.push([
+        record.driver || "",
+        record.vehicle || "",
+        record.description || "",
+        record.date || "",
+        record.time || "",
+        record.amount || "",
+        record.paymentMode || "",
+        record.distance || "",
+        record.duration || "",
+        record.pickupKm || "",
+        record.dropKm || "",
+        record.pickupLocation || "",
+        record.dropLocation || "",
+        record.screenshotFilename || "",
+        timestamp
+      ]);
+    }
     
     // Insert data starting from row 2 (after headers)
     if (rowsData.length > 0) {
@@ -76,11 +81,13 @@ function doPost(e) {
     }
     
     // Auto-resize columns for better readability
-    sheet.autoResizeColumns(1, sheet.getLastColumn());
+    for (var col = 1; col <= sheet.getLastColumn(); col++) {
+      sheet.autoResizeColumn(col);
+    }
     
     return ContentService.createTextOutput(JSON.stringify({
       success: true,
-      message: `Successfully synced ${records.length} records to ${monthYear} tab`,
+      message: "Successfully synced " + records.length + " records to " + monthYear + " tab",
       recordCount: records.length,
       sheetName: monthYear,
       timestamp: timestamp
@@ -99,7 +106,7 @@ function doPost(e) {
  * This creates a test tab and adds sample data
  */
 function testSync() {
-  const testData = {
+  var testData = {
     data: [
       {
         driver: "John Doe",
@@ -137,12 +144,12 @@ function testSync() {
     month_year: "Test Oct 2025"
   };
   
-  const e = {
+  var e = {
     postData: {
       contents: JSON.stringify(testData)
     }
   };
   
-  const response = doPost(e);
+  var response = doPost(e);
   Logger.log(response.getContent());
 }
