@@ -30,6 +30,14 @@ const MontraVehicle = () => {
       route: "/dashboard/montra-vehicle/battery-consumption"
     },
     {
+      id: "battery-milestones",
+      title: "Battery Milestones",
+      icon: Zap,
+      color: "bg-indigo-500",
+      description: "Track charge milestones & derived mileage",
+      route: "/dashboard/montra-vehicle/battery-milestones"
+    },
+    {
       id: "performance",
       title: "Performance Metrics",
       icon: TrendingUp,
