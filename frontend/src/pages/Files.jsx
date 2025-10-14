@@ -475,10 +475,20 @@ const Files = () => {
                       <td className="px-4 py-3">
                         <div className="flex space-x-2">
                           <Button
+                            onClick={() => handleViewFile(file.id, file.original_filename)}
+                            variant="outline"
+                            size="sm"
+                            className="border-purple-600 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20"
+                            title="View"
+                          >
+                            <Eye size={16} />
+                          </Button>
+                          <Button
                             onClick={() => handleDownload(file.id, file.original_filename)}
                             variant="outline"
                             size="sm"
                             className="border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20"
+                            title="Download"
                           >
                             <Download size={16} />
                           </Button>
@@ -487,6 +497,7 @@ const Files = () => {
                             variant="outline"
                             size="sm"
                             className="border-blue-600 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                            title="Share"
                           >
                             <Share2 size={16} />
                           </Button>
@@ -496,6 +507,7 @@ const Files = () => {
                               variant="outline"
                               size="sm"
                               className="border-red-600 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                              title="Delete (Master Admin only)"
                             >
                               <Trash2 size={16} />
                             </Button>
