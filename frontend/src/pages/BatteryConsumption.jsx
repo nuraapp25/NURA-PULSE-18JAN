@@ -176,18 +176,19 @@ const BatteryConsumption = () => {
       // Calculate battery change and distance traveled from previous reading
       let batteryChange = 0;
       let distanceTraveled = 0;
-      let efficiency = 0;
+      let efficiency = null;
       
       if (index > 0) {
         const prevBattery = parseFloat(rawData[index - 1]['Battery Soc(%)'] || rawData[index - 1]['Battery SOC (%)'] || 0);
-        const prevDistance = parseFloat(rawData[index - 1]['Odometer (km)'] || 0) - startingOdometer;
+        const prevAbsoluteDistance = parseFloat(rawData[index - 1]['Odometer (km)'] || 0);
         
         batteryChange = currentBattery - prevBattery;
-        distanceTraveled = normalizedDistance - prevDistance;
+        distanceTraveled = absoluteDistance - prevAbsoluteDistance;
         
         // Calculate efficiency: km per % charge drop (only for discharge periods)
         if (batteryChange < 0 && distanceTraveled > 0) {
-          efficiency = distanceTraveled / Math.abs(batteryChange);
+          const chargeDrop = Math.abs(batteryChange);
+          efficiency = (distanceTraveled / chargeDrop).toFixed(2);
         }
       }
 
@@ -196,7 +197,7 @@ const BatteryConsumption = () => {
         battery: currentBattery,
         distance: normalizedDistance,
         batteryChange: batteryChange, // Positive = charging, Negative = discharging
-        efficiency: efficiency > 0 ? efficiency.toFixed(2) : null, // km per % charge drop
+        efficiency: efficiency, // km per % charge drop (null if not applicable)
         rawIndex: index
       };
     });
