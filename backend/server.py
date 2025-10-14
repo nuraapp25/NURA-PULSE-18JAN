@@ -1939,7 +1939,8 @@ async def get_battery_milestones(
                                     charge_drop = prev_battery_pct - battery_pct
                                     km_traveled = km - prev_km
                                     
-                                    if charge_drop > 0 and km_traveled > 0:
+                                    # Only include reasonable values
+                                    if charge_drop > 0 and km_traveled > 0 and charge_drop < 50 and km_traveled < 100:
                                         efficiency = km_traveled / charge_drop
                                         driving_segments.append(efficiency)
                         
@@ -1947,7 +1948,7 @@ async def get_battery_milestones(
                     
                     if driving_segments:
                         avg_mileage = sum(driving_segments) / len(driving_segments)
-                        analysis["derived_mileage"] = f"{avg_mileage:.2f} km/%"
+                        analysis["derived_mileage"] = f"{avg_mileage:.2f}"
                     
                     # Calculate mid-day charge (7AM to 7PM)
                     total_midday_charge = 0
