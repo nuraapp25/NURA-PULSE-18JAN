@@ -41,6 +41,14 @@ const MontraVehicle = () => {
       route: "/dashboard/montra-vehicle/battery-milestones"
     },
     {
+      id: "battery-audit",
+      title: "Battery Charge Audit",
+      icon: AlertTriangle,
+      color: "bg-red-500",
+      description: "Low charge instances (<20%) analysis",
+      route: "/dashboard/montra-vehicle/battery-audit"
+    },
+    {
       id: "performance",
       title: "Performance Metrics",
       icon: TrendingUp,
