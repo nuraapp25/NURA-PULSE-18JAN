@@ -252,10 +252,10 @@ const PaymentScreenshots = () => {
                         key={index}
                         className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow"
                       >
-                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="flex items-center gap-3 flex-1">
                           <ImageIcon className="w-6 h-6 text-green-500 flex-shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium truncate">{file.name}</p>
+                          <div className="flex-1">
+                            <p className="font-medium break-all">{file.name}</p>
                             <p className="text-sm text-gray-500">{(file.size / 1024).toFixed(2)} KB</p>
                           </div>
                         </div>
