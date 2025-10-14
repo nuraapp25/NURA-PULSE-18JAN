@@ -329,12 +329,13 @@ const PaymentScreenshots = () => {
             </div>
 
             {/* Main Image */}
-            <div className="flex-1 flex items-center justify-center p-4">
+            <div className="flex-1 flex items-center justify-center p-4 overflow-hidden">
               {imageUrls.length > 0 && (
                 <img
                   src={imageUrls[currentImageIndex]}
                   alt={`Screenshot ${currentImageIndex + 1}`}
-                  className="max-w-full max-h-full object-contain"
+                  className="max-w-full max-h-full w-auto h-auto object-contain"
+                  style={{ maxHeight: 'calc(90vh - 100px)' }}
                 />
               )}
             </div>
