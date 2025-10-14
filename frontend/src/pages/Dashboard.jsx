@@ -35,6 +35,7 @@ const Dashboard = () => {
 
   const manageItems = [
     { name: "Manage", icon: FolderOpen, path: "/dashboard/manage" },
+    { name: "Payment Screenshots", icon: Image, path: "/dashboard/admin/payment-screenshots" },
   ];
 
   const settingsItems = [
