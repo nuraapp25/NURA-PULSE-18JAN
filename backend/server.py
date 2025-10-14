@@ -1457,7 +1457,24 @@ async def import_montra_feed(file: UploadFile = File(...), current_user: User = 
             montra_docs.append(doc)
         
         # Save to MongoDB
-
+        if montra_docs:
+            await db.montra_feed_data.insert_many(montra_docs)
+            logger.info(f"Saved {len(montra_docs)} rows to MongoDB")
+        
+        logger.info(f"Successfully imported {len(rows_to_import)} rows to database")
+        return {
+            "message": f"Successfully imported {len(rows_to_import)} rows from {filename}",
+            "rows": len(rows_to_import),
+            "vehicle_id": vehicle_id,
+            "date": f"{day} {month}",
+            "synced_to_database": True
+        }
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error importing Montra feed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to import feed: {str(e)}")
 
 
 @api_router.post("/montra-vehicle/enrich-existing-data")
