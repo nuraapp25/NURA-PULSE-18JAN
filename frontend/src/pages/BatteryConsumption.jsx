@@ -173,11 +173,22 @@ const BatteryConsumption = () => {
 
       const currentBattery = parseFloat(row['Battery Soc(%)'] || row['Battery SOC (%)'] || 0);
       
-      // Calculate battery change from previous reading
+      // Calculate battery change and distance traveled from previous reading
       let batteryChange = 0;
+      let distanceTraveled = 0;
+      let efficiency = 0;
+      
       if (index > 0) {
         const prevBattery = parseFloat(rawData[index - 1]['Battery Soc(%)'] || rawData[index - 1]['Battery SOC (%)'] || 0);
+        const prevDistance = parseFloat(rawData[index - 1]['Odometer (km)'] || 0) - startingOdometer;
+        
         batteryChange = currentBattery - prevBattery;
+        distanceTraveled = normalizedDistance - prevDistance;
+        
+        // Calculate efficiency: km per % charge drop (only for discharge periods)
+        if (batteryChange < 0 && distanceTraveled > 0) {
+          efficiency = distanceTraveled / Math.abs(batteryChange);
+        }
       }
 
       return {
@@ -185,11 +196,32 @@ const BatteryConsumption = () => {
         battery: currentBattery,
         distance: normalizedDistance,
         batteryChange: batteryChange, // Positive = charging, Negative = discharging
+        efficiency: efficiency > 0 ? efficiency.toFixed(2) : null, // km per % charge drop
         rawIndex: index
       };
     });
     
     return processedData;
+  };
+
+  // Custom tooltip component
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      return (
+        <div className="bg-gray-800 border border-gray-700 p-3 rounded-lg shadow-lg">
+          <p className="text-gray-300 font-semibold mb-2">{label}</p>
+          <p className="text-green-400 text-sm">Battery %: {data.battery}</p>
+          <p className="text-blue-400 text-sm">Distance (km): {data.distance.toFixed(2)}</p>
+          {data.efficiency && (
+            <p className="text-yellow-400 text-sm font-semibold">
+              Efficiency: {data.efficiency} km/%
+            </p>
+          )}
+        </div>
+      );
+    }
+    return null;
   };
 
   return (
