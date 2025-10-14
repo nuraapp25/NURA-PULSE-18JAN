@@ -2425,6 +2425,155 @@ async def get_battery_charge_audit(current_user: User = Depends(get_current_user
         raise HTTPException(status_code=500, detail=f"Error generating battery audit: {str(e)}")
 
 
+@api_router.get("/montra-vehicle/morning-charge-audit")
+async def get_morning_charge_audit(current_user: User = Depends(get_current_user)):
+    """
+    Morning Charge Audit: Find all instances where vehicle charge at 6 AM was less than 95%
+    This helps identify vehicles that didn't charge properly overnight.
+    
+    Returns: Date, Vehicle Name, Charge at 6 AM (only for instances < 95%)
+    """
+    try:
+        from datetime import datetime, time as dt_time
+        
+        # Get all Montra feed data
+        all_records = await db.montra_feed_data.find({}).to_list(250000)
+        
+        if not all_records:
+            return {
+                "success": True,
+                "audit_results": [],
+                "count": 0,
+                "message": "No Montra feed data found. Please import vehicle data first."
+            }
+        
+        logger.info(f"Processing {len(all_records)} records for morning charge audit")
+        
+        # Group records by vehicle and date
+        vehicle_date_groups = {}
+        for record in all_records:
+            vehicle_id = record.get("vehicle_id") or record.get("Vehicle ID")
+            registration = record.get("registration_number") or record.get("Registration Number")
+            date = record.get("date")
+            
+            if not vehicle_id or not date:
+                continue
+            
+            # Use registration number if available, otherwise vehicle_id
+            display_name = registration if registration else vehicle_id
+            
+            key = f"{vehicle_id}_{date}"
+            if key not in vehicle_date_groups:
+                vehicle_date_groups[key] = {
+                    "vehicle_id": vehicle_id,
+                    "display_name": display_name,
+                    "date": date,
+                    "records": []
+                }
+            vehicle_date_groups[key]["records"].append(record)
+        
+        logger.info(f"Grouped into {len(vehicle_date_groups)} vehicle-date combinations")
+        
+        audit_results = []
+        
+        # Analyze each vehicle-date combination
+        for key, group_data in vehicle_date_groups.items():
+            vehicle_id = group_data["vehicle_id"]
+            display_name = group_data["display_name"]
+            date = group_data["date"]
+            day_records = group_data["records"]
+            
+            # Sort records by time
+            try:
+                day_records.sort(key=lambda x: x.get("Portal Received Time", x.get("time", "00:00:00")) if x.get("Portal Received Time") or x.get("time") else "00:00:00")
+            except Exception as e:
+                logger.error(f"Error sorting records for {vehicle_id} on {date}: {str(e)}")
+                continue
+            
+            # Find battery charge at or closest to 6 AM
+            charge_at_6am = None
+            closest_time_to_6am = None
+            
+            for record in day_records:
+                battery_pct = (record.get("Battery Soc(%)") or 
+                              record.get("Battery %") or 
+                              record.get("battery_soc_percentage") or 
+                              record.get("Battery") or
+                              record.get("battery") or
+                              record.get("SOC") or
+                              record.get("soc"))
+                
+                time_str = (record.get("Portal Received Time") or
+                           record.get("time") or 
+                           record.get("Time") or 
+                           record.get("Hour") or
+                           record.get("hour"))
+                
+                if battery_pct and time_str:
+                    try:
+                        if isinstance(time_str, str):
+                            try:
+                                dt = datetime.fromisoformat(time_str.replace(' ', 'T'))
+                                record_time = dt.time()
+                            except:
+                                time_part = time_str.split()[0] if ' ' in time_str else time_str
+                                try:
+                                    record_time = datetime.strptime(time_part, "%H:%M:%S").time()
+                                except:
+                                    continue
+                        else:
+                            continue
+                        
+                        # Look for records between 5:30 AM and 6:30 AM to get closest to 6 AM
+                        if dt_time(5, 30) <= record_time <= dt_time(6, 30):
+                            if battery_pct != '-':
+                                try:
+                                    battery_val = float(str(battery_pct))
+                                    
+                                    # Keep the record closest to 6:00 AM
+                                    target_time = dt_time(6, 0)
+                                    time_diff = abs((datetime.combine(datetime.today(), record_time) - 
+                                                   datetime.combine(datetime.today(), target_time)).total_seconds())
+                                    
+                                    if closest_time_to_6am is None or time_diff < closest_time_to_6am:
+                                        closest_time_to_6am = time_diff
+                                        charge_at_6am = battery_val
+                                except:
+                                    pass
+                        elif record_time > dt_time(6, 30):
+                            # Stop looking once we're past 6:30 AM
+                            break
+                    except:
+                        continue
+            
+            # Add to results if charge at 6 AM is less than 95%
+            if charge_at_6am is not None and charge_at_6am < 95:
+                audit_results.append({
+                    "date": date,
+                    "vehicle_name": display_name,
+                    "charge_at_6am": round(charge_at_6am, 1)
+                })
+                logger.info(f"Found low morning charge: {vehicle_id} on {date} - {charge_at_6am}%")
+        
+        # Sort results by date and vehicle
+        audit_results.sort(key=lambda x: (x["date"], x["vehicle_name"]))
+        
+        logger.info(f"Morning charge audit complete: Found {len(audit_results)} instances with charge < 95% at 6 AM")
+        
+        return {
+            "success": True,
+            "audit_results": audit_results,
+            "count": len(audit_results),
+            "message": f"Found {len(audit_results)} instances where morning charge was below 95% at 6 AM"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in morning charge audit: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error generating morning charge audit: {str(e)}")
+
+
 @api_router.get("/admin/files/get-drivers-vehicles")
 async def get_drivers_and_vehicles(
     month: str = Query(..., description="Month name (e.g., Sep)"),
