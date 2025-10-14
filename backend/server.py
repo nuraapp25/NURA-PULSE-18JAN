@@ -2273,19 +2273,22 @@ async def get_battery_charge_audit(current_user: User = Depends(get_current_user
             
             for record in day_records:
                 # Get battery percentage (check all possible field names)
-                battery_pct = (record.get("Battery %") or 
+                battery_pct = (record.get("Battery Soc(%)") or 
+                              record.get("Battery %") or 
                               record.get("battery_soc_percentage") or 
                               record.get("Battery") or
                               record.get("battery") or
                               record.get("SOC") or
                               record.get("soc"))
                 
-                time_str = (record.get("time") or 
+                time_str = (record.get("Portal Received Time") or
+                           record.get("time") or 
                            record.get("Time") or 
                            record.get("Hour") or
                            record.get("hour"))
                 
-                km_value = (record.get("KM") or 
+                km_value = (record.get("Odometer (km)") or
+                           record.get("KM") or 
                            record.get("km") or 
                            record.get("Kilometer") or
                            record.get("kilometer"))
