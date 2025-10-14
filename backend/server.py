@@ -2207,8 +2207,8 @@ async def get_battery_charge_audit(current_user: User = Depends(get_current_user
     try:
         from datetime import datetime, time as dt_time
         
-        # Get all Montra feed data
-        all_records = await db.montra_feed_data.find({}).to_list(100000)
+        # Get all Montra feed data (increased limit to handle all records)
+        all_records = await db.montra_feed_data.find({}).to_list(250000)
         
         if not all_records:
             return {
