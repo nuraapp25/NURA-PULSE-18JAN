@@ -315,39 +315,92 @@ const BatteryConsumption = () => {
         </CardContent>
       </Card>
 
-      {/* Chart Display */}
-      {showChart && chartData.length > 0 && (
-        <Card className="dark:bg-gray-800 dark:border-gray-700">
-          <CardHeader>
-            <CardTitle className="dark:text-white">
-              Battery Consumption for {vehicles.find(v => v.vehicle_id === selectedVehicle)?.registration_number}
-              <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-3">
-                on {selectedDate ? format(selectedDate, "PPP") : ""}
-              </span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-96">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart
-                  data={chartData}
-                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                  <XAxis 
-                    dataKey="time" 
-                    stroke="#9CA3AF"
-                    label={{ value: 'Time', position: 'insideBottom', offset: -5 }}
-                  />
-                  <YAxis 
-                    yAxisId="left"
-                    stroke="#10B981"
-                    label={{ value: 'Battery %', angle: -90, position: 'insideLeft' }}
-                  />
-                  <YAxis 
-                    yAxisId="right"
-                    orientation="right"
-                    stroke="#3B82F6"
+      {/* Charts Display - Multiple charts stacked vertically */}
+      {showCharts && chartsData.length > 0 && (
+        <div className="space-y-6">
+          {chartsData.map((dayData, index) => (
+            <Card key={index} className="dark:bg-gray-800 dark:border-gray-700">
+              <CardHeader>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                  <CardTitle className="dark:text-white">
+                    Battery Consumption for {vehicles.find(v => v.vehicle_id === selectedVehicle)?.registration_number}
+                    <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-3">
+                      on {dayData.date}
+                    </span>
+                  </CardTitle>
+                </div>
+                
+                {/* Summary Stats */}
+                <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <div className="text-center">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Charge Drop %</p>
+                    <p className="text-lg font-bold text-red-600 dark:text-red-400">{dayData.summary.chargeDrop}%</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Charge %</p>
+                    <p className="text-lg font-bold text-green-600 dark:text-green-400">{dayData.summary.charge}%</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">KM Travelled</p>
+                    <p className="text-lg font-bold text-blue-600 dark:text-blue-400">{dayData.summary.kmTravelled} km</p>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="h-96">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart
+                      data={dayData.chartData}
+                      margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                      <XAxis 
+                        dataKey="time" 
+                        stroke="#9CA3AF"
+                        label={{ value: 'Time', position: 'insideBottom', offset: -5 }}
+                      />
+                      <YAxis 
+                        yAxisId="left"
+                        stroke="#10B981"
+                        label={{ value: 'Battery %', angle: -90, position: 'insideLeft' }}
+                      />
+                      <YAxis 
+                        yAxisId="right"
+                        orientation="right"
+                        stroke="#3B82F6"
+                        label={{ value: 'Distance (km)', angle: 90, position: 'insideRight' }}
+                      />
+                      <Tooltip 
+                        contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151' }}
+                        labelStyle={{ color: '#F3F4F6' }}
+                      />
+                      <Legend />
+                      <Line 
+                        yAxisId="left"
+                        type="monotone" 
+                        dataKey="battery" 
+                        stroke="#10B981" 
+                        strokeWidth={2}
+                        name="Battery %"
+                        dot={{ r: 3 }}
+                      />
+                      <Line 
+                        yAxisId="right"
+                        type="monotone" 
+                        dataKey="distance" 
+                        stroke="#3B82F6" 
+                        strokeWidth={2}
+                        name="Distance (km)"
+                        dot={{ r: 3 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
                     label={{ value: 'Distance (km)', angle: 90, position: 'insideRight' }}
                   />
                   <Tooltip
