@@ -2196,6 +2196,133 @@ async def get_battery_milestones(
         raise HTTPException(status_code=500, detail=f"Error analyzing battery milestones: {str(e)}")
 
 
+@api_router.get("/montra-vehicle/battery-audit")
+async def get_battery_charge_audit(current_user: User = Depends(get_current_user)):
+    """
+    Battery Charge Audit: Find all instances where vehicle charge dropped below 20% 
+    between 7 AM and 7 PM. Returns the first instance per day per vehicle.
+    
+    Returns: Date, Vehicle Name, Timestamp (when dropped <20%), KM driven from start of day
+    """
+    try:
+        from datetime import datetime, time as dt_time
+        
+        # Get all Montra feed data
+        all_records = await db.montra_feed_data.find({}).to_list(100000)
+        
+        if not all_records:
+            return {
+                "success": True,
+                "audit_results": [],
+                "count": 0,
+                "message": "No Montra feed data found. Please import vehicle data first."
+            }
+        
+        # Group records by vehicle and date
+        vehicle_date_groups = {}
+        for record in all_records:
+            vehicle_id = record.get("vehicle_id")
+            date = record.get("date")
+            
+            if not vehicle_id or not date:
+                continue
+            
+            key = f"{vehicle_id}_{date}"
+            if key not in vehicle_date_groups:
+                vehicle_date_groups[key] = {
+                    "vehicle_id": vehicle_id,
+                    "date": date,
+                    "records": []
+                }
+            vehicle_date_groups[key]["records"].append(record)
+        
+        audit_results = []
+        
+        # Analyze each vehicle-date combination
+        for key, group_data in vehicle_date_groups.items():
+            vehicle_id = group_data["vehicle_id"]
+            date = group_data["date"]
+            day_records = group_data["records"]
+            
+            # Sort records by time
+            try:
+                day_records.sort(key=lambda x: x.get("time", "00:00:00") if x.get("time") else "00:00:00")
+            except:
+                # If sorting fails, skip this group
+                continue
+            
+            # Find first instance where charge < 20% between 7 AM and 7 PM
+            first_low_charge = None
+            start_of_day_km = None
+            
+            # Get the KM at start of day (earliest record)
+            if day_records:
+                start_of_day_km = day_records[0].get("KM") or day_records[0].get("km")
+            
+            for record in day_records:
+                # Get battery percentage (check different possible field names)
+                battery_pct = record.get("Battery %") or record.get("battery_soc_percentage") or record.get("Battery")
+                time_str = record.get("time") or record.get("Time") or record.get("Hour")
+                km_value = record.get("KM") or record.get("km")
+                
+                if battery_pct is None or time_str is None:
+                    continue
+                
+                try:
+                    # Parse time
+                    if isinstance(time_str, str):
+                        record_time = datetime.strptime(time_str.split()[0] if ' ' in time_str else time_str, "%H:%M:%S").time()
+                    else:
+                        continue
+                    
+                    # Check if between 7 AM and 7 PM
+                    if dt_time(7, 0) <= record_time <= dt_time(19, 0):
+                        # Check if charge is below 20%
+                        battery_value = float(battery_pct) if not isinstance(battery_pct, (int, float)) else battery_pct
+                        
+                        if battery_value < 20:
+                            # Calculate KM driven from start of day
+                            km_driven = None
+                            if km_value is not None and start_of_day_km is not None:
+                                try:
+                                    km_driven = float(km_value) - float(start_of_day_km)
+                                    if km_driven < 0:
+                                        km_driven = None  # Invalid data
+                                except:
+                                    km_driven = None
+                            
+                            first_low_charge = {
+                                "date": date,
+                                "vehicle_name": vehicle_id,
+                                "timestamp": time_str,
+                                "km_driven_upto_point": round(km_driven, 2) if km_driven is not None else "N/A",
+                                "battery_percentage": round(battery_value, 1)
+                            }
+                            break  # Found first instance, stop checking this day
+                    
+                except Exception as e:
+                    logger.error(f"Error processing record for {vehicle_id} on {date}: {str(e)}")
+                    continue
+            
+            # Add to results if we found a low charge instance
+            if first_low_charge:
+                audit_results.append(first_low_charge)
+        
+        # Sort results by date and vehicle
+        audit_results.sort(key=lambda x: (x["date"], x["vehicle_name"]))
+        
+        return {
+            "success": True,
+            "audit_results": audit_results,
+            "count": len(audit_results),
+            "message": f"Found {len(audit_results)} instances where battery dropped below 20% between 7 AM - 7 PM"
+        }
+        
+    except Exception as e:
+        logger.error(f"Error in battery charge audit: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error generating battery audit: {str(e)}")
+
+
 @api_router.get("/admin/files/get-drivers-vehicles")
 async def get_drivers_and_vehicles(
     month: str = Query(..., description="Month name (e.g., Sep)"),
