@@ -2267,7 +2267,8 @@ async def get_battery_charge_audit(current_user: User = Depends(get_current_user
             
             # Get the KM at start of day (earliest record)
             if day_records:
-                start_of_day_km = (day_records[0].get("KM") or 
+                start_of_day_km = (day_records[0].get("Odometer (km)") or
+                                  day_records[0].get("KM") or 
                                   day_records[0].get("km") or 
                                   day_records[0].get("Kilometer"))
             
