@@ -21,12 +21,17 @@ const Dashboard = () => {
     { name: "Home", icon: Home, path: "/dashboard", exact: true },
   ];
 
-  const apps = [
-    { name: "Payment Data Extractor", icon: FileText, path: "/dashboard/payment-reconciliation" },
-    { name: "Driver Onboarding", icon: Car, path: "/dashboard/driver-onboarding" },
-    { name: "Telecaller's Desk", icon: Phone, path: "/dashboard/telecaller-queue" },
-    { name: "Montra Vehicle Insights", icon: BarChart3, path: "/dashboard/montra-vehicle" },
+  // Filter apps based on user account type
+  const allApps = [
+    { name: "Payment Data Extractor", icon: FileText, path: "/dashboard/payment-reconciliation", roles: ["master_admin", "admin", "standard", "ops_team"] },
+    { name: "Driver Onboarding", icon: Car, path: "/dashboard/driver-onboarding", roles: ["master_admin", "admin", "standard"] },
+    { name: "Telecaller's Desk", icon: Phone, path: "/dashboard/telecaller-queue", roles: ["master_admin", "admin", "standard"] },
+    { name: "Montra Vehicle Insights", icon: BarChart3, path: "/dashboard/montra-vehicle", roles: ["master_admin", "admin", "standard"] },
   ];
+
+  const apps = allApps.filter(app => 
+    app.roles.includes(user?.account_type)
+  );
 
   const manageItems = [
     { name: "Manage", icon: FolderOpen, path: "/dashboard/manage" },
