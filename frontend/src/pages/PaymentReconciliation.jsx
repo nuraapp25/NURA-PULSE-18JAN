@@ -641,11 +641,6 @@ const PaymentReconciliation = () => {
           <p className="text-gray-600 dark:text-gray-400 mt-1">
             Upload screenshots and extract payment data
           </p>
-          {lastSync && (
-            <p className="text-xs text-green-600 dark:text-green-400 mt-1">
-              Last sync: {new Date(lastSync).toLocaleString()}
-            </p>
-          )}
         </div>
         <div className="flex gap-2">
           <Button 
