@@ -25,7 +25,7 @@ Find these lines at the top and update them:
 ```javascript
 const CONFIG = {
   SHEET_ID: 'YOUR_SHEET_ID_HERE', // Replace with your Sheet ID from Step 1
-  BACKEND_URL: 'YOUR_BACKEND_URL_HERE' // Replace with: https://charge-tracker-3.preview.emergentagent.com/api
+  BACKEND_URL: 'YOUR_BACKEND_URL_HERE' // Replace with: https://payment-dash-11.preview.emergentagent.com/api
 };
 ```
 
@@ -33,7 +33,7 @@ const CONFIG = {
 ```javascript
 const CONFIG = {
   SHEET_ID: '1CLhARhllhqZuDzkzNRqFcOGqjrSDzPgmC6gd3-AWOTs', // Your actual Sheet ID
-  BACKEND_URL: 'https://charge-tracker-3.preview.emergentagent.com/api'
+  BACKEND_URL: 'https://payment-dash-11.preview.emergentagent.com/api'
 };
 ```
 
