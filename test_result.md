@@ -317,6 +317,9 @@ backend:
         - working: "NA"
           agent: "main"
           comment: "IMPLEMENTATION VERIFIED: Add expense dialog fully implemented with date picker (calendar), description field, amount field, receipt file upload (single/bulk, max 10MB per file validation). Dialog opens via '+ ADD' button. Shows selected file count. Has Cancel and Add/Update Expense buttons."
+        - working: "NA"
+          agent: "testing"
+          comment: "FRONTEND TASK: This is a frontend UI component that requires frontend testing. Backend APIs for expense creation (POST /expenses/add) have been tested and are working correctly. Frontend testing needed to verify dialog functionality, form validation, and file upload UI."
 
   - task: "Expense Tracker - Expense List Table"
     implemented: true
@@ -329,6 +332,9 @@ backend:
         - working: "NA"
           agent: "main"
           comment: "IMPLEMENTATION VERIFIED: Table displays all expenses with columns: checkbox, S.No., Date, Description, Amount (₹), Receipt (with filenames and view/download buttons), Approval Status. Multiple receipts per expense supported. Each receipt shows: filename, eye icon (view), download icon (download). Receipts stack vertically when multiple."
+        - working: "NA"
+          agent: "testing"
+          comment: "FRONTEND TASK: This is a frontend UI component that requires frontend testing. Backend APIs for expense retrieval (GET /expenses) and receipt download (GET /expenses/{id}/receipt/{filename}) have been tested and are working correctly. Frontend testing needed to verify table display, receipt viewing, and download functionality."
 
   - task: "Expense Tracker - Approval Status Management"
     implemented: true
@@ -341,6 +347,9 @@ backend:
         - working: "NA"
           agent: "main"
           comment: "IMPLEMENTATION VERIFIED: Approval status dropdown (Pending/Approved/Rejected) editable by master_admin and admin roles. Standard users see status as read-only badge with color coding (yellow=Pending, green=Approved, red=Rejected). Role-based permissions correctly implemented."
+        - working: "NA"
+          agent: "testing"
+          comment: "FRONTEND TASK: This is a frontend UI component that requires frontend testing. Backend APIs for expense approval (POST /expenses/approve) have been tested and are working correctly with proper role-based permissions. Frontend testing needed to verify dropdown functionality and role-based UI restrictions."
 
   - task: "Expense Tracker - Edit/Delete with Role Permissions"
     implemented: true
@@ -353,6 +362,9 @@ backend:
         - working: "NA"
           agent: "main"
           comment: "IMPLEMENTATION VERIFIED: Row selection with checkboxes. Edit button appears when selecting expenses (single selection required for edit). Delete button visible only to master_admin. Edit allows updating date, description, amount, and adding more receipts. Delete confirmation dialog implemented."
+        - working: "NA"
+          agent: "testing"
+          comment: "FRONTEND TASK: This is a frontend UI component that requires frontend testing. Backend APIs for expense update (POST /expenses/update) and delete (POST /expenses/delete) have been tested and are working correctly with proper role-based permissions. Frontend testing needed to verify edit dialog, delete confirmation, and role-based UI restrictions."
 
   - task: "Expense Tracker Backend APIs"
     implemented: true
