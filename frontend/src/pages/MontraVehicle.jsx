@@ -19,6 +19,9 @@ const MontraVehicle = () => {
   const [loadingDatabase, setLoadingDatabase] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [expandedFolders, setExpandedFolders] = useState({});
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [viewingFileData, setViewingFileData] = useState(null);
+  const [loadingFileData, setLoadingFileData] = useState(false);
 
   const widgets = [
     {
