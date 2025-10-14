@@ -221,13 +221,20 @@ const BatteryConsumption = () => {
       return (
         <div className="bg-gray-800 border border-gray-700 p-3 rounded-lg shadow-lg">
           <p className="text-gray-300 font-semibold mb-2">{label}</p>
-          <p className="text-green-400 text-sm">Battery %: {data.battery}</p>
-          <p className="text-blue-400 text-sm">Distance (km): {data.distance.toFixed(2)}</p>
-          {data.efficiency && data.efficiency !== "0.00" && (
-            <p className="text-yellow-400 text-sm font-semibold">
-              Efficiency: {data.efficiency} km/%
-            </p>
-          )}
+          <p className="text-green-400 text-sm">Battery %: {data.battery.toFixed(1)}</p>
+          <p className="text-blue-400 text-sm">Total Distance: {data.distance.toFixed(2)} km</p>
+          <div className="border-t border-gray-600 mt-2 pt-2">
+            <p className="text-xs text-gray-400 mb-1">This Hour:</p>
+            <p className="text-red-400 text-sm">Charge Drop: {data.chargeDrop}%</p>
+            <p className="text-blue-300 text-sm">KM Traveled: {data.distanceTraveled} km</p>
+            {data.efficiency ? (
+              <p className="text-yellow-400 text-sm font-semibold">
+                Efficiency: {data.efficiency} km/%
+              </p>
+            ) : (
+              <p className="text-gray-500 text-sm">Efficiency: N/A (no discharge)</p>
+            )}
+          </div>
         </div>
       );
     }
