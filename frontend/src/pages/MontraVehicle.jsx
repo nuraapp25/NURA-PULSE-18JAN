@@ -299,6 +299,38 @@ const MontraVehicle = () => {
     }
   };
 
+  const handleViewFile = async (file) => {
+    setLoadingFileData(true);
+    setViewDialogOpen(true);
+    
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.post(
+        `${API}/montra-vehicle/view-file-data`,
+        {
+          vehicle_id: file.vehicle_id,
+          date: file.date,
+          filename: file.filename
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (response.data.success) {
+        setViewingFileData({
+          file: file,
+          data: response.data.data,
+          columns: response.data.columns
+        });
+      }
+    } catch (error) {
+      toast.error("Failed to load file data");
+      console.error("View file error:", error);
+      setViewDialogOpen(false);
+    } finally {
+      setLoadingFileData(false);
+    }
+  };
+
   const handleDownloadMapping = async () => {
     try {
       const token = localStorage.getItem("token");
