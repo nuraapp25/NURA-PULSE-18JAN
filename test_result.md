@@ -306,6 +306,66 @@ backend:
           agent: "main"
           comment: "✅ ENHANCEMENTS ADDED: 1) Added individual View button (eye icon) next to Download and Delete buttons for each file. Clicking View button opens image viewer directly for that specific image. 2) Improved image fitting within browser space - added style maxHeight calc(90vh - 100px) and overflow-hidden to ensure images always fit within modal without scrolling. 3) Updated handleViewImages to accept startIndex parameter to support both 'View All Images' button and individual file view button. Tested: View button works perfectly, images display fitted and centered within modal with proper black background. All three buttons (View, Download, Delete) working correctly."
 
+  - task: "Expense Tracker - Add Expense Dialog"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/ExpenseTracker.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "IMPLEMENTATION VERIFIED: Add expense dialog fully implemented with date picker (calendar), description field, amount field, receipt file upload (single/bulk, max 10MB per file validation). Dialog opens via '+ ADD' button. Shows selected file count. Has Cancel and Add/Update Expense buttons."
+
+  - task: "Expense Tracker - Expense List Table"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/ExpenseTracker.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "IMPLEMENTATION VERIFIED: Table displays all expenses with columns: checkbox, S.No., Date, Description, Amount (₹), Receipt (with filenames and view/download buttons), Approval Status. Multiple receipts per expense supported. Each receipt shows: filename, eye icon (view), download icon (download). Receipts stack vertically when multiple."
+
+  - task: "Expense Tracker - Approval Status Management"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/ExpenseTracker.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "IMPLEMENTATION VERIFIED: Approval status dropdown (Pending/Approved/Rejected) editable by master_admin and admin roles. Standard users see status as read-only badge with color coding (yellow=Pending, green=Approved, red=Rejected). Role-based permissions correctly implemented."
+
+  - task: "Expense Tracker - Edit/Delete with Role Permissions"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/ExpenseTracker.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "IMPLEMENTATION VERIFIED: Row selection with checkboxes. Edit button appears when selecting expenses (single selection required for edit). Delete button visible only to master_admin. Edit allows updating date, description, amount, and adding more receipts. Delete confirmation dialog implemented."
+
+  - task: "Expense Tracker Backend APIs"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "IMPLEMENTATION VERIFIED: All expense endpoints implemented: GET /expenses (fetch all/user expenses), POST /expenses/add (create with receipt upload), POST /expenses/update (edit expense + add receipts), POST /expenses/delete (master_admin only, soft delete), POST /expenses/approve (admin/master_admin change status), GET /expenses/{expense_id}/receipt/{filename} (view/download receipts). Receipt files stored in /app/backend/expense_receipts/{expense_id}/ folder structure. 10MB file size validation. Role-based access control implemented."
+
 frontend:
   - task: "Login Page"
     implemented: true
