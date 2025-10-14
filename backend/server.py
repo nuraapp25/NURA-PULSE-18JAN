@@ -2964,6 +2964,8 @@ async def sync_payment_data_to_sheets(
 ):
     """Sync payment reconciliation data to Google Sheets using Apps Script V2"""
     try:
+        import shutil
+        
         body = await request.json()
         data_rows = body.get("data", [])
         month_year = body.get("month_year", "Sep 2025")
@@ -3012,8 +3014,43 @@ async def sync_payment_data_to_sheets(
         if response.status_code == 200:
             result = response.json()
             if result.get("success"):
+                # After successful sync, organize screenshots into Payment Screenshots library
+                payment_screenshots_base = "/app/backend/payment_screenshots"
+                os.makedirs(payment_screenshots_base, exist_ok=True)
+                
+                # Get unique records from MongoDB to find screenshot paths
+                record_ids = [row.get("id") for row in data_rows]
+                records = await db.payment_records.find({"id": {"$in": record_ids}}).to_list(1000)
+                
+                copied_files = []
+                for record in records:
+                    driver = record.get("driver", "Unknown")
+                    screenshot_filename = record.get("screenshot_filename", "")
+                    screenshot_path = record.get("screenshot_path", "")
+                    
+                    if screenshot_path and os.path.exists(screenshot_path):
+                        # Create directory structure: Month Year / Driver Name /
+                        driver_folder = os.path.join(payment_screenshots_base, month_year, driver)
+                        os.makedirs(driver_folder, exist_ok=True)
+                        
+                        # Copy screenshot to organized location
+                        dest_path = os.path.join(driver_folder, screenshot_filename)
+                        
+                        try:
+                            shutil.copy2(screenshot_path, dest_path)
+                            copied_files.append(screenshot_filename)
+                            logger.info(f"Copied screenshot {screenshot_filename} to {driver_folder}")
+                        except Exception as copy_error:
+                            logger.error(f"Error copying screenshot {screenshot_filename}: {str(copy_error)}")
+                
                 logger.info(f"Successfully synced {len(records_to_sync)} records to Google Sheets: {month_year}")
-                return {"success": True, "message": result.get("message", "Synced successfully")}
+                logger.info(f"Organized {len(copied_files)} screenshots into Payment Screenshots library")
+                
+                return {
+                    "success": True, 
+                    "message": result.get("message", "Synced successfully"),
+                    "screenshots_organized": len(copied_files)
+                }
             else:
                 raise HTTPException(status_code=500, detail=f"Apps Script error: {result.get('message')}")
         else:
