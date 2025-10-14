@@ -789,10 +789,6 @@ const PaymentReconciliation = () => {
                   <Download size={16} className="mr-1" />
                   Download CSV
                 </Button>
-                <Button variant="outline" size="sm" onClick={exportToExcelBackend} className="text-green-600 border-green-600">
-                  <Download size={16} className="mr-1" />
-                  Export to Excel (Backend)
-                </Button>
                 <Button 
                   variant="outline" 
                   size="sm" 
