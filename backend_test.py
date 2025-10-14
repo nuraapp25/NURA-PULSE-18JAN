@@ -860,16 +860,21 @@ class NuraPulseBackendTester:
         
         # Test 1: Authentication requirement (should return 403 without token)
         print("\n--- Testing Authentication Requirement ---")
-        response = self.make_request("GET", "/montra-vehicle/battery-audit", use_auth=False)
-        
-        if response and response.status_code in [401, 403]:
-            self.log_test("Battery Audit - Authentication Required", True, 
-                        f"Correctly requires authentication ({response.status_code} without token)")
-            success_count += 1
-        else:
-            status = response.status_code if response else "Network error"
+        try:
+            import requests
+            url = f"{self.base_url}/montra-vehicle/battery-audit"
+            response = requests.get(url, timeout=10)  # No Authorization header
+            
+            if response.status_code in [401, 403]:
+                self.log_test("Battery Audit - Authentication Required", True, 
+                            f"Correctly requires authentication ({response.status_code} without token)")
+                success_count += 1
+            else:
+                self.log_test("Battery Audit - Authentication Required", False, 
+                            f"Expected 401/403, got {response.status_code}")
+        except Exception as e:
             self.log_test("Battery Audit - Authentication Required", False, 
-                        f"Expected 401/403, got {status}")
+                        f"Network error during authentication test: {e}")
         
         # Test 2: Valid request with authentication (should return 200 with proper structure)
         print("\n--- Testing Valid Request with Authentication ---")
