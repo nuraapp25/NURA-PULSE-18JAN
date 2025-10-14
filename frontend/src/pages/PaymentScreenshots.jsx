@@ -5,7 +5,7 @@ import axios from 'axios';
 import { toast } from 'sonner';
 import { useAuth } from '@/App';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 const API = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001/api';
 
@@ -137,200 +137,187 @@ const PaymentScreenshots = () => {
       toast.error('Failed to download file');
     }
   };
-  };
-
-  const handleDownload = async (fileName) => {
-    try {
-      const token = localStorage.getItem('token');
-      const path = [...currentPath, fileName].join('/');
-      
-      const response = await axios.get(`${API}/admin/payment-screenshots/download`, {
-        headers: { Authorization: `Bearer ${token}` },
-        params: { path },
-        responseType: 'blob'
-      });
-
-      // Create download link
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', fileName);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-
-      toast.success(`Downloaded ${fileName}`);
-    } catch (error) {
-      console.error('Error downloading file:', error);
-      toast.error('Failed to download file');
-    }
-  };
-
-  const handleDelete = async (itemName, isFolder) => {
-    if (!window.confirm(`Are you sure you want to delete ${itemName}?`)) {
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem('token');
-      const path = [...currentPath, itemName].join('/');
-      
-      await axios.delete(`${API}/admin/payment-screenshots/delete`, {
-        headers: { Authorization: `Bearer ${token}` },
-        data: { path, is_folder: isFolder }
-      });
-
-      toast.success(`Deleted ${itemName}`);
-      fetchContents();
-    } catch (error) {
-      console.error('Error deleting item:', error);
-      toast.error('Failed to delete item');
-    }
-  };
-
-  const isImage = (fileName) => {
-    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
-    return imageExtensions.some(ext => fileName.toLowerCase().endsWith(ext));
-  };
-
-  const isExcel = (fileName) => {
-    return fileName.toLowerCase().endsWith('.xlsx') || fileName.toLowerCase().endsWith('.xls');
-  };
 
   return (
-    <div className="p-4 md:p-6">
-      {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Payment Screenshots
-          </h1>
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-6">
+          <div className="flex items-center gap-4 mb-4">
+            <Button variant="outline" onClick={() => navigate('/dashboard')}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Dashboard
+            </Button>
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900">Payment Screenshots</h1>
+          <p className="text-gray-600 mt-2">Browse and manage uploaded payment screenshots organized by Month Year / Driver Name</p>
         </div>
 
         {/* Breadcrumb */}
-        <div className="flex items-center space-x-2 text-sm">
-          <button
-            onClick={() => setCurrentPath([])}
-            className="text-blue-600 hover:text-blue-800 dark:text-blue-400"
-          >
-            Home
-          </button>
-          {currentPath.map((folder, index) => (
-            <React.Fragment key={index}>
-              <ChevronRight size={16} className="text-gray-400" />
-              <button
-                onClick={() => setCurrentPath(currentPath.slice(0, index + 1))}
-                className="text-blue-600 hover:text-blue-800 dark:text-blue-400"
-              >
-                {folder}
-              </button>
-            </React.Fragment>
-          ))}
-        </div>
-
         {currentPath.length > 0 && (
-          <button
-            onClick={handleBackClick}
-            className="mt-4 flex items-center text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
-          >
-            <ArrowLeft size={16} className="mr-1" />
-            Back
-          </button>
-        )}
-      </div>
-
-      {/* Content */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-        {loading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600 dark:text-gray-400">Loading...</p>
+          <div className="mb-4 flex items-center gap-2 text-sm">
+            <button onClick={() => setCurrentPath([])} className="text-blue-600 hover:underline">
+              Home
+            </button>
+            {currentPath.map((folder, index) => (
+              <React.Fragment key={index}>
+                <ChevronRight className="w-4 h-4 text-gray-400" />
+                <button
+                  onClick={() => setCurrentPath(currentPath.slice(0, index + 1))}
+                  className="text-blue-600 hover:underline"
+                >
+                  {folder}
+                </button>
+              </React.Fragment>
+            ))}
           </div>
-        ) : (
-          <>
-            {/* Folders */}
-            {folders.length > 0 && (
-              <div className="mb-6">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Folders</h2>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                  {folders.map((folder) => (
-                    <button
-                      key={folder}
-                      onClick={() => handleFolderClick(folder)}
-                      className="flex flex-col items-center p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                    >
-                      <Folder size={48} className="text-blue-500 mb-2" />
-                      <span className="text-sm text-center text-gray-700 dark:text-gray-300 truncate w-full">
-                        {folder}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Files */}
-            {files.length > 0 && (
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Files</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {files.map((file) => (
-                    <div
-                      key={file}
-                      className="flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
-                    >
-                      <div className="flex items-center space-x-3 flex-1 min-w-0">
-                        {isImage(file) ? (
-                          <Image size={24} className="text-green-500 flex-shrink-0" />
-                        ) : isExcel(file) ? (
-                          <FileText size={24} className="text-blue-500 flex-shrink-0" />
-                        ) : (
-                          <FileText size={24} className="text-gray-500 flex-shrink-0" />
-                        )}
-                        <span className="text-sm text-gray-700 dark:text-gray-300 truncate">
-                          {file}
-                        </span>
-                      </div>
-                      <div className="flex items-center space-x-2 ml-2">
-                        <button
-                          onClick={() => handleDownload(file)}
-                          className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"
-                          title="Download"
-                        >
-                          <Download size={16} />
-                        </button>
-                        {isMasterAdmin && (
-                          <button
-                            onClick={() => handleDelete(file, false)}
-                            className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
-                            title="Delete"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Empty State */}
-            {folders.length === 0 && files.length === 0 && (
-              <div className="text-center py-12">
-                <Folder size={64} className="mx-auto text-gray-400 mb-4" />
-                <p className="text-gray-600 dark:text-gray-400 text-lg">
-                  No folders or files found
-                </p>
-                <p className="text-gray-500 dark:text-gray-500 text-sm mt-2">
-                  Screenshots will appear here after processing payment reconciliation
-                </p>
-              </div>
-            )}
-          </>
         )}
+
+        {/* View Images Button - Show when in a folder with files */}
+        {files.length > 0 && (
+          <div className="mb-4">
+            <Button onClick={handleViewImages} className="flex items-center gap-2">
+              <Eye className="w-4 h-4" />
+              View All Images ({files.length})
+            </Button>
+          </div>
+        )}
+
+        {/* Content Grid */}
+        <div className="bg-white rounded-lg shadow p-6">
+          {loading ? (
+            <div className="text-center py-12 text-gray-500">Loading...</div>
+          ) : (
+            <>
+              {/* Folders */}
+              {folders.length > 0 && (
+                <div className="mb-6">
+                  <h2 className="text-lg font-semibold mb-3 text-gray-700">Folders</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {folders.map((folder, index) => (
+                      <div
+                        key={index}
+                        onClick={() => handleFolderClick(folder.name)}
+                        className="flex items-center gap-3 p-4 border rounded-lg hover:bg-blue-50 cursor-pointer transition-colors"
+                      >
+                        <Folder className="w-8 h-8 text-blue-500" />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate">{folder.name}</p>
+                          <p className="text-sm text-gray-500">
+                            {folder.file_count} file{folder.file_count !== 1 ? 's' : ''}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Files */}
+              {files.length > 0 && (
+                <div>
+                  <h2 className="text-lg font-semibold mb-3 text-gray-700">Files</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {files.map((file, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow"
+                      >
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <ImageIcon className="w-6 h-6 text-green-500 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium truncate">{file.name}</p>
+                            <p className="text-sm text-gray-500">{(file.size / 1024).toFixed(2)} KB</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2 ml-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDownload(file.name)}
+                            title="Download"
+                          >
+                            <Download className="w-4 h-4" />
+                          </Button>
+                          {isMasterAdmin && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteFile(file.name)}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              title="Delete (Master Admin only)"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Empty State */}
+              {folders.length === 0 && files.length === 0 && (
+                <div className="text-center py-12 text-gray-500">
+                  <ImageIcon className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                  <p>No screenshots found</p>
+                  <p className="text-sm mt-2">Upload screenshots via Payment Data Extractor and sync to Google Sheets</p>
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
+
+      {/* Image Viewer Modal */}
+      <Dialog open={viewerOpen} onOpenChange={setViewerOpen}>
+        <DialogContent className="max-w-5xl w-full h-[90vh] p-0">
+          <div className="relative w-full h-full flex flex-col bg-black">
+            {/* Close Button */}
+            <button
+              onClick={() => setViewerOpen(false)}
+              className="absolute top-4 right-4 z-10 p-2 bg-black/50 text-white rounded-full hover:bg-black/70"
+            >
+              <X className="w-6 h-6" />
+            </button>
+
+            {/* Image Counter */}
+            <div className="absolute top-4 left-4 z-10 px-3 py-1 bg-black/50 text-white rounded-full text-sm">
+              {currentImageIndex + 1} / {imageUrls.length}
+            </div>
+
+            {/* Main Image */}
+            <div className="flex-1 flex items-center justify-center p-4">
+              {imageUrls.length > 0 && (
+                <img
+                  src={imageUrls[currentImageIndex]}
+                  alt={`Screenshot ${currentImageIndex + 1}`}
+                  className="max-w-full max-h-full object-contain"
+                />
+              )}
+            </div>
+
+            {/* Navigation Buttons */}
+            {imageUrls.length > 1 && (
+              <>
+                <button
+                  onClick={handlePrevImage}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-black/50 text-white rounded-full hover:bg-black/70"
+                >
+                  <PrevIcon className="w-6 h-6" />
+                </button>
+                <button
+                  onClick={handleNextImage}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-black/50 text-white rounded-full hover:bg-black/70"
+                >
+                  <NextIcon className="w-6 h-6" />
+                </button>
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
