@@ -2723,7 +2723,7 @@ async def process_payment_screenshots(
         chat = LlmChat(
             api_key=api_key,
             session_id=f"payment-extraction-{uuid.uuid4()}",
-            system_message="You are an expert at extracting ride payment details from screenshots. Extract data accurately and return structured information."
+            system_message="You are an expert at extracting ride payment details from screenshots. Extract ONLY visible data accurately. DO NOT assume or guess missing information. DO NOT copy data from one ride to another. Return structured information with N/A for any data that is not clearly visible."
         ).with_model("openai", "gpt-4o")
         
         extracted_results = []
