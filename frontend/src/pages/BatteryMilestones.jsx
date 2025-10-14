@@ -279,16 +279,18 @@ const BatteryMilestones = () => {
                     <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-900">
                       <td className="px-3 py-2 text-gray-900 dark:text-white">{row.date}</td>
                       <td className="px-3 py-2 text-gray-900 dark:text-white">{row.vehicle}</td>
-                      <td className="px-3 py-2 text-gray-900 dark:text-white">{row.charge_at_6am}</td>
-                      <td className="px-3 py-2 text-gray-900 dark:text-white">{row.time_at_80}</td>
-                      <td className="px-3 py-2 text-gray-900 dark:text-white">{row.km_at_80}</td>
-                      <td className="px-3 py-2 text-gray-900 dark:text-white">{row.time_at_50}</td>
-                      <td className="px-3 py-2 text-gray-900 dark:text-white">{row.km_at_50}</td>
-                      <td className="px-3 py-2 text-gray-900 dark:text-white">{row.time_at_30}</td>
-                      <td className="px-3 py-2 text-gray-900 dark:text-white">{row.time_at_20}</td>
-                      <td className="px-3 py-2 text-gray-900 dark:text-white">{row.km_at_20}</td>
-                      <td className="px-3 py-2 text-gray-900 dark:text-white font-semibold">{row.derived_mileage}</td>
-                      <td className="px-3 py-2 text-gray-900 dark:text-white">{row.midday_charge}</td>
+                      <td className="px-3 py-2 text-gray-900 dark:text-white">{row.charge_at_6am || "-"}</td>
+                      <td className="px-3 py-2 text-gray-900 dark:text-white">{row.time_at_80 || "-"}</td>
+                      <td className="px-3 py-2 text-gray-900 dark:text-white">{row.km_at_80 || "-"}</td>
+                      <td className="px-3 py-2 text-gray-900 dark:text-white">{row.time_at_50 || "-"}</td>
+                      <td className="px-3 py-2 text-gray-900 dark:text-white">{row.km_at_50 || "-"}</td>
+                      <td className="px-3 py-2 text-gray-900 dark:text-white">{row.time_at_30 || "-"}</td>
+                      <td className="px-3 py-2 text-gray-900 dark:text-white">{row.time_at_20 || "-"}</td>
+                      <td className="px-3 py-2 text-gray-900 dark:text-white">{row.km_at_20 || "-"}</td>
+                      <td className="px-3 py-2 text-gray-900 dark:text-white font-semibold">
+                        {row.derived_mileage ? `${row.derived_mileage} km/%` : "-"}
+                      </td>
+                      <td className="px-3 py-2 text-gray-900 dark:text-white">{row.midday_charge || "-"}</td>
                     </tr>
                   ))}
                 </tbody>
