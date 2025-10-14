@@ -1173,7 +1173,7 @@ class NuraPulseBackendTester:
         
         # Summary
         print("\n" + "="*60)
-        print("📊 TEST SUMMARY - PAYMENT RECONCILIATION DRIVERS AND VEHICLES API")
+        print("📊 TEST SUMMARY - BATTERY CHARGE AUDIT ENDPOINT")
         print("="*60)
         
         total_tests = len(self.test_results)
@@ -1186,7 +1186,7 @@ class NuraPulseBackendTester:
         print(f"Success Rate: {(passed_tests/total_tests)*100:.1f}%")
         
         # Priority test results
-        print(f"\n🎯 PAYMENT RECONCILIATION API RESULT: {'✅ PASS' if payment_reconciliation_success else '❌ FAIL'}")
+        print(f"\n🎯 BATTERY CHARGE AUDIT ENDPOINT RESULT: {'✅ PASS' if battery_audit_success else '❌ FAIL'}")
         
         if failed_tests > 0:
             print("\n❌ FAILED TESTS:")
@@ -1194,8 +1194,8 @@ class NuraPulseBackendTester:
                 if not result["success"]:
                     print(f"  - {result['test']}: {result['message']}")
         
-        overall_success = payment_reconciliation_success and failed_tests <= 3  # Allow some minor failures
-        status = "✅ PAYMENT RECONCILIATION API VERIFIED" if overall_success else "❌ PAYMENT RECONCILIATION API ISSUES FOUND"
+        overall_success = battery_audit_success and failed_tests <= 3  # Allow some minor failures
+        status = "✅ BATTERY CHARGE AUDIT ENDPOINT VERIFIED" if overall_success else "❌ BATTERY CHARGE AUDIT ENDPOINT ISSUES FOUND"
         print(f"\n{status}")
         
         return overall_success
