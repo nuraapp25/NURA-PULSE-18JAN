@@ -402,10 +402,7 @@ const BatteryConsumption = () => {
                         stroke="#3B82F6"
                         label={{ value: 'Distance (km)', angle: 90, position: 'insideRight' }}
                       />
-                      <Tooltip 
-                        contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151' }}
-                        labelStyle={{ color: '#F3F4F6' }}
-                      />
+                      <Tooltip content={<CustomTooltip />} />
                       <Legend />
                       <Line 
                         yAxisId="left"
