@@ -3,11 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { Folder, Image as ImageIcon, ChevronRight, Download, Trash2, ArrowLeft, X, ChevronLeft as PrevIcon, ChevronRight as NextIcon, Eye } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
-import { useAuth } from '@/App';
+import { API, useAuth } from '@/App';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-
-const API = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
 
 const PaymentScreenshots = () => {
   const navigate = useNavigate();
