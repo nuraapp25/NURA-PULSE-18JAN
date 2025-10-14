@@ -7,7 +7,7 @@ import { useAuth } from '@/App';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 
-const API = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001/api';
+const API = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
 
 const PaymentScreenshots = () => {
   const navigate = useNavigate();
