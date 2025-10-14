@@ -218,22 +218,26 @@ const BatteryConsumption = () => {
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
+      
+      // Calculate efficiency for display (km / charge drop %)
+      let efficiencyDisplay = "N/A";
+      if (data.chargeDrop && parseFloat(data.chargeDrop) > 0) {
+        const eff = parseFloat(data.distanceTraveled) / parseFloat(data.chargeDrop);
+        efficiencyDisplay = eff.toFixed(2);
+      }
+      
       return (
         <div className="bg-gray-800 border border-gray-700 p-3 rounded-lg shadow-lg">
           <p className="text-gray-300 font-semibold mb-2">{label}</p>
-          <p className="text-green-400 text-sm">Battery %: {data.battery.toFixed(1)}</p>
+          <p className="text-green-400 text-sm">Battery: {data.battery.toFixed(1)}%</p>
           <p className="text-blue-400 text-sm">Total Distance: {data.distance.toFixed(2)} km</p>
           <div className="border-t border-gray-600 mt-2 pt-2">
             <p className="text-xs text-gray-400 mb-1">This Hour:</p>
             <p className="text-red-400 text-sm">Charge Drop: {data.chargeDrop}%</p>
-            <p className="text-blue-300 text-sm">KM Traveled: {data.distanceTraveled} km</p>
-            {data.efficiency ? (
-              <p className="text-yellow-400 text-sm font-semibold">
-                Efficiency: {data.efficiency} km/%
-              </p>
-            ) : (
-              <p className="text-gray-500 text-sm">Efficiency: N/A (no discharge)</p>
-            )}
+            <p className="text-blue-300 text-sm">Distance Travelled: {data.distanceTraveled} km</p>
+            <p className="text-yellow-400 text-sm font-semibold">
+              Efficiency: {efficiencyDisplay} {efficiencyDisplay !== "N/A" ? "km/%" : ""}
+            </p>
           </div>
         </div>
       );
