@@ -95,6 +95,122 @@ const Files = () => {
     }
   };
 
+  const handleViewFile = async (fileId, filename) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        `${API}/admin/files/${fileId}/download`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: 'blob'
+        }
+      );
+
+      // Determine file type
+      const fileExtension = filename.split('.').pop().toLowerCase();
+      const blob = new Blob([response.data]);
+      const url = window.URL.createObjectURL(blob);
+
+      // Open in new window with scrolling
+      const newWindow = window.open('', '_blank', 'width=1200,height=800,scrollbars=yes');
+      
+      if (newWindow) {
+        if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp'].includes(fileExtension)) {
+          // Image file
+          newWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <title>${filename}</title>
+              <style>
+                body { margin: 0; padding: 20px; background: #f5f5f5; display: flex; flex-direction: column; align-items: center; }
+                h1 { color: #333; margin-bottom: 20px; }
+                img { max-width: 100%; height: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+                .download-btn { background: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin-bottom: 20px; }
+                .download-btn:hover { background: #45a049; }
+              </style>
+            </head>
+            <body>
+              <h1>📷 ${filename}</h1>
+              <button class="download-btn" onclick="window.location.href='${url}'">⬇️ Download</button>
+              <img src="${url}" alt="${filename}" />
+            </body>
+            </html>
+          `);
+        } else if (['pdf'].includes(fileExtension)) {
+          // PDF file
+          newWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <title>${filename}</title>
+              <style>
+                body { margin: 0; height: 100vh; }
+                iframe { width: 100%; height: 100%; border: none; }
+              </style>
+            </head>
+            <body>
+              <iframe src="${url}" type="application/pdf"></iframe>
+            </body>
+            </html>
+          `);
+        } else if (['txt', 'csv', 'json', 'xml', 'log'].includes(fileExtension)) {
+          // Text-based files
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            const text = e.target.result;
+            newWindow.document.write(`
+              <!DOCTYPE html>
+              <html>
+              <head>
+                <title>${filename}</title>
+                <style>
+                  body { font-family: 'Courier New', monospace; padding: 20px; background: #f5f5f5; }
+                  h1 { color: #333; margin-bottom: 20px; }
+                  pre { background: white; padding: 20px; border-radius: 8px; overflow-x: auto; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+                  .download-btn { background: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin-bottom: 20px; }
+                  .download-btn:hover { background: #45a049; }
+                </style>
+              </head>
+              <body>
+                <h1>📄 ${filename}</h1>
+                <button class="download-btn" onclick="window.location.href='${url}'">⬇️ Download</button>
+                <pre>${text.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
+              </body>
+              </html>
+            `);
+          };
+          reader.readAsText(blob);
+        } else {
+          // Unsupported type - just offer download
+          newWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <title>${filename}</title>
+              <style>
+                body { font-family: Arial, sans-serif; padding: 40px; background: #f5f5f5; text-align: center; }
+                h1 { color: #333; }
+                p { color: #666; margin: 20px 0; }
+                .download-btn { background: #4CAF50; color: white; padding: 15px 30px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+                .download-btn:hover { background: #45a049; }
+              </style>
+            </head>
+            <body>
+              <h1>📁 ${filename}</h1>
+              <p>Preview not available for this file type.</p>
+              <button class="download-btn" onclick="window.location.href='${url}'">⬇️ Download File</button>
+            </body>
+            </html>
+          `);
+        }
+        newWindow.document.close();
+      }
+    } catch (error) {
+      toast.error("Failed to view file");
+    }
+  };
+
   const handleDownload = async (fileId, filename) => {
     try {
       const token = localStorage.getItem("token");
