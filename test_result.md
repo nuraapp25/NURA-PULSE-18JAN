@@ -516,7 +516,6 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Expense Tracker Backend APIs"
     - "Expense Tracker - Add Expense Dialog"
     - "Expense Tracker - Expense List Table"
     - "Expense Tracker - Approval Status Management"
