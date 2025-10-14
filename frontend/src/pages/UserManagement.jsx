@@ -502,6 +502,14 @@ const UserManagement = () => {
           </Card>
           <Card className="dark:bg-gray-800 dark:border-gray-700">
             <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Ops Team Users</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.ops_team_users || 0}</p>
+            </CardContent>
+          </Card>
+          <Card className="dark:bg-gray-800 dark:border-gray-700">
+            <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Pending Approval</CardTitle>
             </CardHeader>
             <CardContent>
