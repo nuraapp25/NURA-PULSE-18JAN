@@ -267,6 +267,14 @@ const PaymentScreenshots = () => {
                           <Button
                             variant="ghost"
                             size="sm"
+                            onClick={() => handleViewSingleImage(index)}
+                            title="View"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => handleDownload(file.name)}
                             title="Download"
                           >
