@@ -300,12 +300,12 @@ const PaymentScreenshots = () => {
       </div>
 
       {/* Image Viewer Modal */}
-      <Dialog open={viewerOpen} onOpenChange={setViewerOpen}>
+      <Dialog open={viewerOpen} onOpenChange={(open) => !open && handleCloseViewer()}>
         <DialogContent className="max-w-5xl w-full h-[90vh] p-0">
           <div className="relative w-full h-full flex flex-col bg-black">
             {/* Close Button */}
             <button
-              onClick={() => setViewerOpen(false)}
+              onClick={handleCloseViewer}
               className="absolute top-4 right-4 z-10 p-2 bg-black/50 text-white rounded-full hover:bg-black/70"
             >
               <X className="w-6 h-6" />
