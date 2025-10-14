@@ -58,8 +58,8 @@ const Dashboard = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <img 
-                  src="https://nuraemobility.co.in/assets/Asset%205@4x-DaHkW2HF.png" 
-                  alt="Nura Logo" 
+                  src={theme === 'dark' ? '/nura-white.png' : '/nura-black.png'}
+                  alt="Nura Pulse Logo" 
                   className="h-10 w-auto"
                 />
               </div>
