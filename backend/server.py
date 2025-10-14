@@ -1967,7 +1967,9 @@ async def get_battery_milestones(
                                     # If battery increased (charging)
                                     if battery_pct > prev_battery_midday:
                                         charge_added = battery_pct - prev_battery_midday
-                                        total_midday_charge += charge_added
+                                        # Only add if reasonable increase (not data error)
+                                        if charge_added < 50:
+                                            total_midday_charge += charge_added
                                 
                                 prev_battery_midday = battery_pct
                         except:
