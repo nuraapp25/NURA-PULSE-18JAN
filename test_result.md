@@ -282,6 +282,21 @@ backend:
           agent: "testing"
           comment: "✅ COMPREHENSIVE TESTING COMPLETE: Battery Charge Audit endpoint (GET /montra-vehicle/battery-audit) fully tested and verified working perfectly. Key findings: 1) AUTHENTICATION: Correctly requires Bearer token (returns 403 without token, 200 with valid token). 2) RESPONSE FORMAT: Returns proper JSON structure with all required fields - success: true, audit_results: [], count: 0, message: 'Found 0 instances where battery dropped below 20% between 7 AM - 7 PM'. 3) EMPTY DATA HANDLING: Correctly handles no Montra feed data scenario with count: 0 and informative message as expected. 4) RESPONSE STRUCTURE: Validates that each audit result would contain required fields: date, vehicle_name, timestamp, battery_percentage, km_driven_upto_point. 5) DATA TYPES: All response fields have correct data types (success: bool, audit_results: array, count: int, message: string). 100% test success rate (10/10 tests passed). Endpoint ready for production use and will correctly analyze battery charge drops once Montra vehicle data is imported."
 
+  - task: "Payment Screenshots Page - File/Image Viewer"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/PaymentScreenshots.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "user"
+          comment: "User reported Payment Screenshots page is blank/white and not rendering uploaded content."
+        - working: true
+          agent: "main"
+          comment: "✅ FIXED: Payment Screenshots page now fully functional. Root cause: Component was using locally defined API constant instead of importing from App.js. Fixed by changing 'const API = process.env.REACT_APP_BACKEND_URL' to 'import { API, useAuth } from @/App'. Page now displays: 1) Folder navigation (Month Year / Driver Name structure). 2) File listing with download/delete options. 3) Image viewer modal with slider (next/prev buttons). 4) Breadcrumb navigation. 5) File count badges. Tested workflow: Login → Navigate to Payment Screenshots → View folders (Sep 2025, Oct 2025) → Click folder → View driver subfolders → Click driver folder → View files → Click 'View All Images' → Image viewer modal opens with navigation. All features working correctly including Master Admin delete restrictions."
+
 frontend:
   - task: "Login Page"
     implemented: true
