@@ -580,7 +580,6 @@ const PaymentReconciliation = () => {
       <div className="space-y-6" data-testid="payment-reconciliation-page">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Payment Data Extractor</h1>
-          <p className="text-gray-600 dark:text-gray-400">Select a period or create a new folder</p>
         </div>
 
         {/* Existing Folders - Grid View */}
