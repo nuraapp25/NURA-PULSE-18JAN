@@ -49,6 +49,14 @@ const MontraVehicle = () => {
       route: "/dashboard/montra-vehicle/battery-audit"
     },
     {
+      id: "morning-charge-audit",
+      title: "Morning Charge Audit",
+      icon: Sun,
+      color: "bg-orange-500",
+      description: "6 AM charge below 95% - charging issues",
+      route: "/dashboard/montra-vehicle/morning-charge-audit"
+    },
+    {
       id: "performance",
       title: "Performance Metrics",
       icon: TrendingUp,
