@@ -117,11 +117,6 @@ const PaymentScreenshots = () => {
   };
 
   const handleDeleteFile = async (fileName) => {
-    if (!isMasterAdmin) {
-      toast.error('Only Master Admin can delete files');
-      return;
-    }
-    
     if (!window.confirm(`Are you sure you want to delete "${fileName}"?`)) {
       return;
     }
