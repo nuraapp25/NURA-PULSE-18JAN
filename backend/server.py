@@ -1838,22 +1838,27 @@ async def get_battery_milestones(
                     # Sort records by time
                     day_records.sort(key=lambda x: x.get("time", "00:00:00"))
                     
+                    # Skip if insufficient data
+                    if len(day_records) < 5:
+                        continue
+                    
                     analysis = {
                         "date": date_str,
                         "vehicle": vehicle_id,
-                        "charge_at_6am": "N/A",
-                        "time_at_80": "N/A",
-                        "km_at_80": "N/A",
-                        "time_at_50": "N/A",
-                        "km_at_50": "N/A",
-                        "time_at_30": "N/A",
-                        "time_at_20": "N/A",
-                        "km_at_20": "N/A",
-                        "derived_mileage": "N/A",
-                        "midday_charge": "N/A"
+                        "charge_at_6am": None,
+                        "time_at_80": None,
+                        "km_at_80": None,
+                        "time_at_50": None,
+                        "km_at_50": None,
+                        "time_at_30": None,
+                        "time_at_20": None,
+                        "km_at_20": None,
+                        "derived_mileage": None,
+                        "midday_charge": None
                     }
                     
                     # Find charge at 6AM (or closest time before 7AM)
+                    charge_at_6am = None
                     for record in day_records:
                         record_time_str = record.get("time", "00:00:00")
                         try:
@@ -1861,9 +1866,15 @@ async def get_battery_milestones(
                             if record_time <= dt_time(7, 0):
                                 battery_pct = record.get("battery_soc_percentage")
                                 if battery_pct is not None:
-                                    analysis["charge_at_6am"] = f"{battery_pct}%"
+                                    charge_at_6am = battery_pct
                         except:
                             pass
+                    
+                    # Skip this day if no 6AM charge found
+                    if charge_at_6am is None:
+                        continue
+                    
+                    analysis["charge_at_6am"] = f"{charge_at_6am}%"
                     
                     # Find milestones (80%, 50%, 30%, 20%) - first occurrence during driving
                     milestones = {80: False, 50: False, 30: False, 20: False}
