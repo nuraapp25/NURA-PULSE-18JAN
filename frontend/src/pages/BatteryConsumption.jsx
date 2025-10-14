@@ -382,7 +382,8 @@ const BatteryConsumption = () => {
                         stroke="#10B981" 
                         strokeWidth={2}
                         name="Battery %"
-                        dot={{ r: 3 }}
+                        dot={false}
+                        activeDot={false}
                       />
                       <Line 
                         yAxisId="right"
@@ -391,7 +392,8 @@ const BatteryConsumption = () => {
                         stroke="#3B82F6" 
                         strokeWidth={2}
                         name="Distance (km)"
-                        dot={{ r: 3 }}
+                        dot={false}
+                        activeDot={false}
                       />
                     </LineChart>
                   </ResponsiveContainer>
