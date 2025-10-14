@@ -827,6 +827,112 @@ const MontraVehicle = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* View File Data Dialog */}
+      <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+        <DialogContent className="max-w-6xl dark:bg-gray-800">
+          <DialogHeader>
+            <DialogTitle className="dark:text-white flex items-center">
+              <Eye size={20} className="mr-2" />
+              View File Data
+              {viewingFileData && (
+                <span className="ml-2 text-sm font-normal text-gray-600 dark:text-gray-400">
+                  {viewingFileData.file.filename}
+                </span>
+              )}
+            </DialogTitle>
+            <DialogDescription className="dark:text-gray-400">
+              Preview the data from the selected CSV file
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 mt-4">
+            {loadingFileData ? (
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <span className="ml-3 text-gray-600 dark:text-gray-400">Loading file data...</span>
+              </div>
+            ) : viewingFileData ? (
+              <div className="space-y-4">
+                {/* File Info */}
+                <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div>
+                      <span className="font-medium text-gray-700 dark:text-gray-300">Vehicle ID:</span>
+                      <div className="text-gray-900 dark:text-white">{viewingFileData.file.vehicle_id}</div>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700 dark:text-gray-300">Date:</span>
+                      <div className="text-gray-900 dark:text-white">{viewingFileData.file.date}</div>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700 dark:text-gray-300">Records:</span>
+                      <div className="text-gray-900 dark:text-white">{viewingFileData.file.record_count}</div>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700 dark:text-gray-300">File Size:</span>
+                      <div className="text-gray-900 dark:text-white">
+                        {viewingFileData.file.file_size ? `${(viewingFileData.file.file_size / 1024).toFixed(2)} KB` : 'N/A'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Data Table */}
+                <div className="border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden">
+                  <div className="max-h-96 overflow-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-100 dark:bg-gray-700 sticky top-0">
+                        <tr>
+                          {viewingFileData.columns.map((column, index) => (
+                            <th key={index} className="px-4 py-3 text-left font-medium text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 last:border-r-0">
+                              {column}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
+                        {viewingFileData.data.map((row, rowIndex) => (
+                          <tr key={rowIndex} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                            {viewingFileData.columns.map((column, colIndex) => (
+                              <td key={colIndex} className="px-4 py-3 text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 last:border-r-0">
+                                {row[column] !== null && row[column] !== undefined ? String(row[column]) : '-'}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Data Summary */}
+                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
+                  <p className="text-sm text-blue-800 dark:text-blue-200">
+                    <strong>Data Preview:</strong> Showing {viewingFileData.data.length} records with {viewingFileData.columns.length} columns
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                No data to display
+              </div>
+            )}
+
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button
+                onClick={() => {
+                  setViewDialogOpen(false);
+                  setViewingFileData(null);
+                }}
+                variant="outline"
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
