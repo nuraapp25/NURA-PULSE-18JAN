@@ -768,15 +768,26 @@ const MontraVehicle = () => {
                                           </span>
                                         </div>
                                       </div>
-                                      <div className="text-right">
-                                        <div className="text-sm text-gray-500 dark:text-gray-400">
-                                          {file.uploaded_at ? new Date(file.uploaded_at).toLocaleDateString() : 'N/A'}
-                                        </div>
-                                        {file.file_size && (
-                                          <div className="text-xs text-gray-400">
-                                            {(file.file_size / 1024).toFixed(2)} KB
+                                      <div className="flex items-center space-x-2">
+                                        <div className="text-right">
+                                          <div className="text-sm text-gray-500 dark:text-gray-400">
+                                            {file.uploaded_at ? new Date(file.uploaded_at).toLocaleDateString() : 'N/A'}
                                           </div>
-                                        )}
+                                          {file.file_size && (
+                                            <div className="text-xs text-gray-400">
+                                              {(file.file_size / 1024).toFixed(2)} KB
+                                            </div>
+                                          )}
+                                        </div>
+                                        <Button
+                                          onClick={() => handleViewFile(file)}
+                                          variant="outline"
+                                          size="sm"
+                                          className="ml-2"
+                                        >
+                                          <Eye size={16} className="mr-1" />
+                                          View
+                                        </Button>
                                       </div>
                                     </div>
                                   </div>
