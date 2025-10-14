@@ -2924,12 +2924,13 @@ Be precise and extract ALL rides shown in the screenshot. If a screenshot shows 
                     os.makedirs(driver_dir, exist_ok=True)
                     
                     logger.info(f"Attempting to save {len(files)} files to {driver_dir}")
-                    logger.info(f"Temp files available: {temp_files}")
+                    logger.info(f"File mapping: {file_mapping}")
                     
                     # Copy files to the driver folder with duplicate handling
                     saved_count = 0
                     for file in files:
-                        src_path = next((tf for tf in temp_files if file.filename in tf), None)
+                        # Get the temp file path from our mapping
+                        src_path = file_mapping.get(file.filename)
                         logger.info(f"Looking for {file.filename}, found: {src_path}")
                         
                         if src_path and os.path.exists(src_path):
@@ -2948,11 +2949,11 @@ Be precise and extract ALL rides shown in the screenshot. If a screenshot shows 
                             import shutil
                             shutil.copy2(src_path, dest_path)
                             saved_count += 1
-                            logger.info(f"Saved screenshot: {dest_path}")
+                            logger.info(f"✅ Saved screenshot: {dest_path}")
                         else:
-                            logger.warning(f"Source file not found or doesn't exist: {src_path}")
+                            logger.warning(f"❌ Source file not found or doesn't exist: {src_path}")
                     
-                    logger.info(f"Successfully saved {saved_count}/{len(files)} screenshots to {driver_dir}")
+                    logger.info(f"✅ Successfully saved {saved_count}/{len(files)} screenshots to {driver_dir}")
                 except Exception as e:
                     logger.error(f"Error saving screenshots to folder: {str(e)}")
                     import traceback
