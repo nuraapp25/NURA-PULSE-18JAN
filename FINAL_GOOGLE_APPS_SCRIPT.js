@@ -128,7 +128,11 @@ function doPost(e) {
 }
 
 // Test function - Run this to verify the script works
+// IMPORTANT: Select "testSync" from the dropdown and click Run
+// DO NOT run "doPost" directly - it will give an error
 function testSync() {
+  Logger.log("Starting test sync...");
+  
   var testData = {
     data: [
       {
@@ -167,12 +171,28 @@ function testSync() {
     month_year: "Test Oct 2025"
   };
   
+  Logger.log("Test data prepared");
+  
   var e = {
     postData: {
       contents: JSON.stringify(testData)
     }
   };
   
+  Logger.log("Calling doPost with test data...");
   var response = doPost(e);
-  Logger.log(response.getContent());
+  var result = response.getContent();
+  
+  Logger.log("Response: " + result);
+  
+  // Parse and display result
+  var resultObj = JSON.parse(result);
+  if (resultObj.success) {
+    Logger.log("✅ TEST PASSED: " + resultObj.message);
+    Logger.log("Check your spreadsheet for a new tab: " + resultObj.sheetName);
+  } else {
+    Logger.log("❌ TEST FAILED: " + resultObj.message);
+  }
+  
+  return result;
 }
