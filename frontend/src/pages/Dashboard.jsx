@@ -22,7 +22,7 @@ const Dashboard = () => {
   ];
 
   const apps = [
-    { name: "Payment Reconciliation", icon: FileText, path: "/dashboard/payment-reconciliation" },
+    { name: "Payment Data Extractor", icon: FileText, path: "/dashboard/payment-reconciliation" },
     { name: "Driver Onboarding", icon: Car, path: "/dashboard/driver-onboarding" },
     { name: "Telecaller's Desk", icon: Phone, path: "/dashboard/telecaller-queue" },
     { name: "Montra Vehicle Insights", icon: BarChart3, path: "/dashboard/montra-vehicle" },
