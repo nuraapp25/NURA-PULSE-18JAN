@@ -76,7 +76,7 @@ class UserCreate(BaseModel):
     last_name: Optional[str] = None
     email: str
     password: str
-    account_type: str  # "admin" or "standard"
+    account_type: str  # "admin", "standard", or "ops_team"
 
 
 class UserLogin(BaseModel):
