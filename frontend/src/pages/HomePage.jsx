@@ -44,52 +44,6 @@ const HomePage = () => {
           </Card>
         ))}
       </div>
-
-      {/* Quick Info */}
-      <Card className="dark:bg-gray-800 dark:border-gray-700">
-        <CardHeader>
-          <CardTitle className="text-gray-900 dark:text-white">Getting Started</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-start space-x-3">
-            <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
-              <span className="text-blue-600 dark:text-blue-400 font-semibold">1</span>
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-1">Explore Apps</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Access various data management apps from the sidebar to manage payments, drivers, and more.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-start space-x-3">
-            <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
-              <span className="text-blue-600 dark:text-blue-400 font-semibold">2</span>
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-1">Manage Settings</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Customize your preferences and account settings from the Settings page.
-              </p>
-            </div>
-          </div>
-
-          {user?.account_type === "master_admin" && (
-            <div className="flex items-start space-x-3">
-              <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
-                <span className="text-blue-600 dark:text-blue-400 font-semibold">3</span>
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white mb-1">User Management</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  As a master admin, you have access to comprehensive user management tools.
-                </p>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 };
