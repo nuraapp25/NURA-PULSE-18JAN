@@ -3027,6 +3027,39 @@ async def sync_payment_data_to_sheets(
         raise HTTPException(status_code=500, detail=f"Error syncing to Google Sheets: {str(e)}")
 
 
+@api_router.post("/payment-reconciliation/delete-records")
+async def delete_payment_records(
+    request: Request,
+    current_user: User = Depends(get_current_user)
+):
+    """Delete payment records after successful sync to Google Sheets"""
+    try:
+        body = await request.json()
+        record_ids = body.get("record_ids", [])
+        month_year = body.get("month_year", "")
+        
+        if not record_ids:
+            return {"success": True, "message": "No records to delete"}
+        
+        # Delete records from MongoDB
+        delete_result = await db.payment_records.delete_many({
+            "id": {"$in": record_ids},
+            "month_year": month_year
+        })
+        
+        logger.info(f"Deleted {delete_result.deleted_count} payment records for {month_year}")
+        
+        return {
+            "success": True,
+            "deleted_count": delete_result.deleted_count,
+            "message": f"Successfully deleted {delete_result.deleted_count} records"
+        }
+        
+    except Exception as e:
+        logger.error(f"Error deleting payment records: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error deleting records: {str(e)}")
+
+
 @api_router.get("/payment-reconciliation/sync-status")
 async def get_payment_sync_status(current_user: User = Depends(get_current_user)):
     """Get last sync status for payment reconciliation"""
