@@ -3003,9 +3003,8 @@ async def sync_payment_data_to_sheets(
         # Call Apps Script Web App
         import requests
         payload = {
-            "action": "sync_from_backend",
-            "month_year": month_year,
-            "records": records_to_sync
+            "data": records_to_sync,
+            "month_year": month_year
         }
         
         response = requests.post(apps_script_url, json=payload, timeout=30)
