@@ -72,10 +72,13 @@ function doPost(e) {
       sheet.setFrozenRows(1);
     }
     
-    // Clear existing data (keep headers)
+    // Find the last row with data (don't clear existing data)
     var lastRow = sheet.getLastRow();
-    if (lastRow > 1) {
-      sheet.getRange(2, 1, lastRow - 1, sheet.getLastColumn()).clearContent();
+    var nextRow = lastRow + 1; // Start from next empty row
+    
+    // If sheet only has headers (row 1), start from row 2
+    if (lastRow === 1) {
+      nextRow = 2;
     }
     
     // Prepare data for insertion
@@ -103,9 +106,10 @@ function doPost(e) {
       ]);
     }
     
-    // Insert data starting from row 2
+    // Append data starting from the next empty row
     if (rowsData.length > 0) {
-      sheet.getRange(2, 1, rowsData.length, rowsData[0].length).setValues(rowsData);
+      sheet.getRange(nextRow, 1, rowsData.length, rowsData[0].length).setValues(rowsData);
+      Logger.log("Appended " + rowsData.length + " rows starting from row " + nextRow);
     }
     
     // Return success
