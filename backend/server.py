@@ -2297,18 +2297,22 @@ async def get_battery_charge_audit(current_user: User = Depends(get_current_user
                     continue
                 
                 try:
-                    # Parse time - handle different time formats
+                    # Parse time - handle different time formats including datetime strings
                     if isinstance(time_str, str):
-                        # Handle time with potential timezone or extra info
-                        time_part = time_str.split()[0] if ' ' in time_str else time_str
-                        # Try different time formats
+                        # Try to parse as datetime first (e.g., "2025-09-30 18:09:56")
                         try:
-                            record_time = datetime.strptime(time_part, "%H:%M:%S").time()
+                            dt = datetime.fromisoformat(time_str.replace(' ', 'T'))
+                            record_time = dt.time()
                         except:
+                            # Try as time only
+                            time_part = time_str.split()[0] if ' ' in time_str else time_str
                             try:
-                                record_time = datetime.strptime(time_part, "%H:%M").time()
+                                record_time = datetime.strptime(time_part, "%H:%M:%S").time()
                             except:
-                                continue
+                                try:
+                                    record_time = datetime.strptime(time_part, "%H:%M").time()
+                                except:
+                                    continue
                     else:
                         continue
                     
