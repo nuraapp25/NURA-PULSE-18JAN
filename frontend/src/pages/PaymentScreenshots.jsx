@@ -55,6 +55,90 @@ const PaymentScreenshots = () => {
     setCurrentPath(currentPath.slice(0, -1));
   };
 
+  const handleViewImages = () => {
+    if (files.length === 0) {
+      toast.error('No images to view');
+      return;
+    }
+    
+    const token = localStorage.getItem('token');
+    const path = currentPath.join('/');
+    
+    // Create URLs for all image files
+    const urls = files.map(file => 
+      `${API}/admin/payment-screenshots/download?path=${encodeURIComponent(path ? `${path}/${file.name}` : file.name)}&token=${token}`
+    );
+    
+    setImageUrls(urls);
+    setCurrentImageIndex(0);
+    setViewerOpen(true);
+  };
+
+  const handleNextImage = () => {
+    setCurrentImageIndex((prev) => (prev + 1) % imageUrls.length);
+  };
+
+  const handlePrevImage = () => {
+    setCurrentImageIndex((prev) => (prev - 1 + imageUrls.length) % imageUrls.length);
+  };
+
+  const handleDeleteFile = async (fileName) => {
+    if (!isMasterAdmin) {
+      toast.error('Only Master Admin can delete files');
+      return;
+    }
+    
+    if (!window.confirm(`Are you sure you want to delete "${fileName}"?`)) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const path = currentPath.join('/');
+      const filePath = path ? `${path}/${fileName}` : fileName;
+
+      await axios.delete(`${API}/admin/payment-screenshots/delete`, {
+        headers: { Authorization: `Bearer ${token}` },
+        data: { path: filePath }
+      });
+
+      toast.success('File deleted successfully');
+      fetchContents();
+    } catch (error) {
+      console.error('Error deleting file:', error);
+      toast.error('Failed to delete file');
+    }
+  };
+
+  const handleDownload = async (fileName) => {
+    try {
+      const token = localStorage.getItem('token');
+      const path = currentPath.join('/');
+      const filePath = path ? `${path}/${fileName}` : fileName;
+
+      const response = await axios.get(`${API}/admin/payment-screenshots/download`, {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { path: filePath },
+        responseType: 'blob'
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', fileName);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('File downloaded successfully');
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      toast.error('Failed to download file');
+    }
+  };
+  };
+
   const handleDownload = async (fileName) => {
     try {
       const token = localStorage.getItem('token');
