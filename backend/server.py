@@ -3387,8 +3387,8 @@ async def download_payment_screenshot(
 ):
     """Download a file from payment screenshots directory"""
     try:
-        # Only allow Master Admin access
-        if current_user.account_type not in ["master_admin", "admin"]:
+        # Allow all authenticated users to download
+        if current_user.account_type not in ["master_admin", "admin", "standard", "ops_team"]:
             raise HTTPException(status_code=403, detail="Access denied")
         
         base_dir = "/app/backend/payment_screenshots"
