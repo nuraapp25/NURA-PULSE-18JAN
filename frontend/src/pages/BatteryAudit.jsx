@@ -47,12 +47,13 @@ const BatteryAudit = () => {
       return;
     }
 
-    const headers = ["Date", "Vehicle Name", "Timestamp", "Battery %", "KM Driven (from start of day)"];
+    const headers = ["Date", "Vehicle Name", "Charge at 7 AM", "Timestamp", "Battery %", "KM Driven (from start of day)"];
     const csvContent = [
       headers.join(","),
       ...auditData.map(item => [
         item.date,
         item.vehicle_name,
+        item.charge_at_7am,
         item.timestamp,
         item.battery_percentage,
         item.km_driven_upto_point
