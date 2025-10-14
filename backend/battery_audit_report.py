@@ -14,8 +14,8 @@ load_dotenv()
 
 # Configuration
 BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', 'https://charge-tracker-3.preview.emergentagent.com/api')
-LOGIN_EMAIL = 'admin'
-LOGIN_PASSWORD = 'Nura@1234$'
+LOGIN_EMAIL = os.getenv('ADMIN_EMAIL', 'admin')
+LOGIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'Nura@1234$')
 
 def get_auth_token():
     """Login and get authentication token"""
