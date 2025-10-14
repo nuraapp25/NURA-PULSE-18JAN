@@ -680,6 +680,7 @@ const UserManagement = () => {
                         ${user.account_type === 'master_admin' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' : ''}
                         ${user.account_type === 'admin' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : ''}
                         ${user.account_type === 'standard' ? 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300' : ''}
+                        ${user.account_type === 'ops_team' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : ''}
                       `}>
                         {user.account_type.replace('_', ' ')}
                       </span>
