@@ -1790,6 +1790,190 @@ async def delete_montra_feed_files(
         raise HTTPException(status_code=500, detail="Failed to delete montra feed files")
 
 
+
+@api_router.post("/montra-vehicle/battery-milestones")
+async def get_battery_milestones(
+    request: Request,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Analyze battery charge milestones for vehicles over a date range.
+    Returns time and km when battery hits 80%, 50%, 30%, 20%, plus derived mileage and mid-day charging.
+    """
+    try:
+        from datetime import datetime, time as dt_time
+        import pandas as pd
+        
+        data = await request.json()
+        vehicle_ids = data.get("vehicle_ids", [])
+        start_date = data.get("start_date")  # Format: "01 Sep"
+        end_date = data.get("end_date")      # Format: "30 Sep"
+        
+        if not vehicle_ids or not start_date or not end_date:
+            raise HTTPException(status_code=400, detail="vehicle_ids, start_date, and end_date are required")
+        
+        results = []
+        
+        for vehicle_id in vehicle_ids:
+            # Query data for this vehicle in date range
+            query = {
+                "vehicle_id": vehicle_id,
+                "date": {"$gte": start_date, "$lte": end_date}
+            }
+            
+            # Get all records for this vehicle in the date range, grouped by date
+            records = await db.montra_feed_data.find(query).sort("date", 1).to_list(10000)
+            
+            # Group by date
+            date_groups = {}
+            for record in records:
+                date_key = record.get("date")
+                if date_key not in date_groups:
+                    date_groups[date_key] = []
+                date_groups[date_key].append(record)
+            
+            # Analyze each date
+            for date_str, day_records in date_groups.items():
+                try:
+                    # Sort records by time
+                    day_records.sort(key=lambda x: x.get("time", "00:00:00"))
+                    
+                    analysis = {
+                        "date": date_str,
+                        "vehicle": vehicle_id,
+                        "charge_at_6am": "N/A",
+                        "time_at_80": "N/A",
+                        "km_at_80": "N/A",
+                        "time_at_50": "N/A",
+                        "km_at_50": "N/A",
+                        "time_at_30": "N/A",
+                        "time_at_20": "N/A",
+                        "km_at_20": "N/A",
+                        "derived_mileage": "N/A",
+                        "midday_charge": "N/A"
+                    }
+                    
+                    # Find charge at 6AM (or closest time before 7AM)
+                    for record in day_records:
+                        record_time_str = record.get("time", "00:00:00")
+                        try:
+                            record_time = datetime.strptime(record_time_str, "%H:%M:%S").time()
+                            if record_time <= dt_time(7, 0):
+                                battery_pct = record.get("battery_soc_percentage")
+                                if battery_pct is not None:
+                                    analysis["charge_at_6am"] = f"{battery_pct}%"
+                        except:
+                            pass
+                    
+                    # Find milestones (80%, 50%, 30%, 20%) - first occurrence during driving
+                    milestones = {80: False, 50: False, 30: False, 20: False}
+                    prev_battery = None
+                    
+                    for record in day_records:
+                        battery_pct = record.get("battery_soc_percentage")
+                        km = record.get("km")
+                        record_time = record.get("time")
+                        
+                        if battery_pct is None:
+                            continue
+                        
+                        # Check if battery is decreasing (driving, not charging)
+                        is_driving = prev_battery is not None and battery_pct < prev_battery
+                        
+                        if is_driving or prev_battery is None:
+                            # Check each milestone
+                            for milestone in [80, 50, 30, 20]:
+                                if not milestones[milestone]:
+                                    if battery_pct <= milestone:
+                                        milestones[milestone] = True
+                                        if milestone == 80:
+                                            analysis["time_at_80"] = record_time
+                                            analysis["km_at_80"] = km if km else "N/A"
+                                        elif milestone == 50:
+                                            analysis["time_at_50"] = record_time
+                                            analysis["km_at_50"] = km if km else "N/A"
+                                        elif milestone == 30:
+                                            analysis["time_at_30"] = record_time
+                                        elif milestone == 20:
+                                            analysis["time_at_20"] = record_time
+                                            analysis["km_at_20"] = km if km else "N/A"
+                        
+                        prev_battery = battery_pct
+                    
+                    # Calculate derived mileage (km per % charge drop during driving periods)
+                    # Only consider periods where battery is decreasing (driving)
+                    driving_segments = []
+                    prev_record = None
+                    
+                    for record in day_records:
+                        battery_pct = record.get("battery_soc_percentage")
+                        km = record.get("km")
+                        
+                        if prev_record and battery_pct is not None and km is not None:
+                            prev_battery_pct = prev_record.get("battery_soc_percentage")
+                            prev_km = prev_record.get("km")
+                            
+                            if prev_battery_pct and prev_km:
+                                # Check if driving (battery decreasing)
+                                if battery_pct < prev_battery_pct:
+                                    charge_drop = prev_battery_pct - battery_pct
+                                    km_traveled = km - prev_km
+                                    
+                                    if charge_drop > 0 and km_traveled > 0:
+                                        efficiency = km_traveled / charge_drop
+                                        driving_segments.append(efficiency)
+                        
+                        prev_record = record
+                    
+                    if driving_segments:
+                        avg_mileage = sum(driving_segments) / len(driving_segments)
+                        analysis["derived_mileage"] = f"{avg_mileage:.2f} km/%"
+                    
+                    # Calculate mid-day charge (7AM to 7PM)
+                    total_midday_charge = 0
+                    prev_battery_midday = None
+                    
+                    for record in day_records:
+                        record_time_str = record.get("time", "00:00:00")
+                        battery_pct = record.get("battery_soc_percentage")
+                        
+                        try:
+                            record_time = datetime.strptime(record_time_str, "%H:%M:%S").time()
+                            
+                            # Check if between 7AM and 7PM
+                            if dt_time(7, 0) <= record_time <= dt_time(19, 0):
+                                if battery_pct is not None and prev_battery_midday is not None:
+                                    # If battery increased (charging)
+                                    if battery_pct > prev_battery_midday:
+                                        charge_added = battery_pct - prev_battery_midday
+                                        total_midday_charge += charge_added
+                                
+                                prev_battery_midday = battery_pct
+                        except:
+                            pass
+                    
+                    if total_midday_charge > 0:
+                        analysis["midday_charge"] = f"{total_midday_charge:.1f}%"
+                    
+                    results.append(analysis)
+                    
+                except Exception as e:
+                    logger.error(f"Error analyzing date {date_str} for vehicle {vehicle_id}: {str(e)}")
+                    continue
+        
+        return {
+            "success": True,
+            "milestones": results,
+            "count": len(results)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in battery milestones analysis: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error analyzing battery milestones: {str(e)}")
+
+
 @api_router.get("/admin/files/get-drivers-vehicles")
 async def get_drivers_and_vehicles(
     month: str = Query(..., description="Month name (e.g., Sep)"),
