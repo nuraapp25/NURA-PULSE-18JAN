@@ -2591,6 +2591,9 @@ async def get_drivers_and_vehicles(
         }
         month_name = month_names.get(month, month)
         
+        # Ensure month name is title case (handles "sep" -> "Sep", "SEP" -> "Sep", etc.)
+        month_name = month_name.capitalize()
+        
         # Tab name format: "Sep 2025", "Oct 2025", etc.
         tab_name = f"{month_name} {year}"
         
