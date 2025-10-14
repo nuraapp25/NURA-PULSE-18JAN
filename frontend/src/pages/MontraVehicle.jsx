@@ -318,9 +318,6 @@ const MontraVehicle = () => {
   };
 
   const handleViewFile = async (file) => {
-    setLoadingFileData(true);
-    setViewDialogOpen(true);
-    
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
@@ -334,18 +331,89 @@ const MontraVehicle = () => {
       );
 
       if (response.data.success) {
-        setViewingFileData({
-          file: file,
-          data: response.data.data,
-          columns: response.data.columns
-        });
+        // Open in new window with scrolling
+        const newWindow = window.open('', '_blank', 'width=1200,height=800,scrollbars=yes');
+        if (newWindow) {
+          const data = response.data.data;
+          const columns = response.data.columns;
+          
+          // Create HTML content
+          let htmlContent = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <title>${file.filename}</title>
+              <style>
+                body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+                h1 { color: #333; margin-bottom: 20px; }
+                .info { background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+                .info p { margin: 5px 0; color: #666; }
+                table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+                th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+                th { background-color: #4CAF50; color: white; position: sticky; top: 0; }
+                tr:nth-child(even) { background-color: #f9f9f9; }
+                tr:hover { background-color: #f5f5f5; }
+                .download-btn { background: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin-bottom: 20px; }
+                .download-btn:hover { background: #45a049; }
+              </style>
+            </head>
+            <body>
+              <div class="info">
+                <h1>📊 ${file.filename}</h1>
+                <p><strong>Vehicle:</strong> ${file.vehicle_name || file.vehicle_id}</p>
+                <p><strong>Date:</strong> ${file.date}</p>
+                <p><strong>Records:</strong> ${data.length}</p>
+              </div>
+              <button class="download-btn" onclick="downloadCSV()">⬇️ Download as CSV</button>
+              <div style="overflow-x: auto;">
+                <table>
+                  <thead>
+                    <tr>
+                      ${columns.map(col => `<th>${col}</th>`).join('')}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${data.map(row => `
+                      <tr>
+                        ${columns.map(col => `<td>${row[col] !== null && row[col] !== undefined ? row[col] : ''}</td>`).join('')}
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+              <script>
+                function downloadCSV() {
+                  const data = ${JSON.stringify(data)};
+                  const columns = ${JSON.stringify(columns)};
+                  
+                  let csv = columns.join(',') + '\\n';
+                  data.forEach(row => {
+                    csv += columns.map(col => {
+                      const value = row[col];
+                      return value !== null && value !== undefined ? '"' + String(value).replace(/"/g, '""') + '"' : '';
+                    }).join(',') + '\\n';
+                  });
+                  
+                  const blob = new Blob([csv], { type: 'text/csv' });
+                  const url = window.URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = '${file.filename.replace(/\\.xlsx?$/i, '')}.csv';
+                  a.click();
+                  window.URL.revokeObjectURL(url);
+                }
+              </script>
+            </body>
+            </html>
+          `;
+          
+          newWindow.document.write(htmlContent);
+          newWindow.document.close();
+        }
       }
     } catch (error) {
       toast.error("Failed to load file data");
       console.error("View file error:", error);
-      setViewDialogOpen(false);
-    } finally {
-      setLoadingFileData(false);
     }
   };
 
