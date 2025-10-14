@@ -1416,6 +1416,9 @@ async def import_montra_feed(file: UploadFile = File(...), current_user: User = 
         
         logger.info(f"Prepared {len(rows_to_import)} rows for import")
         
+        # Load mode mapping tables
+        model_dict, mode_dict = load_mode_mapping_tables()
+        
         # Also save to MongoDB for analytics queries
         montra_docs = []
         headers = df.columns.tolist() + ['Vehicle ID', 'Separator', 'Day', 'Month', 'Registration Number']
@@ -1435,6 +1438,21 @@ async def import_montra_feed(file: UploadFile = File(...), current_user: User = 
             for i, header in enumerate(headers):
                 if i < len(row_data):
                     doc[header] = row_data[i]
+            
+            # Enrich with Mode Name and Mode Type
+            ride_mode = doc.get("Ride Mode", "")
+            if ride_mode:
+                mode_name, mode_type = enrich_with_mode_data(
+                    registration_number if registration_number else vehicle_id,
+                    str(ride_mode),
+                    model_dict,
+                    mode_dict
+                )
+                doc["mode_name"] = mode_name
+                doc["mode_type"] = mode_type
+            else:
+                doc["mode_name"] = "Unknown"
+                doc["mode_type"] = "Unknown"
             
             montra_docs.append(doc)
         
