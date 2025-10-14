@@ -187,6 +187,7 @@ const BatteryConsumption = () => {
       
       let chargeDrop = 0;
       let distanceTraveled = 0;
+      let batteryChange = 0;
       
       // Compare with previous hour
       if (index > 0) {
@@ -197,7 +198,7 @@ const BatteryConsumption = () => {
         const prevBattery = parseFloat(prevLastReading['Battery Soc(%)'] || prevLastReading['Battery SOC (%)'] || 0);
         const prevAbsoluteDistance = parseFloat(prevLastReading['Odometer (km)'] || 0);
         
-        const batteryChange = currentBattery - prevBattery;
+        batteryChange = currentBattery - prevBattery;
         distanceTraveled = absoluteDistance - prevAbsoluteDistance;
         
         // Charge drop when battery decreases
@@ -212,6 +213,7 @@ const BatteryConsumption = () => {
         distance: normalizedDistance,
         chargeDrop: chargeDrop.toFixed(2),
         distanceTraveled: distanceTraveled.toFixed(2),
+        batteryChange: batteryChange, // Add this for summary calculation
         rawIndex: index
       });
     });
