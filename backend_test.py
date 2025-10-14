@@ -852,6 +852,149 @@ class NuraPulseBackendTester:
         
         return success_count >= 4  # At least 4 out of 6 tests should pass
 
+    def test_battery_charge_audit_endpoint(self):
+        """Test Battery Charge Audit endpoint as requested in review"""
+        print("\n=== Testing Battery Charge Audit Endpoint ===")
+        
+        success_count = 0
+        
+        # Test 1: Authentication requirement (should return 403 without token)
+        print("\n--- Testing Authentication Requirement ---")
+        response = self.make_request("GET", "/montra-vehicle/battery-audit", use_auth=False)
+        
+        if response and response.status_code in [401, 403]:
+            self.log_test("Battery Audit - Authentication Required", True, 
+                        f"Correctly requires authentication ({response.status_code} without token)")
+            success_count += 1
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("Battery Audit - Authentication Required", False, 
+                        f"Expected 401/403, got {status}")
+        
+        # Test 2: Valid request with authentication (should return 200 with proper structure)
+        print("\n--- Testing Valid Request with Authentication ---")
+        response = self.make_request("GET", "/montra-vehicle/battery-audit")
+        
+        if response and response.status_code == 200:
+            try:
+                data = response.json()
+                
+                # Check required response structure
+                required_fields = ["success", "audit_results", "count", "message"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if not missing_fields:
+                    self.log_test("Battery Audit - Response Structure", True, 
+                                "Response contains all required fields: success, audit_results, count, message")
+                    success_count += 1
+                    
+                    # Check if success is True
+                    if data.get("success") == True:
+                        self.log_test("Battery Audit - Success Status", True, 
+                                    "Response success field is True")
+                        success_count += 1
+                    else:
+                        self.log_test("Battery Audit - Success Status", False, 
+                                    f"Expected success=True, got success={data.get('success')}")
+                    
+                    # Check audit_results is an array
+                    audit_results = data.get("audit_results", [])
+                    if isinstance(audit_results, list):
+                        self.log_test("Battery Audit - Audit Results Array", True, 
+                                    f"audit_results is an array with {len(audit_results)} items")
+                        success_count += 1
+                        
+                        # Since no Montra data exists, should return count: 0
+                        count = data.get("count", -1)
+                        if count == 0:
+                            self.log_test("Battery Audit - Empty Data Count", True, 
+                                        "Correctly returns count: 0 when no Montra data exists")
+                            success_count += 1
+                        else:
+                            self.log_test("Battery Audit - Empty Data Count", False, 
+                                        f"Expected count: 0, got count: {count}")
+                        
+                        # Check message indicates no data found
+                        message = data.get("message", "")
+                        if "0 instances" in message and "7 AM" in message and "7 PM" in message:
+                            self.log_test("Battery Audit - Informative Message", True, 
+                                        f"Message correctly indicates no instances found: '{message}'")
+                            success_count += 1
+                        elif "No Montra feed data found" in message:
+                            self.log_test("Battery Audit - Informative Message", True, 
+                                        f"Message correctly indicates no Montra data: '{message}'")
+                            success_count += 1
+                        else:
+                            self.log_test("Battery Audit - Informative Message", False, 
+                                        f"Message doesn't indicate expected empty state: '{message}'")
+                        
+                        # If there are audit results, validate their structure
+                        if len(audit_results) > 0:
+                            sample_result = audit_results[0]
+                            expected_result_fields = ["date", "vehicle_name", "timestamp", "battery_percentage", "km_driven_upto_point"]
+                            missing_result_fields = [field for field in expected_result_fields if field not in sample_result]
+                            
+                            if not missing_result_fields:
+                                self.log_test("Battery Audit - Result Structure", True, 
+                                            "Audit result contains all required fields: date, vehicle_name, timestamp, battery_percentage, km_driven_upto_point")
+                                success_count += 1
+                            else:
+                                self.log_test("Battery Audit - Result Structure", False, 
+                                            f"Audit result missing fields: {missing_result_fields}")
+                        else:
+                            self.log_test("Battery Audit - Result Structure", True, 
+                                        "No audit results to validate (expected for empty data)")
+                            success_count += 1
+                    else:
+                        self.log_test("Battery Audit - Audit Results Array", False, 
+                                    f"audit_results is not an array, got: {type(audit_results)}")
+                else:
+                    self.log_test("Battery Audit - Response Structure", False, 
+                                f"Response missing required fields: {missing_fields}")
+                
+            except json.JSONDecodeError:
+                self.log_test("Battery Audit - Valid Request", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Battery Audit - Valid Request", False, error_msg, 
+                        response.text if response else None)
+        
+        # Test 3: Response format validation
+        print("\n--- Testing Response Format Validation ---")
+        if response and response.status_code == 200:
+            try:
+                data = response.json()
+                
+                # Validate JSON structure matches expected format
+                expected_structure = {
+                    "success": bool,
+                    "audit_results": list,
+                    "count": int,
+                    "message": str
+                }
+                
+                structure_valid = True
+                for field, expected_type in expected_structure.items():
+                    if field in data:
+                        actual_type = type(data[field])
+                        if actual_type != expected_type:
+                            structure_valid = False
+                            self.log_test("Battery Audit - Field Type Validation", False, 
+                                        f"Field '{field}' expected {expected_type.__name__}, got {actual_type.__name__}")
+                            break
+                
+                if structure_valid:
+                    self.log_test("Battery Audit - Field Type Validation", True, 
+                                "All response fields have correct data types")
+                    success_count += 1
+                
+            except Exception as e:
+                self.log_test("Battery Audit - Response Format Validation", False, 
+                            f"Error validating response format: {e}")
+        
+        return success_count >= 5  # At least 5 out of 7 tests should pass
+
     def test_payment_reconciliation_drivers_vehicles_api(self):
         """Test Payment Reconciliation Drivers and Vehicles API - Excel files with monthly tabs"""
         print("\n=== Testing Payment Reconciliation Drivers and Vehicles API ===")
