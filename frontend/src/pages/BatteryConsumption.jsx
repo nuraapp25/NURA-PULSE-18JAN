@@ -233,13 +233,43 @@ const BatteryConsumption = () => {
         efficiencyDisplay = eff.toFixed(2);
       }
       
+      // Calculate the hour range (previous hour to current hour)
+      // If label is "11 AM", the range should be "10 AM - 11 AM"
+      let hourRangeText = "This Hour:";
+      if (label) {
+        try {
+          const match = label.match(/(\d+)\s+(AM|PM)/);
+          if (match) {
+            let hour = parseInt(match[1]);
+            const ampm = match[2];
+            
+            // Calculate previous hour
+            let prevHour = hour - 1;
+            let prevAmPm = ampm;
+            
+            if (prevHour === 0) {
+              prevHour = 12;
+              prevAmPm = ampm === "AM" ? "PM" : "AM";
+            } else if (prevHour === 11 && ampm === "PM") {
+              prevAmPm = "AM";
+            } else if (prevHour === 12 && ampm === "AM") {
+              prevAmPm = "PM";
+            }
+            
+            hourRangeText = `${prevHour} ${prevAmPm} - ${hour} ${ampm}:`;
+          }
+        } catch (e) {
+          // If parsing fails, use default text
+        }
+      }
+      
       return (
         <div className="bg-gray-800 border border-gray-700 p-3 rounded-lg shadow-lg">
           <p className="text-gray-300 font-semibold mb-2">{label}</p>
           <p className="text-green-400 text-sm">Battery: {data.battery.toFixed(1)}%</p>
           <p className="text-blue-400 text-sm">Total Distance: {data.distance.toFixed(2)} km</p>
           <div className="border-t border-gray-600 mt-2 pt-2">
-            <p className="text-xs text-gray-400 mb-1">This Hour:</p>
+            <p className="text-xs text-gray-400 mb-1">{hourRangeText}</p>
             <p className="text-red-400 text-sm">Charge Drop: {data.chargeDrop}%</p>
             <p className="text-blue-300 text-sm">Distance Travelled: {data.distanceTraveled} km</p>
             <p className="text-yellow-400 text-sm font-semibold">
