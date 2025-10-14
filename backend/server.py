@@ -2812,6 +2812,16 @@ async def process_payment_screenshots(
 ✅ Extract pickup/drop locations if visible (e.g., "Crown Residences", "Mogappair West")
 ✅ For ride history lists: Extract each ride separately with its timestamp
 
+⚠️ **CRITICAL RULES - NO ASSUMPTIONS:**
+❌ DO NOT copy or assume data from other rides in the same screenshot
+❌ DO NOT guess missing pickup/drop locations - use "N/A" if not visible
+❌ DO NOT assume the same location repeats across multiple rides
+❌ DO NOT fill in missing data based on other rides
+✅ ONLY extract data that is CLEARLY VISIBLE for each specific ride
+✅ If a ride has no visible pickup location, use "N/A" - DO NOT copy from other rides
+✅ If a ride has no visible drop location, use "N/A" - DO NOT copy from other rides
+✅ Each ride is independent - treat them separately
+
 **EXAMPLE CONVERSIONS:**
 - "3.57 கி.மீ" / "2.36 km" → distance: "3.57" / "2.36"
 - "16 நிமி 55 வி" → duration: "16" (ignore seconds)
