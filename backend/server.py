@@ -1632,6 +1632,59 @@ async def upload_file(file: UploadFile = File(...), current_user: User = Depends
         # Check file size (100MB limit)
         MAX_SIZE = 100 * 1024 * 1024  # 100MB in bytes
         
+
+
+
+@api_router.post("/montra-vehicle/view-file-data")
+async def view_montra_file_data(
+    request: Request,
+    current_user: User = Depends(get_current_user)
+):
+    """View data from a specific uploaded Montra feed file"""
+    try:
+        data = await request.json()
+        vehicle_id = data.get("vehicle_id")
+        date = data.get("date")
+        filename = data.get("filename")
+        
+        if not vehicle_id or not date:
+            raise HTTPException(status_code=400, detail="vehicle_id and date are required")
+        
+        # Query records for this specific file
+        query = {
+            "vehicle_id": vehicle_id,
+            "date": date
+        }
+        if filename:
+            query["filename"] = filename
+        
+        records = await db.montra_feed_data.find(query, {"_id": 0}).sort("Portal Received Time", 1).to_list(1000)
+        
+        if not records:
+            return {
+                "success": True,
+                "data": [],
+                "columns": [],
+                "count": 0,
+                "message": "No data found for this file"
+            }
+        
+        # Extract columns from first record
+        columns = list(records[0].keys())
+        
+        return {
+            "success": True,
+            "data": records,
+            "columns": columns,
+            "count": len(records)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error viewing file data: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to view file data: {str(e)}")
+
         # Read file content
         content = await file.read()
         file_size = len(content)
