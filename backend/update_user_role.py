@@ -8,8 +8,9 @@ from motor.motor_asyncio import AsyncIOMotorClient
 import os
 
 mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
+db_name = os.environ.get('DB_NAME', 'nura_pulse_db')
 client = AsyncIOMotorClient(mongo_url)
-db = client['nura_pulse_db']
+db = client[db_name]
 
 async def update_user_to_master_admin(search_email):
     """Update user role to master_admin"""
