@@ -60,7 +60,7 @@ const Dashboard = () => {
                 <img 
                   src={theme === 'dark' ? '/nura-white.png' : '/nura-black.png'}
                   alt="Nura Pulse Logo" 
-                  className="h-10 w-auto"
+                  className="h-16 w-auto"
                 />
               </div>
               <button
