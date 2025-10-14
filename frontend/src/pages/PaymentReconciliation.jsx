@@ -340,11 +340,6 @@ const PaymentReconciliation = () => {
         setUploadedFiles([]); // Clear uploaded files after successful processing
         
         toast.success(`Successfully processed all ${response.data.processed_files} screenshots!`);
-        
-        // Auto-sync to Google Sheets after successful processing (10 seconds)
-        setTimeout(() => {
-          syncToGoogleSheets();
-        }, 10000);
       } else {
         toast.error("Failed to process screenshots");
       }
