@@ -2264,6 +2264,7 @@ async def get_battery_charge_audit(current_user: User = Depends(get_current_user
             # Find first instance where charge <= 20% between 7 AM and 7 PM
             first_low_charge = None
             start_of_day_km = None
+            charge_at_7am = None
             
             # Get the KM at start of day (earliest record)
             if day_records:
@@ -2271,6 +2272,50 @@ async def get_battery_charge_audit(current_user: User = Depends(get_current_user
                                   day_records[0].get("KM") or 
                                   day_records[0].get("km") or 
                                   day_records[0].get("Kilometer"))
+            
+            # Find battery charge at or before 7 AM
+            for record in day_records:
+                battery_pct_7am = (record.get("Battery Soc(%)") or 
+                                  record.get("Battery %") or 
+                                  record.get("battery_soc_percentage") or 
+                                  record.get("Battery") or
+                                  record.get("battery") or
+                                  record.get("SOC") or
+                                  record.get("soc"))
+                
+                time_str_7am = (record.get("Portal Received Time") or
+                               record.get("time") or 
+                               record.get("Time") or 
+                               record.get("Hour") or
+                               record.get("hour"))
+                
+                if battery_pct_7am and time_str_7am:
+                    try:
+                        if isinstance(time_str_7am, str):
+                            try:
+                                dt_7am = datetime.fromisoformat(time_str_7am.replace(' ', 'T'))
+                                record_time_7am = dt_7am.time()
+                            except:
+                                time_part = time_str_7am.split()[0] if ' ' in time_str_7am else time_str_7am
+                                try:
+                                    record_time_7am = datetime.strptime(time_part, "%H:%M:%S").time()
+                                except:
+                                    continue
+                        else:
+                            continue
+                        
+                        # Get battery at or just before 7 AM
+                        if record_time_7am <= dt_time(7, 0):
+                            if battery_pct_7am != '-':
+                                try:
+                                    charge_at_7am = float(str(battery_pct_7am))
+                                except:
+                                    pass
+                        else:
+                            # Once we pass 7 AM, stop looking
+                            break
+                    except:
+                        continue
             
             for record in day_records:
                 # Get battery percentage (check all possible field names)
