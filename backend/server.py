@@ -1675,55 +1675,6 @@ async def view_montra_file_data(
         logger.error(f"Error viewing file data: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to view file data: {str(e)}")
 
-        # Read file content
-        content = await file.read()
-        file_size = len(content)
-        
-        if file_size > MAX_SIZE:
-            raise HTTPException(
-                status_code=400, 
-                detail=f"File size exceeds 100MB limit. File size: {file_size / 1024 / 1024:.2f}MB"
-            )
-        
-        # Generate unique file ID
-        file_id = str(uuid.uuid4())
-        
-        # Save file to disk
-        file_path = os.path.join(UPLOAD_DIR, f"{file_id}_{file.filename}")
-        with open(file_path, "wb") as f:
-            f.write(content)
-        
-        logger.info(f"File uploaded: {file.filename} ({file_size / 1024:.2f} KB)")
-        
-        # Save metadata to MongoDB
-        file_metadata = {
-            "id": file_id,
-            "filename": file.filename,
-            "original_filename": file.filename,
-            "file_path": file_path,
-            "file_size": file_size,
-            "content_type": file.content_type or "application/octet-stream",
-            "uploaded_by": current_user.email,
-            "uploaded_at": datetime.now(timezone.utc).isoformat(),
-            "created_at": datetime.now(timezone.utc).isoformat()
-        }
-        
-        await db.admin_files.insert_one(file_metadata)
-        
-        return {
-            "message": "File uploaded successfully",
-            "file_id": file_id,
-            "filename": file.filename,
-            "size": file_size,
-            "uploaded_at": file_metadata["uploaded_at"]
-        }
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error uploading file: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to upload file: {str(e)}")
-
 
 @api_router.get("/admin/files")
 async def list_files(current_user: User = Depends(get_current_user)):
