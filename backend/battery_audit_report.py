@@ -13,7 +13,7 @@ from tabulate import tabulate
 load_dotenv()
 
 # Configuration
-BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', 'https://fleet-monitor-41.preview.emergentagent.com/api')
+BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', 'https://charge-tracker-3.preview.emergentagent.com/api')
 LOGIN_EMAIL = 'admin'
 LOGIN_PASSWORD = 'Nura@1234$'
 

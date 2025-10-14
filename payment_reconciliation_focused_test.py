@@ -12,7 +12,7 @@ from datetime import datetime
 from PIL import Image
 
 # Configuration
-BASE_URL = "https://fleet-monitor-41.preview.emergentagent.com/api"
+BASE_URL = "https://charge-tracker-3.preview.emergentagent.com/api"
 MASTER_ADMIN_EMAIL = "admin"
 MASTER_ADMIN_PASSWORD = "Nura@1234$"
 
