@@ -568,6 +568,9 @@ const PaymentReconciliation = () => {
     try {
       const token = localStorage.getItem("token");
       
+      // Get all record IDs to delete after successful sync
+      const recordIds = extractedData.map(record => record.id);
+      
       await axios.post(`${API}/payment-reconciliation/sync-to-sheets`, {
         data: extractedData,
         month_year: selectedPeriod
@@ -575,8 +578,20 @@ const PaymentReconciliation = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
+      // After successful sync, delete records from backend
+      await axios.post(`${API}/payment-reconciliation/delete-records`, {
+        record_ids: recordIds,
+        month_year: selectedPeriod
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      // Clear frontend data
+      setExtractedData([]);
+      setUploadedFiles([]);
       setLastSync(new Date().toISOString());
-      toast.success("Successfully synced to Google Sheets");
+      
+      toast.success("Successfully synced to Google Sheets and cleared local data");
     } catch (error) {
       toast.error("Failed to sync to Google Sheets");
       console.error("Sync error:", error);
