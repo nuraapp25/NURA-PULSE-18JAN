@@ -64,7 +64,7 @@ const PaymentScreenshots = () => {
     setCurrentPath(currentPath.slice(0, -1));
   };
 
-  const handleViewImages = async () => {
+  const handleViewImages = async (startIndex = 0) => {
     if (files.length === 0) {
       toast.error('No images to view');
       return;
@@ -99,8 +99,12 @@ const PaymentScreenshots = () => {
     }
     
     setImageUrls(validUrls);
-    setCurrentImageIndex(0);
+    setCurrentImageIndex(startIndex);
     setViewerOpen(true);
+  };
+
+  const handleViewSingleImage = async (fileIndex) => {
+    await handleViewImages(fileIndex);
   };
 
   const handleNextImage = () => {
