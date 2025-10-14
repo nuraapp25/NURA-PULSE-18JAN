@@ -3597,6 +3597,259 @@ async def startup_event():
     logger.info("Application started")
 
 
+
+
+# ==================== EXPENSE TRACKER ====================
+
+from fastapi import UploadFile, File
+
+# Expenses directory
+EXPENSES_DIR = ROOT_DIR / "expense_receipts"
+EXPENSES_DIR.mkdir(exist_ok=True)
+
+@api_router.get("/expenses")
+async def get_expenses(current_user: User = Depends(get_current_user)):
+    """Get all expenses for the user or all expenses for admin/master_admin"""
+    try:
+        if current_user.account_type in ["master_admin", "admin"]:
+            # Admins can see all expenses
+            expenses_cursor = db.expenses.find({"deleted": {"$ne": True}})
+        else:
+            # Standard users see only their expenses
+            expenses_cursor = db.expenses.find({
+                "user_id": current_user.id,
+                "deleted": {"$ne": True}
+            })
+        
+        expenses = await expenses_cursor.to_list(length=None)
+        
+        # Convert ObjectId and datetime to string
+        for expense in expenses:
+            if '_id' in expense:
+                del expense['_id']
+            if 'created_at' in expense and isinstance(expense['created_at'], datetime):
+                expense['created_at'] = expense['created_at'].isoformat()
+        
+        return {"expenses": expenses}
+    except Exception as e:
+        logger.error(f"Error fetching expenses: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch expenses")
+
+
+@api_router.post("/expenses/add")
+async def add_expense(
+    date: str = Form(...),
+    description: str = Form(...),
+    amount: float = Form(...),
+    receipts: List[UploadFile] = File(default=[]),
+    current_user: User = Depends(get_current_user)
+):
+    """Add a new expense"""
+    try:
+        expense_id = str(uuid.uuid4())
+        receipt_filenames = []
+        
+        # Save receipt files
+        if receipts:
+            expense_folder = EXPENSES_DIR / expense_id
+            expense_folder.mkdir(exist_ok=True)
+            
+            for receipt in receipts:
+                if receipt.size > 10 * 1024 * 1024:  # 10MB limit
+                    raise HTTPException(status_code=400, detail=f"File {receipt.filename} exceeds 10MB limit")
+                
+                file_path = expense_folder / receipt.filename
+                with open(file_path, "wb") as f:
+                    content = await receipt.read()
+                    f.write(content)
+                receipt_filenames.append(receipt.filename)
+        
+        expense_data = {
+            "id": expense_id,
+            "user_id": current_user.id,
+            "user_name": f"{current_user.first_name} {current_user.last_name or ''}".strip(),
+            "date": date,
+            "description": description,
+            "amount": amount,
+            "receipt_filenames": receipt_filenames,
+            "approval_status": "Pending",
+            "created_at": datetime.now(timezone.utc),
+            "deleted": False
+        }
+        
+        await db.expenses.insert_one(expense_data)
+        
+        return {"message": "Expense added successfully", "expense_id": expense_id}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error adding expense: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to add expense")
+
+
+@api_router.post("/expenses/update")
+async def update_expense(
+    expense_id: str = Form(...),
+    date: str = Form(...),
+    description: str = Form(...),
+    amount: float = Form(...),
+    receipts: List[UploadFile] = File(default=[]),
+    current_user: User = Depends(get_current_user)
+):
+    """Update an existing expense"""
+    try:
+        # Check if expense exists and user has permission
+        expense = await db.expenses.find_one({"id": expense_id})
+        if not expense:
+            raise HTTPException(status_code=404, detail="Expense not found")
+        
+        # Only the creator or admin/master_admin can edit
+        if expense["user_id"] != current_user.id and current_user.account_type not in ["master_admin", "admin"]:
+            raise HTTPException(status_code=403, detail="Not authorized to edit this expense")
+        
+        update_data = {
+            "date": date,
+            "description": description,
+            "amount": amount,
+            "updated_at": datetime.now(timezone.utc)
+        }
+        
+        # Handle new receipt files
+        if receipts and any(r.filename for r in receipts):
+            expense_folder = EXPENSES_DIR / expense_id
+            expense_folder.mkdir(exist_ok=True)
+            
+            existing_receipts = expense.get("receipt_filenames", [])
+            
+            for receipt in receipts:
+                if receipt.filename and receipt.size > 0:
+                    if receipt.size > 10 * 1024 * 1024:
+                        raise HTTPException(status_code=400, detail=f"File {receipt.filename} exceeds 10MB limit")
+                    
+                    file_path = expense_folder / receipt.filename
+                    with open(file_path, "wb") as f:
+                        content = await receipt.read()
+                        f.write(content)
+                    
+                    if receipt.filename not in existing_receipts:
+                        existing_receipts.append(receipt.filename)
+            
+            update_data["receipt_filenames"] = existing_receipts
+        
+        await db.expenses.update_one(
+            {"id": expense_id},
+            {"$set": update_data}
+        )
+        
+        return {"message": "Expense updated successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating expense: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to update expense")
+
+
+@api_router.post("/expenses/delete")
+async def delete_expenses(
+    request: Request,
+    current_user: User = Depends(get_current_user)
+):
+    """Delete expenses (master admin only)"""
+    try:
+        if current_user.account_type != "master_admin":
+            raise HTTPException(status_code=403, detail="Only master admin can delete expenses")
+        
+        body = await request.json()
+        expense_ids = body.get("expense_ids", [])
+        
+        if not expense_ids:
+            raise HTTPException(status_code=400, detail="No expense IDs provided")
+        
+        # Mark as deleted instead of actually deleting
+        result = await db.expenses.update_many(
+            {"id": {"$in": expense_ids}},
+            {"$set": {"deleted": True, "deleted_at": datetime.now(timezone.utc)}}
+        )
+        
+        return {"message": f"Deleted {result.modified_count} expense(s)"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting expenses: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to delete expenses")
+
+
+@api_router.post("/expenses/approve")
+async def approve_expense(
+    request: Request,
+    current_user: User = Depends(get_current_user)
+):
+    """Approve or reject an expense (admin/master admin only)"""
+    try:
+        if current_user.account_type not in ["master_admin", "admin"]:
+            raise HTTPException(status_code=403, detail="Only admins can approve/reject expenses")
+        
+        body = await request.json()
+        expense_id = body.get("expense_id")
+        status = body.get("status")  # "Approved", "Rejected", "Pending"
+        
+        if not expense_id or not status:
+            raise HTTPException(status_code=400, detail="Missing expense_id or status")
+        
+        if status not in ["Approved", "Rejected", "Pending"]:
+            raise HTTPException(status_code=400, detail="Invalid status")
+        
+        result = await db.expenses.update_one(
+            {"id": expense_id},
+            {"$set": {
+                "approval_status": status,
+                "approved_by": current_user.id,
+                "approved_at": datetime.now(timezone.utc)
+            }}
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=404, detail="Expense not found")
+        
+        return {"message": f"Expense {status.lower()} successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error approving expense: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to update approval status")
+
+
+@api_router.get("/expenses/{expense_id}/receipt/{filename}")
+async def get_expense_receipt(
+    expense_id: str,
+    filename: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Download/view an expense receipt"""
+    from fastapi.responses import FileResponse
+    
+    try:
+        # Check if expense exists and user has permission
+        expense = await db.expenses.find_one({"id": expense_id})
+        if not expense:
+            raise HTTPException(status_code=404, detail="Expense not found")
+        
+        # Check permissions
+        if expense["user_id"] != current_user.id and current_user.account_type not in ["master_admin", "admin"]:
+            raise HTTPException(status_code=403, detail="Not authorized to view this receipt")
+        
+        file_path = EXPENSES_DIR / expense_id / filename
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail="Receipt file not found")
+        
+        return FileResponse(file_path, filename=filename)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error retrieving receipt: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve receipt")
+
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
