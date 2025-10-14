@@ -4,12 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { BarChart3, Upload, FileUp, CheckCircle, XCircle, Battery, TrendingUp, Gauge, Clock, Activity, Zap, Database, Trash2, FolderOpen, Folder, ChevronDown, ChevronRight, Download, Eye, AlertTriangle, Sun } from "lucide-react";
 import axios from "axios";
-import { API } from "@/App";
+import { API, useAuth } from "@/App";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
 const MontraVehicle = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isMasterAdmin = user?.account_type === "master_admin";
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [importing, setImporting] = useState(false);
