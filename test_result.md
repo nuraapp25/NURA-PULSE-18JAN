@@ -302,6 +302,9 @@ backend:
         - working: true
           agent: "main"
           comment: "✅ FIXED IMAGE VIEWER: Root cause - Images weren't loading in modal because img tags with src attribute can't send Authorization headers. Solution: Changed handleViewImages to fetch images using axios with proper authentication headers, convert response to blob, and create blob URLs. Added handleCloseViewer to cleanup blob URLs and prevent memory leaks. Modal now successfully displays images with proper authentication. Tested workflow: Sep 2025 → Anandhi folder → View All Images → Modal opens showing auto-rickshaw receipt image (55KB) with ride details, amounts (₹93, ₹138, ₹98), locations clearly visible. Image viewer fully functional with next/prev navigation and close button."
+        - working: true
+          agent: "main"
+          comment: "✅ ENHANCEMENTS ADDED: 1) Added individual View button (eye icon) next to Download and Delete buttons for each file. Clicking View button opens image viewer directly for that specific image. 2) Improved image fitting within browser space - added style maxHeight calc(90vh - 100px) and overflow-hidden to ensure images always fit within modal without scrolling. 3) Updated handleViewImages to accept startIndex parameter to support both 'View All Images' button and individual file view button. Tested: View button works perfectly, images display fitted and centered within modal with proper black background. All three buttons (View, Download, Delete) working correctly."
 
 frontend:
   - task: "Login Page"
