@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Folder, FileText, Image, ChevronRight, Download, Trash2, ArrowLeft } from 'lucide-react';
+import { Folder, Image as ImageIcon, ChevronRight, Download, Trash2, ArrowLeft, X, ChevronLeft as PrevIcon, ChevronRight as NextIcon, Eye } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { useAuth } from '@/App';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const API = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001/api';
 
@@ -16,6 +18,9 @@ const PaymentScreenshots = () => {
   const [folders, setFolders] = useState([]);
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [imageUrls, setImageUrls] = useState([]);
 
   useEffect(() => {
     fetchContents();
