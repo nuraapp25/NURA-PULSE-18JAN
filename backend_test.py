@@ -1877,16 +1877,17 @@ class NuraPulseBackendTester:
             files = {'file': ("test_auth.txt", "test content", 'text/plain')}
             response = self.make_request("PUT", f"/admin/files/{test_file_id}/update", files=files, use_auth=False)
             
-            if response and response.status_code in [401, 403]:
-                self.log_test("File Update - Authentication Required", True, 
-                            f"Correctly requires authentication ({response.status_code} without token)")
-                success_count += 1
+            if response:
+                if response.status_code in [401, 403]:
+                    self.log_test("File Update - Authentication Required", True, 
+                                f"Correctly requires authentication ({response.status_code} without token)")
+                    success_count += 1
+                else:
+                    self.log_test("File Update - Authentication Required", False, 
+                                f"Expected 401/403, got {response.status_code}")
             else:
-                status = response.status_code if response else "Network error"
-                if response:
-                    print(f"DEBUG: Update auth test response: {response.status_code} - {response.text}")
                 self.log_test("File Update - Authentication Required", False, 
-                            f"Expected 401/403, got {status}")
+                            "Network error - no response received")
         
         # Test 7: Integration Test - Full Update Workflow
         print("\n--- Test 7: Integration Test - Full Update Workflow ---")
