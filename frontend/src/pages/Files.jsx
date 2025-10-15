@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Folder, Upload, Download, Share2, Trash2, CheckCircle, FileIcon, XCircle, Eye } from "lucide-react";
+import { Folder, Upload, Download, Share2, Trash2, CheckCircle, FileIcon, XCircle, Eye, RefreshCw } from "lucide-react";
 import axios from "axios";
 import { API, useAuth } from "@/App";
 import { toast } from "sonner";
