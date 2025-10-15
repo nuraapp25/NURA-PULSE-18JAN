@@ -2541,10 +2541,12 @@ class NuraPulseBackendTester:
         response = self.make_request("DELETE", "/admin/payment-screenshots/delete", data=delete_data)
         
         print(f"DEBUG: Payment Screenshots Delete response: {response}")
-        if response:
+        print(f"DEBUG: Response is None: {response is None}")
+        print(f"DEBUG: Response bool: {bool(response) if response is not None else 'N/A'}")
+        if response is not None:
             print(f"DEBUG: Response status code: {response.status_code}")
         
-        if response:
+        if response is not None:
             if response.status_code == 200:
                 try:
                     result = response.json()
