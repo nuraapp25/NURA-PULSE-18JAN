@@ -2491,26 +2491,40 @@ class NuraPulseBackendTester:
         print("\n--- Test 6: Test Parameter Validation ---")
         
         # Test missing month parameter
-        response = self.make_request("GET", "/admin/files/get-drivers-vehicles?year=2025")
-        if response and response.status_code == 422:
-            self.log_test("Parameter Validation - Missing Month", True, 
-                        "Correctly rejects missing month parameter (422)")
-            success_count += 1
-        else:
-            status = response.status_code if response else "Network error"
+        try:
+            import requests
+            url = f"{self.base_url}/admin/files/get-drivers-vehicles?year=2025"
+            headers = {"Authorization": f"Bearer {self.token}"}
+            response = requests.get(url, headers=headers, timeout=10)
+            
+            if response.status_code == 422:
+                self.log_test("Parameter Validation - Missing Month", True, 
+                            "Correctly rejects missing month parameter (422)")
+                success_count += 1
+            else:
+                self.log_test("Parameter Validation - Missing Month", False, 
+                            f"Expected 422, got {response.status_code}")
+        except Exception as e:
             self.log_test("Parameter Validation - Missing Month", False, 
-                        f"Expected 422, got {status}")
+                        f"Network error: {e}")
         
         # Test missing year parameter
-        response = self.make_request("GET", "/admin/files/get-drivers-vehicles?month=Oct")
-        if response and response.status_code == 422:
-            self.log_test("Parameter Validation - Missing Year", True, 
-                        "Correctly rejects missing year parameter (422)")
-            success_count += 1
-        else:
-            status = response.status_code if response else "Network error"
+        try:
+            import requests
+            url = f"{self.base_url}/admin/files/get-drivers-vehicles?month=Oct"
+            headers = {"Authorization": f"Bearer {self.token}"}
+            response = requests.get(url, headers=headers, timeout=10)
+            
+            if response.status_code == 422:
+                self.log_test("Parameter Validation - Missing Year", True, 
+                            "Correctly rejects missing year parameter (422)")
+                success_count += 1
+            else:
+                self.log_test("Parameter Validation - Missing Year", False, 
+                            f"Expected 422, got {response.status_code}")
+        except Exception as e:
             self.log_test("Parameter Validation - Missing Year", False, 
-                        f"Expected 422, got {status}")
+                        f"Network error: {e}")
         
         return success_count >= 8  # At least 8 out of 12 tests should pass
 
