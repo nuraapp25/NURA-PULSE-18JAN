@@ -2471,16 +2471,21 @@ class NuraPulseBackendTester:
         
         # Test 5: Test Authentication Requirements
         print("\n--- Test 5: Test Authentication Requirements ---")
-        response = self.make_request("GET", "/admin/files/get-drivers-vehicles?month=Oct&year=2025", use_auth=False)
-        
-        if response and response.status_code in [401, 403]:
-            self.log_test("Authentication Test - Unauthorized Access", True, 
-                        f"Correctly requires authentication ({response.status_code} without token)")
-            success_count += 1
-        else:
-            status = response.status_code if response else "Network error"
+        try:
+            import requests
+            url = f"{self.base_url}/admin/files/get-drivers-vehicles?month=Oct&year=2025"
+            response = requests.get(url, timeout=10)  # No Authorization header
+            
+            if response.status_code in [401, 403]:
+                self.log_test("Authentication Test - Unauthorized Access", True, 
+                            f"Correctly requires authentication ({response.status_code} without token)")
+                success_count += 1
+            else:
+                self.log_test("Authentication Test - Unauthorized Access", False, 
+                            f"Expected 401/403, got {response.status_code}")
+        except Exception as e:
             self.log_test("Authentication Test - Unauthorized Access", False, 
-                        f"Expected 401/403, got {status}")
+                        f"Network error during authentication test: {e}")
         
         # Test 6: Test Parameter Validation
         print("\n--- Test 6: Test Parameter Validation ---")
