@@ -3045,8 +3045,16 @@ Be precise and extract ALL rides shown in the screenshot. If a screenshot shows 
                         for record in extracted_results:
                             record["files_imported"] = False
                         
-                        await db.payment_records.insert_many(extracted_results)
+                        # Create copies for MongoDB (will get _id added)
+                        records_to_insert = [record.copy() for record in extracted_results]
+                        await db.payment_records.insert_many(records_to_insert)
                         logger.info(f"✅ Saved {len(extracted_results)} payment records to MongoDB for {month_year}")
+                        
+                        # Clean up - remove _id from original records if it was added
+                        for record in extracted_results:
+                            if "_id" in record:
+                                del record["_id"]
+                        
                 except Exception as e:
                     logger.error(f"❌ Failed to save payment records to MongoDB: {str(e)}")
                     # Don't fail the request, records are still in memory
