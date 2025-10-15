@@ -2257,6 +2257,229 @@ class NuraPulseBackendTester:
         
         return success_count >= 7  # At least 7 out of 10 tests should pass
 
+    def test_payment_data_extractor_fix(self):
+        """Test Payment Data Extractor - Drivers/Vehicles Fetch Fix Verification"""
+        print("\n=== Testing Payment Data Extractor - Drivers/Vehicles Fetch Fix ===")
+        
+        success_count = 0
+        
+        # Test 1: Verify Files Exist
+        print("\n--- Test 1: Verify Files Exist ---")
+        response = self.make_request("GET", "/admin/files")
+        
+        if response and response.status_code == 200:
+            try:
+                data = response.json()
+                files = data.get("files", [])
+                
+                # Look for required files
+                drivers_file = None
+                vehicles_file = None
+                
+                for file_info in files:
+                    filename = file_info.get("original_filename", file_info.get("filename", ""))
+                    if "Drivers List.xlsx" in filename:
+                        drivers_file = file_info
+                    elif "Vehicles List.xlsx" in filename:
+                        vehicles_file = file_info
+                
+                if drivers_file and vehicles_file:
+                    self.log_test("Files Verification - Required Files Present", True, 
+                                f"Found both required files: Drivers List.xlsx and Vehicles List.xlsx")
+                    success_count += 1
+                else:
+                    missing = []
+                    if not drivers_file:
+                        missing.append("Drivers List.xlsx")
+                    if not vehicles_file:
+                        missing.append("Vehicles List.xlsx")
+                    self.log_test("Files Verification - Required Files Present", False, 
+                                f"Missing required files: {missing}")
+                
+            except json.JSONDecodeError:
+                self.log_test("Files Verification - Get Files", False, "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Files Verification - Get Files", False, error_msg, 
+                        response.text if response else None)
+        
+        # Test 2: Test Drivers/Vehicles Endpoint - Current Month (Oct 2025)
+        print("\n--- Test 2: Test Current Month (Oct 2025) ---")
+        response = self.make_request("GET", "/admin/files/get-drivers-vehicles?month=Oct&year=2025")
+        
+        if response and response.status_code == 200:
+            try:
+                data = response.json()
+                
+                if data.get("success"):
+                    drivers = data.get("drivers", [])
+                    vehicles = data.get("vehicles", [])
+                    using_mock = data.get("using_mock_data", True)
+                    
+                    self.log_test("Current Month Test - API Response", True, 
+                                f"Retrieved {len(drivers)} drivers, {len(vehicles)} vehicles, using_mock_data: {using_mock}")
+                    success_count += 1
+                    
+                    # Verify real data is being used (not mock)
+                    if not using_mock:
+                        self.log_test("Current Month Test - Real Data Usage", True, 
+                                    "Successfully using real data from Excel files (not mock)")
+                        success_count += 1
+                        
+                        # Verify data structure - drivers should be actual names, not NaN or "name"
+                        valid_drivers = [d for d in drivers if d and d != "NaN" and d != "name" and len(d.strip()) > 0]
+                        if len(valid_drivers) == len(drivers) and len(valid_drivers) > 0:
+                            self.log_test("Current Month Test - Driver Data Quality", True, 
+                                        f"All {len(drivers)} drivers have valid names (no NaN/header rows)")
+                            success_count += 1
+                        else:
+                            self.log_test("Current Month Test - Driver Data Quality", False, 
+                                        f"Found invalid driver data: {len(drivers) - len(valid_drivers)} invalid entries")
+                        
+                        # Verify vehicle data quality
+                        valid_vehicles = [v for v in vehicles if v and v != "NaN" and v != "vehicle" and len(v.strip()) > 0]
+                        if len(valid_vehicles) == len(vehicles) and len(valid_vehicles) > 0:
+                            self.log_test("Current Month Test - Vehicle Data Quality", True, 
+                                        f"All {len(vehicles)} vehicles have valid numbers (no NaN/header rows)")
+                            success_count += 1
+                        else:
+                            self.log_test("Current Month Test - Vehicle Data Quality", False, 
+                                        f"Found invalid vehicle data: {len(vehicles) - len(valid_vehicles)} invalid entries")
+                    else:
+                        self.log_test("Current Month Test - Real Data Usage", False, 
+                                    "Using mock data instead of real Excel file data - fix may not be working")
+                else:
+                    self.log_test("Current Month Test - API Response", False, 
+                                f"API returned success=false: {data}")
+                
+            except json.JSONDecodeError:
+                self.log_test("Current Month Test - API Response", False, "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Current Month Test - API Response", False, error_msg, 
+                        response.text if response else None)
+        
+        # Test 3: Test Different Month Format (numeric vs text)
+        print("\n--- Test 3: Test Different Month Format (10 vs Oct) ---")
+        response = self.make_request("GET", "/admin/files/get-drivers-vehicles?month=10&year=2025")
+        
+        if response and response.status_code == 200:
+            try:
+                data = response.json()
+                
+                if data.get("success"):
+                    drivers = data.get("drivers", [])
+                    vehicles = data.get("vehicles", [])
+                    using_mock = data.get("using_mock_data", True)
+                    
+                    self.log_test("Month Format Test - Numeric Month", True, 
+                                f"month=10 converted correctly: {len(drivers)} drivers, {len(vehicles)} vehicles, using_mock_data: {using_mock}")
+                    success_count += 1
+                    
+                    # Should work the same as month="Oct"
+                    if not using_mock:
+                        self.log_test("Month Format Test - Numeric Conversion", True, 
+                                    "Numeric month (10) correctly converted to text format (Oct)")
+                        success_count += 1
+                    else:
+                        self.log_test("Month Format Test - Numeric Conversion", False, 
+                                    "Numeric month conversion may not be working properly")
+                else:
+                    self.log_test("Month Format Test - Numeric Month", False, 
+                                f"API returned success=false for numeric month: {data}")
+                
+            except json.JSONDecodeError:
+                self.log_test("Month Format Test - Numeric Month", False, "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Month Format Test - Numeric Month", False, error_msg, 
+                        response.text if response else None)
+        
+        # Test 4: Test Non-Existent Month (should return mock data)
+        print("\n--- Test 4: Test Non-Existent Month (Jan 2026) ---")
+        response = self.make_request("GET", "/admin/files/get-drivers-vehicles?month=Jan&year=2026")
+        
+        if response and response.status_code == 200:
+            try:
+                data = response.json()
+                
+                if data.get("success"):
+                    drivers = data.get("drivers", [])
+                    vehicles = data.get("vehicles", [])
+                    using_mock = data.get("using_mock_data", False)
+                    
+                    self.log_test("Non-Existent Month Test - API Response", True, 
+                                f"Non-existent month handled: {len(drivers)} drivers, {len(vehicles)} vehicles, using_mock_data: {using_mock}")
+                    success_count += 1
+                    
+                    # Should return mock data for non-existent month
+                    if using_mock:
+                        self.log_test("Non-Existent Month Test - Mock Data Fallback", True, 
+                                    "Correctly returns mock data for non-existent month/year combination")
+                        success_count += 1
+                        
+                        # Mock data should still be valid
+                        if len(drivers) > 0 and len(vehicles) > 0:
+                            self.log_test("Non-Existent Month Test - Mock Data Quality", True, 
+                                        f"Mock data contains {len(drivers)} drivers and {len(vehicles)} vehicles")
+                            success_count += 1
+                        else:
+                            self.log_test("Non-Existent Month Test - Mock Data Quality", False, 
+                                        "Mock data is empty or invalid")
+                    else:
+                        self.log_test("Non-Existent Month Test - Mock Data Fallback", False, 
+                                    "Should use mock data for non-existent month but using_mock_data=false")
+                else:
+                    self.log_test("Non-Existent Month Test - API Response", False, 
+                                f"API returned success=false for non-existent month: {data}")
+                
+            except json.JSONDecodeError:
+                self.log_test("Non-Existent Month Test - API Response", False, "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Non-Existent Month Test - API Response", False, error_msg, 
+                        response.text if response else None)
+        
+        # Test 5: Test Authentication Requirements
+        print("\n--- Test 5: Test Authentication Requirements ---")
+        response = self.make_request("GET", "/admin/files/get-drivers-vehicles?month=Oct&year=2025", use_auth=False)
+        
+        if response and response.status_code in [401, 403]:
+            self.log_test("Authentication Test - Unauthorized Access", True, 
+                        f"Correctly requires authentication ({response.status_code} without token)")
+            success_count += 1
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("Authentication Test - Unauthorized Access", False, 
+                        f"Expected 401/403, got {status}")
+        
+        # Test 6: Test Parameter Validation
+        print("\n--- Test 6: Test Parameter Validation ---")
+        
+        # Test missing month parameter
+        response = self.make_request("GET", "/admin/files/get-drivers-vehicles?year=2025")
+        if response and response.status_code == 422:
+            self.log_test("Parameter Validation - Missing Month", True, 
+                        "Correctly rejects missing month parameter (422)")
+            success_count += 1
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("Parameter Validation - Missing Month", False, 
+                        f"Expected 422, got {status}")
+        
+        # Test missing year parameter
+        response = self.make_request("GET", "/admin/files/get-drivers-vehicles?month=Oct")
+        if response and response.status_code == 422:
+            self.log_test("Parameter Validation - Missing Year", True, 
+                        "Correctly rejects missing year parameter (422)")
+            success_count += 1
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("Parameter Validation - Missing Year", False, 
+                        f"Expected 422, got {status}")
+        
+        return success_count >= 8  # At least 8 out of 12 tests should pass
+
     def run_all_tests(self):
         """Run all backend tests"""
         print("🚀 Starting File Update Feature - Comprehensive Verification Testing")
