@@ -2230,7 +2230,7 @@ class NuraPulseBackendTester:
 
     def run_all_tests(self):
         """Run all backend tests"""
-        print("🚀 Starting File Update Feature Backend Testing")
+        print("🚀 Starting File Update Feature - Comprehensive Verification Testing")
         print(f"Backend URL: {self.base_url}")
         print(f"Master Admin: {MASTER_ADMIN_EMAIL}")
         
@@ -2241,12 +2241,12 @@ class NuraPulseBackendTester:
             print("\n❌ Authentication failed - cannot proceed with other tests")
             return False
         
-        # PRIORITY: Test the File Update Feature Backend APIs as requested in review
-        file_update_success = self.test_file_update_feature_backend()
+        # PRIORITY: Test the File Update Feature - Comprehensive Verification as requested in review
+        comprehensive_verification_success = self.test_file_update_feature_comprehensive_verification()
         
         # Summary
         print("\n" + "="*60)
-        print("📊 TEST SUMMARY - FILE UPDATE FEATURE BACKEND APIS")
+        print("📊 TEST SUMMARY - FILE UPDATE FEATURE COMPREHENSIVE VERIFICATION")
         print("="*60)
         
         total_tests = len(self.test_results)
@@ -2259,7 +2259,7 @@ class NuraPulseBackendTester:
         print(f"Success Rate: {(passed_tests/total_tests)*100:.1f}%")
         
         # Priority test results
-        print(f"\n🎯 FILE UPDATE FEATURE BACKEND RESULT: {'✅ PASS' if file_update_success else '❌ FAIL'}")
+        print(f"\n🎯 FILE UPDATE FEATURE COMPREHENSIVE VERIFICATION RESULT: {'✅ PASS' if comprehensive_verification_success else '❌ FAIL'}")
         
         if failed_tests > 0:
             print("\n❌ FAILED TESTS:")
@@ -2267,8 +2267,8 @@ class NuraPulseBackendTester:
                 if not result["success"]:
                     print(f"  - {result['test']}: {result['message']}")
         
-        overall_success = file_update_success and failed_tests <= 3  # Allow some minor failures
-        status = "✅ EXPENSE TRACKER BACKEND APIS VERIFIED" if overall_success else "❌ EXPENSE TRACKER BACKEND ISSUES FOUND"
+        overall_success = comprehensive_verification_success and failed_tests <= 3  # Allow some minor failures
+        status = "✅ FILE UPDATE FEATURE COMPREHENSIVE VERIFICATION COMPLETE" if overall_success else "❌ FILE UPDATE FEATURE VERIFICATION ISSUES FOUND"
         print(f"\n{status}")
         
         return overall_success
