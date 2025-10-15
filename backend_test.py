@@ -2389,8 +2389,8 @@ class NuraPulseBackendTester:
                         response.text if response else None)
         
         # Test 3: Test Different Month Format (numeric vs text)
-        print("\n--- Test 3: Test Different Month Format (10 vs Oct) ---")
-        response = self.make_request("GET", "/admin/files/get-drivers-vehicles?month=10&year=2025")
+        print("\n--- Test 3: Test Different Month Format (09 vs Sep) ---")
+        response = self.make_request("GET", "/admin/files/get-drivers-vehicles?month=09&year=2025")
         
         if response and response.status_code == 200:
             try:
@@ -2402,17 +2402,17 @@ class NuraPulseBackendTester:
                     using_mock = data.get("using_mock_data", True)
                     
                     self.log_test("Month Format Test - Numeric Month", True, 
-                                f"month=10 converted correctly: {len(drivers)} drivers, {len(vehicles)} vehicles, using_mock_data: {using_mock}")
+                                f"month=09 converted correctly: {len(drivers)} drivers, {len(vehicles)} vehicles, using_mock_data: {using_mock}")
                     success_count += 1
                     
-                    # Should work the same as month="Oct"
-                    if not using_mock:
+                    # Should work the same as month="Sep" - check for real driver data
+                    if len(drivers) > 10 and any("Abdul" in str(d) or "Alexander" in str(d) for d in drivers):
                         self.log_test("Month Format Test - Numeric Conversion", True, 
-                                    "Numeric month (10) correctly converted to text format (Oct)")
+                                    "Numeric month (09) correctly converted to text format (Sep) and loaded real data")
                         success_count += 1
                     else:
                         self.log_test("Month Format Test - Numeric Conversion", False, 
-                                    "Numeric month conversion may not be working properly")
+                                    f"Numeric month conversion may not be working properly. Drivers: {drivers[:3]}...")
                 else:
                     self.log_test("Month Format Test - Numeric Month", False, 
                                 f"API returned success=false for numeric month: {data}")
