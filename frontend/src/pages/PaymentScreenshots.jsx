@@ -250,8 +250,8 @@ const PaymentScreenshots = () => {
                     {folders.map((folder, index) => (
                       <div
                         key={index}
+                        className="relative flex items-center gap-3 p-4 border rounded-lg hover:bg-blue-50 cursor-pointer transition-colors group"
                         onClick={() => handleFolderClick(folder.name)}
-                        className="flex items-center gap-3 p-4 border rounded-lg hover:bg-blue-50 cursor-pointer transition-colors"
                       >
                         <Folder className="w-8 h-8 text-blue-500" />
                         <div className="flex-1 min-w-0">
@@ -260,6 +260,15 @@ const PaymentScreenshots = () => {
                             {folder.file_count} file{folder.file_count !== 1 ? 's' : ''}
                           </p>
                         </div>
+                        {isMasterAdmin && (
+                          <button
+                            onClick={(e) => handleDeleteFolder(folder.name, e)}
+                            className="absolute top-2 right-2 p-1.5 rounded-md bg-red-50 text-red-600 hover:bg-red-100 opacity-0 group-hover:opacity-100 transition-opacity"
+                            title="Delete folder"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     ))}
                   </div>
