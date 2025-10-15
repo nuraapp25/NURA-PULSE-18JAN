@@ -2081,25 +2081,24 @@ class NuraPulseBackendTester:
                 files = {'file': ('test_permission_file.txt', test_content, 'text/plain')}
                 
                 permission_response = requests.put(url, headers=headers, files=files, timeout=10)
+                
+                if permission_response.status_code in [401, 403]:
+                    try:
+                        error_data = permission_response.json()
+                        error_message = error_data.get("detail", "")
+                        self.log_test("File Update - Non-Master Admin Blocked", True, 
+                                    f"Non-Master Admin correctly blocked ({permission_response.status_code}): {error_message}")
+                        success_count += 1
+                    except json.JSONDecodeError:
+                        self.log_test("File Update - Non-Master Admin Blocked", True, 
+                                    f"Non-Master Admin correctly blocked ({permission_response.status_code}) - no JSON response")
+                        success_count += 1
+                else:
+                    self.log_test("File Update - Non-Master Admin Blocked", False, 
+                                f"Expected 401/403, got {permission_response.status_code}")
             except Exception as e:
-                permission_response = None
-                print(f"Permission test error: {e}")
-            
-            if permission_response and permission_response.status_code in [401, 403]:
-                try:
-                    error_data = permission_response.json()
-                    error_message = error_data.get("detail", "")
-                    self.log_test("File Update - Non-Master Admin Blocked", True, 
-                                f"Non-Master Admin correctly blocked ({permission_response.status_code}): {error_message}")
-                    success_count += 1
-                except json.JSONDecodeError:
-                    self.log_test("File Update - Non-Master Admin Blocked", True, 
-                                f"Non-Master Admin correctly blocked ({permission_response.status_code}) - no JSON response")
-                    success_count += 1
-            else:
-                status = permission_response.status_code if permission_response else "Network error"
                 self.log_test("File Update - Non-Master Admin Blocked", False, 
-                            f"Expected 401/403, got {status}")
+                            f"Permission test failed with exception: {e}")
         else:
             self.log_test("File Update - Non-Master Admin Blocked", False, 
                         "No file ID available for permission testing")
