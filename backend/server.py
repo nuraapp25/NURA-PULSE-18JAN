@@ -3038,59 +3038,21 @@ Be precise and extract ALL rides shown in the screenshot. If a screenshot shows 
                     record["uploaded_at"] = datetime.now().isoformat()
                     record["status"] = "pending"
                 
-                # Save all extracted records to MongoDB
+                # Save all extracted records to MongoDB with files_imported flag
                 try:
                     if extracted_results:
+                        # Mark files as not imported yet
+                        for record in extracted_results:
+                            record["files_imported"] = False
+                        
                         await db.payment_records.insert_many(extracted_results)
                         logger.info(f"✅ Saved {len(extracted_results)} payment records to MongoDB for {month_year}")
                 except Exception as e:
                     logger.error(f"❌ Failed to save payment records to MongoDB: {str(e)}")
                     # Don't fail the request, records are still in memory
             
-            # Save screenshot files to organized folder structure
-            if driver_name and month_year:
-                try:
-                    # Create directory: payment_screenshots/Sep 2025/DriverName/
-                    base_dir = "/app/backend/payment_screenshots"
-                    driver_dir = os.path.join(base_dir, month_year, driver_name)
-                    os.makedirs(driver_dir, exist_ok=True)
-                    
-                    logger.info(f"Attempting to save {len(files)} files to {driver_dir}")
-                    logger.info(f"File mapping: {file_mapping}")
-                    
-                    # Copy files to the driver folder with duplicate handling
-                    saved_count = 0
-                    for file in files:
-                        # Get the temp file path from our mapping
-                        src_path = file_mapping.get(file.filename)
-                        logger.info(f"Looking for {file.filename}, found: {src_path}")
-                        
-                        if src_path and os.path.exists(src_path):
-                            # Handle duplicate filenames
-                            base_filename = file.filename
-                            filename_without_ext, ext = os.path.splitext(base_filename)
-                            dest_path = os.path.join(driver_dir, base_filename)
-                            
-                            counter = 2
-                            while os.path.exists(dest_path):
-                                # File exists, add (2), (3), etc.
-                                new_filename = f"{filename_without_ext} ({counter}){ext}"
-                                dest_path = os.path.join(driver_dir, new_filename)
-                                counter += 1
-                            
-                            import shutil
-                            shutil.copy2(src_path, dest_path)
-                            saved_count += 1
-                            logger.info(f"✅ Saved screenshot: {dest_path}")
-                        else:
-                            logger.warning(f"❌ Source file not found or doesn't exist: {src_path}")
-                    
-                    logger.info(f"✅ Successfully saved {saved_count}/{len(files)} screenshots to {driver_dir}")
-                except Exception as e:
-                    logger.error(f"Error saving screenshots to folder: {str(e)}")
-                    import traceback
-                    logger.error(traceback.format_exc())
-                    # Don't fail the request, just log the error
+            # Keep temp files for later import - store mapping in the response
+            # Don't save screenshots yet - will be saved when user clicks "Import Files to Backend"
         
             return {
                 "success": True,
