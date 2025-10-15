@@ -2482,7 +2482,7 @@ class NuraPulseBackendTester:
 
     def run_all_tests(self):
         """Run all backend tests"""
-        print("🚀 Starting File Update Feature - Comprehensive Verification Testing")
+        print("🚀 Starting Payment Data Extractor - Drivers/Vehicles Fetch Fix Verification")
         print(f"Backend URL: {self.base_url}")
         print(f"Master Admin: {MASTER_ADMIN_EMAIL}")
         
@@ -2493,12 +2493,12 @@ class NuraPulseBackendTester:
             print("\n❌ Authentication failed - cannot proceed with other tests")
             return False
         
-        # PRIORITY: Test the File Update Feature - Comprehensive Verification as requested in review
-        comprehensive_verification_success = self.test_file_update_feature_comprehensive_verification()
+        # PRIORITY: Test the Payment Data Extractor Fix as requested in review
+        payment_extractor_fix_success = self.test_payment_data_extractor_fix()
         
         # Summary
         print("\n" + "="*60)
-        print("📊 TEST SUMMARY - FILE UPDATE FEATURE COMPREHENSIVE VERIFICATION")
+        print("📊 TEST SUMMARY - PAYMENT DATA EXTRACTOR FIX VERIFICATION")
         print("="*60)
         
         total_tests = len(self.test_results)
@@ -2511,7 +2511,7 @@ class NuraPulseBackendTester:
         print(f"Success Rate: {(passed_tests/total_tests)*100:.1f}%")
         
         # Priority test results
-        print(f"\n🎯 FILE UPDATE FEATURE COMPREHENSIVE VERIFICATION RESULT: {'✅ PASS' if comprehensive_verification_success else '❌ FAIL'}")
+        print(f"\n🎯 PAYMENT DATA EXTRACTOR FIX VERIFICATION RESULT: {'✅ PASS' if payment_extractor_fix_success else '❌ FAIL'}")
         
         if failed_tests > 0:
             print("\n❌ FAILED TESTS:")
