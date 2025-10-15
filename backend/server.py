@@ -3720,6 +3720,116 @@ async def startup_event():
 
 
 
+# ==================== ANALYTICS ====================
+
+# In-memory storage for active sessions and page views
+active_sessions = {}  # {user_id: {username, email, account_type, last_seen, current_page}}
+page_views = {}  # {page_name: count}
+
+@api_router.post("/analytics/track-page-view")
+async def track_page_view(
+    request: Request,
+    current_user: User = Depends(get_current_user)
+):
+    """Track page view and update user session"""
+    try:
+        body = await request.json()
+        page_name = body.get("page")
+        
+        if not page_name:
+            raise HTTPException(status_code=400, detail="Page name is required")
+        
+        # Update active session
+        active_sessions[current_user.id] = {
+            "user_id": current_user.id,
+            "username": f"{current_user.first_name} {current_user.last_name or ''}".strip(),
+            "email": current_user.email,
+            "account_type": current_user.account_type,
+            "current_page": page_name,
+            "last_seen": datetime.now(timezone.utc).isoformat()
+        }
+        
+        # Update page view count
+        page_views[page_name] = page_views.get(page_name, 0) + 1
+        
+        return {"success": True, "message": "Page view tracked"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error tracking page view: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to track page view")
+
+
+@api_router.get("/analytics/active-users")
+async def get_active_users(current_user: User = Depends(get_current_user)):
+    """Get list of currently active users (Master Admin only)"""
+    if current_user.account_type != "master_admin":
+        raise HTTPException(status_code=403, detail="Only Master Admin can view analytics")
+    
+    try:
+        # Clean up stale sessions (inactive for more than 5 minutes)
+        current_time = datetime.now(timezone.utc)
+        stale_users = []
+        
+        for user_id, session in active_sessions.items():
+            last_seen = datetime.fromisoformat(session["last_seen"])
+            if (current_time - last_seen).total_seconds() > 300:  # 5 minutes
+                stale_users.append(user_id)
+        
+        for user_id in stale_users:
+            del active_sessions[user_id]
+        
+        return {
+            "success": True,
+            "active_users": list(active_sessions.values()),
+            "count": len(active_sessions)
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting active users: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get active users")
+
+
+@api_router.get("/analytics/page-views")
+async def get_page_views(current_user: User = Depends(get_current_user)):
+    """Get page view statistics (Master Admin only)"""
+    if current_user.account_type != "master_admin":
+        raise HTTPException(status_code=403, detail="Only Master Admin can view analytics")
+    
+    try:
+        # Convert to list of {page, count} sorted by count
+        page_view_list = [
+            {"page": page, "views": count}
+            for page, count in page_views.items()
+        ]
+        page_view_list.sort(key=lambda x: x["views"], reverse=True)
+        
+        return {
+            "success": True,
+            "page_views": page_view_list,
+            "total_views": sum(page_views.values())
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting page views: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get page views")
+
+
+@api_router.post("/analytics/logout")
+async def track_logout(current_user: User = Depends(get_current_user)):
+    """Track user logout"""
+    try:
+        if current_user.id in active_sessions:
+            del active_sessions[current_user.id]
+        
+        return {"success": True, "message": "Logout tracked"}
+        
+    except Exception as e:
+        logger.error(f"Error tracking logout: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to track logout")
+
+
 # ==================== EXPENSE TRACKER ====================
 
 # Expenses directory
