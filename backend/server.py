@@ -2729,7 +2729,7 @@ async def get_drivers_and_vehicles(
         vehicles_file = None
         
         for file in files:
-            filename = file.get("filename", "")
+            filename = file.get("original_filename", "")
             # Look for generic filenames
             if filename == "Drivers List.xlsx":
                 drivers_file = file
