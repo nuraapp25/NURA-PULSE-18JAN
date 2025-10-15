@@ -346,7 +346,8 @@ const PaymentReconciliation = () => {
         
         // Append to existing data instead of replacing
         setExtractedData(prev => [...prev, ...processedData]);
-        setUploadedFiles([]); // Clear uploaded files after successful processing
+        // Don't clear uploadedFiles - we need them for importing to backend
+        setFilesImported(false); // Reset import status
         
         toast.success(`Successfully processed all ${response.data.processed_files} screenshots!`);
       } else {
