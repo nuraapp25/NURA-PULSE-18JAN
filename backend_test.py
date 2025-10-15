@@ -2575,26 +2575,28 @@ class NuraPulseBackendTester:
         delete_data = {"path": "Test Folder", "is_folder": True}
         response = self.make_request("DELETE", "/admin/payment-screenshots/delete", data=delete_data, use_auth=False)
         
-        if response and response.status_code in [401, 403]:
-            try:
-                result = response.json()
-                error_message = result.get('detail', '')
-                if "Only Master Admin can delete payment screenshots" in error_message or "Invalid token" in error_message or "Not authorized" in error_message:
-                    self.log_test("Payment Screenshots Delete - Non-Master Admin Blocked", True, 
-                                f"Correctly blocked non-master admin access: {error_message}")
-                    success_count += 1
-                else:
+        if response:
+            if response.status_code in [401, 403]:
+                try:
+                    result = response.json()
+                    error_message = result.get('detail', '')
+                    if "Only Master Admin can delete payment screenshots" in error_message or "Invalid token" in error_message or "Not authorized" in error_message:
+                        self.log_test("Payment Screenshots Delete - Non-Master Admin Blocked", True, 
+                                    f"Correctly blocked non-master admin access: {error_message}")
+                        success_count += 1
+                    else:
+                        self.log_test("Payment Screenshots Delete - Non-Master Admin Blocked", True, 
+                                    f"Correctly blocked unauthorized access ({response.status_code})")
+                        success_count += 1
+                except json.JSONDecodeError:
                     self.log_test("Payment Screenshots Delete - Non-Master Admin Blocked", True, 
                                 f"Correctly blocked unauthorized access ({response.status_code})")
                     success_count += 1
-            except json.JSONDecodeError:
-                self.log_test("Payment Screenshots Delete - Non-Master Admin Blocked", True, 
-                            f"Correctly blocked unauthorized access ({response.status_code})")
-                success_count += 1
+            else:
+                self.log_test("Payment Screenshots Delete - Non-Master Admin Blocked", False, 
+                            f"Expected 401/403, got {response.status_code}")
         else:
-            status = response.status_code if response else "Network error"
-            self.log_test("Payment Screenshots Delete - Non-Master Admin Blocked", False, 
-                        f"Expected 401/403, got {status}")
+            self.log_test("Payment Screenshots Delete - Non-Master Admin Blocked", False, "Network error")
         
         return success_count >= 1  # At least 1 test should pass
 
