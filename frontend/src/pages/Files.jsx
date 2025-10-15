@@ -19,6 +19,10 @@ const Files = () => {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [shareLink, setShareLink] = useState("");
+  const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
+  const [fileToUpdate, setFileToUpdate] = useState(null);
+  const [updateFile, setUpdateFile] = useState(null);
+  const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
     fetchFiles();
