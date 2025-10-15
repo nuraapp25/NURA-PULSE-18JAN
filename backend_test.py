@@ -2643,16 +2643,17 @@ class NuraPulseBackendTester:
         if response and response.status_code == 200:
             try:
                 result = response.json()
-                if isinstance(result, list):
+                if "active_users" in result and isinstance(result["active_users"], list):
+                    active_users = result["active_users"]
                     # Check if response contains expected fields for active users
-                    if len(result) > 0:
-                        sample_user = result[0]
+                    if len(active_users) > 0:
+                        sample_user = active_users[0]
                         expected_fields = ["user_id", "username", "email", "account_type", "current_page", "last_seen"]
                         missing_fields = [field for field in expected_fields if field not in sample_user]
                         
                         if not missing_fields:
                             self.log_test("Analytics - Active Users Structure", True, 
-                                        f"Active users response contains all required fields: {len(result)} users")
+                                        f"Active users response contains all required fields: {len(active_users)} users")
                             success_count += 1
                         else:
                             self.log_test("Analytics - Active Users Structure", False, 
@@ -2663,7 +2664,7 @@ class NuraPulseBackendTester:
                         success_count += 1
                 else:
                     self.log_test("Analytics - Active Users Format", False, 
-                                f"Expected list, got {type(result)}")
+                                f"Expected dict with active_users array, got {type(result)}")
             except json.JSONDecodeError:
                 self.log_test("Analytics - Active Users", False, 
                             "Invalid JSON response", response.text)
