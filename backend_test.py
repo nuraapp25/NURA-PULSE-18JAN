@@ -2677,14 +2677,16 @@ class NuraPulseBackendTester:
         
         # Test permission restriction for non-master admin
         response = self.make_request("GET", "/analytics/active-users", use_auth=False)
-        if response and response.status_code in [401, 403]:
-            self.log_test("Analytics - Active Users Permission", True, 
-                        f"Correctly requires master admin access ({response.status_code})")
-            success_count += 1
+        if response:
+            if response.status_code in [401, 403]:
+                self.log_test("Analytics - Active Users Permission", True, 
+                            f"Correctly requires master admin access ({response.status_code})")
+                success_count += 1
+            else:
+                self.log_test("Analytics - Active Users Permission", False, 
+                            f"Expected 401/403, got {response.status_code}")
         else:
-            status = response.status_code if response else "Network error"
-            self.log_test("Analytics - Active Users Permission", False, 
-                        f"Expected 401/403, got {status}")
+            self.log_test("Analytics - Active Users Permission", False, "Network error")
         
         # Test 3: GET /analytics/page-views - Get Page View Statistics (Master Admin Only)
         print("\n--- Test 3: GET /analytics/page-views - Master Admin Only ---")
