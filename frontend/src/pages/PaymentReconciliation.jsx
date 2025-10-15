@@ -53,6 +53,8 @@ const PaymentReconciliation = () => {
   const [syncing, setSyncing] = useState(false);
   const [lastSync, setLastSync] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [filesImported, setFilesImported] = useState(false);
   
   // Edit dialog states
   const [editingRecord, setEditingRecord] = useState(null);
