@@ -237,7 +237,7 @@ class NuraPulseBackendTester:
         # Test 1: GET all payments (should work even if empty)
         response = self.make_request("GET", "/payment-reconciliation")
         
-        if response and response.status_code == 200:
+        if response is not None and response.status_code == 200:
             try:
                 payments = response.json()
                 self.log_test("Payment Reconciliation - GET All", True, 
@@ -264,7 +264,7 @@ class NuraPulseBackendTester:
         
         response = self.make_request("POST", "/payment-reconciliation", test_payment_data)
         
-        if response and response.status_code == 200:
+        if response is not None and response.status_code == 200:
             try:
                 result = response.json()
                 if "payment" in result:
@@ -284,7 +284,7 @@ class NuraPulseBackendTester:
         # Test 3: Google Sheets Sync
         response = self.make_request("POST", "/payment-reconciliation/sync")
         
-        if response and response.status_code == 200:
+        if response is not None and response.status_code == 200:
             try:
                 result = response.json()
                 self.log_test("Payment Reconciliation - Sheets Sync", True, 
@@ -380,7 +380,7 @@ class NuraPulseBackendTester:
         # Test daily assignments endpoint
         response = self.make_request("GET", "/telecaller-queue/daily-assignments")
         
-        if response and response.status_code == 200:
+        if response is not None and response.status_code == 200:
             try:
                 assignments = response.json()
                 telecaller1_count = assignments.get("telecaller1", {}).get("count", 0)
@@ -400,7 +400,7 @@ class NuraPulseBackendTester:
         # Test regular telecaller queue endpoint
         response = self.make_request("GET", "/telecaller-queue")
         
-        if response and response.status_code == 200:
+        if response is not None and response.status_code == 200:
             try:
                 tasks = response.json()
                 self.log_test("Telecaller Queue - Get Tasks", True, 
@@ -438,7 +438,7 @@ class NuraPulseBackendTester:
         
         response = self.make_request("POST", "/montra-vehicle/import-feed", files=files)
         
-        if response and response.status_code == 200:
+        if response is not None and response.status_code == 200:
             try:
                 result = response.json()
                 # Check for corrected response format
@@ -470,7 +470,7 @@ class NuraPulseBackendTester:
         
         response = self.make_request("GET", "/montra-vehicle/feed-database")
         
-        if response and response.status_code == 200:
+        if response is not None and response.status_code == 200:
             try:
                 data = response.json()
                 if "success" in data and "files" in data and "count" in data:
@@ -551,7 +551,7 @@ class NuraPulseBackendTester:
         ]
         response = self.make_request("DELETE", "/montra-vehicle/feed-database", data=sample_delete_data)
         
-        if response and response.status_code == 200:
+        if response is not None and response.status_code == 200:
             try:
                 result = response.json()
                 if "success" in result and "deleted_count" in result:
@@ -623,7 +623,7 @@ class NuraPulseBackendTester:
         # Test Montra Vehicle Insights
         response = self.make_request("GET", "/montra-vehicle-insights")
         
-        if response and response.status_code == 200:
+        if response is not None and response.status_code == 200:
             try:
                 vehicles = response.json()
                 self.log_test("Mini-Apps - Montra Vehicle Insights", True, 
@@ -649,7 +649,7 @@ class NuraPulseBackendTester:
         response = self.make_request("GET", "/montra-vehicle/feed-database")
         
         existing_files = []
-        if response and response.status_code == 200:
+        if response is not None and response.status_code == 200:
             try:
                 data = response.json()
                 if "files" in data and data["files"]:
@@ -704,7 +704,7 @@ class NuraPulseBackendTester:
         ]
         response = self.make_request("DELETE", "/montra-vehicle/feed-database", data=invalid_data)
         
-        if response and response.status_code == 200:
+        if response is not None and response.status_code == 200:
             try:
                 result = response.json()
                 if "success" in result and "deleted_count" in result:
@@ -776,7 +776,7 @@ class NuraPulseBackendTester:
                 # Perform the DELETE operation
                 response = self.make_request("DELETE", "/montra-vehicle/feed-database", data=valid_data)
                 
-                if response and response.status_code == 200:
+                if response is not None and response.status_code == 200:
                     try:
                         result = response.json()
                         if "success" in result and "deleted_count" in result:
@@ -883,7 +883,7 @@ class NuraPulseBackendTester:
         print("\n--- Testing Valid Request with Authentication ---")
         response = self.make_request("GET", "/montra-vehicle/battery-audit")
         
-        if response and response.status_code == 200:
+        if response is not None and response.status_code == 200:
             try:
                 data = response.json()
                 
@@ -970,7 +970,7 @@ class NuraPulseBackendTester:
         
         # Test 3: Response format validation
         print("\n--- Testing Response Format Validation ---")
-        if response and response.status_code == 200:
+        if response is not None and response.status_code == 200:
             try:
                 data = response.json()
                 
@@ -1013,7 +1013,7 @@ class NuraPulseBackendTester:
         print("\n--- Testing Sep 2025 Data ---")
         response = self.make_request("GET", "/admin/files/get-drivers-vehicles?month=Sep&year=2025")
         
-        if response and response.status_code == 200:
+        if response is not None and response.status_code == 200:
             try:
                 data = response.json()
                 
@@ -1088,7 +1088,7 @@ class NuraPulseBackendTester:
         print("\n--- Testing Oct 2025 Data ---")
         response = self.make_request("GET", "/admin/files/get-drivers-vehicles?month=Oct&year=2025")
         
-        if response and response.status_code == 200:
+        if response is not None and response.status_code == 200:
             try:
                 data = response.json()
                 
@@ -1187,7 +1187,7 @@ class NuraPulseBackendTester:
         
         # Test with authentication
         response = self.make_request("GET", "/expenses")
-        if response and response.status_code == 200:
+        if response is not None and response.status_code == 200:
             try:
                 data = response.json()
                 if "expenses" in data and isinstance(data["expenses"], list):
@@ -1369,7 +1369,7 @@ class NuraPulseBackendTester:
         print("\n--- Test 3: Verify Expense Saved to Database ---")
         if test_expense_id:
             response = self.make_request("GET", "/expenses")
-            if response and response.status_code == 200:
+            if response is not None and response.status_code == 200:
                 try:
                     data = response.json()
                     expenses = data.get("expenses", [])
@@ -1458,7 +1458,7 @@ class NuraPulseBackendTester:
             }
             
             response = self.make_request("POST", "/expenses/approve", approve_data)
-            if response and response.status_code == 200:
+            if response is not None and response.status_code == 200:
                 self.log_test("Expense Tracker - Approve Expense", True, 
                             "Successfully approved expense")
                 success_count += 1
@@ -1474,7 +1474,7 @@ class NuraPulseBackendTester:
             }
             
             response = self.make_request("POST", "/expenses/approve", reject_data)
-            if response and response.status_code == 200:
+            if response is not None and response.status_code == 200:
                 self.log_test("Expense Tracker - Reject Expense", True, 
                             "Successfully rejected expense")
                 success_count += 1
@@ -1490,7 +1490,7 @@ class NuraPulseBackendTester:
             }
             
             response = self.make_request("POST", "/expenses/approve", pending_data)
-            if response and response.status_code == 200:
+            if response is not None and response.status_code == 200:
                 self.log_test("Expense Tracker - Set Pending Status", True, 
                             "Successfully set expense to pending")
                 success_count += 1
@@ -1610,7 +1610,7 @@ class NuraPulseBackendTester:
         if test_expense_id:
             delete_data = {"expense_ids": [test_expense_id]}
             response = self.make_request("POST", "/expenses/delete", delete_data)
-            if response and response.status_code == 200:
+            if response is not None and response.status_code == 200:
                 try:
                     result = response.json()
                     if "message" in result and "1 expense" in result["message"]:
@@ -1632,7 +1632,7 @@ class NuraPulseBackendTester:
         if test_expense_id:
             # Check that expense is no longer returned in GET /expenses
             response = self.make_request("GET", "/expenses")
-            if response and response.status_code == 200:
+            if response is not None and response.status_code == 200:
                 try:
                     data = response.json()
                     expenses = data.get("expenses", [])
@@ -1669,7 +1669,7 @@ class NuraPulseBackendTester:
         files = {'file': (test_filename, test_file_content, 'text/plain')}
         response = self.make_request("POST", "/admin/files/upload", files=files)
         
-        if response and response.status_code == 200:
+        if response is not None and response.status_code == 200:
             try:
                 result = response.json()
                 
@@ -1731,7 +1731,7 @@ class NuraPulseBackendTester:
         response = self.make_request("POST", "/admin/files/upload", files=files)
         
         # This should pass since 1MB < 100MB, but let's test the validation logic exists
-        if response and response.status_code == 200:
+        if response is not None and response.status_code == 200:
             self.log_test("File Upload - Size Validation Logic", True, 
                         "Size validation allows files under 100MB limit")
             success_count += 1
@@ -1783,7 +1783,7 @@ class NuraPulseBackendTester:
             files = {'file': (updated_filename, updated_file_content, 'text/plain')}
             response = self.make_request("PUT", f"/admin/files/{test_file_id}/update", files=files)
             
-            if response and response.status_code == 200:
+            if response is not None and response.status_code == 200:
                 try:
                     result = response.json()
                     
@@ -1973,7 +1973,7 @@ class NuraPulseBackendTester:
         print("\n--- Test 1: Verify Only 3 Real Files Present ---")
         response = self.make_request("GET", "/admin/files")
         
-        if response and response.status_code == 200:
+        if response is not None and response.status_code == 200:
             try:
                 data = response.json()
                 files = data.get("files", [])
@@ -2026,7 +2026,7 @@ class NuraPulseBackendTester:
         
         # First get a file ID to test with
         file_id_to_test = None
-        if response and response.status_code == 200:
+        if response is not None and response.status_code == 200:
             try:
                 data = response.json()
                 files = data.get("files", [])
@@ -2267,7 +2267,7 @@ class NuraPulseBackendTester:
         print("\n--- Test 1: Verify Files Exist ---")
         response = self.make_request("GET", "/admin/files")
         
-        if response and response.status_code == 200:
+        if response is not None and response.status_code == 200:
             try:
                 data = response.json()
                 files = data.get("files", [])
@@ -2307,7 +2307,7 @@ class NuraPulseBackendTester:
         print("\n--- Test 2: Test Known Working Month (Sep 2025) ---")
         response = self.make_request("GET", "/admin/files/get-drivers-vehicles?month=Sep&year=2025")
         
-        if response and response.status_code == 200:
+        if response is not None and response.status_code == 200:
             try:
                 data = response.json()
                 
@@ -2359,7 +2359,7 @@ class NuraPulseBackendTester:
         print("\n--- Test 2b: Test Current Month (Oct 2025) ---")
         response = self.make_request("GET", "/admin/files/get-drivers-vehicles?month=Oct&year=2025")
         
-        if response and response.status_code == 200:
+        if response is not None and response.status_code == 200:
             try:
                 data = response.json()
                 
@@ -2392,7 +2392,7 @@ class NuraPulseBackendTester:
         print("\n--- Test 3: Test Different Month Format (09 vs Sep) ---")
         response = self.make_request("GET", "/admin/files/get-drivers-vehicles?month=09&year=2025")
         
-        if response and response.status_code == 200:
+        if response is not None and response.status_code == 200:
             try:
                 data = response.json()
                 
@@ -2428,7 +2428,7 @@ class NuraPulseBackendTester:
         print("\n--- Test 4: Test Non-Existent Month (Jan 2026) ---")
         response = self.make_request("GET", "/admin/files/get-drivers-vehicles?month=Jan&year=2026")
         
-        if response and response.status_code == 200:
+        if response is not None and response.status_code == 200:
             try:
                 data = response.json()
                 
@@ -2622,7 +2622,7 @@ class NuraPulseBackendTester:
         page_view_data = {"page": "/dashboard"}
         response = self.make_request("POST", "/analytics/track-page-view", data=page_view_data)
         
-        if response and response.status_code == 200:
+        if response is not None and response.status_code == 200:
             try:
                 result = response.json()
                 if "success" in result or "message" in result:
@@ -2644,7 +2644,7 @@ class NuraPulseBackendTester:
         for page in ["/payment-reconciliation", "/driver-onboarding", "/expense-tracker"]:
             page_data = {"page": page}
             response = self.make_request("POST", "/analytics/track-page-view", data=page_data)
-            if response and response.status_code == 200:
+            if response is not None and response.status_code == 200:
                 success_count += 0.25  # Partial credit for additional page tracking
         
         # Test 2: GET /analytics/active-users - Get Active Users (Master Admin Only)
@@ -2652,7 +2652,7 @@ class NuraPulseBackendTester:
         
         response = self.make_request("GET", "/analytics/active-users")
         
-        if response and response.status_code == 200:
+        if response is not None and response.status_code == 200:
             try:
                 result = response.json()
                 if "active_users" in result and isinstance(result["active_users"], list):
@@ -2703,7 +2703,7 @@ class NuraPulseBackendTester:
         
         response = self.make_request("GET", "/analytics/page-views")
         
-        if response and response.status_code == 200:
+        if response is not None and response.status_code == 200:
             try:
                 result = response.json()
                 if "page_views" in result and "total_views" in result:
@@ -2758,7 +2758,7 @@ class NuraPulseBackendTester:
         
         response = self.make_request("POST", "/analytics/logout")
         
-        if response and response.status_code == 200:
+        if response is not None and response.status_code == 200:
             try:
                 result = response.json()
                 if "success" in result or "message" in result:
@@ -2794,7 +2794,7 @@ class NuraPulseBackendTester:
         for page in pages_to_track:
             page_data = {"page": page}
             response = self.make_request("POST", "/analytics/track-page-view", data=page_data)
-            if response and response.status_code == 200:
+            if response is not None and response.status_code == 200:
                 tracked_pages += 1
         
         if tracked_pages >= 3:
@@ -2808,7 +2808,7 @@ class NuraPulseBackendTester:
         # Step 2: Get active users - verify user appears with correct page
         response = self.make_request("GET", "/analytics/active-users")
         
-        if response and response.status_code == 200:
+        if response is not None and response.status_code == 200:
             try:
                 result = response.json()
                 if "active_users" in result and isinstance(result["active_users"], list):
@@ -2842,7 +2842,7 @@ class NuraPulseBackendTester:
         # Step 3: Get page views - verify counts are accurate
         response = self.make_request("GET", "/analytics/page-views")
         
-        if response and response.status_code == 200:
+        if response is not None and response.status_code == 200:
             try:
                 result = response.json()
                 if "page_views" in result and "total_views" in result:
@@ -2873,7 +2873,7 @@ class NuraPulseBackendTester:
         # Step 4: Track logout - verify user removed from active sessions
         response = self.make_request("POST", "/analytics/logout")
         
-        if response and response.status_code == 200:
+        if response is not None and response.status_code == 200:
             self.log_test("Analytics Workflow - Track Logout", True, 
                         "Successfully tracked logout")
             success_count += 1
@@ -2882,7 +2882,7 @@ class NuraPulseBackendTester:
             # Note: This might not work immediately due to session cleanup timing
             response = self.make_request("GET", "/analytics/active-users")
             
-            if response and response.status_code == 200:
+            if response is not None and response.status_code == 200:
                 try:
                     result = response.json()
                     if "active_users" in result and isinstance(result["active_users"], list):
