@@ -2579,6 +2579,10 @@ class NuraPulseBackendTester:
         delete_data = {"path": "Test Folder", "is_folder": True}
         response = self.make_request("DELETE", "/admin/payment-screenshots/delete", data=delete_data, use_auth=False)
         
+        print(f"DEBUG: Non-Master Admin response: {response}")
+        if response:
+            print(f"DEBUG: Response status code: {response.status_code}")
+        
         if response:
             if response.status_code in [401, 403]:
                 try:
