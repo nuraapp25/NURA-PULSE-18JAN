@@ -34,7 +34,19 @@ const Dashboard = () => {
     trackPageView();
   }, [location.pathname]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (token) {
+        await axios.post(
+          `${API}/analytics/logout`,
+          {},
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      }
+    } catch (error) {
+      console.debug("Analytics logout tracking failed:", error);
+    }
     logout();
     navigate("/login");
   };
