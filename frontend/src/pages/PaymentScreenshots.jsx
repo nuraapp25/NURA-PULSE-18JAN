@@ -10,8 +10,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 const PaymentScreenshots = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  // Allow all users to delete
-  const canDelete = true;
+  const isMasterAdmin = user?.account_type === "master_admin";
   
   const [currentPath, setCurrentPath] = useState([]);
   const [folders, setFolders] = useState([]);
