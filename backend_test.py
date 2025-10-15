@@ -1953,7 +1953,7 @@ class NuraPulseBackendTester:
 
     def run_all_tests(self):
         """Run all backend tests"""
-        print("🚀 Starting Comprehensive Expense Tracker Backend Testing")
+        print("🚀 Starting File Update Feature Backend Testing")
         print(f"Backend URL: {self.base_url}")
         print(f"Master Admin: {MASTER_ADMIN_EMAIL}")
         
@@ -1964,12 +1964,12 @@ class NuraPulseBackendTester:
             print("\n❌ Authentication failed - cannot proceed with other tests")
             return False
         
-        # PRIORITY: Test the Expense Tracker Backend APIs as requested in review
-        expense_tracker_success = self.test_expense_tracker_backend_apis()
+        # PRIORITY: Test the File Update Feature Backend APIs as requested in review
+        file_update_success = self.test_file_update_feature_backend()
         
         # Summary
         print("\n" + "="*60)
-        print("📊 TEST SUMMARY - EXPENSE TRACKER BACKEND APIS")
+        print("📊 TEST SUMMARY - FILE UPDATE FEATURE BACKEND APIS")
         print("="*60)
         
         total_tests = len(self.test_results)
@@ -1982,7 +1982,7 @@ class NuraPulseBackendTester:
         print(f"Success Rate: {(passed_tests/total_tests)*100:.1f}%")
         
         # Priority test results
-        print(f"\n🎯 EXPENSE TRACKER BACKEND RESULT: {'✅ PASS' if expense_tracker_success else '❌ FAIL'}")
+        print(f"\n🎯 FILE UPDATE FEATURE BACKEND RESULT: {'✅ PASS' if file_update_success else '❌ FAIL'}")
         
         if failed_tests > 0:
             print("\n❌ FAILED TESTS:")
@@ -1990,7 +1990,7 @@ class NuraPulseBackendTester:
                 if not result["success"]:
                     print(f"  - {result['test']}: {result['message']}")
         
-        overall_success = expense_tracker_success and failed_tests <= 5  # Allow some minor failures
+        overall_success = file_update_success and failed_tests <= 3  # Allow some minor failures
         status = "✅ EXPENSE TRACKER BACKEND APIS VERIFIED" if overall_success else "❌ EXPENSE TRACKER BACKEND ISSUES FOUND"
         print(f"\n{status}")
         
