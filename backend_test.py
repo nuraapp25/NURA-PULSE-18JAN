@@ -1522,7 +1522,7 @@ class NuraPulseBackendTester:
         }
         
         response = self.make_request("POST", "/expenses/approve", nonexistent_data)
-        if response and response.status_code == 404:
+        if response is not None and response.status_code == 404:
             self.log_test("Expense Tracker - Approve Non-existent Expense", True, 
                         "Correctly returns 404 for non-existent expense")
             success_count += 1
