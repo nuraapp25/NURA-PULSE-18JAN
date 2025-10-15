@@ -2794,8 +2794,9 @@ class NuraPulseBackendTester:
         
         if response and response.status_code == 200:
             try:
-                active_users = response.json()
-                if isinstance(active_users, list):
+                result = response.json()
+                if "active_users" in result and isinstance(result["active_users"], list):
+                    active_users = result["active_users"]
                     # Look for current user in active users
                     current_user_found = False
                     for user in active_users:
@@ -2817,7 +2818,7 @@ class NuraPulseBackendTester:
                                     f"Master admin not found in active users list ({len(active_users)} users)")
                 else:
                     self.log_test("Analytics Workflow - Active Users Response", False, 
-                                f"Invalid active users response type: {type(active_users)}")
+                                f"Invalid active users response format: {type(result)}")
             except json.JSONDecodeError:
                 self.log_test("Analytics Workflow - Active Users Response", False, 
                             "Invalid JSON response from active users")
