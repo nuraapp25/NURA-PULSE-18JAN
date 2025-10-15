@@ -367,6 +367,75 @@ const PaymentReconciliation = () => {
     }
   };
 
+  const handleImportFilesToBackend = async () => {
+    if (extractedData.length === 0) {
+      toast.error("No data to import");
+      return;
+    }
+
+    if (!selectedDriver || !uploadedFiles || uploadedFiles.length === 0) {
+      toast.error("No files available to import. Please process screenshots first.");
+      return;
+    }
+
+    setImporting(true);
+    try {
+      const token = localStorage.getItem("token");
+      const formData = new FormData();
+      
+      // Add all files
+      uploadedFiles.forEach(file => {
+        formData.append("files", file);
+      });
+      
+      formData.append("month_year", selectedPeriod);
+      formData.append("driver_name", selectedDriver);
+      
+      const response = await axios.post(
+        `${API}/payment-reconciliation/upload-screenshots-to-folder`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+      
+      if (response.data.success) {
+        // Mark records as imported in DB
+        const recordIds = extractedData.map(record => record.id);
+        await axios.post(
+          `${API}/payment-reconciliation/import-files`,
+          {
+            month_year: selectedPeriod,
+            record_ids: recordIds
+          },
+          {
+            headers: { Authorization: `Bearer ${token}` }
+          }
+        );
+        
+        setFilesImported(true);
+        setUploadedFiles([]); // Clear uploaded files after import
+        
+        toast.success(
+          <div>
+            <p className="font-semibold">Files Imported Successfully!</p>
+            <p className="text-sm mt-1">{response.data.message}</p>
+            <p className="text-xs mt-1">Screenshots saved to: {selectedPeriod}/{selectedDriver}</p>
+          </div>,
+          { duration: 5000 }
+        );
+      }
+    } catch (error) {
+      console.error("Import error:", error);
+      toast.error(error.response?.data?.detail || "Failed to import files to backend");
+    } finally {
+      setImporting(false);
+    }
+  };
+
   const copyAllData = () => {
     const csvData = extractedData.map(row => 
       Object.values(row).join(',')
