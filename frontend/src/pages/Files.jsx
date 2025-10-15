@@ -721,6 +721,98 @@ const Files = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Update File Dialog */}
+      <Dialog open={updateDialogOpen} onOpenChange={setUpdateDialogOpen}>
+        <DialogContent className="dark:bg-gray-800">
+          <DialogHeader>
+            <DialogTitle className="dark:text-white">Update File</DialogTitle>
+            <DialogDescription className="dark:text-gray-400">
+              Replace "{fileToUpdate?.original_filename}" with a new file. The old file will be permanently deleted.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 mt-4">
+            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
+              <p className="text-sm text-gray-900 dark:text-white font-medium">
+                Current file: {fileToUpdate?.original_filename}
+              </p>
+              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                Size: {fileToUpdate?.size_display}
+              </p>
+            </div>
+
+            <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center">
+              <input
+                type="file"
+                onChange={handleUpdateFileSelect}
+                className="hidden"
+                id="update-file-input"
+              />
+              <label
+                htmlFor="update-file-input"
+                className="cursor-pointer flex flex-col items-center"
+              >
+                <RefreshCw size={32} className="text-orange-500 dark:text-orange-400 mb-2" />
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Click to select replacement file
+                </span>
+                <span className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                  Any format, max 100MB
+                </span>
+              </label>
+            </div>
+
+            {updateFile && (
+              <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded border border-green-200 dark:border-green-800">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <CheckCircle size={18} className="text-green-600 dark:text-green-400" />
+                    <span className="text-sm text-gray-900 dark:text-white font-medium">
+                      {updateFile.name}
+                    </span>
+                  </div>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    {(updateFile.size / 1024 / 1024).toFixed(2)} MB
+                  </span>
+                </div>
+              </div>
+            )}
+
+            <div className="flex space-x-3">
+              <Button
+                onClick={() => {
+                  setUpdateDialogOpen(false);
+                  setFileToUpdate(null);
+                  setUpdateFile(null);
+                }}
+                variant="outline"
+                className="flex-1 dark:border-gray-600"
+                disabled={updating}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleUpdateSubmit}
+                disabled={!updateFile || updating}
+                className="flex-1 bg-orange-600 hover:bg-orange-700"
+              >
+                {updating ? (
+                  <>
+                    <RefreshCw size={18} className="mr-2 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw size={18} className="mr-2" />
+                    Update File
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
