@@ -1176,7 +1176,7 @@ class NuraPulseBackendTester:
         
         # Test without authentication (should fail)
         response = self.make_request("GET", "/expenses", use_auth=False)
-        if response and response.status_code == 403:
+        if response is not None and response.status_code == 403:
             self.log_test("Expense Tracker - GET /expenses Authentication", True, 
                         "Correctly requires authentication (403 without token)")
             success_count += 1
