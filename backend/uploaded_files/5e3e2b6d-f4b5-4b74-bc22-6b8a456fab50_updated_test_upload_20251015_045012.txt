@@ -1,3 +1,0 @@
-This is UPDATED content for the test file.
-New line 2 with different data.
-Updated line 3.
