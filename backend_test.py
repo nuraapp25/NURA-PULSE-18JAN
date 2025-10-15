@@ -1881,6 +1881,8 @@ class NuraPulseBackendTester:
                 success_count += 1
             else:
                 status = response.status_code if response else "Network error"
+                if response:
+                    print(f"DEBUG: Update auth test response: {response.status_code} - {response.text}")
                 self.log_test("File Update - Authentication Required", False, 
                             f"Expected 401/403, got {status}")
         
