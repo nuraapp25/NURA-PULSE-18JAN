@@ -19,6 +19,7 @@ import BatteryMilestones from "@/pages/BatteryMilestones";
 import BatteryAudit from "@/pages/BatteryAudit";
 import MorningChargeAudit from "@/pages/MorningChargeAudit";
 import ExpenseTracker from "@/pages/ExpenseTracker";
+import Analytics from "@/pages/Analytics";
 import ManagePage from "@/pages/ManagePage";
 import SettingsPage from "@/pages/SettingsPage";
 
