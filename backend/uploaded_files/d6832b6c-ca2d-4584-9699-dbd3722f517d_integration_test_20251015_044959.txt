@@ -1,0 +1,1 @@
+Integration test file content for full workflow testing.
