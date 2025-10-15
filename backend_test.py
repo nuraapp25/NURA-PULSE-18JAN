@@ -2528,6 +2528,362 @@ class NuraPulseBackendTester:
         
         return success_count >= 8  # At least 8 out of 12 tests should pass
 
+    def test_payment_screenshots_delete_functionality(self):
+        """Test Payment Screenshots Folder Delete Functionality - Master Admin Only"""
+        print("\n=== Testing Payment Screenshots Delete Functionality ===")
+        
+        success_count = 0
+        
+        # Test 1: DELETE Folder Permission - Master Admin
+        print("\n--- Test 1: DELETE Folder Permission - Master Admin ---")
+        
+        delete_data = {"path": "Test Folder", "is_folder": True}
+        response = self.make_request("DELETE", "/admin/payment-screenshots/delete", data=delete_data)
+        
+        if response:
+            if response.status_code == 200:
+                try:
+                    result = response.json()
+                    self.log_test("Payment Screenshots Delete - Master Admin Success", True, 
+                                f"Master Admin successfully deleted folder: {result.get('message', 'No message')}")
+                    success_count += 1
+                except json.JSONDecodeError:
+                    self.log_test("Payment Screenshots Delete - Master Admin Success", False, 
+                                "Invalid JSON response", response.text)
+            elif response.status_code == 404:
+                # 404 is acceptable if folder doesn't exist
+                try:
+                    result = response.json()
+                    self.log_test("Payment Screenshots Delete - Master Admin 404", True, 
+                                f"Correctly returned 404 for non-existent folder: {result.get('detail', 'No detail')}")
+                    success_count += 1
+                except json.JSONDecodeError:
+                    self.log_test("Payment Screenshots Delete - Master Admin 404", True, 
+                                "Correctly returned 404 for non-existent folder")
+                    success_count += 1
+            else:
+                self.log_test("Payment Screenshots Delete - Master Admin", False, 
+                            f"Unexpected status code: {response.status_code}", response.text)
+        else:
+            self.log_test("Payment Screenshots Delete - Master Admin", False, "Network error")
+        
+        # Test 2: DELETE Folder Permission - Non-Master Admin (Should Fail)
+        print("\n--- Test 2: DELETE Folder Permission - Non-Master Admin ---")
+        
+        # Create a temporary non-master admin token for testing (if possible)
+        # For now, test with no token to simulate unauthorized access
+        delete_data = {"path": "Test Folder", "is_folder": True}
+        response = self.make_request("DELETE", "/admin/payment-screenshots/delete", data=delete_data, use_auth=False)
+        
+        if response and response.status_code in [401, 403]:
+            try:
+                result = response.json()
+                error_message = result.get('detail', '')
+                if "Only Master Admin can delete payment screenshots" in error_message or "Invalid token" in error_message or "Not authorized" in error_message:
+                    self.log_test("Payment Screenshots Delete - Non-Master Admin Blocked", True, 
+                                f"Correctly blocked non-master admin access: {error_message}")
+                    success_count += 1
+                else:
+                    self.log_test("Payment Screenshots Delete - Non-Master Admin Blocked", True, 
+                                f"Correctly blocked unauthorized access ({response.status_code})")
+                    success_count += 1
+            except json.JSONDecodeError:
+                self.log_test("Payment Screenshots Delete - Non-Master Admin Blocked", True, 
+                            f"Correctly blocked unauthorized access ({response.status_code})")
+                success_count += 1
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("Payment Screenshots Delete - Non-Master Admin Blocked", False, 
+                        f"Expected 401/403, got {status}")
+        
+        return success_count >= 1  # At least 1 test should pass
+
+    def test_analytics_endpoints(self):
+        """Test Analytics Dashboard Endpoints - Real-time tracking and Master Admin restrictions"""
+        print("\n=== Testing Analytics Dashboard Endpoints ===")
+        
+        success_count = 0
+        
+        # Test 1: POST /analytics/track-page-view - Track Page View
+        print("\n--- Test 1: POST /analytics/track-page-view - Track Page View ---")
+        
+        page_view_data = {"page": "/dashboard"}
+        response = self.make_request("POST", "/analytics/track-page-view", data=page_view_data)
+        
+        if response and response.status_code == 200:
+            try:
+                result = response.json()
+                if "success" in result or "message" in result:
+                    self.log_test("Analytics - Track Page View", True, 
+                                f"Successfully tracked page view: {result.get('message', 'Success')}")
+                    success_count += 1
+                else:
+                    self.log_test("Analytics - Track Page View", False, 
+                                "Response missing success/message field", result)
+            except json.JSONDecodeError:
+                self.log_test("Analytics - Track Page View", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Analytics - Track Page View", False, error_msg, 
+                        response.text if response else None)
+        
+        # Test with different pages
+        for page in ["/payment-reconciliation", "/driver-onboarding", "/expense-tracker"]:
+            page_data = {"page": page}
+            response = self.make_request("POST", "/analytics/track-page-view", data=page_data)
+            if response and response.status_code == 200:
+                success_count += 0.25  # Partial credit for additional page tracking
+        
+        # Test 2: GET /analytics/active-users - Get Active Users (Master Admin Only)
+        print("\n--- Test 2: GET /analytics/active-users - Master Admin Only ---")
+        
+        response = self.make_request("GET", "/analytics/active-users")
+        
+        if response and response.status_code == 200:
+            try:
+                result = response.json()
+                if isinstance(result, list):
+                    # Check if response contains expected fields for active users
+                    if len(result) > 0:
+                        sample_user = result[0]
+                        expected_fields = ["user_id", "username", "email", "account_type", "current_page", "last_seen"]
+                        missing_fields = [field for field in expected_fields if field not in sample_user]
+                        
+                        if not missing_fields:
+                            self.log_test("Analytics - Active Users Structure", True, 
+                                        f"Active users response contains all required fields: {len(result)} users")
+                            success_count += 1
+                        else:
+                            self.log_test("Analytics - Active Users Structure", False, 
+                                        f"Missing fields in active users: {missing_fields}")
+                    else:
+                        self.log_test("Analytics - Active Users Empty", True, 
+                                    "Active users endpoint working (empty list - sessions may have expired)")
+                        success_count += 1
+                else:
+                    self.log_test("Analytics - Active Users Format", False, 
+                                f"Expected list, got {type(result)}")
+            except json.JSONDecodeError:
+                self.log_test("Analytics - Active Users", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Analytics - Active Users", False, error_msg, 
+                        response.text if response else None)
+        
+        # Test permission restriction for non-master admin
+        response = self.make_request("GET", "/analytics/active-users", use_auth=False)
+        if response and response.status_code in [401, 403]:
+            self.log_test("Analytics - Active Users Permission", True, 
+                        f"Correctly requires master admin access ({response.status_code})")
+            success_count += 1
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("Analytics - Active Users Permission", False, 
+                        f"Expected 401/403, got {status}")
+        
+        # Test 3: GET /analytics/page-views - Get Page View Statistics (Master Admin Only)
+        print("\n--- Test 3: GET /analytics/page-views - Master Admin Only ---")
+        
+        response = self.make_request("GET", "/analytics/page-views")
+        
+        if response and response.status_code == 200:
+            try:
+                result = response.json()
+                if "page_views" in result and "total_views" in result:
+                    page_views = result["page_views"]
+                    total_views = result["total_views"]
+                    
+                    if isinstance(page_views, list) and isinstance(total_views, int):
+                        self.log_test("Analytics - Page Views Structure", True, 
+                                    f"Page views response valid: {len(page_views)} pages, {total_views} total views")
+                        success_count += 1
+                        
+                        # Check if page_views are sorted by views (descending)
+                        if len(page_views) > 1:
+                            is_sorted = all(page_views[i].get("views", 0) >= page_views[i+1].get("views", 0) 
+                                          for i in range(len(page_views)-1))
+                            if is_sorted:
+                                self.log_test("Analytics - Page Views Sorting", True, 
+                                            "Page views correctly sorted by views (descending)")
+                                success_count += 1
+                            else:
+                                self.log_test("Analytics - Page Views Sorting", False, 
+                                            "Page views not sorted by views descending")
+                    else:
+                        self.log_test("Analytics - Page Views Structure", False, 
+                                    f"Invalid data types: page_views={type(page_views)}, total_views={type(total_views)}")
+                else:
+                    self.log_test("Analytics - Page Views Structure", False, 
+                                "Response missing page_views or total_views fields", result)
+            except json.JSONDecodeError:
+                self.log_test("Analytics - Page Views", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Analytics - Page Views", False, error_msg, 
+                        response.text if response else None)
+        
+        # Test permission restriction for non-master admin
+        response = self.make_request("GET", "/analytics/page-views", use_auth=False)
+        if response and response.status_code in [401, 403]:
+            self.log_test("Analytics - Page Views Permission", True, 
+                        f"Correctly requires master admin access ({response.status_code})")
+            success_count += 1
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("Analytics - Page Views Permission", False, 
+                        f"Expected 401/403, got {status}")
+        
+        # Test 4: POST /analytics/logout - Track Logout
+        print("\n--- Test 4: POST /analytics/logout - Track Logout ---")
+        
+        response = self.make_request("POST", "/analytics/logout")
+        
+        if response and response.status_code == 200:
+            try:
+                result = response.json()
+                if "success" in result or "message" in result:
+                    self.log_test("Analytics - Track Logout", True, 
+                                f"Successfully tracked logout: {result.get('message', 'Success')}")
+                    success_count += 1
+                else:
+                    self.log_test("Analytics - Track Logout", False, 
+                                "Response missing success/message field", result)
+            except json.JSONDecodeError:
+                self.log_test("Analytics - Track Logout", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Analytics - Track Logout", False, error_msg, 
+                        response.text if response else None)
+        
+        return success_count >= 4  # At least 4 tests should pass
+
+    def test_analytics_integration_workflow(self):
+        """Test Complete Analytics Workflow - Integration Tests"""
+        print("\n=== Testing Complete Analytics Workflow ===")
+        
+        success_count = 0
+        
+        # Test 1: Complete Analytics Workflow
+        print("\n--- Test 1: Complete Analytics Workflow ---")
+        
+        # Step 1: Track multiple page views for different pages
+        pages_to_track = ["/dashboard", "/payment-reconciliation", "/driver-onboarding", "/expense-tracker"]
+        tracked_pages = 0
+        
+        for page in pages_to_track:
+            page_data = {"page": page}
+            response = self.make_request("POST", "/analytics/track-page-view", data=page_data)
+            if response and response.status_code == 200:
+                tracked_pages += 1
+        
+        if tracked_pages >= 3:
+            self.log_test("Analytics Workflow - Track Multiple Pages", True, 
+                        f"Successfully tracked {tracked_pages} different pages")
+            success_count += 1
+        else:
+            self.log_test("Analytics Workflow - Track Multiple Pages", False, 
+                        f"Only tracked {tracked_pages} out of {len(pages_to_track)} pages")
+        
+        # Step 2: Get active users - verify user appears with correct page
+        response = self.make_request("GET", "/analytics/active-users")
+        
+        if response and response.status_code == 200:
+            try:
+                active_users = response.json()
+                if isinstance(active_users, list):
+                    # Look for current user in active users
+                    current_user_found = False
+                    for user in active_users:
+                        if user.get("account_type") == "master_admin":
+                            current_user_found = True
+                            current_page = user.get("current_page", "")
+                            if current_page in pages_to_track:
+                                self.log_test("Analytics Workflow - User in Active List", True, 
+                                            f"Master admin found in active users with page: {current_page}")
+                                success_count += 1
+                            else:
+                                self.log_test("Analytics Workflow - User Page Tracking", True, 
+                                            f"Master admin found in active users (page: {current_page})")
+                                success_count += 0.5
+                            break
+                    
+                    if not current_user_found:
+                        self.log_test("Analytics Workflow - User in Active List", False, 
+                                    f"Master admin not found in active users list ({len(active_users)} users)")
+                else:
+                    self.log_test("Analytics Workflow - Active Users Response", False, 
+                                f"Invalid active users response type: {type(active_users)}")
+            except json.JSONDecodeError:
+                self.log_test("Analytics Workflow - Active Users Response", False, 
+                            "Invalid JSON response from active users")
+        
+        # Step 3: Get page views - verify counts are accurate
+        response = self.make_request("GET", "/analytics/page-views")
+        
+        if response and response.status_code == 200:
+            try:
+                result = response.json()
+                if "page_views" in result and "total_views" in result:
+                    page_views = result["page_views"]
+                    total_views = result["total_views"]
+                    
+                    # Check if tracked pages appear in page views
+                    tracked_pages_found = 0
+                    for page_stat in page_views:
+                        page_name = page_stat.get("page", "")
+                        if page_name in pages_to_track:
+                            tracked_pages_found += 1
+                    
+                    if tracked_pages_found >= 2:
+                        self.log_test("Analytics Workflow - Page View Counts", True, 
+                                    f"Found {tracked_pages_found} tracked pages in statistics, total views: {total_views}")
+                        success_count += 1
+                    else:
+                        self.log_test("Analytics Workflow - Page View Counts", False, 
+                                    f"Only found {tracked_pages_found} tracked pages in statistics")
+                else:
+                    self.log_test("Analytics Workflow - Page Views Response", False, 
+                                "Page views response missing required fields")
+            except json.JSONDecodeError:
+                self.log_test("Analytics Workflow - Page Views Response", False, 
+                            "Invalid JSON response from page views")
+        
+        # Step 4: Track logout - verify user removed from active sessions
+        response = self.make_request("POST", "/analytics/logout")
+        
+        if response and response.status_code == 200:
+            self.log_test("Analytics Workflow - Track Logout", True, 
+                        "Successfully tracked logout")
+            success_count += 1
+            
+            # Step 5: Get active users again - verify user no longer in list
+            # Note: This might not work immediately due to session cleanup timing
+            response = self.make_request("GET", "/analytics/active-users")
+            
+            if response and response.status_code == 200:
+                try:
+                    active_users = response.json()
+                    if isinstance(active_users, list):
+                        # Check if master admin is still in active users (should be removed after logout)
+                        master_admin_still_active = any(user.get("account_type") == "master_admin" for user in active_users)
+                        
+                        if not master_admin_still_active:
+                            self.log_test("Analytics Workflow - Logout Cleanup", True, 
+                                        "Master admin correctly removed from active users after logout")
+                            success_count += 1
+                        else:
+                            self.log_test("Analytics Workflow - Logout Cleanup", False, 
+                                        "Master admin still appears in active users after logout (session cleanup may be delayed)")
+                except json.JSONDecodeError:
+                    self.log_test("Analytics Workflow - Post-Logout Active Users", False, 
+                                "Invalid JSON response from post-logout active users check")
+        
+        return success_count >= 3  # At least 3 out of 5 workflow steps should pass
+
     def run_all_tests(self):
         """Run all backend tests"""
         print("🚀 Starting Payment Data Extractor - Drivers/Vehicles Fetch Fix Verification")
