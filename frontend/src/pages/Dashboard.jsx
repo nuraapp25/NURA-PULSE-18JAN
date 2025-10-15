@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import { useAuth, useTheme } from "@/App";
+import { useAuth, useTheme, API } from "@/App";
 import { Button } from "@/components/ui/button";
 import { Home, FileText, Car, Phone, BarChart3, FolderOpen, Settings, Users, Moon, Sun, Menu, X, ChevronDown, Folder, Image, Receipt, Activity } from "lucide-react";
+import axios from "axios";
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
@@ -11,6 +12,27 @@ const Dashboard = () => {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [appsExpanded, setAppsExpanded] = useState(true);
+
+  // Track page views
+  useEffect(() => {
+    const trackPageView = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (token && location.pathname) {
+          await axios.post(
+            `${API}/analytics/track-page-view`,
+            { page: location.pathname },
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+        }
+      } catch (error) {
+        // Silently fail - analytics shouldn't break the app
+        console.debug("Analytics tracking failed:", error);
+      }
+    };
+
+    trackPageView();
+  }, [location.pathname]);
 
   const handleLogout = () => {
     logout();
