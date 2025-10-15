@@ -2033,7 +2033,7 @@ class NuraPulseBackendTester:
                 data = response.json()
                 files = data.get("files", [])
                 if files:
-                    file_id_to_test = files[0].get("file_id")
+                    file_id_to_test = files[0].get("id")  # Use "id" not "file_id"
             except:
                 pass
         
