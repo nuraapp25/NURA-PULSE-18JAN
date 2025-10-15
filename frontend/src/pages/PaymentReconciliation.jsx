@@ -123,10 +123,16 @@ const PaymentReconciliation = () => {
           dropLocation: record.drop_location,
           screenshotFilename: record.screenshot_filename,
           hasAmountError: record.amount === "N/A" || !record.amount || record.amount === "",
-          status: record.status
+          status: record.status,
+          filesImported: record.files_imported
         }));
         
         setExtractedData(records);
+        
+        // Check if all records have files imported
+        const allImported = records.length > 0 && records.every(r => r.filesImported);
+        setFilesImported(allImported);
+        
         if (records.length > 0) {
           toast.success(`Loaded ${records.length} existing record(s) for ${monthYear}`);
         }
