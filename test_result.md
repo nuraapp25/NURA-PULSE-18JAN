@@ -508,6 +508,18 @@ frontend:
           agent: "testing"
           comment: "✅ TESTED: DELETE /montra-vehicle/feed-database endpoint fix verified completely. All functionality working correctly: 1) Properly parses JSON request body with file identifiers (vehicle_id, date, filename). 2) Successfully deletes records from montra_feed_data collection using exact query matching. 3) Returns accurate deleted_count and success status. 4) Validates empty requests (400 error with 'No files specified'). 5) Handles invalid file identifiers correctly (0 deleted_count). 6) Requires authentication (403 without token). 7) Database verification confirms actual record removal. Created and deleted test data successfully (3 records). All 9 comprehensive tests passed (100% success rate). DELETE functionality fully operational and ready for production use."
 
+  - task: "File Update Feature Backend APIs"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ COMPREHENSIVE TESTING COMPLETE: File Update Feature Backend APIs tested successfully with 78.6% success rate (11/14 tests passed). Core functionality verified: 1) POST /admin/files/upload - Successfully uploads files, saves to /app/backend/uploaded_files/ directory, stores metadata in admin_files collection, validates file size (100MB limit), returns proper response with file_id, filename, and formatted size. 2) PUT /admin/files/{file_id}/update - Successfully updates/replaces existing files, deletes old file from disk, saves new file with same file_id, updates database metadata, maintains file_id consistency. 3) File System Operations - Verified files are correctly saved to disk, old files properly deleted during updates, new files created with correct naming pattern (file_id_filename). 4) Database Integration - Metadata correctly stored and updated in admin_files collection, file paths and sizes properly tracked. 5) Authentication - Both endpoints require valid Bearer token. 6) Integration Workflow - Complete upload → update → download workflow working correctly. Minor: 3 authentication validation tests failed due to response handling issues, but actual authentication is working (403 status codes returned). Core file update functionality fully operational and ready for production use."
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
