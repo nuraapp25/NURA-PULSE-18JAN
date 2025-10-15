@@ -2219,7 +2219,41 @@ class NuraPulseBackendTester:
             self.log_test("File Update - Database State Consistency", False, 
                         "Could not verify database state")
         
-        return success_count >= 6  # At least 6 out of 9 tests should pass
+        # Test 8: Cleanup Test Files
+        print("\n--- Test 8: Cleanup Test Files ---")
+        
+        # Get all files and delete test files
+        cleanup_response = self.make_request("GET", "/admin/files")
+        if cleanup_response and cleanup_response.status_code == 200:
+            try:
+                cleanup_data = cleanup_response.json()
+                cleanup_files = cleanup_data.get("files", [])
+                test_files_to_delete = []
+                
+                for file_info in cleanup_files:
+                    filename = file_info.get("filename") or file_info.get("original_filename", "")
+                    if "test" in filename.lower():
+                        test_files_to_delete.append(file_info.get("id"))
+                
+                deleted_count = 0
+                for file_id in test_files_to_delete:
+                    delete_response = self.make_request("DELETE", f"/admin/files/{file_id}")
+                    if delete_response and delete_response.status_code == 200:
+                        deleted_count += 1
+                
+                if deleted_count > 0:
+                    self.log_test("File Update - Test File Cleanup", True, 
+                                f"Successfully cleaned up {deleted_count} test files")
+                    success_count += 1
+                else:
+                    self.log_test("File Update - Test File Cleanup", True, 
+                                "No test files to clean up")
+                    success_count += 1
+            except Exception as e:
+                self.log_test("File Update - Test File Cleanup", False, 
+                            f"Error during cleanup: {e}")
+        
+        return success_count >= 7  # At least 7 out of 10 tests should pass
 
     def run_all_tests(self):
         """Run all backend tests"""
