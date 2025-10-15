@@ -3027,7 +3027,7 @@ Be precise and extract ALL rides shown in the screenshot. If a screenshot shows 
             if len(extracted_results) < len(files):
                 logger.warning(f"Only {len(extracted_results)} rides extracted from {len(files)} files")
             
-            # Add metadata to results (but don't save to MongoDB - keep in memory only)
+            # Add metadata to results and save to MongoDB
             if extracted_results:
                 for record in extracted_results:
                     record["user_id"] = current_user.id
@@ -3037,6 +3037,15 @@ Be precise and extract ALL rides shown in the screenshot. If a screenshot shows 
                     record["platform"] = platform or record.get("platform", "N/A")
                     record["uploaded_at"] = datetime.now().isoformat()
                     record["status"] = "pending"
+                
+                # Save all extracted records to MongoDB
+                try:
+                    if extracted_results:
+                        await db.payment_records.insert_many(extracted_results)
+                        logger.info(f"✅ Saved {len(extracted_results)} payment records to MongoDB for {month_year}")
+                except Exception as e:
+                    logger.error(f"❌ Failed to save payment records to MongoDB: {str(e)}")
+                    # Don't fail the request, records are still in memory
             
             # Save screenshot files to organized folder structure
             if driver_name and month_year:
