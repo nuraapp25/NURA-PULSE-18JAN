@@ -165,6 +165,31 @@ const PaymentScreenshots = () => {
       toast.error('Failed to download file');
     }
   };
+  const handleDeleteFolder = async (folderName, event) => {
+    event.stopPropagation(); // Prevent folder click
+    
+    if (!window.confirm(`Are you sure you want to delete the folder "${folderName}" and all its contents?`)) {
+      return;
+    }
+
+    try {
+      const path = currentPath.length > 0 
+        ? `${currentPath.join('/')}/${folderName}` 
+        : folderName;
+      
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API}/admin/payment-screenshots/delete`, {
+        headers: { Authorization: `Bearer ${token}` },
+        data: { path, is_folder: true }
+      });
+
+      toast.success('Folder deleted successfully');
+      fetchContents();
+    } catch (error) {
+      console.error('Error deleting folder:', error);
+      toast.error(error.response?.data?.detail || 'Failed to delete folder');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
