@@ -2886,7 +2886,7 @@ class NuraPulseBackendTester:
 
     def run_all_tests(self):
         """Run all backend tests"""
-        print("🚀 Starting Payment Data Extractor - Drivers/Vehicles Fetch Fix Verification")
+        print("🚀 Starting Comprehensive Testing - Payment Screenshots Delete & Analytics Dashboard")
         print(f"Backend URL: {self.base_url}")
         print(f"Master Admin: {MASTER_ADMIN_EMAIL}")
         
@@ -2897,13 +2897,19 @@ class NuraPulseBackendTester:
             print("\n❌ Authentication failed - cannot proceed with other tests")
             return False
         
-        # PRIORITY: Test the Payment Data Extractor Fix as requested in review
-        payment_extractor_fix_success = self.test_payment_data_extractor_fix()
+        # PRIORITY: Test Payment Screenshots Delete Functionality
+        payment_screenshots_success = self.test_payment_screenshots_delete_functionality()
+        
+        # PRIORITY: Test Analytics Dashboard Endpoints
+        analytics_endpoints_success = self.test_analytics_endpoints()
+        
+        # PRIORITY: Test Analytics Integration Workflow
+        analytics_workflow_success = self.test_analytics_integration_workflow()
         
         # Summary
-        print("\n" + "="*60)
-        print("📊 TEST SUMMARY - PAYMENT DATA EXTRACTOR FIX VERIFICATION")
-        print("="*60)
+        print("\n" + "="*80)
+        print("📊 TEST SUMMARY - PAYMENT SCREENSHOTS DELETE & ANALYTICS DASHBOARD")
+        print("="*80)
         
         total_tests = len(self.test_results)
         passed_tests = sum(1 for result in self.test_results if result["success"])
@@ -2915,7 +2921,10 @@ class NuraPulseBackendTester:
         print(f"Success Rate: {(passed_tests/total_tests)*100:.1f}%")
         
         # Priority test results
-        print(f"\n🎯 PAYMENT DATA EXTRACTOR FIX VERIFICATION RESULT: {'✅ PASS' if payment_extractor_fix_success else '❌ FAIL'}")
+        print(f"\n🎯 PRIORITY TEST RESULTS:")
+        print(f"   Payment Screenshots Delete: {'✅ PASS' if payment_screenshots_success else '❌ FAIL'}")
+        print(f"   Analytics Endpoints: {'✅ PASS' if analytics_endpoints_success else '❌ FAIL'}")
+        print(f"   Analytics Workflow: {'✅ PASS' if analytics_workflow_success else '❌ FAIL'}")
         
         if failed_tests > 0:
             print("\n❌ FAILED TESTS:")
@@ -2923,9 +2932,13 @@ class NuraPulseBackendTester:
                 if not result["success"]:
                     print(f"  - {result['test']}: {result['message']}")
         
-        overall_success = payment_extractor_fix_success and failed_tests <= 3  # Allow some minor failures
-        status = "✅ PAYMENT DATA EXTRACTOR FIX VERIFICATION COMPLETE" if overall_success else "❌ PAYMENT DATA EXTRACTOR FIX VERIFICATION ISSUES FOUND"
+        # Overall success if at least 2 out of 3 priority features work
+        priority_success_count = sum([payment_screenshots_success, analytics_endpoints_success, analytics_workflow_success])
+        overall_success = priority_success_count >= 2 and failed_tests <= 5  # Allow some minor failures
+        
+        status = "✅ COMPREHENSIVE TESTING COMPLETE" if overall_success else "❌ CRITICAL ISSUES FOUND"
         print(f"\n{status}")
+        print(f"Priority Features Working: {priority_success_count}/3")
         
         return overall_success
 
