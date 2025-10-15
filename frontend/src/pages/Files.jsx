@@ -565,15 +565,17 @@ const Files = () => {
                           >
                             <Download size={16} />
                           </Button>
-                          <Button
-                            onClick={() => handleUpdateClick(file)}
-                            variant="outline"
-                            size="sm"
-                            className="border-orange-600 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20"
-                            title="Update File"
-                          >
-                            <RefreshCw size={16} />
-                          </Button>
+                          {isMasterAdmin && (
+                            <Button
+                              onClick={() => handleUpdateClick(file)}
+                              variant="outline"
+                              size="sm"
+                              className="border-orange-600 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                              title="Update File (Master Admin only)"
+                            >
+                              <RefreshCw size={16} />
+                            </Button>
+                          )}
                           <Button
                             onClick={() => handleShare(file.id)}
                             variant="outline"
