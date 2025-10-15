@@ -312,6 +312,73 @@ const Files = () => {
     }
   };
 
+  const handleUpdateClick = (file) => {
+    setFileToUpdate(file);
+    setUpdateFile(null);
+    setUpdateDialogOpen(true);
+  };
+
+  const handleUpdateFileSelect = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      // Check file size (100MB limit)
+      const maxSize = 100 * 1024 * 1024; // 100MB
+      if (file.size > maxSize) {
+        toast.error(`File size exceeds 100MB limit. Selected file: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
+        event.target.value = null;
+        return;
+      }
+      setUpdateFile(file);
+    }
+  };
+
+  const handleUpdateSubmit = async () => {
+    if (!updateFile) {
+      toast.error("Please select a file to upload");
+      return;
+    }
+
+    if (!window.confirm(`Are you sure you want to replace "${fileToUpdate.original_filename}" with "${updateFile.name}"? This will permanently delete the old file.`)) {
+      return;
+    }
+
+    setUpdating(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', updateFile);
+
+      const token = localStorage.getItem("token");
+      const response = await axios.put(
+        `${API}/admin/files/${fileToUpdate.id}/update`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+
+      toast.success(
+        <div>
+          <p className="font-semibold">File Updated!</p>
+          <p className="text-sm mt-1">{response.data.message}</p>
+        </div>,
+        { duration: 5000 }
+      );
+
+      setUpdateDialogOpen(false);
+      setFileToUpdate(null);
+      setUpdateFile(null);
+      await fetchFiles();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to update file");
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   const toggleFileSelection = (fileId) => {
     setSelectedFiles(prev => 
       prev.includes(fileId) 
