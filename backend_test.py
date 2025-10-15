@@ -55,8 +55,11 @@ class NuraPulseBackendTester:
                     headers["Content-Type"] = "application/json"
                     response = requests.post(url, headers=headers, json=data, timeout=10)
             elif method.upper() == "PUT":
-                headers["Content-Type"] = "application/json"
-                response = requests.put(url, headers=headers, json=data, timeout=10)
+                if files:
+                    response = requests.put(url, headers=headers, files=files, timeout=10)
+                else:
+                    headers["Content-Type"] = "application/json"
+                    response = requests.put(url, headers=headers, json=data, timeout=10)
             elif method.upper() == "DELETE":
                 if data is not None:
                     headers["Content-Type"] = "application/json"
