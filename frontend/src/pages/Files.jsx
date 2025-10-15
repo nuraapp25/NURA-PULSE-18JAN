@@ -10,6 +10,8 @@ import { toast } from "sonner";
 const Files = () => {
   const { user } = useAuth();
   const isMasterAdmin = user?.account_type === "master_admin";
+  const isAdmin = user?.account_type === "admin";
+  const canUpload = isMasterAdmin || isAdmin;
 
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);
