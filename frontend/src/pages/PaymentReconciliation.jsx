@@ -810,6 +810,15 @@ const PaymentReconciliation = () => {
 
       {/* Extracted Payment Data */}
       <Card className="dark:bg-gray-800 dark:border-gray-700">
+          {/* Important Note */}
+          <div className="px-6 pt-4 pb-2">
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
+              <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                <span className="font-semibold">NOTE:</span> Refresh the page after each batch of images are successfully synced to Google Sheets. Do not upload next batch without refreshing.
+              </p>
+            </div>
+          </div>
+          
           <CardHeader>
             <CardTitle className="flex items-center justify-between dark:text-white">
               <div className="flex items-center">
