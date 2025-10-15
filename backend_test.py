@@ -2734,7 +2734,7 @@ class NuraPulseBackendTester:
         
         # Test permission restriction for non-master admin
         response = self.make_request("GET", "/analytics/page-views", use_auth=False)
-        if response:
+        if response is not None:
             if response.status_code in [401, 403]:
                 self.log_test("Analytics - Page Views Permission", True, 
                             f"Correctly requires master admin access ({response.status_code})")
