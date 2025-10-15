@@ -1849,25 +1849,26 @@ class NuraPulseBackendTester:
         files = {'file': ("fake_file.txt", "fake content", 'text/plain')}
         response = self.make_request("PUT", f"/admin/files/{fake_file_id}/update", files=files)
         
-        if response and response.status_code == 404:
-            try:
-                error_data = response.json()
-                if "detail" in error_data and "File not found" in error_data["detail"]:
-                    self.log_test("File Update - Non-existent File", True, 
-                                "Correctly returns 404 for non-existent file")
-                    success_count += 1
-                else:
+        if response:
+            if response.status_code == 404:
+                try:
+                    error_data = response.json()
+                    if "detail" in error_data and "File not found" in error_data["detail"]:
+                        self.log_test("File Update - Non-existent File", True, 
+                                    "Correctly returns 404 for non-existent file")
+                        success_count += 1
+                    else:
+                        self.log_test("File Update - Non-existent File", False, 
+                                    f"Unexpected error message: {error_data}")
+                except json.JSONDecodeError:
                     self.log_test("File Update - Non-existent File", False, 
-                                f"Unexpected error message: {error_data}")
-            except json.JSONDecodeError:
+                                "Invalid JSON error response", response.text)
+            else:
                 self.log_test("File Update - Non-existent File", False, 
-                            "Invalid JSON error response", response.text)
+                            f"Expected 404, got {response.status_code}")
         else:
-            status = response.status_code if response else "Network error"
-            if response:
-                print(f"DEBUG: Non-existent file test response: {response.status_code} - {response.text}")
             self.log_test("File Update - Non-existent File", False, 
-                        f"Expected 404, got {status}")
+                        "Network error - no response received")
         
         # Test 6: Authentication Requirement for Update
         print("\n--- Test 6: Authentication Requirement for Update ---")
