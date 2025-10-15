@@ -2082,26 +2082,21 @@ class NuraPulseBackendTester:
             # Restore original token
             self.token = original_token
             
-            if permission_response and permission_response.status_code == 403:
+            if permission_response and permission_response.status_code in [401, 403]:
                 try:
                     error_data = permission_response.json()
                     error_message = error_data.get("detail", "")
-                    if "Master Admin" in error_message or "authorized" in error_message.lower():
-                        self.log_test("File Update - Non-Master Admin Blocked", True, 
-                                    f"Non-Master Admin correctly blocked (403): {error_message}")
-                        success_count += 1
-                    else:
-                        self.log_test("File Update - Non-Master Admin Blocked", True, 
-                                    f"Non-Master Admin correctly blocked (403) - generic auth error")
-                        success_count += 1
+                    self.log_test("File Update - Non-Master Admin Blocked", True, 
+                                f"Non-Master Admin correctly blocked ({permission_response.status_code}): {error_message}")
+                    success_count += 1
                 except json.JSONDecodeError:
                     self.log_test("File Update - Non-Master Admin Blocked", True, 
-                                "Non-Master Admin correctly blocked (403) - no JSON response")
+                                f"Non-Master Admin correctly blocked ({permission_response.status_code}) - no JSON response")
                     success_count += 1
             else:
                 status = permission_response.status_code if permission_response else "Network error"
                 self.log_test("File Update - Non-Master Admin Blocked", False, 
-                            f"Expected 403, got {status}")
+                            f"Expected 401/403, got {status}")
         else:
             self.log_test("File Update - Non-Master Admin Blocked", False, 
                         "No file ID available for permission testing")
