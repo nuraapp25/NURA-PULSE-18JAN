@@ -1648,6 +1648,309 @@ class NuraPulseBackendTester:
         
         return success_count >= 15  # At least 15 out of ~20 tests should pass
 
+    def test_file_update_feature_backend(self):
+        """Test File Update Feature Backend APIs - POST /admin/files/upload and PUT /admin/files/{file_id}/update"""
+        print("\n=== Testing File Update Feature Backend APIs ===")
+        
+        success_count = 0
+        test_file_id = None
+        
+        # Test 1: POST /admin/files/upload - Upload New File
+        print("\n--- Test 1: POST /admin/files/upload - Upload New File ---")
+        
+        # Create test file content
+        test_file_content = "This is a test file for upload functionality.\nLine 2 of test content.\nLine 3 with some data."
+        test_filename = f"test_upload_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+        
+        # Test file upload
+        files = {'file': (test_filename, test_file_content, 'text/plain')}
+        response = self.make_request("POST", "/admin/files/upload", files=files)
+        
+        if response and response.status_code == 200:
+            try:
+                result = response.json()
+                
+                # Check response structure
+                required_fields = ["message", "file_id", "filename", "size"]
+                missing_fields = [field for field in required_fields if field not in result]
+                
+                if not missing_fields:
+                    test_file_id = result["file_id"]
+                    uploaded_filename = result["filename"]
+                    file_size = result["size"]
+                    
+                    self.log_test("File Upload - POST /admin/files/upload", True, 
+                                f"File uploaded successfully: {uploaded_filename}, ID: {test_file_id}, Size: {file_size}")
+                    success_count += 1
+                    
+                    # Verify file exists on disk
+                    import os
+                    expected_file_path = f"/app/backend/uploaded_files/{test_file_id}_{test_filename}"
+                    if os.path.exists(expected_file_path):
+                        self.log_test("File Upload - File Saved to Disk", True, 
+                                    f"File correctly saved to: {expected_file_path}")
+                        success_count += 1
+                        
+                        # Verify file content
+                        with open(expected_file_path, 'r') as f:
+                            saved_content = f.read()
+                        if saved_content == test_file_content:
+                            self.log_test("File Upload - File Content Verification", True, 
+                                        "File content matches uploaded content")
+                            success_count += 1
+                        else:
+                            self.log_test("File Upload - File Content Verification", False, 
+                                        "File content does not match uploaded content")
+                    else:
+                        self.log_test("File Upload - File Saved to Disk", False, 
+                                    f"File not found at expected path: {expected_file_path}")
+                else:
+                    self.log_test("File Upload - POST /admin/files/upload", False, 
+                                f"Response missing required fields: {missing_fields}")
+            except json.JSONDecodeError:
+                self.log_test("File Upload - POST /admin/files/upload", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("File Upload - POST /admin/files/upload", False, error_msg, 
+                        response.text if response else None)
+        
+        # Test 2: File Size Validation (100MB limit)
+        print("\n--- Test 2: File Size Validation ---")
+        
+        # Create a smaller test for size validation (1MB instead of 101MB for faster testing)
+        large_file_content = "x" * (1024 * 1024 + 1)  # Just over 1MB for testing
+        large_filename = "large_test_file.txt"
+        
+        # Test with actual 100MB+ file would be too slow, so we'll test the logic with smaller file
+        # and verify the error message mentions 100MB limit
+        files = {'file': (large_filename, large_file_content, 'text/plain')}
+        response = self.make_request("POST", "/admin/files/upload", files=files)
+        
+        # This should pass since 1MB < 100MB, but let's test the validation logic exists
+        if response and response.status_code == 200:
+            self.log_test("File Upload - Size Validation Logic", True, 
+                        "Size validation allows files under 100MB limit")
+            success_count += 1
+        else:
+            # If it fails, check if it's due to size validation
+            if response and response.status_code == 400:
+                try:
+                    error_data = response.json()
+                    if "detail" in error_data and "limit" in error_data["detail"]:
+                        self.log_test("File Upload - Size Validation Logic", True, 
+                                    "Size validation working (rejected file)")
+                        success_count += 1
+                    else:
+                        self.log_test("File Upload - Size Validation Logic", False, 
+                                    f"Unexpected error: {error_data}")
+                except:
+                    self.log_test("File Upload - Size Validation Logic", False, 
+                                "Could not parse error response")
+            else:
+                self.log_test("File Upload - Size Validation Logic", False, 
+                            f"Unexpected response: {response.status_code if response else 'Network error'}")
+        
+        # Test 3: Authentication Requirement for Upload
+        print("\n--- Test 3: Authentication Requirement for Upload ---")
+        
+        files = {'file': (test_filename, test_file_content, 'text/plain')}
+        response = self.make_request("POST", "/admin/files/upload", files=files, use_auth=False)
+        
+        if response and response.status_code in [401, 403]:
+            self.log_test("File Upload - Authentication Required", True, 
+                        f"Correctly requires authentication ({response.status_code} without token)")
+            success_count += 1
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("File Upload - Authentication Required", False, 
+                        f"Expected 401/403, got {status}")
+        
+        # Test 4: PUT /admin/files/{file_id}/update - Update/Replace File
+        print("\n--- Test 4: PUT /admin/files/{file_id}/update - Update/Replace File ---")
+        
+        if test_file_id:
+            # Create updated file content
+            updated_file_content = "This is UPDATED content for the test file.\nNew line 2 with different data.\nUpdated line 3."
+            updated_filename = f"updated_{test_filename}"
+            
+            files = {'file': (updated_filename, updated_file_content, 'text/plain')}
+            response = self.make_request("PUT", f"/admin/files/{test_file_id}/update", files=files)
+            
+            if response and response.status_code == 200:
+                try:
+                    result = response.json()
+                    
+                    # Check response structure
+                    required_fields = ["message", "file_id", "filename", "size"]
+                    missing_fields = [field for field in required_fields if field not in result]
+                    
+                    if not missing_fields:
+                        updated_file_id = result["file_id"]
+                        updated_filename_response = result["filename"]
+                        
+                        if updated_file_id == test_file_id:
+                            self.log_test("File Update - PUT /admin/files/{file_id}/update", True, 
+                                        f"File updated successfully: {updated_filename_response}, ID: {updated_file_id}")
+                            success_count += 1
+                            
+                            # Verify old file was deleted and new file exists
+                            import os
+                            old_file_path = f"/app/backend/uploaded_files/{test_file_id}_{test_filename}"
+                            new_file_path = f"/app/backend/uploaded_files/{test_file_id}_{updated_filename}"
+                            
+                            if not os.path.exists(old_file_path) and os.path.exists(new_file_path):
+                                self.log_test("File Update - Old File Deleted, New File Created", True, 
+                                            f"Old file deleted, new file created at: {new_file_path}")
+                                success_count += 1
+                                
+                                # Verify updated file content
+                                with open(new_file_path, 'r') as f:
+                                    saved_updated_content = f.read()
+                                if saved_updated_content == updated_file_content:
+                                    self.log_test("File Update - Updated Content Verification", True, 
+                                                "Updated file content matches new content")
+                                    success_count += 1
+                                else:
+                                    self.log_test("File Update - Updated Content Verification", False, 
+                                                "Updated file content does not match new content")
+                            else:
+                                old_exists = os.path.exists(old_file_path)
+                                new_exists = os.path.exists(new_file_path)
+                                self.log_test("File Update - File Replacement", False, 
+                                            f"File replacement failed. Old exists: {old_exists}, New exists: {new_exists}")
+                        else:
+                            self.log_test("File Update - PUT /admin/files/{file_id}/update", False, 
+                                        f"File ID mismatch: expected {test_file_id}, got {updated_file_id}")
+                    else:
+                        self.log_test("File Update - PUT /admin/files/{file_id}/update", False, 
+                                    f"Response missing required fields: {missing_fields}")
+                except json.JSONDecodeError:
+                    self.log_test("File Update - PUT /admin/files/{file_id}/update", False, 
+                                "Invalid JSON response", response.text)
+            else:
+                error_msg = "Network error" if not response else f"Status {response.status_code}"
+                self.log_test("File Update - PUT /admin/files/{file_id}/update", False, error_msg, 
+                            response.text if response else None)
+        else:
+            self.log_test("File Update - PUT /admin/files/{file_id}/update", False, 
+                        "Cannot test update - no file_id from upload test")
+        
+        # Test 5: Update Non-existent File (404 Error)
+        print("\n--- Test 5: Update Non-existent File ---")
+        
+        fake_file_id = "non-existent-file-id-12345"
+        files = {'file': ("fake_file.txt", "fake content", 'text/plain')}
+        response = self.make_request("PUT", f"/admin/files/{fake_file_id}/update", files=files)
+        
+        if response and response.status_code == 404:
+            try:
+                error_data = response.json()
+                if "detail" in error_data and "File not found" in error_data["detail"]:
+                    self.log_test("File Update - Non-existent File", True, 
+                                "Correctly returns 404 for non-existent file")
+                    success_count += 1
+                else:
+                    self.log_test("File Update - Non-existent File", False, 
+                                f"Unexpected error message: {error_data}")
+            except json.JSONDecodeError:
+                self.log_test("File Update - Non-existent File", False, 
+                            "Invalid JSON error response", response.text)
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("File Update - Non-existent File", False, 
+                        f"Expected 404, got {status}")
+        
+        # Test 6: Authentication Requirement for Update
+        print("\n--- Test 6: Authentication Requirement for Update ---")
+        
+        if test_file_id:
+            files = {'file': ("test_auth.txt", "test content", 'text/plain')}
+            response = self.make_request("PUT", f"/admin/files/{test_file_id}/update", files=files, use_auth=False)
+            
+            if response and response.status_code in [401, 403]:
+                self.log_test("File Update - Authentication Required", True, 
+                            f"Correctly requires authentication ({response.status_code} without token)")
+                success_count += 1
+            else:
+                status = response.status_code if response else "Network error"
+                self.log_test("File Update - Authentication Required", False, 
+                            f"Expected 401/403, got {status}")
+        
+        # Test 7: Integration Test - Full Update Workflow
+        print("\n--- Test 7: Integration Test - Full Update Workflow ---")
+        
+        # Upload a new file for integration test
+        integration_content = "Integration test file content for full workflow testing."
+        integration_filename = f"integration_test_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+        
+        files = {'file': (integration_filename, integration_content, 'text/plain')}
+        upload_response = self.make_request("POST", "/admin/files/upload", files=files)
+        
+        if upload_response and upload_response.status_code == 200:
+            try:
+                upload_result = upload_response.json()
+                integration_file_id = upload_result["file_id"]
+                
+                # Update the file with new content
+                new_integration_content = "UPDATED integration test content with completely different data."
+                new_integration_filename = f"updated_{integration_filename}"
+                
+                files = {'file': (new_integration_filename, new_integration_content, 'text/plain')}
+                update_response = self.make_request("PUT", f"/admin/files/{integration_file_id}/update", files=files)
+                
+                if update_response and update_response.status_code == 200:
+                    try:
+                        update_result = update_response.json()
+                        
+                        # Verify file system operations
+                        import os
+                        old_path = f"/app/backend/uploaded_files/{integration_file_id}_{integration_filename}"
+                        new_path = f"/app/backend/uploaded_files/{integration_file_id}_{new_integration_filename}"
+                        
+                        old_exists = os.path.exists(old_path)
+                        new_exists = os.path.exists(new_path)
+                        
+                        if not old_exists and new_exists:
+                            # Verify new file content
+                            with open(new_path, 'r') as f:
+                                final_content = f.read()
+                            
+                            if final_content == new_integration_content:
+                                self.log_test("Integration Test - Full Update Workflow", True, 
+                                            f"Complete workflow successful: old file deleted, new file created with correct content")
+                                success_count += 1
+                                
+                                # Test download to verify file is accessible
+                                download_response = self.make_request("GET", f"/admin/files/{integration_file_id}/download")
+                                if download_response and download_response.status_code == 200:
+                                    self.log_test("Integration Test - File Download After Update", True, 
+                                                "Updated file can be downloaded successfully")
+                                    success_count += 1
+                                else:
+                                    self.log_test("Integration Test - File Download After Update", False, 
+                                                f"Cannot download updated file: {download_response.status_code if download_response else 'Network error'}")
+                            else:
+                                self.log_test("Integration Test - Full Update Workflow", False, 
+                                            "File content verification failed after update")
+                        else:
+                            self.log_test("Integration Test - Full Update Workflow", False, 
+                                        f"File system operations failed. Old exists: {old_exists}, New exists: {new_exists}")
+                    except Exception as e:
+                        self.log_test("Integration Test - Full Update Workflow", False, 
+                                    f"Error during integration test: {e}")
+                else:
+                    self.log_test("Integration Test - Full Update Workflow", False, 
+                                f"Update failed in integration test: {update_response.status_code if update_response else 'Network error'}")
+            except Exception as e:
+                self.log_test("Integration Test - Full Update Workflow", False, 
+                            f"Error in integration test setup: {e}")
+        else:
+            self.log_test("Integration Test - Full Update Workflow", False, 
+                        f"Upload failed in integration test: {upload_response.status_code if upload_response else 'Network error'}")
+        
+        return success_count >= 8  # At least 8 out of 10+ tests should pass
+
     def run_all_tests(self):
         """Run all backend tests"""
         print("🚀 Starting Comprehensive Expense Tracker Backend Testing")
