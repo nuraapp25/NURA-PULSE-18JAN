@@ -1785,6 +1785,123 @@ async def delete_file(file_id: str, current_user: User = Depends(get_current_use
         raise HTTPException(status_code=500, detail="Failed to delete file")
 
 
+@api_router.post("/admin/files/upload")
+async def upload_file(file: UploadFile = File(...), current_user: User = Depends(get_current_user)):
+    """Upload a new file"""
+    try:
+        # Validate file size (100MB limit)
+        max_size = 100 * 1024 * 1024  # 100MB
+        file_content = await file.read()
+        file_size = len(file_content)
+        
+        if file_size > max_size:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"File size exceeds 100MB limit. File size: {format_file_size(file_size)}"
+            )
+        
+        # Generate unique file ID
+        file_id = str(uuid.uuid4())
+        
+        # Save file to disk
+        file_path = os.path.join(UPLOAD_DIR, f"{file_id}_{file.filename}")
+        with open(file_path, "wb") as f:
+            f.write(file_content)
+        
+        # Save metadata to database
+        file_metadata = {
+            "id": file_id,
+            "original_filename": file.filename,
+            "file_path": file_path,
+            "file_size": file_size,
+            "uploaded_by": current_user.id,
+            "uploaded_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.admin_files.insert_one(file_metadata)
+        
+        logger.info(f"File uploaded successfully: {file.filename} (ID: {file_id})")
+        
+        return {
+            "message": f"File '{file.filename}' uploaded successfully",
+            "file_id": file_id,
+            "filename": file.filename,
+            "size": format_file_size(file_size)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error uploading file: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to upload file: {str(e)}")
+
+
+@api_router.put("/admin/files/{file_id}/update")
+async def update_file(
+    file_id: str, 
+    file: UploadFile = File(...), 
+    current_user: User = Depends(get_current_user)
+):
+    """Update/replace an existing file - overwrites the old file"""
+    try:
+        # Find existing file metadata
+        file_metadata = await db.admin_files.find_one({"id": file_id}, {"_id": 0})
+        
+        if not file_metadata:
+            raise HTTPException(status_code=404, detail="File not found")
+        
+        # Validate file size (100MB limit)
+        max_size = 100 * 1024 * 1024  # 100MB
+        file_content = await file.read()
+        file_size = len(file_content)
+        
+        if file_size > max_size:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"File size exceeds 100MB limit. File size: {format_file_size(file_size)}"
+            )
+        
+        # Delete old file from disk
+        old_file_path = file_metadata["file_path"]
+        if os.path.exists(old_file_path):
+            os.remove(old_file_path)
+            logger.info(f"Deleted old file from disk: {old_file_path}")
+        
+        # Save new file to disk with same naming pattern
+        new_file_path = os.path.join(UPLOAD_DIR, f"{file_id}_{file.filename}")
+        with open(new_file_path, "wb") as f:
+            f.write(file_content)
+        
+        # Update metadata in database
+        updated_metadata = {
+            "original_filename": file.filename,
+            "file_path": new_file_path,
+            "file_size": file_size,
+            "updated_by": current_user.id,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.admin_files.update_one(
+            {"id": file_id},
+            {"$set": updated_metadata}
+        )
+        
+        logger.info(f"File updated successfully: {file.filename} (ID: {file_id})")
+        
+        return {
+            "message": f"File '{file.filename}' updated successfully",
+            "file_id": file_id,
+            "filename": file.filename,
+            "size": format_file_size(file_size)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating file: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to update file: {str(e)}")
+
+
 @api_router.post("/admin/files/bulk-delete")
 async def bulk_delete_files(file_ids: list, current_user: User = Depends(get_current_user)):
     """Bulk delete files (Master Admin only)"""
