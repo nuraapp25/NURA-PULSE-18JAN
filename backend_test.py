@@ -1141,7 +1141,7 @@ class NuraPulseBackendTester:
         
         # Test missing parameters
         response = self.make_request("GET", "/admin/files/get-drivers-vehicles")
-        if response and response.status_code == 422:
+        if response is not None and response.status_code == 422:
             self.log_test("Payment Reconciliation API - Missing Parameters", True, 
                         "Correctly rejects missing parameters (422)")
             success_count += 1
