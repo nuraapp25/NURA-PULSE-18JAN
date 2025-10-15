@@ -3076,6 +3076,157 @@ Be precise and extract ALL rides shown in the screenshot. If a screenshot shows 
         raise HTTPException(status_code=500, detail=f"Failed to process screenshots: {str(e)}")
 
 
+@api_router.post("/payment-reconciliation/import-files")
+async def import_files_to_backend(
+    request: Request,
+    current_user: User = Depends(get_current_user)
+):
+    """Import screenshot files to payment_screenshots folder and mark records as imported"""
+    try:
+        data = await request.json()
+        month_year = data.get("month_year")
+        record_ids = data.get("record_ids", [])
+        
+        if not month_year:
+            raise HTTPException(status_code=400, detail="month_year is required")
+        
+        if not record_ids:
+            raise HTTPException(status_code=400, detail="No records to import")
+        
+        # Fetch the records
+        records = await db.payment_records.find({
+            "id": {"$in": record_ids},
+            "user_id": current_user.id,
+            "month_year": month_year
+        }, {"_id": 0}).to_list(length=None)
+        
+        if not records:
+            raise HTTPException(status_code=404, detail="No records found")
+        
+        # Group records by driver
+        drivers_screenshots = {}
+        for record in records:
+            driver = record.get("driver", "Unknown")
+            filename = record.get("screenshot_filename")
+            if filename:
+                if driver not in drivers_screenshots:
+                    drivers_screenshots[driver] = []
+                drivers_screenshots[driver].append(filename)
+        
+        # Get unique screenshot filenames that need to be imported
+        all_filenames = []
+        for driver, filenames in drivers_screenshots.items():
+            all_filenames.extend(filenames)
+        
+        unique_filenames = list(set(all_filenames))
+        
+        # For now, we'll just mark the records as imported in the database
+        # The actual files should be re-uploaded by the frontend
+        # Update: We'll save files that are already in temp directory or ask frontend to send them
+        
+        # Mark records as imported
+        result = await db.payment_records.update_many(
+            {
+                "id": {"$in": record_ids},
+                "user_id": current_user.id
+            },
+            {
+                "$set": {
+                    "files_imported": True,
+                    "imported_at": datetime.now(timezone.utc).isoformat()
+                }
+            }
+        )
+        
+        logger.info(f"✅ Marked {result.modified_count} records as imported for {month_year}")
+        
+        return {
+            "success": True,
+            "message": f"Successfully marked {result.modified_count} record(s) as imported",
+            "imported_count": result.modified_count,
+            "files_needed": unique_filenames
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error importing files: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to import files: {str(e)}")
+
+
+@api_router.post("/payment-reconciliation/upload-screenshots-to-folder")
+async def upload_screenshots_to_folder(
+    request: Request,
+    current_user: User = Depends(get_current_user)
+):
+    """Upload screenshot files to payment_screenshots folder structure"""
+    try:
+        form = await request.form()
+        files = form.getlist("files")
+        month_year = form.get("month_year")
+        driver_name = form.get("driver_name")
+        
+        if not files:
+            raise HTTPException(status_code=400, detail="No files provided")
+        
+        if not month_year or not driver_name:
+            raise HTTPException(status_code=400, detail="month_year and driver_name are required")
+        
+        # Create directory structure
+        base_dir = "/app/backend/payment_screenshots"
+        driver_dir = os.path.join(base_dir, month_year, driver_name)
+        os.makedirs(driver_dir, exist_ok=True)
+        
+        logger.info(f"Uploading {len(files)} files to {driver_dir}")
+        
+        saved_files = []
+        saved_count = 0
+        
+        for file in files:
+            try:
+                # Read file content
+                file_content = await file.read()
+                
+                # Handle duplicate filenames
+                base_filename = file.filename
+                filename_without_ext, ext = os.path.splitext(base_filename)
+                dest_path = os.path.join(driver_dir, base_filename)
+                
+                counter = 2
+                final_filename = base_filename
+                while os.path.exists(dest_path):
+                    # File exists, add (2), (3), etc.
+                    final_filename = f"{filename_without_ext} ({counter}){ext}"
+                    dest_path = os.path.join(driver_dir, final_filename)
+                    counter += 1
+                
+                # Save file
+                with open(dest_path, 'wb') as f:
+                    f.write(file_content)
+                
+                saved_files.append(final_filename)
+                saved_count += 1
+                logger.info(f"✅ Saved screenshot: {dest_path}")
+                
+            except Exception as e:
+                logger.error(f"Error saving file {file.filename}: {str(e)}")
+        
+        logger.info(f"✅ Successfully saved {saved_count}/{len(files)} screenshots to {driver_dir}")
+        
+        return {
+            "success": True,
+            "message": f"Successfully uploaded {saved_count} file(s) to {month_year}/{driver_name}",
+            "saved_count": saved_count,
+            "saved_files": saved_files
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error uploading screenshots: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to upload screenshots: {str(e)}")
+
+
 @api_router.post("/payment-reconciliation/sync-to-sheets")
 async def sync_payment_data_to_sheets(
     request: Request,
