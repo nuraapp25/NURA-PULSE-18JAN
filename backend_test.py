@@ -2868,8 +2868,9 @@ class NuraPulseBackendTester:
             
             if response and response.status_code == 200:
                 try:
-                    active_users = response.json()
-                    if isinstance(active_users, list):
+                    result = response.json()
+                    if "active_users" in result and isinstance(result["active_users"], list):
+                        active_users = result["active_users"]
                         # Check if master admin is still in active users (should be removed after logout)
                         master_admin_still_active = any(user.get("account_type") == "master_admin" for user in active_users)
                         
