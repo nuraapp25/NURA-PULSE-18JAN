@@ -576,7 +576,7 @@ class NuraPulseBackendTester:
         # Test GET without authentication
         response = self.make_request("GET", "/montra-vehicle/feed-database", use_auth=False)
         
-        if response and response.status_code in [401, 403]:
+        if response is not None and response.status_code in [401, 403]:
             self.log_test("Montra Feed Database - GET Authentication", True, 
                         f"Correctly requires authentication ({response.status_code} without token)")
             success_count += 1
@@ -590,7 +590,7 @@ class NuraPulseBackendTester:
                                    data=[{"vehicle_id": "TEST", "date": "01 Jan", "filename": "test.csv"}], 
                                    use_auth=False)
         
-        if response and response.status_code in [401, 403]:
+        if response is not None and response.status_code in [401, 403]:
             self.log_test("Montra Feed Database - DELETE Authentication", True, 
                         f"Correctly requires authentication ({response.status_code} without token)")
             success_count += 1
@@ -603,7 +603,7 @@ class NuraPulseBackendTester:
         files = {'file': (test_filename, sample_csv_content, 'text/csv')}
         response = self.make_request("POST", "/montra-vehicle/import-feed", files=files, use_auth=False)
         
-        if response and response.status_code in [401, 403]:
+        if response is not None and response.status_code in [401, 403]:
             self.log_test("Montra Feed Import - Authentication", True, 
                         f"Correctly requires authentication ({response.status_code} without token)")
             success_count += 1
@@ -1152,7 +1152,7 @@ class NuraPulseBackendTester:
         
         # Test authentication requirement
         response = self.make_request("GET", "/admin/files/get-drivers-vehicles?month=Sep&year=2025", use_auth=False)
-        if response and response.status_code in [401, 403]:
+        if response is not None and response.status_code in [401, 403]:
             self.log_test("Payment Reconciliation API - Authentication Required", True, 
                         f"Correctly requires authentication ({response.status_code} without token)")
             success_count += 1
