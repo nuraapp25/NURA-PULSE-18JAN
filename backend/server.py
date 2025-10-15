@@ -1842,7 +1842,11 @@ async def update_file(
     file: UploadFile = File(...), 
     current_user: User = Depends(get_current_user)
 ):
-    """Update/replace an existing file - overwrites the old file"""
+    """Update/replace an existing file - overwrites the old file (Master Admin only)"""
+    # Check if user is master admin
+    if current_user.account_type != "master_admin":
+        raise HTTPException(status_code=403, detail="Only Master Admin can update files")
+    
     try:
         # Find existing file metadata
         file_metadata = await db.admin_files.find_one({"id": file_id}, {"_id": 0})
