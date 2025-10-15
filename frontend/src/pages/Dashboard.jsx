@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuth, useTheme } from "@/App";
 import { Button } from "@/components/ui/button";
-import { Home, FileText, Car, Phone, BarChart3, FolderOpen, Settings, Users, Moon, Sun, Menu, X, ChevronDown, Folder, Image, Receipt } from "lucide-react";
+import { Home, FileText, Car, Phone, BarChart3, FolderOpen, Settings, Users, Moon, Sun, Menu, X, ChevronDown, Folder, Image, Receipt, Activity } from "lucide-react";
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
