@@ -2540,6 +2540,10 @@ class NuraPulseBackendTester:
         delete_data = {"path": "Test Folder", "is_folder": True}
         response = self.make_request("DELETE", "/admin/payment-screenshots/delete", data=delete_data)
         
+        print(f"DEBUG: Payment Screenshots Delete response: {response}")
+        if response:
+            print(f"DEBUG: Response status code: {response.status_code}")
+        
         if response:
             if response.status_code == 200:
                 try:
