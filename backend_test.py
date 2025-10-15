@@ -526,7 +526,7 @@ class NuraPulseBackendTester:
         delete_data = []
         response = self.make_request("DELETE", "/montra-vehicle/feed-database", data=delete_data)
         
-        if response and response.status_code == 400:
+        if response is not None and response.status_code == 400:
             try:
                 error_data = response.json()
                 if "detail" in error_data and "No files specified" in error_data["detail"]:
@@ -1506,7 +1506,7 @@ class NuraPulseBackendTester:
         }
         
         response = self.make_request("POST", "/expenses/approve", invalid_status_data)
-        if response and response.status_code == 400:
+        if response is not None and response.status_code == 400:
             self.log_test("Expense Tracker - Invalid Status Validation", True, 
                         "Correctly rejects invalid approval status (400)")
             success_count += 1
@@ -1597,7 +1597,7 @@ class NuraPulseBackendTester:
         # Test with empty expense_ids array
         empty_delete_data = {"expense_ids": []}
         response = self.make_request("POST", "/expenses/delete", empty_delete_data)
-        if response and response.status_code == 400:
+        if response is not None and response.status_code == 400:
             self.log_test("Expense Tracker - Delete Empty Array", True, 
                         "Correctly rejects empty expense_ids array (400)")
             success_count += 1
@@ -1737,7 +1737,7 @@ class NuraPulseBackendTester:
             success_count += 1
         else:
             # If it fails, check if it's due to size validation
-            if response and response.status_code == 400:
+            if response is not None and response.status_code == 400:
                 try:
                     error_data = response.json()
                     if "detail" in error_data and "limit" in error_data["detail"]:
