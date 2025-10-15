@@ -2045,7 +2045,7 @@ class NuraPulseBackendTester:
             if update_response and update_response.status_code == 200:
                 try:
                     result = update_response.json()
-                    if "message" in result and "success" in result:
+                    if "message" in result and "file_id" in result:
                         self.log_test("File Update - Master Admin Update Permission", True, 
                                     f"Master Admin can update files: {result.get('message', '')}")
                         success_count += 1
