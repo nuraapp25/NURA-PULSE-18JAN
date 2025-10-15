@@ -2073,14 +2073,17 @@ class NuraPulseBackendTester:
             test_content = "Test file content for permission test"
             files_data = {'file': ('test_permission_file.txt', test_content, 'text/plain')}
             
-            # Temporarily remove token to simulate non-authorized user
-            original_token = self.token
-            self.token = "invalid_token_for_testing"
-            
-            permission_response = self.make_request("PUT", f"/admin/files/{file_id_to_test}/update", files=files_data)
-            
-            # Restore original token
-            self.token = original_token
+            # Test with invalid token to simulate non-authorized user
+            try:
+                import requests
+                url = f"{self.base_url}/admin/files/{file_id_to_test}/update"
+                headers = {"Authorization": "Bearer invalid_token_for_testing"}
+                files = {'file': ('test_permission_file.txt', test_content, 'text/plain')}
+                
+                permission_response = requests.put(url, headers=headers, files=files, timeout=10)
+            except Exception as e:
+                permission_response = None
+                print(f"Permission test error: {e}")
             
             if permission_response and permission_response.status_code in [401, 403]:
                 try:
