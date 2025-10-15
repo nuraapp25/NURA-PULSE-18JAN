@@ -821,9 +821,20 @@ const PaymentReconciliation = () => {
                 <Button 
                   variant="outline" 
                   size="sm" 
+                  onClick={handleImportFilesToBackend}
+                  disabled={importing || filesImported || extractedData.length === 0}
+                  className="text-blue-600 border-blue-600"
+                >
+                  <Upload size={16} className={`mr-1 ${importing ? 'animate-spin' : ''}`} />
+                  {importing ? "Importing..." : filesImported ? "Files Imported ✓" : "Import Files to Backend"}
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
                   onClick={syncToGoogleSheets}
-                  disabled={syncing}
+                  disabled={syncing || !filesImported}
                   className="text-green-600 border-green-600"
+                  title={!filesImported ? "Import files to backend first" : ""}
                 >
                   <RefreshCw size={16} className={`mr-1 ${syncing ? 'animate-spin' : ''}`} />
                   {syncing ? "Syncing..." : "Sync to Sheets"}
