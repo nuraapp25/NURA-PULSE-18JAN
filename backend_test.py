@@ -1861,6 +1861,8 @@ class NuraPulseBackendTester:
                             "Invalid JSON error response", response.text)
         else:
             status = response.status_code if response else "Network error"
+            if response:
+                print(f"DEBUG: Non-existent file test response: {response.status_code} - {response.text}")
             self.log_test("File Update - Non-existent File", False, 
                         f"Expected 404, got {status}")
         
