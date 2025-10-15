@@ -2519,8 +2519,8 @@ class NuraPulseBackendTester:
                 if not result["success"]:
                     print(f"  - {result['test']}: {result['message']}")
         
-        overall_success = comprehensive_verification_success and failed_tests <= 3  # Allow some minor failures
-        status = "✅ FILE UPDATE FEATURE COMPREHENSIVE VERIFICATION COMPLETE" if overall_success else "❌ FILE UPDATE FEATURE VERIFICATION ISSUES FOUND"
+        overall_success = payment_extractor_fix_success and failed_tests <= 3  # Allow some minor failures
+        status = "✅ PAYMENT DATA EXTRACTOR FIX VERIFICATION COMPLETE" if overall_success else "❌ PAYMENT DATA EXTRACTOR FIX VERIFICATION ISSUES FOUND"
         print(f"\n{status}")
         
         return overall_success
