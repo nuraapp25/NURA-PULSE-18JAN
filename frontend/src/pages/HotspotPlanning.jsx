@@ -5,9 +5,8 @@ import { Upload, MapPin, TrendingUp, Clock, Target, AlertCircle } from "lucide-r
 import { toast } from "sonner";
 import axios from "axios";
 import { API } from "@/App";
-import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
-import L from "leaflet";
+// Leaflet imports - dynamically loaded
+let MapContainer, TileLayer, Marker, Popup, Circle, useMap, L;
 
 // Fix Leaflet default icon issue
 delete L.Icon.Default.prototype._getIconUrl;
