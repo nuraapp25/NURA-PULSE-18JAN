@@ -3962,35 +3962,117 @@ async def analyze_hotspot_placement(
         # Analyze each time slot
         time_slot_results = {}
         
-        # Calculate coverage for each ride
-        def calculate_coverage(row):
-            pickup_point = (row['pickupLat'], row['pickupLong'])
-            # Find nearest cluster center
-            min_distance = float('inf')
-            nearest_cluster = -1
+        for slot_name, (start_hour, end_hour) in time_slots.items():
+            # Filter rides for this time slot
+            if end_hour > 24:
+                # Handle overnight slot (e.g., 10PM-1AM)
+                slot_rides = df_clean[
+                    (df_clean['ist_hour'] >= start_hour) | 
+                    (df_clean['ist_hour'] < (end_hour - 24))
+                ]
+            else:
+                slot_rides = df_clean[
+                    (df_clean['ist_hour'] >= start_hour) & 
+                    (df_clean['ist_hour'] < end_hour)
+                ]
             
-            for idx, center in enumerate(cluster_centers):
-                center_point = (center[0], center[1])
-                distance = geodesic(pickup_point, center_point).kilometers
-                if distance < min_distance:
-                    min_distance = distance
-                    nearest_cluster = idx
+            logger.info(f"{slot_name}: {len(slot_rides)} rides")
             
-            return {
-                'nearest_cluster': nearest_cluster,
-                'distance_km': min_distance,
-                'within_5min': min_distance <= MAX_DISTANCE_KM
+            if len(slot_rides) == 0:
+                time_slot_results[slot_name] = {
+                    'status': 'no_data',
+                    'message': 'No rides in this time slot',
+                    'rides_count': 0
+                }
+                continue
+            
+            # Determine number of clusters (locations)
+            num_locations = min(MAX_LOCATIONS, len(slot_rides))
+            
+            if num_locations < 3:
+                time_slot_results[slot_name] = {
+                    'status': 'insufficient_data',
+                    'message': f'Only {len(slot_rides)} ride(s) in this slot - insufficient for clustering',
+                    'rides_count': len(slot_rides),
+                    'rides': slot_rides[['pickupLat', 'pickupLong']].values.tolist()
+                }
+                continue
+            
+            # Run K-Means clustering for this time slot
+            pickup_coords = slot_rides[['pickupLat', 'pickupLong']].values
+            
+            kmeans = KMeans(n_clusters=num_locations, random_state=42, n_init=10)
+            slot_rides_copy = slot_rides.copy()
+            slot_rides_copy['cluster'] = kmeans.fit_predict(pickup_coords)
+            
+            hotspot_locations = kmeans.cluster_centers_
+            
+            # Calculate coverage for this time slot
+            def calculate_coverage(row, locations):
+                pickup_point = (row['pickupLat'], row['pickupLong'])
+                min_distance = float('inf')
+                nearest_location = -1
+                
+                for idx, location in enumerate(locations):
+                    location_point = (location[0], location[1])
+                    distance = geodesic(pickup_point, location_point).kilometers
+                    if distance < min_distance:
+                        min_distance = distance
+                        nearest_location = idx
+                
+                return {
+                    'nearest_location': nearest_location,
+                    'distance_km': min_distance,
+                    'within_5min': min_distance <= MAX_DISTANCE_KM
+                }
+            
+            coverage_results = slot_rides_copy.apply(
+                lambda row: calculate_coverage(row, hotspot_locations), 
+                axis=1, 
+                result_type='expand'
+            )
+            
+            slot_rides_copy['nearest_location'] = coverage_results['nearest_location']
+            slot_rides_copy['distance_to_nearest'] = coverage_results['distance_km']
+            slot_rides_copy['within_5min'] = coverage_results['within_5min']
+            
+            # Calculate coverage percentage
+            total_rides_slot = len(slot_rides_copy)
+            covered_rides_slot = slot_rides_copy['within_5min'].sum()
+            coverage_percentage_slot = (covered_rides_slot / total_rides_slot) * 100
+            
+            # Location statistics
+            location_stats = []
+            for i in range(num_locations):
+                location_rides = slot_rides_copy[slot_rides_copy['nearest_location'] == i]
+                covered_in_location = location_rides['within_5min'].sum()
+                
+                location_stats.append({
+                    'location_id': int(i),
+                    'lat': float(hotspot_locations[i][0]),
+                    'long': float(hotspot_locations[i][1]),
+                    'rides_assigned': int(len(location_rides)),
+                    'rides_within_5min': int(covered_in_location),
+                    'coverage_percentage': float((covered_in_location / len(location_rides) * 100) if len(location_rides) > 0 else 0)
+                })
+            
+            # Sort by rides assigned
+            location_stats.sort(key=lambda x: x['rides_assigned'], reverse=True)
+            
+            # Prepare pickup points for map
+            pickup_points = slot_rides_copy[['pickupLat', 'pickupLong', 'within_5min']].values.tolist()
+            
+            time_slot_results[slot_name] = {
+                'status': 'success',
+                'rides_count': int(total_rides_slot),
+                'covered_rides': int(covered_rides_slot),
+                'coverage_percentage': float(round(coverage_percentage_slot, 2)),
+                'num_locations': int(num_locations),
+                'avg_distance': float(round(slot_rides_copy['distance_to_nearest'].mean(), 3)),
+                'hotspot_locations': location_stats,
+                'pickup_points': pickup_points[:200],  # Limit for performance
+                'warning': f'Only {num_locations} locations generated (low sample size)' if num_locations < MAX_LOCATIONS else None
             }
-        
-        coverage_results = df_clean.apply(calculate_coverage, axis=1, result_type='expand')
-        df_clean['nearest_cluster'] = coverage_results['nearest_cluster']
-        df_clean['distance_to_nearest'] = coverage_results['distance_km']
-        df_clean['within_5min'] = coverage_results['within_5min']
-        
-        # Calculate overall coverage percentage
-        total_rides = len(df_clean)
-        covered_rides = df_clean['within_5min'].sum()
-        coverage_percentage = (covered_rides / total_rides) * 100
         
         # Time-based analysis (if time column exists)
         time_analysis = {}
