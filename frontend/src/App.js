@@ -128,6 +128,7 @@ function App() {
                 <Route path="montra-vehicle/battery-audit" element={<BatteryAudit />} />
                 <Route path="montra-vehicle/morning-charge-audit" element={<MorningChargeAudit />} />
                 <Route path="expense-tracker" element={<ExpenseTracker />} />
+                <Route path="hotspot-planning" element={<HotspotPlanning />} />
                 <Route path="admin/analytics" element={<Analytics />} />
                 <Route path="admin/files" element={<Files />} />
                 <Route path="admin/payment-screenshots" element={<PaymentScreenshots />} />
