@@ -3947,21 +3947,20 @@ async def analyze_hotspot_placement(
                 detail="No time column found. Expected 'time', 'rideAssignedTime', 'pickup_time', or 'request_time'"
             )
         
-        # Extract pickup coordinates
-        pickup_coords = df_clean[['pickupLat', 'pickupLong']].values
+        # Convert time to IST hours
+        df_clean['ist_hour'] = df_clean[time_col].apply(convert_utc_to_ist)
+        df_clean = df_clean.dropna(subset=['ist_hour'])
+        
+        logger.info(f"After time conversion: {len(df_clean)} rides with valid IST time")
         
         # Constants
-        NUM_VEHICLES = 10
+        MAX_LOCATIONS = 10
         PICKUP_TIME_MINUTES = 5
         AVG_SPEED_KMH = 5
         MAX_DISTANCE_KM = (PICKUP_TIME_MINUTES / 60) * AVG_SPEED_KMH  # 0.4167 km
         
-        # K-Means clustering with 10 clusters
-        kmeans = KMeans(n_clusters=NUM_VEHICLES, random_state=42, n_init=10)
-        df_clean['cluster'] = kmeans.fit_predict(pickup_coords)
-        
-        # Get cluster centers (optimal vehicle placement points)
-        cluster_centers = kmeans.cluster_centers_
+        # Analyze each time slot
+        time_slot_results = {}
         
         # Calculate coverage for each ride
         def calculate_coverage(row):
