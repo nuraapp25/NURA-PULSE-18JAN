@@ -69,6 +69,12 @@ const HotspotPlanning = () => {
   const [file, setFile] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [results, setResults] = useState(null);
+  const [mapLoaded, setMapLoaded] = useState(false);
+
+  // Load map libraries when component mounts
+  React.useEffect(() => {
+    loadMapLibraries().then(() => setMapLoaded(true));
+  }, []);
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
