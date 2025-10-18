@@ -62,6 +62,7 @@ const Dashboard = () => {
     { name: "Telecaller's Desk", icon: Phone, path: "/dashboard/telecaller-queue", roles: ["master_admin", "admin", "standard"] },
     { name: "Montra Vehicle Insights", icon: BarChart3, path: "/dashboard/montra-vehicle", roles: ["master_admin", "admin", "standard"] },
     { name: "Expense Tracker", icon: Receipt, path: "/dashboard/expense-tracker", roles: ["master_admin", "admin", "standard"] },
+    { name: "Hotspot Planning", icon: MapPin, path: "/dashboard/hotspot-planning", roles: ["master_admin", "admin", "standard"] },
   ];
 
   const apps = allApps.filter(app => 
