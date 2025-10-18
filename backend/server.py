@@ -3850,6 +3850,184 @@ async def startup_event():
 
 
 
+# ==================== HOTSPOT PLANNING ====================
+
+@api_router.post("/hotspot-planning/analyze")
+async def analyze_hotspot_placement(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user)
+):
+    """Analyze ride data and recommend optimal vehicle placement using K-Means clustering"""
+    try:
+        import pandas as pd
+        import numpy as np
+        from sklearn.cluster import KMeans
+        from geopy.distance import geodesic
+        import json
+        from collections import defaultdict
+        
+        # Read CSV file
+        contents = await file.read()
+        import io
+        df = pd.read_csv(io.BytesIO(contents))
+        
+        logger.info(f"Loaded {len(df)} rides from CSV")
+        
+        # Validate required columns
+        required_cols = ['pickupLat', 'pickupLong', 'dropLat', 'dropLong']
+        missing_cols = [col for col in required_cols if col not in df.columns]
+        if missing_cols:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Missing required columns: {', '.join(missing_cols)}"
+            )
+        
+        # Clean data - remove rows with missing coordinates
+        df_clean = df.dropna(subset=['pickupLat', 'pickupLong'])
+        logger.info(f"Clean data: {len(df_clean)} rides with valid pickup coordinates")
+        
+        if len(df_clean) < 10:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Not enough data points. Need at least 10 rides, got {len(df_clean)}"
+            )
+        
+        # Extract pickup coordinates
+        pickup_coords = df_clean[['pickupLat', 'pickupLong']].values
+        
+        # Constants
+        NUM_VEHICLES = 10
+        PICKUP_TIME_MINUTES = 5
+        AVG_SPEED_KMH = 5
+        MAX_DISTANCE_KM = (PICKUP_TIME_MINUTES / 60) * AVG_SPEED_KMH  # 0.4167 km
+        
+        # K-Means clustering with 10 clusters
+        kmeans = KMeans(n_clusters=NUM_VEHICLES, random_state=42, n_init=10)
+        df_clean['cluster'] = kmeans.fit_predict(pickup_coords)
+        
+        # Get cluster centers (optimal vehicle placement points)
+        cluster_centers = kmeans.cluster_centers_
+        
+        # Calculate coverage for each ride
+        def calculate_coverage(row):
+            pickup_point = (row['pickupLat'], row['pickupLong'])
+            # Find nearest cluster center
+            min_distance = float('inf')
+            nearest_cluster = -1
+            
+            for idx, center in enumerate(cluster_centers):
+                center_point = (center[0], center[1])
+                distance = geodesic(pickup_point, center_point).kilometers
+                if distance < min_distance:
+                    min_distance = distance
+                    nearest_cluster = idx
+            
+            return {
+                'nearest_cluster': nearest_cluster,
+                'distance_km': min_distance,
+                'within_5min': min_distance <= MAX_DISTANCE_KM
+            }
+        
+        coverage_results = df_clean.apply(calculate_coverage, axis=1, result_type='expand')
+        df_clean['nearest_cluster'] = coverage_results['nearest_cluster']
+        df_clean['distance_to_nearest'] = coverage_results['distance_km']
+        df_clean['within_5min'] = coverage_results['within_5min']
+        
+        # Calculate overall coverage percentage
+        total_rides = len(df_clean)
+        covered_rides = df_clean['within_5min'].sum()
+        coverage_percentage = (covered_rides / total_rides) * 100
+        
+        # Time-based analysis (if time column exists)
+        time_analysis = {}
+        if 'time' in df_clean.columns or 'rideAssignedTime' in df_clean.columns:
+            time_col = 'time' if 'time' in df_clean.columns else 'rideAssignedTime'
+            
+            # Extract hour from time
+            def extract_hour(time_str):
+                try:
+                    if pd.isna(time_str):
+                        return None
+                    time_str = str(time_str)
+                    if ':' in time_str:
+                        hour = int(time_str.split(':')[0])
+                        return hour if 0 <= hour <= 23 else None
+                    return None
+                except:
+                    return None
+            
+            df_clean['hour'] = df_clean[time_col].apply(extract_hour)
+            df_clean_with_time = df_clean.dropna(subset=['hour'])
+            
+            if len(df_clean_with_time) > 0:
+                # Group by hour
+                hourly_demand = df_clean_with_time.groupby('hour').size().to_dict()
+                hourly_coverage = df_clean_with_time.groupby('hour')['within_5min'].sum().to_dict()
+                
+                time_analysis = {
+                    'hourly_demand': hourly_demand,
+                    'hourly_coverage': hourly_coverage,
+                    'hourly_coverage_percentage': {
+                        hour: (hourly_coverage.get(hour, 0) / hourly_demand.get(hour, 1)) * 100
+                        for hour in hourly_demand.keys()
+                    }
+                }
+        
+        # Cluster statistics
+        cluster_stats = []
+        for i in range(NUM_VEHICLES):
+            cluster_rides = df_clean[df_clean['nearest_cluster'] == i]
+            covered_in_cluster = cluster_rides['within_5min'].sum()
+            
+            cluster_stats.append({
+                'cluster_id': int(i),
+                'placement_lat': float(cluster_centers[i][0]),
+                'placement_long': float(cluster_centers[i][1]),
+                'total_rides_assigned': int(len(cluster_rides)),
+                'rides_within_5min': int(covered_in_cluster),
+                'coverage_percentage': float((covered_in_cluster / len(cluster_rides) * 100) if len(cluster_rides) > 0 else 0)
+            })
+        
+        # Sort by total rides assigned (descending)
+        cluster_stats.sort(key=lambda x: x['total_rides_assigned'], reverse=True)
+        
+        # Prepare map data
+        pickup_points = df_clean[['pickupLat', 'pickupLong', 'within_5min']].values.tolist()
+        drop_points = df_clean[['dropLat', 'dropLong']].dropna().values.tolist()
+        
+        # Summary statistics
+        summary = {
+            'total_rides_analyzed': int(total_rides),
+            'rides_within_5min': int(covered_rides),
+            'rides_outside_5min': int(total_rides - covered_rides),
+            'coverage_percentage': float(round(coverage_percentage, 2)),
+            'average_distance_to_nearest_vehicle': float(round(df_clean['distance_to_nearest'].mean(), 3)),
+            'max_distance_km': float(MAX_DISTANCE_KM),
+            'num_vehicles': NUM_VEHICLES,
+            'speed_kmh': AVG_SPEED_KMH
+        }
+        
+        logger.info(f"Analysis complete: {coverage_percentage:.2f}% coverage with {NUM_VEHICLES} vehicles")
+        
+        return {
+            'success': True,
+            'summary': summary,
+            'cluster_stats': cluster_stats,
+            'time_analysis': time_analysis,
+            'pickup_points': pickup_points[:1000],  # Limit to 1000 points for performance
+            'drop_points': drop_points[:1000],
+            'message': f'Analysis complete: {coverage_percentage:.2f}% of rides can be picked up within 5 minutes'
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in hotspot analysis: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Failed to analyze data: {str(e)}")
+
+
 # ==================== ANALYTICS ====================
 
 # In-memory storage for active sessions and page views
