@@ -8,32 +8,51 @@ import { API } from "@/App";
 // Leaflet imports - dynamically loaded
 let MapContainer, TileLayer, Marker, Popup, Circle, useMap, L;
 
-// Fix Leaflet default icon issue
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
-  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
-});
+// Map configuration (will be loaded dynamically)
+let vehicleIcon, pickupIcon;
 
-// Custom icons
-const vehicleIcon = new L.Icon({
-  iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41]
-});
+// Dynamic map loader
+const loadMapLibraries = async () => {
+  if (!MapContainer) {
+    const leaflet = await import("leaflet");
+    const reactLeaflet = await import("react-leaflet");
+    
+    L = leaflet.default;
+    MapContainer = reactLeaflet.MapContainer;
+    TileLayer = reactLeaflet.TileLayer;
+    Marker = reactLeaflet.Marker;
+    Popup = reactLeaflet.Popup;
+    Circle = reactLeaflet.Circle;
+    useMap = reactLeaflet.useMap;
+    
+    // Fix Leaflet default icon issue
+    delete L.Icon.Default.prototype._getIconUrl;
+    L.Icon.Default.mergeOptions({
+      iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+      iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+      shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+    });
 
-const pickupIcon = new L.Icon({
-  iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
-  iconSize: [15, 25],
-  iconAnchor: [7, 25],
-  popupAnchor: [1, -20],
-  shadowSize: [25, 25]
-});
+    // Custom icons
+    vehicleIcon = new L.Icon({
+      iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png",
+      shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      shadowSize: [41, 41]
+    });
+
+    pickupIcon = new L.Icon({
+      iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png",
+      shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+      iconSize: [15, 25],
+      iconAnchor: [7, 25],
+      popupAnchor: [1, -20],
+      shadowSize: [25, 25]
+    });
+  }
+};
 
 // Component to fit map to bounds
 function MapBounds({ bounds }) {
