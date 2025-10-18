@@ -4074,85 +4074,22 @@ async def analyze_hotspot_placement(
                 'warning': f'Only {num_locations} locations generated (low sample size)' if num_locations < MAX_LOCATIONS else None
             }
         
-        # Time-based analysis (if time column exists)
-        time_analysis = {}
-        if 'time' in df_clean.columns or 'rideAssignedTime' in df_clean.columns:
-            time_col = 'time' if 'time' in df_clean.columns else 'rideAssignedTime'
-            
-            # Extract hour from time
-            def extract_hour(time_str):
-                try:
-                    if pd.isna(time_str):
-                        return None
-                    time_str = str(time_str)
-                    if ':' in time_str:
-                        hour = int(time_str.split(':')[0])
-                        return hour if 0 <= hour <= 23 else None
-                    return None
-                except:
-                    return None
-            
-            df_clean['hour'] = df_clean[time_col].apply(extract_hour)
-            df_clean_with_time = df_clean.dropna(subset=['hour'])
-            
-            if len(df_clean_with_time) > 0:
-                # Group by hour
-                hourly_demand = df_clean_with_time.groupby('hour').size().to_dict()
-                hourly_coverage = df_clean_with_time.groupby('hour')['within_5min'].sum().to_dict()
-                
-                time_analysis = {
-                    'hourly_demand': hourly_demand,
-                    'hourly_coverage': hourly_coverage,
-                    'hourly_coverage_percentage': {
-                        hour: (hourly_coverage.get(hour, 0) / hourly_demand.get(hour, 1)) * 100
-                        for hour in hourly_demand.keys()
-                    }
-                }
+        # Calculate overall summary
+        total_rides = len(df_clean)
+        all_slots_with_data = [slot for slot, data in time_slot_results.items() if data.get('status') == 'success']
         
-        # Cluster statistics
-        cluster_stats = []
-        for i in range(NUM_VEHICLES):
-            cluster_rides = df_clean[df_clean['nearest_cluster'] == i]
-            covered_in_cluster = cluster_rides['within_5min'].sum()
-            
-            cluster_stats.append({
-                'cluster_id': int(i),
-                'placement_lat': float(cluster_centers[i][0]),
-                'placement_long': float(cluster_centers[i][1]),
-                'total_rides_assigned': int(len(cluster_rides)),
-                'rides_within_5min': int(covered_in_cluster),
-                'coverage_percentage': float((covered_in_cluster / len(cluster_rides) * 100) if len(cluster_rides) > 0 else 0)
-            })
-        
-        # Sort by total rides assigned (descending)
-        cluster_stats.sort(key=lambda x: x['total_rides_assigned'], reverse=True)
-        
-        # Prepare map data
-        pickup_points = df_clean[['pickupLat', 'pickupLong', 'within_5min']].values.tolist()
-        drop_points = df_clean[['dropLat', 'dropLong']].dropna().values.tolist()
-        
-        # Summary statistics
-        summary = {
-            'total_rides_analyzed': int(total_rides),
-            'rides_within_5min': int(covered_rides),
-            'rides_outside_5min': int(total_rides - covered_rides),
-            'coverage_percentage': float(round(coverage_percentage, 2)),
-            'average_distance_to_nearest_vehicle': float(round(df_clean['distance_to_nearest'].mean(), 3)),
-            'max_distance_km': float(MAX_DISTANCE_KM),
-            'num_vehicles': NUM_VEHICLES,
-            'speed_kmh': AVG_SPEED_KMH
-        }
-        
-        logger.info(f"Analysis complete: {coverage_percentage:.2f}% coverage with {NUM_VEHICLES} vehicles")
+        logger.info(f"Analysis complete: {len(all_slots_with_data)} time slots with data")
         
         return {
             'success': True,
-            'summary': summary,
-            'cluster_stats': cluster_stats,
-            'time_analysis': time_analysis,
-            'pickup_points': pickup_points[:1000],  # Limit to 1000 points for performance
-            'drop_points': drop_points[:1000],
-            'message': f'Analysis complete: {coverage_percentage:.2f}% of rides can be picked up within 5 minutes'
+            'total_rides_analyzed': int(total_rides),
+            'time_slots': time_slot_results,
+            'analysis_params': {
+                'max_distance_km': float(MAX_DISTANCE_KM),
+                'speed_kmh': AVG_SPEED_KMH,
+                'max_locations': MAX_LOCATIONS
+            },
+            'message': f'Analysis complete: {len(all_slots_with_data)} time slots analyzed from {total_rides} rides'
         }
         
     except HTTPException:
