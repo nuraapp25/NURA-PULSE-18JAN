@@ -3857,7 +3857,7 @@ async def analyze_hotspot_placement(
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_user)
 ):
-    """Analyze ride data and recommend optimal vehicle placement using K-Means clustering"""
+    """Analyze ride data and recommend optimal placement locations per time slot"""
     try:
         import pandas as pd
         import numpy as np
@@ -3865,6 +3865,8 @@ async def analyze_hotspot_placement(
         from geopy.distance import geodesic
         import json
         from collections import defaultdict
+        from datetime import datetime, timedelta
+        import pytz
         
         # Read CSV file
         contents = await file.read()
@@ -3890,6 +3892,59 @@ async def analyze_hotspot_placement(
             raise HTTPException(
                 status_code=400,
                 detail=f"Not enough data points. Need at least 10 rides, got {len(df_clean)}"
+            )
+        
+        # UTC to IST conversion
+        def convert_utc_to_ist(time_str):
+            """Convert UTC time string to IST hour"""
+            try:
+                if pd.isna(time_str):
+                    return None
+                time_str = str(time_str).strip()
+                
+                # Try parsing different time formats
+                for fmt in ['%H:%M:%S', '%H:%M', '%I:%M:%S %p', '%I:%M %p']:
+                    try:
+                        utc_time = datetime.strptime(time_str, fmt)
+                        # Add IST offset (UTC + 5:30)
+                        ist_time = utc_time + timedelta(hours=5, minutes=30)
+                        return ist_time.hour
+                    except ValueError:
+                        continue
+                
+                # If parsing fails, try extracting hour directly
+                if ':' in time_str:
+                    hour = int(time_str.split(':')[0])
+                    # Add 5.5 hours for IST
+                    ist_hour = (hour + 5) % 24
+                    return ist_hour
+                    
+                return None
+            except Exception as e:
+                logger.warning(f"Failed to parse time '{time_str}': {e}")
+                return None
+        
+        # Define time slots (IST)
+        time_slots = {
+            'Morning Rush (6AM-9AM)': (6, 9),
+            'Mid-Morning (9AM-12PM)': (9, 12),
+            'Afternoon (12PM-4PM)': (12, 16),
+            'Evening Rush (4PM-7PM)': (16, 19),
+            'Night (7PM-10PM)': (19, 22),
+            'Late Night (10PM-1AM)': (22, 25)  # 25 represents 1AM next day
+        }
+        
+        # Find time column
+        time_col = None
+        for col in ['time', 'rideAssignedTime', 'pickup_time', 'request_time']:
+            if col in df_clean.columns:
+                time_col = col
+                break
+        
+        if not time_col:
+            raise HTTPException(
+                status_code=400,
+                detail="No time column found. Expected 'time', 'rideAssignedTime', 'pickup_time', or 'request_time'"
             )
         
         # Extract pickup coordinates
