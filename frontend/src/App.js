@@ -20,7 +20,7 @@ import BatteryAudit from "@/pages/BatteryAudit";
 import MorningChargeAudit from "@/pages/MorningChargeAudit";
 import ExpenseTracker from "@/pages/ExpenseTracker";
 import Analytics from "@/pages/Analytics";
-import HotspotPlanning from "@/pages/HotspotPlanning";
+// Temporarily disabled - import HotspotPlanning from "@/pages/HotspotPlanning";
 import ManagePage from "@/pages/ManagePage";
 import SettingsPage from "@/pages/SettingsPage";
 
