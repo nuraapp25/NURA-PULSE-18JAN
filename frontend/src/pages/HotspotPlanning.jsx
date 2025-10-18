@@ -390,6 +390,7 @@ const HotspotPlanning = () => {
                   <span>5-min Coverage (420m)</span>
                 </div>
               </div>
+              )}
             </CardContent>
           </Card>
 
