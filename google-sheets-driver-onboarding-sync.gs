@@ -174,21 +174,27 @@ function doPost(e) {
 
 /**
  * MANUAL: Push all leads from Google Sheets to App
+ * Can be called manually from menu or programmatically via doGet
  */
-function syncAllToApp() {
+function syncAllToApp(showUI) {
+  // Default to showing UI if not specified
+  if (showUI === undefined) showUI = true;
+  
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName(SHEET_NAME);
   
   if (!sheet) {
-    SpreadsheetApp.getUi().alert('Error: Sheet "' + SHEET_NAME + '" not found!');
-    return;
+    if (showUI) SpreadsheetApp.getUi().alert('Error: Sheet "' + SHEET_NAME + '" not found!');
+    Logger.log('Error: Sheet not found');
+    return false;
   }
   
   // Get all data (skip header row)
   const lastRow = sheet.getLastRow();
   if (lastRow <= 1) {
-    SpreadsheetApp.getUi().alert('No data to sync. Sheet is empty.');
-    return;
+    if (showUI) SpreadsheetApp.getUi().alert('No data to sync. Sheet is empty.');
+    Logger.log('No data to sync - sheet is empty');
+    return false;
   }
   
   const dataRange = sheet.getRange(2, 1, lastRow - 1, Object.keys(COLUMNS).length);
@@ -198,8 +204,9 @@ function syncAllToApp() {
   const leads = data.map(row => rowToLead(row)).filter(lead => lead.phone_number && lead.phone_number !== '');
   
   if (leads.length === 0) {
-    SpreadsheetApp.getUi().alert('No valid leads found (phone number required)');
-    return;
+    if (showUI) SpreadsheetApp.getUi().alert('No valid leads found (phone number required)');
+    Logger.log('No valid leads found');
+    return false;
   }
   
   // Send to app
@@ -219,24 +226,32 @@ function syncAllToApp() {
     const result = JSON.parse(response.getContentText());
     
     if (result.success) {
-      SpreadsheetApp.getUi().alert(
-        '✅ Sync Complete!\n\n' +
-        'Created: ' + result.created + '\n' +
-        'Updated: ' + result.updated + '\n' +
-        'Total: ' + result.total_processed
-      );
+      if (showUI) {
+        SpreadsheetApp.getUi().alert(
+          '✅ Sync Complete!\n\n' +
+          'Created: ' + result.created + '\n' +
+          'Updated: ' + result.updated + '\n' +
+          'Total: ' + result.total_processed
+        );
+      }
+      
+      Logger.log('Sync successful: Created ' + result.created + ', Updated ' + result.updated);
       
       // Update last sync time
       const props = PropertiesService.getDocumentProperties();
       props.setProperty('lastSyncToApp', new Date().toISOString());
       
+      return true;
     } else {
       throw new Error(result.message || 'Sync failed');
     }
     
   } catch (error) {
-    SpreadsheetApp.getUi().alert('❌ Sync Failed!\n\n' + error.toString());
+    if (showUI) {
+      SpreadsheetApp.getUi().alert('❌ Sync Failed!\n\n' + error.toString());
+    }
     Logger.log('Sync error: ' + error.toString());
+    return false;
   }
 }
 
