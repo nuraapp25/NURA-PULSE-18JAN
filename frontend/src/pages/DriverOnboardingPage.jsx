@@ -609,10 +609,33 @@ const DriverOnboardingPage = () => {
             variant="outline"
             className="border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 text-sm"
             size="sm"
+            title="Push leads to Google Sheets"
           >
             <RefreshCw size={16} className="mr-1 sm:mr-2" />
-            <span className="hidden sm:inline">Sync</span>
-            <span className="sm:hidden">Sync</span>
+            <span className="hidden sm:inline">Sync to Sheets</span>
+            <span className="sm:hidden">→ GS</span>
+          </Button>
+          <Button
+            onClick={handleSyncFromSheets}
+            variant="outline"
+            className="border-blue-600 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-sm"
+            size="sm"
+            title="Pull leads from Google Sheets"
+          >
+            <RefreshCw size={16} className="mr-1 sm:mr-2 transform rotate-180" />
+            <span className="hidden sm:inline">Sync from Sheets</span>
+            <span className="sm:hidden">← GS</span>
+          </Button>
+          <Button
+            onClick={handleOpenGoogleSheet}
+            variant="outline"
+            className="border-purple-600 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 text-sm"
+            size="sm"
+            title="Open Google Sheets"
+          >
+            <FileSpreadsheet size={16} className="mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Google Sheets</span>
+            <span className="sm:hidden">GS</span>
           </Button>
           <Button
             onClick={() => setImportDialogOpen(true)}
