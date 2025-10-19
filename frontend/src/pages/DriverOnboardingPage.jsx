@@ -288,7 +288,7 @@ const DriverOnboardingPage = () => {
       toast.info("📥 Pulling data from Google Sheets...");
       
       // Call Google Apps Script to trigger sync from sheets to app
-      const GOOGLE_SHEETS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz8A7TXmBehV2XbYp5behlidQ8YklPBGaz5NkqgwYFo7dOXCSeRIZfqnNCf2mCORXHU/exec";
+      const GOOGLE_SHEETS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx_C6R0XGO1hkLvZhcSS9zGj3TSatH55uXoioYIX9YZa4tm53ubuqWLtC7wKEJCwgbs/exec";
       
       const response = await fetch(`${GOOGLE_SHEETS_WEB_APP_URL}?action=sync_to_app`, {
         method: 'GET',
