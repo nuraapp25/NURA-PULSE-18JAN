@@ -361,8 +361,16 @@ function updateSheetFromApp(leads) {
  * Convert a sheet row to a lead object
  */
 function rowToLead(row) {
+  // Get ID from sheet, or generate a new one if empty
+  let leadId = row[COLUMNS.ID - 1] || '';
+  
+  // Clean up the ID (remove any whitespace)
+  if (leadId) {
+    leadId = String(leadId).trim();
+  }
+  
   return {
-    id: row[COLUMNS.ID - 1] || '',
+    id: leadId,
     name: row[COLUMNS.NAME - 1] || '',
     phone_number: row[COLUMNS.PHONE_NUMBER - 1] || '',
     vehicle: row[COLUMNS.VEHICLE - 1] || null,
