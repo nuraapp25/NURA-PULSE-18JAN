@@ -285,15 +285,26 @@ const DriverOnboardingPage = () => {
 
   const handleSyncFromSheets = async () => {
     try {
-      toast.info("Syncing from Google Sheets...");
+      toast.info("📥 Pulling data from Google Sheets...");
       
-      // The Google Sheets script should call the webhook endpoint automatically
-      // We'll just refresh the leads to see the updated data
+      // Call Google Apps Script to trigger sync from sheets to app
+      const GOOGLE_SHEETS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz8A7TXmBehV2XbYp5behlidQ8YklPBGaz5NkqgwYFo7dOXCSeRIZfqnNCf2mCORXHU/exec";
+      
+      const response = await fetch(`${GOOGLE_SHEETS_WEB_APP_URL}?action=sync_to_app`, {
+        method: 'GET',
+        mode: 'no-cors' // Required for Google Apps Script
+      });
+      
+      // Wait a moment for the webhook to process
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Refresh leads to show updated data
       await fetchLeads();
       
-      toast.success("✅ Synced from Google Sheets! Data refreshed.");
+      toast.success("✅ Data synced from Google Sheets!");
     } catch (error) {
-      toast.error("Failed to sync from Google Sheets");
+      console.error("Sync from sheets error:", error);
+      toast.error("Failed to sync from Google Sheets. Make sure the script is set up correctly.");
     }
   };
 
