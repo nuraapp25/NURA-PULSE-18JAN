@@ -1228,6 +1228,102 @@ async def get_performance_tracking(current_user: User = Depends(get_current_user
         raise HTTPException(status_code=500, detail=f"Failed to get performance data: {str(e)}")
 
 
+@api_router.post("/driver-onboarding/webhook/sync-from-sheets")
+async def sync_from_google_sheets(request: Request):
+    """
+    Webhook endpoint to receive driver leads data FROM Google Sheets
+    This enables two-way sync: Google Sheets → App
+    
+    Expected payload: {
+        "action": "sync_from_sheets",
+        "leads": [array of lead objects]
+    }
+    """
+    try:
+        body = await request.json()
+        logger.info(f"Received sync from Google Sheets: {body.get('action')}")
+        
+        if body.get('action') != 'sync_from_sheets':
+            raise HTTPException(status_code=400, detail="Invalid action")
+        
+        leads_data = body.get('leads', [])
+        if not leads_data:
+            return {
+                "success": True,
+                "message": "No leads to sync",
+                "created": 0,
+                "updated": 0
+            }
+        
+        created_count = 0
+        updated_count = 0
+        
+        for lead in leads_data:
+            # Skip empty rows
+            if not lead.get('phone_number') or lead.get('phone_number') == '':
+                continue
+            
+            # Use phone_number as unique identifier
+            phone = lead.get('phone_number')
+            
+            # Check if lead exists
+            existing_lead = await db.driver_leads.find_one({"phone_number": phone})
+            
+            # Prepare lead data with all fields
+            lead_data = {
+                "name": lead.get('name', ''),
+                "phone_number": phone,
+                "vehicle": lead.get('vehicle'),
+                "driving_license": lead.get('driving_license'),
+                "experience": lead.get('experience'),
+                "interested_ev": lead.get('interested_ev'),
+                "monthly_salary": lead.get('monthly_salary'),
+                "residing_chennai": lead.get('residing_chennai'),
+                "current_location": lead.get('current_location'),
+                "lead_stage": lead.get('lead_stage', 'New'),
+                "status": lead.get('status', 'New'),
+                "driver_readiness": lead.get('driver_readiness', 'Not Started'),
+                "docs_collection": lead.get('docs_collection', 'Pending'),
+                "customer_readiness": lead.get('customer_readiness', 'Not Ready'),
+                "assigned_telecaller": lead.get('assigned_telecaller'),
+                "telecaller_notes": lead.get('telecaller_notes'),
+                "notes": lead.get('notes')
+            }
+            
+            if existing_lead:
+                # Update existing lead
+                await db.driver_leads.update_one(
+                    {"phone_number": phone},
+                    {"$set": lead_data}
+                )
+                updated_count += 1
+                logger.info(f"Updated lead: {phone}")
+            else:
+                # Create new lead
+                lead_data.update({
+                    "id": str(uuid.uuid4()),
+                    "import_date": datetime.now(timezone.utc).isoformat(),
+                    "created_at": datetime.now(timezone.utc).isoformat()
+                })
+                await db.driver_leads.insert_one(lead_data)
+                created_count += 1
+                logger.info(f"Created new lead: {phone}")
+        
+        return {
+            "success": True,
+            "message": f"Synced {len(leads_data)} leads from Google Sheets",
+            "created": created_count,
+            "updated": updated_count,
+            "total_processed": created_count + updated_count
+        }
+        
+    except Exception as e:
+        logger.error(f"Sync from sheets error: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Failed to sync from sheets: {str(e)}")
+
+
 # Telecaller Queue Manager - Lead Assignment
 @api_router.get("/telecaller-queue/daily-assignments")
 async def get_daily_assignments(current_user: User = Depends(get_current_user)):
