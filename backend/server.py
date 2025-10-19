@@ -1234,9 +1234,15 @@ async def sync_from_google_sheets(request: Request):
     Webhook endpoint to receive driver leads data FROM Google Sheets
     This enables two-way sync: Google Sheets → App
     
+    SYNC STRATEGY:
+    - Uses ID as unique identifier (not phone number)
+    - If ID exists in DB → UPDATE the lead
+    - If ID doesn't exist in DB → CREATE new lead with that ID
+    - If lead exists in DB but NOT in sheets → DELETE from DB
+    
     Expected payload: {
         "action": "sync_from_sheets",
-        "leads": [array of lead objects]
+        "leads": [array of lead objects with id field]
     }
     """
     try:
@@ -1247,32 +1253,46 @@ async def sync_from_google_sheets(request: Request):
             raise HTTPException(status_code=400, detail="Invalid action")
         
         leads_data = body.get('leads', [])
-        if not leads_data:
-            return {
-                "success": True,
-                "message": "No leads to sync",
-                "created": 0,
-                "updated": 0
-            }
         
-        created_count = 0
-        updated_count = 0
+        # Get all IDs from Google Sheets (filter out empty rows)
+        sheet_lead_ids = set()
+        valid_leads = []
         
         for lead in leads_data:
-            # Skip empty rows
+            # Skip empty rows (no phone number means empty row)
             if not lead.get('phone_number') or lead.get('phone_number') == '':
                 continue
             
-            # Use phone_number as unique identifier
-            phone = lead.get('phone_number')
+            lead_id = lead.get('id', '').strip()
             
-            # Check if lead exists
-            existing_lead = await db.driver_leads.find_one({"phone_number": phone})
+            # Generate ID if not present
+            if not lead_id:
+                lead_id = str(uuid.uuid4())
+                lead['id'] = lead_id
+            
+            sheet_lead_ids.add(lead_id)
+            valid_leads.append(lead)
+        
+        # Get all existing leads from database
+        existing_leads = await db.driver_leads.find().to_list(length=None)
+        db_lead_ids = {lead['id'] for lead in existing_leads}
+        
+        created_count = 0
+        updated_count = 0
+        deleted_count = 0
+        
+        # Process each lead from sheets
+        for lead in valid_leads:
+            lead_id = lead['id']
+            
+            # Check if lead exists by ID
+            existing_lead = await db.driver_leads.find_one({"id": lead_id})
             
             # Prepare lead data with all fields
             lead_data = {
+                "id": lead_id,
                 "name": lead.get('name', ''),
-                "phone_number": phone,
+                "phone_number": lead.get('phone_number', ''),
                 "vehicle": lead.get('vehicle'),
                 "driving_license": lead.get('driving_license'),
                 "experience": lead.get('experience'),
@@ -1287,34 +1307,48 @@ async def sync_from_google_sheets(request: Request):
                 "customer_readiness": lead.get('customer_readiness', 'Not Ready'),
                 "assigned_telecaller": lead.get('assigned_telecaller'),
                 "telecaller_notes": lead.get('telecaller_notes'),
-                "notes": lead.get('notes')
+                "notes": lead.get('notes'),
+                "import_date": lead.get('import_date', ''),
+                "created_at": lead.get('created_at', '')
             }
             
             if existing_lead:
-                # Update existing lead
+                # Update existing lead (overwrite with sheet data)
                 await db.driver_leads.update_one(
-                    {"phone_number": phone},
+                    {"id": lead_id},
                     {"$set": lead_data}
                 )
                 updated_count += 1
-                logger.info(f"Updated lead: {phone}")
+                logger.info(f"Updated lead: {lead_id} - {lead_data['name']}")
             else:
-                # Create new lead
-                lead_data.update({
-                    "id": str(uuid.uuid4()),
-                    "import_date": datetime.now(timezone.utc).isoformat(),
-                    "created_at": datetime.now(timezone.utc).isoformat()
-                })
+                # Create new lead with the ID from sheets
+                # Add timestamps if not present
+                if not lead_data['import_date']:
+                    lead_data['import_date'] = datetime.now(timezone.utc).isoformat()
+                if not lead_data['created_at']:
+                    lead_data['created_at'] = datetime.now(timezone.utc).isoformat()
+                
                 await db.driver_leads.insert_one(lead_data)
                 created_count += 1
-                logger.info(f"Created new lead: {phone}")
+                logger.info(f"Created new lead: {lead_id} - {lead_data['name']}")
+        
+        # Delete leads that exist in DB but NOT in Google Sheets
+        leads_to_delete = db_lead_ids - sheet_lead_ids
+        
+        if leads_to_delete:
+            delete_result = await db.driver_leads.delete_many({
+                "id": {"$in": list(leads_to_delete)}
+            })
+            deleted_count = delete_result.deleted_count
+            logger.info(f"Deleted {deleted_count} leads that were removed from Google Sheets")
         
         return {
             "success": True,
-            "message": f"Synced {len(leads_data)} leads from Google Sheets",
+            "message": f"Synced {len(valid_leads)} leads from Google Sheets",
             "created": created_count,
             "updated": updated_count,
-            "total_processed": created_count + updated_count
+            "deleted": deleted_count,
+            "total_processed": created_count + updated_count + deleted_count
         }
         
     except Exception as e:
