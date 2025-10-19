@@ -117,12 +117,12 @@ function doGet(e) {
     Logger.log('Received GET request with action: ' + action);
     
     if (action === 'sync_to_app') {
-      // Trigger sync from Google Sheets to App
-      syncAllToApp();
+      // Trigger sync from Google Sheets to App (no UI dialogs)
+      const success = syncAllToApp(false);
       
       return ContentService.createTextOutput(JSON.stringify({
-        success: true,
-        message: 'Sync triggered from Google Sheets to App'
+        success: success,
+        message: success ? 'Sync completed from Google Sheets to App' : 'Sync failed'
       })).setMimeType(ContentService.MimeType.JSON);
     }
     
