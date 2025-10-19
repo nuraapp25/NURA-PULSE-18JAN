@@ -109,8 +109,37 @@ function scheduledSync() {
 
 /**
  * Webhook receiver for data FROM the app (App → Sheets)
- * This is deployed as a Web App
+ * Also handles GET requests to trigger sync FROM sheets TO app
  */
+function doGet(e) {
+  try {
+    const action = e.parameter.action;
+    Logger.log('Received GET request with action: ' + action);
+    
+    if (action === 'sync_to_app') {
+      // Trigger sync from Google Sheets to App
+      syncAllToApp();
+      
+      return ContentService.createTextOutput(JSON.stringify({
+        success: true,
+        message: 'Sync triggered from Google Sheets to App'
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    return ContentService.createTextOutput(JSON.stringify({
+      success: false,
+      message: 'Unknown action. Use ?action=sync_to_app'
+    })).setMimeType(ContentService.MimeType.JSON);
+    
+  } catch (error) {
+    Logger.log('doGet error: ' + error.toString());
+    return ContentService.createTextOutput(JSON.stringify({
+      success: false,
+      message: error.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
 function doPost(e) {
   try {
     const data = JSON.parse(e.postData.contents);
