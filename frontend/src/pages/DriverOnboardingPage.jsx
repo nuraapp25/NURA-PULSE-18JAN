@@ -274,13 +274,32 @@ const DriverOnboardingPage = () => {
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      toast.success("Leads synced to Google Sheets successfully!");
+      toast.success("✅ Leads synced to Google Sheets successfully!");
       
       // Update last sync time
       await fetchLastSyncTime();
     } catch (error) {
       toast.error(error.response?.data?.detail || "Failed to sync to Google Sheets");
     }
+  };
+
+  const handleSyncFromSheets = async () => {
+    try {
+      toast.info("Syncing from Google Sheets...");
+      
+      // The Google Sheets script should call the webhook endpoint automatically
+      // We'll just refresh the leads to see the updated data
+      await fetchLeads();
+      
+      toast.success("✅ Synced from Google Sheets! Data refreshed.");
+    } catch (error) {
+      toast.error("Failed to sync from Google Sheets");
+    }
+  };
+
+  const handleOpenGoogleSheet = () => {
+    const sheetUrl = "https://docs.google.com/spreadsheets/d/1FfZYvc9EpSE03myhp3yk8lfOzCJoibVmaJ74Xm-qhv0/edit";
+    window.open(sheetUrl, '_blank');
   };
 
   const handleLeadClick = (lead, e) => {
