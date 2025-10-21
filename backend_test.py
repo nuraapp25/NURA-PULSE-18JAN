@@ -3364,7 +3364,7 @@ class NuraPulseBackendTester:
 
     def run_all_tests(self):
         """Run all backend tests"""
-        print("🚀 Starting Comprehensive Testing - Payment Screenshots Delete & Analytics Dashboard")
+        print("🚀 Starting Comprehensive Testing - Driver Onboarding Two-Way Sync with ID-Based Reconciliation")
         print(f"Backend URL: {self.base_url}")
         print(f"Master Admin: {MASTER_ADMIN_EMAIL}")
         
@@ -3375,13 +3375,16 @@ class NuraPulseBackendTester:
             print("\n❌ Authentication failed - cannot proceed with other tests")
             return False
         
-        # PRIORITY: Test Payment Screenshots Delete Functionality
+        # PRIORITY: Test Driver Onboarding Two-Way Sync with ID-Based Reconciliation
+        two_way_sync_success = self.test_driver_onboarding_two_way_sync()
+        
+        # ADDITIONAL: Test Payment Screenshots Delete Functionality
         payment_screenshots_success = self.test_payment_screenshots_delete_functionality()
         
-        # PRIORITY: Test Analytics Dashboard Endpoints
+        # ADDITIONAL: Test Analytics Dashboard Endpoints
         analytics_endpoints_success = self.test_analytics_endpoints()
         
-        # PRIORITY: Test Analytics Integration Workflow
+        # ADDITIONAL: Test Analytics Integration Workflow
         analytics_workflow_success = self.test_analytics_integration_workflow()
         
         # Summary
