@@ -201,3 +201,73 @@ class BulkLeadStatusUpdate(BaseModel):
 
 class BulkLeadDelete(BaseModel):
     lead_ids: List[str]
+
+
+
+# ==================== QR Code Management ====================
+
+class QRCodeCreate(BaseModel):
+    """Model for creating a new QR code"""
+    name: str
+    landing_page_type: str  # "single" or "multiple"
+    landing_page_single: Optional[str] = None
+    landing_page_ios: Optional[str] = None
+    landing_page_android: Optional[str] = None
+    landing_page_mobile: Optional[str] = None
+    landing_page_desktop: Optional[str] = None
+
+
+class QRCode(BaseModel):
+    """Model for QR code stored in database"""
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    landing_page_type: str
+    landing_page_single: Optional[str] = None
+    landing_page_ios: Optional[str] = None
+    landing_page_android: Optional[str] = None
+    landing_page_mobile: Optional[str] = None
+    landing_page_desktop: Optional[str] = None
+    qr_image_filename: str
+    unique_short_code: str
+    created_by: str  # user_id
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    total_scans: int = 0
+    is_active: bool = True
+
+
+class QRCodeUpdate(BaseModel):
+    """Model for updating QR code settings"""
+    name: Optional[str] = None
+    landing_page_type: Optional[str] = None
+    landing_page_single: Optional[str] = None
+    landing_page_ios: Optional[str] = None
+    landing_page_android: Optional[str] = None
+    landing_page_mobile: Optional[str] = None
+    landing_page_desktop: Optional[str] = None
+    is_active: Optional[bool] = None
+
+
+class QRScan(BaseModel):
+    """Model for QR scan event"""
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    qr_code_id: str
+    scan_datetime: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    scan_date: str  # YYYY-MM-DD format
+    scan_time: str  # HH:MM:SS format
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    location_source: str = "none"  # "gps", "ip", "none"
+    ip_address: str
+    device_type: str  # "ios", "android", "mobile", "desktop", "unknown"
+    device_info: str  # Full user agent
+    browser: Optional[str] = None
+    os: Optional[str] = None
+    landing_page_redirected: str
+    country: Optional[str] = None
+    city: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
