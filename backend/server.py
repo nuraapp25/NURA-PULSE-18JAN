@@ -5064,7 +5064,7 @@ async def qr_redirect(
     """Public QR redirect endpoint - tracks scan and redirects to landing page"""
     try:
         # Find QR code by short code
-        qr_code = await db.qr_codes.find_one({"unique_short_code": short_code})
+        qr_code = await db.qr_codes.find_one({"unique_short_code": short_code}, {"_id": 0})
         
         if not qr_code:
             raise HTTPException(status_code=404, detail="QR code not found")
