@@ -131,6 +131,8 @@ function App() {
                 <Route path="montra-vehicle/morning-charge-audit" element={<MorningChargeAudit />} />
                 <Route path="expense-tracker" element={<ExpenseTracker />} />
                 <Route path="hotspot-planning" element={<HotspotPlanning />} />
+                <Route path="qr-codes" element={<QRCodeManager />} />
+                <Route path="qr-codes/:qrId/analytics" element={<QRAnalytics />} />
                 <Route path="admin/analytics" element={<Analytics />} />
                 <Route path="admin/files" element={<Files />} />
                 <Route path="admin/payment-screenshots" element={<PaymentScreenshots />} />
