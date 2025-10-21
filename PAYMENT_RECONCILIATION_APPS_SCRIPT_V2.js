@@ -10,7 +10,7 @@
 
 const CONFIG = {
   SHEET_ID: '1CLhARhllhqZuDzkzNRqFcOGqjrSDzPgmC6gd3-AWOTs',
-  BACKEND_URL: 'https://hotspot-analysis.preview.emergentagent.com/api'
+  BACKEND_URL: 'https://driver-sync-hub.preview.emergentagent.com/api'
 };
 
 // Column mapping for payment records

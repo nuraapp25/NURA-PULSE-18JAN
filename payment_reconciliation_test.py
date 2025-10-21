@@ -13,7 +13,7 @@ from datetime import datetime
 from PIL import Image
 
 # Configuration
-BASE_URL = "https://hotspot-analysis.preview.emergentagent.com/api"
+BASE_URL = "https://driver-sync-hub.preview.emergentagent.com/api"
 MASTER_ADMIN_EMAIL = "admin"
 MASTER_ADMIN_PASSWORD = "Nura@1234$"
 

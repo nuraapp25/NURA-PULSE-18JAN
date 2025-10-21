@@ -1866,7 +1866,7 @@ async def get_share_link(file_id: str, current_user: User = Depends(get_current_
             raise HTTPException(status_code=404, detail="File not found")
         
         # Get backend URL from environment
-        backend_url = os.environ.get('BACKEND_URL', 'https://hotspot-analysis.preview.emergentagent.com')
+        backend_url = os.environ.get('BACKEND_URL', 'https://driver-sync-hub.preview.emergentagent.com')
         
         share_link = f"{backend_url}/api/admin/files/{file_id}/download"
         
