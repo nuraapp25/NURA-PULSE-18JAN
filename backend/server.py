@@ -5000,7 +5000,7 @@ async def update_qr_code(
             {"$set": update_data}
         )
         
-        logger.info(f"QR code updated: {qr_id} by {current_user.username}")
+        logger.info(f"QR code updated: {qr_id} by {current_user.email}")
         
         return {
             "success": True,
