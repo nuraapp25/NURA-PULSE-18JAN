@@ -469,6 +469,120 @@ export default function QRCodeManager() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* View QR Code Modal */}
+      <Dialog open={viewModalOpen} onOpenChange={setViewModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>QR Code: {viewingQR?.name}</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            {/* QR Code Image */}
+            <div className="bg-white border-2 border-gray-200 rounded-lg p-6 flex items-center justify-center">
+              {viewingQR && qrImages[viewingQR.id] ? (
+                <img 
+                  src={qrImages[viewingQR.id]}
+                  alt={`QR Code for ${viewingQR.name}`}
+                  className="h-48 w-48 object-contain"
+                />
+              ) : (
+                <QrCode className="h-48 w-48 text-gray-400" />
+              )}
+            </div>
+
+            {/* QR Code Details */}
+            {viewingQR && (
+              <div className="space-y-3">
+                <div>
+                  <span className="text-sm font-medium text-gray-600">Name:</span>
+                  <p className="text-sm">{viewingQR.name}</p>
+                </div>
+                
+                <div>
+                  <span className="text-sm font-medium text-gray-600">Type:</span>
+                  <p className="text-sm">
+                    {viewingQR.landing_page_type === 'single' ? 'Single URL' : 'Multiple URLs'}
+                  </p>
+                </div>
+                
+                <div>
+                  <span className="text-sm font-medium text-gray-600">Total Scans:</span>
+                  <p className="text-sm font-semibold text-blue-600">{viewingQR.total_scans || 0}</p>
+                </div>
+                
+                <div>
+                  <span className="text-sm font-medium text-gray-600">Created:</span>
+                  <p className="text-sm">{viewingQR.created_at ? formatDate(viewingQR.created_at) : 'N/A'}</p>
+                </div>
+                
+                <div>
+                  <span className="text-sm font-medium text-gray-600">Status:</span>
+                  <span className={`ml-2 px-2 py-0.5 text-xs rounded-full ${
+                    viewingQR.is_active 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-gray-100 text-gray-800'
+                  }`}>
+                    {viewingQR.is_active ? 'Active' : 'Inactive'}
+                  </span>
+                </div>
+
+                {/* Landing Page URLs */}
+                <div>
+                  <span className="text-sm font-medium text-gray-600">Landing Pages:</span>
+                  <div className="mt-1 space-y-1">
+                    {viewingQR.landing_page_type === 'single' ? (
+                      <p className="text-sm break-all">{viewingQR.landing_page_single}</p>
+                    ) : (
+                      <div className="space-y-1">
+                        {viewingQR.landing_page_ios && (
+                          <div>
+                            <span className="text-xs text-gray-500">iOS:</span>
+                            <p className="text-sm break-all">{viewingQR.landing_page_ios}</p>
+                          </div>
+                        )}
+                        {viewingQR.landing_page_android && (
+                          <div>
+                            <span className="text-xs text-gray-500">Android:</span>
+                            <p className="text-sm break-all">{viewingQR.landing_page_android}</p>
+                          </div>
+                        )}
+                        {viewingQR.landing_page_mobile && (
+                          <div>
+                            <span className="text-xs text-gray-500">Mobile:</span>
+                            <p className="text-sm break-all">{viewingQR.landing_page_mobile}</p>
+                          </div>
+                        )}
+                        {viewingQR.landing_page_desktop && (
+                          <div>
+                            <span className="text-xs text-gray-500">Desktop:</span>
+                            <p className="text-sm break-all">{viewingQR.landing_page_desktop}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setViewModalOpen(false)}>
+              Close
+            </Button>
+            {viewingQR && (
+              <Button 
+                onClick={() => handleDownloadQR(viewingQR.id, viewingQR.name)}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Download
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
