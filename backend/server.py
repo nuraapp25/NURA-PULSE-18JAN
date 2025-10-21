@@ -4688,7 +4688,7 @@ async def get_qr_codes(
             raise HTTPException(status_code=403, detail="Only master admin can view QR codes")
         
         # Get QR codes with pagination
-        qr_codes = await db.qr_codes.find().sort("created_at", -1).skip(skip).limit(limit).to_list(length=None)
+        qr_codes = await db.qr_codes.find({}, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(length=None)
         
         # Get total count
         total_count = await db.qr_codes.count_documents({})
