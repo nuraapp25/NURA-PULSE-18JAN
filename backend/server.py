@@ -4020,10 +4020,35 @@ async def analyze_hotspot_placement(
         df_clean = df.dropna(subset=['pickupLat', 'pickupLong'])
         logger.info(f"Clean data: {len(df_clean)} rides with valid pickup coordinates")
         
+        # Geographic filter - Chennai bounds (to remove multi-city outliers)
+        # This ensures all hotspots are within operational area
+        CHENNAI_BOUNDS = {
+            'lat_min': 12.8,
+            'lat_max': 13.3,
+            'long_min': 80.0,
+            'long_max': 80.4
+        }
+        
+        df_chennai = df_clean[
+            (df_clean['pickupLat'] >= CHENNAI_BOUNDS['lat_min']) &
+            (df_clean['pickupLat'] <= CHENNAI_BOUNDS['lat_max']) &
+            (df_clean['pickupLong'] >= CHENNAI_BOUNDS['long_min']) &
+            (df_clean['pickupLong'] <= CHENNAI_BOUNDS['long_max'])
+        ].copy()
+        
+        filtered_out = len(df_clean) - len(df_chennai)
+        if filtered_out > 0:
+            logger.info(f"Geographic filter: Removed {filtered_out} rides outside Chennai bounds")
+        
+        logger.info(f"Chennai rides: {len(df_chennai)} (within lat: {CHENNAI_BOUNDS['lat_min']}-{CHENNAI_BOUNDS['lat_max']}, long: {CHENNAI_BOUNDS['long_min']}-{CHENNAI_BOUNDS['long_max']})")
+        
+        # Use filtered data for analysis
+        df_clean = df_chennai
+        
         if len(df_clean) < 10:
             raise HTTPException(
                 status_code=400,
-                detail=f"Not enough data points. Need at least 10 rides, got {len(df_clean)}"
+                detail=f"Not enough data points after geographic filtering. Need at least 10 Chennai rides, got {len(df_clean)}. {filtered_out} rides were outside Chennai bounds."
             )
         
         # UTC to IST conversion
