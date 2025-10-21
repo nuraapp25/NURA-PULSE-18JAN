@@ -4722,15 +4722,12 @@ async def get_qr_code(
         if current_user.account_type != "master_admin":
             raise HTTPException(status_code=403, detail="Only master admin can view QR codes")
         
-        qr_code = await db.qr_codes.find_one({"id": qr_id})
+        qr_code = await db.qr_codes.find_one({"id": qr_id}, {"_id": 0})
         
         if not qr_code:
             raise HTTPException(status_code=404, detail="QR code not found")
         
-        return {
-            "success": True,
-            "qr_code": qr_code
-        }
+        return qr_code
         
     except HTTPException:
         raise
