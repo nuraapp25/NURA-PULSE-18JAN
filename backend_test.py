@@ -3797,7 +3797,10 @@ class NuraPulseBackendTester:
             print("\n❌ Authentication failed - cannot proceed with other tests")
             return False
         
-        # PRIORITY: Test Driver Onboarding Two-Way Sync with ID-Based Reconciliation
+        # PRIORITY: Test QR Code Management APIs as requested
+        qr_code_success = self.test_qr_code_management_apis()
+        
+        # ADDITIONAL: Test Driver Onboarding Two-Way Sync with ID-Based Reconciliation
         two_way_sync_success = self.test_driver_onboarding_two_way_sync()
         
         # ADDITIONAL: Test Payment Screenshots Delete Functionality
