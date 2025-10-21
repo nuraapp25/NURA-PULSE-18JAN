@@ -21,6 +21,8 @@ import MorningChargeAudit from "@/pages/MorningChargeAudit";
 import ExpenseTracker from "@/pages/ExpenseTracker";
 import Analytics from "@/pages/Analytics";
 import HotspotPlanning from "@/pages/HotspotPlanning";
+import QRCodeManager from "@/pages/QRCodeManager";
+import QRAnalytics from "@/pages/QRAnalytics";
 import ManagePage from "@/pages/ManagePage";
 import SettingsPage from "@/pages/SettingsPage";
 
