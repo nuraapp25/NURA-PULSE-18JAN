@@ -4746,7 +4746,7 @@ async def download_qr_code(
         if current_user.account_type != "master_admin":
             raise HTTPException(status_code=403, detail="Only master admin can download QR codes")
         
-        qr_code = await db.qr_codes.find_one({"id": qr_id})
+        qr_code = await db.qr_codes.find_one({"id": qr_id}, {"_id": 0})
         
         if not qr_code:
             raise HTTPException(status_code=404, detail="QR code not found")
@@ -4782,7 +4782,7 @@ async def get_qr_analytics(
         if current_user.account_type != "master_admin":
             raise HTTPException(status_code=403, detail="Only master admin can view analytics")
         
-        qr_code = await db.qr_codes.find_one({"id": qr_id})
+        qr_code = await db.qr_codes.find_one({"id": qr_id}, {"_id": 0})
         
         if not qr_code:
             raise HTTPException(status_code=404, detail="QR code not found")
@@ -4915,7 +4915,7 @@ async def export_qr_scans_csv(
         if current_user.account_type != "master_admin":
             raise HTTPException(status_code=403, detail="Only master admin can export scan data")
         
-        qr_code = await db.qr_codes.find_one({"id": qr_id})
+        qr_code = await db.qr_codes.find_one({"id": qr_id}, {"_id": 0})
         if not qr_code:
             raise HTTPException(status_code=404, detail="QR code not found")
         
@@ -4984,7 +4984,7 @@ async def update_qr_code(
         if current_user.account_type != "master_admin":
             raise HTTPException(status_code=403, detail="Only master admin can update QR codes")
         
-        qr_code = await db.qr_codes.find_one({"id": qr_id})
+        qr_code = await db.qr_codes.find_one({"id": qr_id}, {"_id": 0})
         if not qr_code:
             raise HTTPException(status_code=404, detail="QR code not found")
         
@@ -5024,7 +5024,7 @@ async def delete_qr_code(
         if current_user.account_type != "master_admin":
             raise HTTPException(status_code=403, detail="Only master admin can delete QR codes")
         
-        qr_code = await db.qr_codes.find_one({"id": qr_id})
+        qr_code = await db.qr_codes.find_one({"id": qr_id}, {"_id": 0})
         if not qr_code:
             raise HTTPException(status_code=404, detail="QR code not found")
         
