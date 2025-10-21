@@ -2895,6 +2895,473 @@ class NuraPulseBackendTester:
         
         return success_count >= 3  # At least 3 out of 5 workflow steps should pass
 
+    def test_driver_onboarding_two_way_sync(self):
+        """Test Driver Onboarding Two-Way Google Sheets Sync with ID-Based Reconciliation"""
+        print("\n=== Testing Driver Onboarding Two-Way Google Sheets Sync with ID-Based Reconciliation ===")
+        
+        success_count = 0
+        
+        # First, get current leads to understand the database state
+        print("\n--- Step 1: Getting current leads state ---")
+        current_leads_response = self.make_request("GET", "/driver-onboarding/leads")
+        current_leads = []
+        
+        if current_leads_response and current_leads_response.status_code == 200:
+            try:
+                current_leads = current_leads_response.json()
+                self.log_test("Two-Way Sync - Get Current Leads", True, 
+                            f"Retrieved {len(current_leads)} existing leads from database")
+                success_count += 1
+            except json.JSONDecodeError:
+                self.log_test("Two-Way Sync - Get Current Leads", False, "Invalid JSON response")
+        else:
+            self.log_test("Two-Way Sync - Get Current Leads", False, 
+                        f"Failed to get current leads: {current_leads_response.status_code if current_leads_response else 'Network error'}")
+        
+        # Test 1: CREATE Test - Send payload with new lead IDs that don't exist in database
+        print("\n--- Test 1: CREATE Test - New leads that don't exist in database ---")
+        
+        new_leads_payload = {
+            "action": "sync_from_sheets",
+            "leads": [
+                {
+                    "id": f"test-create-lead-1-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+                    "name": "John Doe Test",
+                    "phone_number": "9876543210",
+                    "vehicle": "Two Wheeler",
+                    "driving_license": "Yes",
+                    "experience": "3 years",
+                    "status": "New",
+                    "lead_stage": "New",
+                    "interested_ev": "Yes",
+                    "monthly_salary": "25000",
+                    "current_location": "Chennai"
+                },
+                {
+                    "id": f"test-create-lead-2-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+                    "name": "Jane Smith Test",
+                    "phone_number": "9876543211",
+                    "vehicle": "Four Wheeler",
+                    "driving_license": "Yes",
+                    "experience": "5 years",
+                    "status": "New",
+                    "lead_stage": "New",
+                    "interested_ev": "No",
+                    "monthly_salary": "30000",
+                    "current_location": "Bangalore"
+                }
+            ]
+        }
+        
+        response = self.make_request("POST", "/driver-onboarding/webhook/sync-from-sheets", new_leads_payload, use_auth=False)
+        
+        if response and response.status_code == 200:
+            try:
+                result = response.json()
+                if result.get("success") and result.get("created", 0) == 2:
+                    self.log_test("Two-Way Sync - CREATE Test", True, 
+                                f"Successfully created {result['created']} new leads. Total processed: {result.get('total_processed', 0)}")
+                    success_count += 1
+                    
+                    # Store the created lead IDs for later tests
+                    created_lead_ids = [lead["id"] for lead in new_leads_payload["leads"]]
+                    
+                    # Verify leads were actually created in database
+                    verify_response = self.make_request("GET", "/driver-onboarding/leads")
+                    if verify_response and verify_response.status_code == 200:
+                        try:
+                            all_leads = verify_response.json()
+                            found_leads = [lead for lead in all_leads if lead["id"] in created_lead_ids]
+                            if len(found_leads) == 2:
+                                self.log_test("Two-Way Sync - CREATE Verification", True, 
+                                            f"Verified {len(found_leads)} created leads exist in database")
+                                success_count += 1
+                            else:
+                                self.log_test("Two-Way Sync - CREATE Verification", False, 
+                                            f"Only found {len(found_leads)} out of 2 created leads in database")
+                        except:
+                            self.log_test("Two-Way Sync - CREATE Verification", False, "Failed to parse verification response")
+                else:
+                    self.log_test("Two-Way Sync - CREATE Test", False, 
+                                f"Unexpected result: {result}")
+            except json.JSONDecodeError:
+                self.log_test("Two-Way Sync - CREATE Test", False, "Invalid JSON response")
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("Two-Way Sync - CREATE Test", False, f"Failed with status: {status}")
+        
+        # Test 2: UPDATE Test - Modify existing leads and send back with same IDs
+        print("\n--- Test 2: UPDATE Test - Modify existing leads with same IDs ---")
+        
+        # Get some existing leads to update
+        if current_leads and len(current_leads) > 0:
+            # Take first existing lead and modify it
+            existing_lead = current_leads[0].copy()
+            original_name = existing_lead.get("name", "")
+            original_status = existing_lead.get("status", "")
+            
+            # Modify some fields
+            existing_lead["name"] = f"{original_name} - UPDATED"
+            existing_lead["status"] = "Contacted"
+            existing_lead["experience"] = "Updated Experience"
+            existing_lead["notes"] = "Updated via sync test"
+            
+            update_payload = {
+                "action": "sync_from_sheets",
+                "leads": [existing_lead]
+            }
+            
+            response = self.make_request("POST", "/driver-onboarding/webhook/sync-from-sheets", update_payload, use_auth=False)
+            
+            if response and response.status_code == 200:
+                try:
+                    result = response.json()
+                    if result.get("success") and result.get("updated", 0) == 1:
+                        self.log_test("Two-Way Sync - UPDATE Test", True, 
+                                    f"Successfully updated {result['updated']} lead. Total processed: {result.get('total_processed', 0)}")
+                        success_count += 1
+                        
+                        # Verify the update was applied
+                        verify_response = self.make_request("GET", "/driver-onboarding/leads")
+                        if verify_response and verify_response.status_code == 200:
+                            try:
+                                all_leads = verify_response.json()
+                                updated_lead = next((lead for lead in all_leads if lead["id"] == existing_lead["id"]), None)
+                                if updated_lead and updated_lead["name"] == existing_lead["name"] and updated_lead["status"] == "Contacted":
+                                    self.log_test("Two-Way Sync - UPDATE Verification", True, 
+                                                f"Verified lead was updated: name='{updated_lead['name']}', status='{updated_lead['status']}'")
+                                    success_count += 1
+                                else:
+                                    self.log_test("Two-Way Sync - UPDATE Verification", False, 
+                                                "Lead was not properly updated in database")
+                            except:
+                                self.log_test("Two-Way Sync - UPDATE Verification", False, "Failed to parse verification response")
+                    else:
+                        self.log_test("Two-Way Sync - UPDATE Test", False, 
+                                    f"Unexpected result: {result}")
+                except json.JSONDecodeError:
+                    self.log_test("Two-Way Sync - UPDATE Test", False, "Invalid JSON response")
+            else:
+                status = response.status_code if response else "Network error"
+                self.log_test("Two-Way Sync - UPDATE Test", False, f"Failed with status: {status}")
+        else:
+            self.log_test("Two-Way Sync - UPDATE Test", False, "No existing leads found to update")
+        
+        # Test 3: DELETE Test - Send subset of leads, verify excluded ones are deleted
+        print("\n--- Test 3: DELETE Test - Send subset of leads to trigger deletion ---")
+        
+        # Get current leads again to see what we have
+        current_leads_response = self.make_request("GET", "/driver-onboarding/leads")
+        if current_leads_response and current_leads_response.status_code == 200:
+            try:
+                all_current_leads = current_leads_response.json()
+                
+                if len(all_current_leads) >= 2:
+                    # Take only first lead, exclude others to trigger deletion
+                    leads_to_keep = [all_current_leads[0]]
+                    leads_to_delete_ids = [lead["id"] for lead in all_current_leads[1:3]]  # Take max 2 to delete
+                    
+                    delete_test_payload = {
+                        "action": "sync_from_sheets",
+                        "leads": leads_to_keep
+                    }
+                    
+                    response = self.make_request("POST", "/driver-onboarding/webhook/sync-from-sheets", delete_test_payload, use_auth=False)
+                    
+                    if response and response.status_code == 200:
+                        try:
+                            result = response.json()
+                            if result.get("success") and result.get("deleted", 0) > 0:
+                                self.log_test("Two-Way Sync - DELETE Test", True, 
+                                            f"Successfully deleted {result['deleted']} leads. Total processed: {result.get('total_processed', 0)}")
+                                success_count += 1
+                                
+                                # Verify leads were actually deleted
+                                verify_response = self.make_request("GET", "/driver-onboarding/leads")
+                                if verify_response and verify_response.status_code == 200:
+                                    try:
+                                        remaining_leads = verify_response.json()
+                                        remaining_ids = [lead["id"] for lead in remaining_leads]
+                                        deleted_found = any(lead_id in remaining_ids for lead_id in leads_to_delete_ids)
+                                        
+                                        if not deleted_found:
+                                            self.log_test("Two-Way Sync - DELETE Verification", True, 
+                                                        f"Verified deleted leads are no longer in database. Remaining: {len(remaining_leads)} leads")
+                                            success_count += 1
+                                        else:
+                                            self.log_test("Two-Way Sync - DELETE Verification", False, 
+                                                        "Some deleted leads still found in database")
+                                    except:
+                                        self.log_test("Two-Way Sync - DELETE Verification", False, "Failed to parse verification response")
+                            else:
+                                self.log_test("Two-Way Sync - DELETE Test", False, 
+                                            f"No deletions occurred: {result}")
+                        except json.JSONDecodeError:
+                            self.log_test("Two-Way Sync - DELETE Test", False, "Invalid JSON response")
+                    else:
+                        status = response.status_code if response else "Network error"
+                        self.log_test("Two-Way Sync - DELETE Test", False, f"Failed with status: {status}")
+                else:
+                    self.log_test("Two-Way Sync - DELETE Test", False, 
+                                f"Not enough leads for delete test (found {len(all_current_leads)}, need at least 2)")
+            except:
+                self.log_test("Two-Way Sync - DELETE Test", False, "Failed to get current leads for delete test")
+        
+        # Test 4: MIXED OPERATIONS Test - Create, Update, Delete in single request
+        print("\n--- Test 4: MIXED OPERATIONS Test - Create, Update, Delete in single request ---")
+        
+        # Get current state again
+        current_leads_response = self.make_request("GET", "/driver-onboarding/leads")
+        if current_leads_response and current_leads_response.status_code == 200:
+            try:
+                current_leads = current_leads_response.json()
+                
+                mixed_payload_leads = []
+                
+                # Add a new lead (CREATE)
+                new_mixed_lead = {
+                    "id": f"test-mixed-create-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+                    "name": "Mixed Test Create",
+                    "phone_number": "9876543299",
+                    "vehicle": "Three Wheeler",
+                    "driving_license": "Yes",
+                    "experience": "2 years",
+                    "status": "New"
+                }
+                mixed_payload_leads.append(new_mixed_lead)
+                
+                # Modify an existing lead (UPDATE)
+                if current_leads:
+                    existing_lead = current_leads[0].copy()
+                    existing_lead["name"] = f"{existing_lead.get('name', 'Unknown')} - MIXED UPDATE"
+                    existing_lead["status"] = "Interested"
+                    mixed_payload_leads.append(existing_lead)
+                
+                # Note: DELETE will happen automatically for leads not included in the payload
+                
+                mixed_payload = {
+                    "action": "sync_from_sheets",
+                    "leads": mixed_payload_leads
+                }
+                
+                response = self.make_request("POST", "/driver-onboarding/webhook/sync-from-sheets", mixed_payload, use_auth=False)
+                
+                if response and response.status_code == 200:
+                    try:
+                        result = response.json()
+                        if result.get("success"):
+                            created = result.get("created", 0)
+                            updated = result.get("updated", 0)
+                            deleted = result.get("deleted", 0)
+                            total = result.get("total_processed", 0)
+                            
+                            self.log_test("Two-Way Sync - MIXED OPERATIONS Test", True, 
+                                        f"Mixed operations successful: Created={created}, Updated={updated}, Deleted={deleted}, Total={total}")
+                            success_count += 1
+                        else:
+                            self.log_test("Two-Way Sync - MIXED OPERATIONS Test", False, 
+                                        f"Mixed operations failed: {result}")
+                    except json.JSONDecodeError:
+                        self.log_test("Two-Way Sync - MIXED OPERATIONS Test", False, "Invalid JSON response")
+                else:
+                    status = response.status_code if response else "Network error"
+                    self.log_test("Two-Way Sync - MIXED OPERATIONS Test", False, f"Failed with status: {status}")
+            except:
+                self.log_test("Two-Way Sync - MIXED OPERATIONS Test", False, "Failed to prepare mixed operations test")
+        
+        # Test 5: DATA CONSISTENCY Test - Verify database state matches payload
+        print("\n--- Test 5: DATA CONSISTENCY Test - Verify database matches payload ---")
+        
+        # Send a known set of leads and verify database contains exactly those
+        consistency_leads = [
+            {
+                "id": f"consistency-test-1-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+                "name": "Consistency Test Lead 1",
+                "phone_number": "9876543301",
+                "vehicle": "Two Wheeler",
+                "status": "New"
+            },
+            {
+                "id": f"consistency-test-2-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+                "name": "Consistency Test Lead 2", 
+                "phone_number": "9876543302",
+                "vehicle": "Four Wheeler",
+                "status": "Contacted"
+            }
+        ]
+        
+        consistency_payload = {
+            "action": "sync_from_sheets",
+            "leads": consistency_leads
+        }
+        
+        response = self.make_request("POST", "/driver-onboarding/webhook/sync-from-sheets", consistency_payload, use_auth=False)
+        
+        if response and response.status_code == 200:
+            try:
+                result = response.json()
+                if result.get("success"):
+                    # Verify database state
+                    verify_response = self.make_request("GET", "/driver-onboarding/leads")
+                    if verify_response and verify_response.status_code == 200:
+                        try:
+                            db_leads = verify_response.json()
+                            consistency_ids = [lead["id"] for lead in consistency_leads]
+                            db_ids = [lead["id"] for lead in db_leads]
+                            
+                            # Check if database contains exactly the leads we sent
+                            extra_leads = [lead_id for lead_id in db_ids if lead_id not in consistency_ids]
+                            missing_leads = [lead_id for lead_id in consistency_ids if lead_id not in db_ids]
+                            
+                            if not extra_leads and not missing_leads:
+                                self.log_test("Two-Way Sync - DATA CONSISTENCY Test", True, 
+                                            f"Database state matches payload exactly: {len(db_leads)} leads")
+                                success_count += 1
+                            else:
+                                self.log_test("Two-Way Sync - DATA CONSISTENCY Test", False, 
+                                            f"Database inconsistency - Extra: {len(extra_leads)}, Missing: {len(missing_leads)}")
+                        except:
+                            self.log_test("Two-Way Sync - DATA CONSISTENCY Test", False, "Failed to verify database consistency")
+                else:
+                    self.log_test("Two-Way Sync - DATA CONSISTENCY Test", False, f"Sync failed: {result}")
+            except json.JSONDecodeError:
+                self.log_test("Two-Way Sync - DATA CONSISTENCY Test", False, "Invalid JSON response")
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("Two-Way Sync - DATA CONSISTENCY Test", False, f"Failed with status: {status}")
+        
+        # Test 6: RESPONSE VALIDATION Test - Check response format
+        print("\n--- Test 6: RESPONSE VALIDATION Test - Check response includes required counts ---")
+        
+        simple_payload = {
+            "action": "sync_from_sheets",
+            "leads": [
+                {
+                    "id": f"response-test-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+                    "name": "Response Test Lead",
+                    "phone_number": "9876543399",
+                    "status": "New"
+                }
+            ]
+        }
+        
+        response = self.make_request("POST", "/driver-onboarding/webhook/sync-from-sheets", simple_payload, use_auth=False)
+        
+        if response and response.status_code == 200:
+            try:
+                result = response.json()
+                required_fields = ["success", "created", "updated", "deleted", "total_processed"]
+                missing_fields = [field for field in required_fields if field not in result]
+                
+                if not missing_fields:
+                    self.log_test("Two-Way Sync - RESPONSE VALIDATION Test", True, 
+                                f"Response contains all required fields: {required_fields}")
+                    success_count += 1
+                else:
+                    self.log_test("Two-Way Sync - RESPONSE VALIDATION Test", False, 
+                                f"Response missing fields: {missing_fields}")
+            except json.JSONDecodeError:
+                self.log_test("Two-Way Sync - RESPONSE VALIDATION Test", False, "Invalid JSON response")
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("Two-Way Sync - RESPONSE VALIDATION Test", False, f"Failed with status: {status}")
+        
+        # Test 7: EMPTY ROWS Test - Verify empty rows are skipped
+        print("\n--- Test 7: EMPTY ROWS Test - Verify empty rows (no phone_number) are skipped ---")
+        
+        empty_rows_payload = {
+            "action": "sync_from_sheets",
+            "leads": [
+                {
+                    "id": f"valid-lead-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+                    "name": "Valid Lead",
+                    "phone_number": "9876543400",
+                    "status": "New"
+                },
+                {
+                    "id": f"empty-lead-1-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+                    "name": "Empty Lead 1",
+                    "phone_number": "",  # Empty phone number
+                    "status": "New"
+                },
+                {
+                    "id": f"empty-lead-2-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+                    "name": "Empty Lead 2",
+                    # No phone_number field
+                    "status": "New"
+                }
+            ]
+        }
+        
+        response = self.make_request("POST", "/driver-onboarding/webhook/sync-from-sheets", empty_rows_payload, use_auth=False)
+        
+        if response and response.status_code == 200:
+            try:
+                result = response.json()
+                if result.get("success"):
+                    # Should only process 1 valid lead, skip 2 empty ones
+                    total_processed = result.get("total_processed", 0)
+                    if total_processed == 1:  # Only the valid lead should be processed
+                        self.log_test("Two-Way Sync - EMPTY ROWS Test", True, 
+                                    f"Correctly skipped empty rows, processed {total_processed} valid lead")
+                        success_count += 1
+                    else:
+                        self.log_test("Two-Way Sync - EMPTY ROWS Test", False, 
+                                    f"Expected 1 processed lead, got {total_processed}")
+                else:
+                    self.log_test("Two-Way Sync - EMPTY ROWS Test", False, f"Sync failed: {result}")
+            except json.JSONDecodeError:
+                self.log_test("Two-Way Sync - EMPTY ROWS Test", False, "Invalid JSON response")
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("Two-Way Sync - EMPTY ROWS Test", False, f"Failed with status: {status}")
+        
+        # Test 8: ID GENERATION Test - Verify system generates ID when missing
+        print("\n--- Test 8: ID GENERATION Test - Verify system generates ID when missing ---")
+        
+        no_id_payload = {
+            "action": "sync_from_sheets",
+            "leads": [
+                {
+                    # No ID field - should be auto-generated
+                    "name": "No ID Lead",
+                    "phone_number": "9876543500",
+                    "status": "New"
+                }
+            ]
+        }
+        
+        response = self.make_request("POST", "/driver-onboarding/webhook/sync-from-sheets", no_id_payload, use_auth=False)
+        
+        if response and response.status_code == 200:
+            try:
+                result = response.json()
+                if result.get("success") and result.get("created", 0) == 1:
+                    # Verify the lead was created with an auto-generated ID
+                    verify_response = self.make_request("GET", "/driver-onboarding/leads")
+                    if verify_response and verify_response.status_code == 200:
+                        try:
+                            db_leads = verify_response.json()
+                            no_id_lead = next((lead for lead in db_leads if lead.get("name") == "No ID Lead"), None)
+                            if no_id_lead and no_id_lead.get("id"):
+                                self.log_test("Two-Way Sync - ID GENERATION Test", True, 
+                                            f"System generated ID for lead without ID: {no_id_lead['id']}")
+                                success_count += 1
+                            else:
+                                self.log_test("Two-Way Sync - ID GENERATION Test", False, 
+                                            "Lead created but no ID found")
+                        except:
+                            self.log_test("Two-Way Sync - ID GENERATION Test", False, "Failed to verify ID generation")
+                else:
+                    self.log_test("Two-Way Sync - ID GENERATION Test", False, f"Lead creation failed: {result}")
+            except json.JSONDecodeError:
+                self.log_test("Two-Way Sync - ID GENERATION Test", False, "Invalid JSON response")
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("Two-Way Sync - ID GENERATION Test", False, f"Failed with status: {status}")
+        
+        return success_count >= 6  # At least 6 out of 8 tests should pass
+
     def run_all_tests(self):
         """Run all backend tests"""
         print("🚀 Starting Comprehensive Testing - Payment Screenshots Delete & Analytics Dashboard")
