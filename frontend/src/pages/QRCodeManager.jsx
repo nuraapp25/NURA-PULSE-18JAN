@@ -44,11 +44,35 @@ export default function QRCodeManager() {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      setQrCodes(response.data.qr_codes || []);
+      const codes = response.data.qr_codes || [];
+      setQrCodes(codes);
       setStats({
         total_count: response.data.total_count || 0,
         total_scans: response.data.total_scans || 0
       });
+      
+      // Fetch QR images for all codes
+      const imagePromises = codes.map(async (qr) => {
+        try {
+          const imgResponse = await axios.get(`${API}/qr-codes/${qr.id}/download`, {
+            headers: { Authorization: `Bearer ${token}` },
+            responseType: 'blob'
+          });
+          const imageUrl = URL.createObjectURL(imgResponse.data);
+          return { id: qr.id, url: imageUrl };
+        } catch (error) {
+          console.error(`Failed to load QR image for ${qr.id}:`, error);
+          return { id: qr.id, url: null };
+        }
+      });
+      
+      const images = await Promise.all(imagePromises);
+      const imageMap = {};
+      images.forEach(img => {
+        imageMap[img.id] = img.url;
+      });
+      setQrImages(imageMap);
+      
     } catch (error) {
       console.error('Failed to fetch QR codes:', error);
       toast.error('Failed to load QR codes');
