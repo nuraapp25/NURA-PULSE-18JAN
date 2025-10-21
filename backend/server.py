@@ -4924,8 +4924,8 @@ async def get_qr_scans(
         if current_user.account_type != "master_admin":
             raise HTTPException(status_code=403, detail="Only master admin can view scan history")
         
-        # Get scans with pagination
-        scans = await db.qr_scans.find({"qr_code_id": qr_id}).sort("scan_datetime", -1).skip(skip).limit(limit).to_list(length=None)
+        # Get scans with pagination (exclude MongoDB _id)
+        scans = await db.qr_scans.find({"qr_code_id": qr_id}, {"_id": 0}).sort("scan_datetime", -1).skip(skip).limit(limit).to_list(length=None)
         
         # Get total count
         total_count = await db.qr_scans.count_documents({"qr_code_id": qr_id})
