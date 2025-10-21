@@ -4639,7 +4639,7 @@ async def create_qr_code(
         unique_code = str(uuid.uuid4())[:8]
         
         # Get backend URL from environment
-        backend_url = os.environ.get('REACT_APP_BACKEND_URL', 'http://localhost:8001/api')
+        backend_url = os.environ.get('BACKEND_URL', 'https://driver-sync-hub.preview.emergentagent.com/api')
         # Create QR redirect URL
         qr_redirect_url = f"{backend_url}/qr/{unique_code}"
         
