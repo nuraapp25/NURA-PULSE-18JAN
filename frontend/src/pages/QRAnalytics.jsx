@@ -40,6 +40,7 @@ export default function QRAnalytics() {
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
+  const [qrImageUrl, setQrImageUrl] = useState(null);
 
   useEffect(() => {
     fetchAnalytics();
