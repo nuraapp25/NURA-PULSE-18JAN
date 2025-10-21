@@ -603,6 +603,7 @@ metadata:
 
 test_plan:
   current_focus:
+    - "Driver Onboarding - Two-Way Google Sheets Sync with ID-Based Reconciliation"
     - "Expense Tracker - Add Expense Dialog"
     - "Expense Tracker - Expense List Table"
     - "Expense Tracker - Approval Status Management"
