@@ -63,6 +63,19 @@ export default function QRAnalytics() {
       
       setQrCode(response.data.qr_code);
       setAnalytics(response.data.analytics);
+      
+      // Fetch QR image
+      try {
+        const imgResponse = await axios.get(`${API}/qr-codes/${qrId}/download`, {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: 'blob'
+        });
+        const imageUrl = URL.createObjectURL(imgResponse.data);
+        setQrImageUrl(imageUrl);
+      } catch (imgError) {
+        console.error('Failed to load QR image:', imgError);
+      }
+      
     } catch (error) {
       console.error('Failed to fetch analytics:', error);
       toast.error('Failed to load analytics');
