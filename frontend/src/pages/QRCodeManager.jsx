@@ -276,17 +276,16 @@ export default function QRCodeManager() {
               <CardContent>
                 <div className="space-y-4">
                   {/* QR Code Preview */}
-                  <div className="bg-gray-100 rounded-lg p-4 flex items-center justify-center">
-                    <img 
-                      src={`${API}/qr-codes/${qr.id}/download`}
-                      alt={`QR Code for ${qr.name}`}
-                      className="h-24 w-24 object-contain"
-                      onError={(e) => {
-                        e.target.style.display = 'none';
-                        e.target.nextSibling.style.display = 'block';
-                      }}
-                    />
-                    <QrCode className="h-24 w-24 text-gray-400" style={{display: 'none'}} />
+                  <div className="bg-white border-2 border-gray-200 rounded-lg p-3 flex items-center justify-center">
+                    {qrImages[qr.id] ? (
+                      <img 
+                        src={qrImages[qr.id]}
+                        alt={`QR Code for ${qr.name}`}
+                        className="h-24 w-24 object-contain"
+                      />
+                    ) : (
+                      <QrCode className="h-24 w-24 text-gray-400" />
+                    )}
                   </div>
 
                   {/* Stats */}
