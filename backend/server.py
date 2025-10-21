@@ -5143,26 +5143,33 @@ async def qr_redirect(
         else:
             device_type = "desktop"
         
-        # Get location from IP
+        # Get location from IP with enhanced details
         location_source = "none"
         country = None
         city = None
+        region = None  # State/Province
         ip_lat = None
         ip_lng = None
+        timezone = None
+        isp = None
         
         try:
-            # Use free IP geolocation API
-            ip_response = requests.get(f"http://ip-api.com/json/{ip_address}", timeout=2)
+            # Use free IP geolocation API with more fields
+            ip_response = requests.get(f"http://ip-api.com/json/{ip_address}?fields=status,message,country,countryCode,region,regionName,city,zip,lat,lon,timezone,isp,org,as,query", timeout=2)
             if ip_response.status_code == 200:
                 ip_data = ip_response.json()
                 if ip_data.get('status') == 'success':
                     country = ip_data.get('country')
                     city = ip_data.get('city')
+                    region = ip_data.get('regionName')  # State/Province name
                     ip_lat = ip_data.get('lat')
                     ip_lng = ip_data.get('lon')
+                    timezone = ip_data.get('timezone')
+                    isp = ip_data.get('isp')
                     location_source = "ip"
-        except:
-            logger.warning(f"IP geolocation failed for {ip_address}")
+                    logger.info(f"IP geolocation: {city}, {region}, {country} ({ip_lat}, {ip_lng})")
+        except Exception as e:
+            logger.warning(f"IP geolocation failed for {ip_address}: {str(e)}")
         
         # Use GPS coordinates if provided
         final_lat = lat if lat is not None else ip_lat
@@ -5196,7 +5203,36 @@ async def qr_redirect(
         if not landing_page:
             raise HTTPException(status_code=500, detail="No landing page configured")
         
-        # Create scan record
+        # Add UTM parameters for Google Analytics tracking
+        from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
+        parsed_url = urlparse(landing_page)
+        query_params = parse_qs(parsed_url.query)
+        
+        # Add UTM parameters
+        utm_params = {
+            'utm_source': 'qr_code',
+            'utm_medium': 'qr_scan',
+            'utm_campaign': qr_code.get('name', 'qr_campaign').replace(' ', '_').lower(),
+            'utm_content': short_code
+        }
+        
+        # Merge with existing query parameters
+        for key, value in utm_params.items():
+            if key not in query_params:
+                query_params[key] = [value]
+        
+        # Rebuild URL with UTM parameters
+        new_query = urlencode(query_params, doseq=True)
+        landing_page_with_utm = urlunparse((
+            parsed_url.scheme,
+            parsed_url.netloc,
+            parsed_url.path,
+            parsed_url.params,
+            new_query,
+            parsed_url.fragment
+        ))
+        
+        # Create scan record with enhanced location data
         scan = QRScan(
             qr_code_id=qr_code['id'],
             scan_date=now.strftime("%Y-%m-%d"),
@@ -5210,13 +5246,19 @@ async def qr_redirect(
             device_info=user_agent_string,
             browser=user_agent.browser.family,
             os=user_agent.os.family,
-            landing_page_redirected=landing_page,
+            landing_page_redirected=landing_page_with_utm,
             country=country,
             city=city
         )
         
+        # Add custom fields for enhanced location (store as dict in scan document)
+        scan_dict = scan.model_dump()
+        scan_dict['region'] = region  # State/Province
+        scan_dict['timezone'] = timezone
+        scan_dict['isp'] = isp
+        
         # Save scan to database
-        await db.qr_scans.insert_one(scan.model_dump())
+        await db.qr_scans.insert_one(scan_dict)
         
         # Increment total scans counter
         await db.qr_codes.update_one(
@@ -5224,11 +5266,11 @@ async def qr_redirect(
             {"$inc": {"total_scans": 1}}
         )
         
-        logger.info(f"QR scan recorded: {short_code} -> {device_type} -> {landing_page}")
+        logger.info(f"QR scan recorded: {short_code} -> {device_type} -> {landing_page_with_utm}")
         
-        # Redirect to landing page
+        # Redirect to landing page with UTM parameters
         from fastapi.responses import RedirectResponse
-        return RedirectResponse(url=landing_page, status_code=302)
+        return RedirectResponse(url=landing_page_with_utm, status_code=302)
         
     except HTTPException:
         raise
