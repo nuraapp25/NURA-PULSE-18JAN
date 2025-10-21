@@ -3362,6 +3362,428 @@ class NuraPulseBackendTester:
         
         return success_count >= 6  # At least 6 out of 8 tests should pass
 
+    def test_qr_code_management_apis(self):
+        """Test QR Code Management APIs - Comprehensive testing as requested"""
+        print("\n=== Testing QR Code Management APIs ===")
+        
+        success_count = 0
+        test_qr_id = None
+        test_short_code = None
+        
+        # Test 1: POST /qr-codes/create - Create new QR code with single URL
+        print("\n--- Testing QR Code Creation (Single URL) ---")
+        single_url_data = {
+            "name": "Test QR Code Single",
+            "landing_page_type": "single",
+            "landing_page_single": "https://example.com/single-page"
+        }
+        
+        response = self.make_request("POST", "/qr-codes/create", single_url_data)
+        
+        if response is not None and response.status_code == 200:
+            try:
+                result = response.json()
+                if "qr_code" in result and "id" in result["qr_code"]:
+                    test_qr_id = result["qr_code"]["id"]
+                    test_short_code = result["qr_code"].get("unique_short_code")
+                    self.log_test("QR Code - Create Single URL", True, 
+                                f"Created QR code: {result['qr_code']['name']}, ID: {test_qr_id}")
+                    success_count += 1
+                    
+                    # Verify QR image file creation
+                    qr_filename = result["qr_code"].get("qr_image_filename")
+                    if qr_filename:
+                        self.log_test("QR Code - Image File Creation", True, 
+                                    f"QR image filename: {qr_filename}")
+                        success_count += 1
+                    else:
+                        self.log_test("QR Code - Image File Creation", False, 
+                                    "QR image filename not found in response")
+                else:
+                    self.log_test("QR Code - Create Single URL", False, 
+                                "Response missing qr_code or id field", result)
+            except json.JSONDecodeError:
+                self.log_test("QR Code - Create Single URL", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("QR Code - Create Single URL", False, error_msg, 
+                        response.text if response else None)
+        
+        # Test 2: POST /qr-codes/create - Create QR code with multiple URLs
+        print("\n--- Testing QR Code Creation (Multiple URLs) ---")
+        multiple_url_data = {
+            "name": "Test QR Code Multiple",
+            "landing_page_type": "multiple",
+            "landing_page_ios": "https://apps.apple.com/test-app",
+            "landing_page_android": "https://play.google.com/store/apps/test-app",
+            "landing_page_mobile": "https://mobile.example.com",
+            "landing_page_desktop": "https://desktop.example.com"
+        }
+        
+        response = self.make_request("POST", "/qr-codes/create", multiple_url_data)
+        
+        if response is not None and response.status_code == 200:
+            try:
+                result = response.json()
+                if "qr_code" in result:
+                    self.log_test("QR Code - Create Multiple URLs", True, 
+                                f"Created multi-URL QR code: {result['qr_code']['name']}")
+                    success_count += 1
+                else:
+                    self.log_test("QR Code - Create Multiple URLs", False, 
+                                "Response missing qr_code field", result)
+            except json.JSONDecodeError:
+                self.log_test("QR Code - Create Multiple URLs", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("QR Code - Create Multiple URLs", False, error_msg, 
+                        response.text if response else None)
+        
+        # Test 3: POST /qr-codes/create - Test validation (empty name)
+        print("\n--- Testing QR Code Creation Validation ---")
+        invalid_data = {
+            "name": "",  # Empty name should fail
+            "landing_page_type": "single",
+            "landing_page_single": "https://example.com"
+        }
+        
+        response = self.make_request("POST", "/qr-codes/create", invalid_data)
+        
+        if response is not None and response.status_code == 422:
+            self.log_test("QR Code - Validation Empty Name", True, 
+                        "Correctly rejects empty name (422)")
+            success_count += 1
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("QR Code - Validation Empty Name", False, 
+                        f"Expected 422, got {status}")
+        
+        # Test 4: POST /qr-codes/create - Test Master Admin only access
+        print("\n--- Testing Master Admin Only Access ---")
+        response = self.make_request("POST", "/qr-codes/create", single_url_data, use_auth=False)
+        
+        if response is not None and response.status_code in [401, 403]:
+            self.log_test("QR Code - Master Admin Access", True, 
+                        f"Correctly requires Master Admin access ({response.status_code} without auth)")
+            success_count += 1
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("QR Code - Master Admin Access", False, 
+                        f"Expected 401/403, got {status}")
+        
+        # Test 5: GET /qr-codes - Get all QR codes
+        print("\n--- Testing Get All QR Codes ---")
+        response = self.make_request("GET", "/qr-codes")
+        
+        if response is not None and response.status_code == 200:
+            try:
+                result = response.json()
+                if "qr_codes" in result and "total_count" in result:
+                    qr_codes = result["qr_codes"]
+                    total_count = result["total_count"]
+                    total_scans = result.get("total_scans", 0)
+                    
+                    self.log_test("QR Code - Get All QR Codes", True, 
+                                f"Retrieved {len(qr_codes)} QR codes, total_count: {total_count}, total_scans: {total_scans}")
+                    success_count += 1
+                else:
+                    self.log_test("QR Code - Get All QR Codes", False, 
+                                "Response missing required fields", result)
+            except json.JSONDecodeError:
+                self.log_test("QR Code - Get All QR Codes", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("QR Code - Get All QR Codes", False, error_msg, 
+                        response.text if response else None)
+        
+        # Test 6: GET /qr-codes with pagination
+        print("\n--- Testing QR Codes Pagination ---")
+        response = self.make_request("GET", "/qr-codes?skip=0&limit=1")
+        
+        if response is not None and response.status_code == 200:
+            try:
+                result = response.json()
+                if "qr_codes" in result:
+                    qr_codes = result["qr_codes"]
+                    if len(qr_codes) <= 1:  # Should return at most 1 QR code
+                        self.log_test("QR Code - Pagination", True, 
+                                    f"Pagination working: returned {len(qr_codes)} QR codes (limit=1)")
+                        success_count += 1
+                    else:
+                        self.log_test("QR Code - Pagination", False, 
+                                    f"Pagination not working: returned {len(qr_codes)} QR codes (expected ≤1)")
+                else:
+                    self.log_test("QR Code - Pagination", False, 
+                                "Response missing qr_codes field", result)
+            except json.JSONDecodeError:
+                self.log_test("QR Code - Pagination", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("QR Code - Pagination", False, error_msg, 
+                        response.text if response else None)
+        
+        # Test 7: GET /qr-codes/{qr_id} - Get specific QR code
+        if test_qr_id:
+            print("\n--- Testing Get Specific QR Code ---")
+            response = self.make_request("GET", f"/qr-codes/{test_qr_id}")
+            
+            if response is not None and response.status_code == 200:
+                try:
+                    qr_code = response.json()
+                    if "id" in qr_code and qr_code["id"] == test_qr_id:
+                        self.log_test("QR Code - Get Specific QR Code", True, 
+                                    f"Retrieved QR code: {qr_code.get('name', 'Unknown')}")
+                        success_count += 1
+                    else:
+                        self.log_test("QR Code - Get Specific QR Code", False, 
+                                    "Response missing id or incorrect id", qr_code)
+                except json.JSONDecodeError:
+                    self.log_test("QR Code - Get Specific QR Code", False, 
+                                "Invalid JSON response", response.text)
+            else:
+                error_msg = "Network error" if not response else f"Status {response.status_code}"
+                self.log_test("QR Code - Get Specific QR Code", False, error_msg, 
+                            response.text if response else None)
+        
+        # Test 8: GET /qr-codes/{qr_id} - Test with invalid QR ID (404 expected)
+        print("\n--- Testing Get QR Code with Invalid ID ---")
+        response = self.make_request("GET", "/qr-codes/invalid-qr-id-12345")
+        
+        if response is not None and response.status_code == 404:
+            self.log_test("QR Code - Invalid QR ID", True, 
+                        "Correctly returns 404 for invalid QR ID")
+            success_count += 1
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("QR Code - Invalid QR ID", False, 
+                        f"Expected 404, got {status}")
+        
+        # Test 9: GET /qr-codes/{qr_id}/download - Download QR image
+        if test_qr_id:
+            print("\n--- Testing QR Image Download ---")
+            response = self.make_request("GET", f"/qr-codes/{test_qr_id}/download")
+            
+            if response is not None and response.status_code == 200:
+                # Check if response is PNG file
+                content_type = response.headers.get('content-type', '')
+                if 'image/png' in content_type or len(response.content) > 0:
+                    self.log_test("QR Code - Download QR Image", True, 
+                                f"Downloaded QR image, size: {len(response.content)} bytes")
+                    success_count += 1
+                else:
+                    self.log_test("QR Code - Download QR Image", False, 
+                                f"Invalid image response, content-type: {content_type}")
+            else:
+                error_msg = "Network error" if not response else f"Status {response.status_code}"
+                self.log_test("QR Code - Download QR Image", False, error_msg, 
+                            response.text if response else None)
+        
+        # Test 10: GET /qr-codes/{qr_id}/analytics - Get analytics with different filters
+        if test_qr_id:
+            print("\n--- Testing QR Analytics ---")
+            
+            # Test different filter types
+            filter_types = ["all", "today", "last_7_days", "last_30_days"]
+            
+            for filter_type in filter_types:
+                response = self.make_request("GET", f"/qr-codes/{test_qr_id}/analytics?filter_type={filter_type}")
+                
+                if response is not None and response.status_code == 200:
+                    try:
+                        analytics = response.json()
+                        required_fields = ["graph_data", "device_breakdown", "top_locations"]
+                        if all(field in analytics for field in required_fields):
+                            self.log_test(f"QR Code - Analytics {filter_type}", True, 
+                                        f"Analytics returned with all required fields")
+                            success_count += 1
+                            break  # Only need one successful analytics test
+                        else:
+                            missing = [f for f in required_fields if f not in analytics]
+                            self.log_test(f"QR Code - Analytics {filter_type}", False, 
+                                        f"Missing fields: {missing}")
+                    except json.JSONDecodeError:
+                        self.log_test(f"QR Code - Analytics {filter_type}", False, 
+                                    "Invalid JSON response", response.text)
+                else:
+                    error_msg = "Network error" if not response else f"Status {response.status_code}"
+                    self.log_test(f"QR Code - Analytics {filter_type}", False, error_msg, 
+                                response.text if response else None)
+        
+        # Test 11: GET /qr-codes/{qr_id}/scans - Get scan history
+        if test_qr_id:
+            print("\n--- Testing QR Scan History ---")
+            response = self.make_request("GET", f"/qr-codes/{test_qr_id}/scans")
+            
+            if response is not None and response.status_code == 200:
+                try:
+                    result = response.json()
+                    if "scans" in result:
+                        scans = result["scans"]
+                        self.log_test("QR Code - Scan History", True, 
+                                    f"Retrieved {len(scans)} scan records")
+                        success_count += 1
+                    else:
+                        self.log_test("QR Code - Scan History", False, 
+                                    "Response missing scans field", result)
+                except json.JSONDecodeError:
+                    self.log_test("QR Code - Scan History", False, 
+                                "Invalid JSON response", response.text)
+            else:
+                error_msg = "Network error" if not response else f"Status {response.status_code}"
+                self.log_test("QR Code - Scan History", False, error_msg, 
+                            response.text if response else None)
+        
+        # Test 12: GET /qr-codes/{qr_id}/export-csv - Export scans as CSV
+        if test_qr_id:
+            print("\n--- Testing CSV Export ---")
+            response = self.make_request("GET", f"/qr-codes/{test_qr_id}/export-csv")
+            
+            if response is not None and response.status_code == 200:
+                # Check if response is CSV file
+                content_type = response.headers.get('content-type', '')
+                if 'text/csv' in content_type or 'application/csv' in content_type:
+                    self.log_test("QR Code - CSV Export", True, 
+                                f"Exported CSV file, size: {len(response.content)} bytes")
+                    success_count += 1
+                else:
+                    # Check if content looks like CSV
+                    content = response.text if hasattr(response, 'text') else str(response.content)
+                    if 'Date,Time,Device' in content or len(content) > 0:
+                        self.log_test("QR Code - CSV Export", True, 
+                                    f"Exported CSV content, size: {len(content)} bytes")
+                        success_count += 1
+                    else:
+                        self.log_test("QR Code - CSV Export", False, 
+                                    f"Invalid CSV response, content-type: {content_type}")
+            else:
+                error_msg = "Network error" if not response else f"Status {response.status_code}"
+                self.log_test("QR Code - CSV Export", False, error_msg, 
+                            response.text if response else None)
+        
+        # Test 13: PUT /qr-codes/{qr_id} - Update QR code
+        if test_qr_id:
+            print("\n--- Testing QR Code Update ---")
+            update_data = {
+                "name": "Updated Test QR Code",
+                "is_active": False
+            }
+            
+            response = self.make_request("PUT", f"/qr-codes/{test_qr_id}", update_data)
+            
+            if response is not None and response.status_code == 200:
+                try:
+                    result = response.json()
+                    if "message" in result and "updated" in result["message"].lower():
+                        self.log_test("QR Code - Update QR Code", True, 
+                                    f"Updated QR code: {result['message']}")
+                        success_count += 1
+                    else:
+                        self.log_test("QR Code - Update QR Code", False, 
+                                    "Unexpected response format", result)
+                except json.JSONDecodeError:
+                    self.log_test("QR Code - Update QR Code", False, 
+                                "Invalid JSON response", response.text)
+            else:
+                error_msg = "Network error" if not response else f"Status {response.status_code}"
+                self.log_test("QR Code - Update QR Code", False, error_msg, 
+                            response.text if response else None)
+        
+        # Test 14: GET /qr/{short_code} - PUBLIC redirect endpoint (no auth required)
+        if test_short_code:
+            print("\n--- Testing Public QR Redirect ---")
+            
+            # Test with different user agents to simulate device detection
+            user_agents = [
+                ("iOS", "Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15"),
+                ("Android", "Mozilla/5.0 (Linux; Android 11; SM-G991B) AppleWebKit/537.36"),
+                ("Desktop", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+            ]
+            
+            for device_type, user_agent in user_agents:
+                try:
+                    import requests
+                    url = f"{self.base_url}/qr/{test_short_code}"
+                    headers = {"User-Agent": user_agent}
+                    
+                    # Use allow_redirects=False to check redirect response
+                    response = requests.get(url, headers=headers, allow_redirects=False, timeout=10)
+                    
+                    if response.status_code in [301, 302, 307, 308]:
+                        redirect_url = response.headers.get('Location', '')
+                        self.log_test(f"QR Code - Public Redirect {device_type}", True, 
+                                    f"Redirected to: {redirect_url[:50]}...")
+                        success_count += 1
+                        break  # Only need one successful redirect test
+                    elif response.status_code == 200:
+                        # Some implementations might return 200 with redirect content
+                        self.log_test(f"QR Code - Public Redirect {device_type}", True, 
+                                    f"Redirect handled (200 response)")
+                        success_count += 1
+                        break
+                    else:
+                        self.log_test(f"QR Code - Public Redirect {device_type}", False, 
+                                    f"Expected redirect (3xx), got {response.status_code}")
+                except Exception as e:
+                    self.log_test(f"QR Code - Public Redirect {device_type}", False, 
+                                f"Exception during redirect test: {e}")
+        
+        # Test 15: GET /qr/{short_code} - Test 404 for invalid short code
+        print("\n--- Testing Invalid Short Code ---")
+        try:
+            import requests
+            url = f"{self.base_url}/qr/invalid-short-code-12345"
+            response = requests.get(url, allow_redirects=False, timeout=10)
+            
+            if response.status_code == 404:
+                self.log_test("QR Code - Invalid Short Code", True, 
+                            "Correctly returns 404 for invalid short code")
+                success_count += 1
+            else:
+                self.log_test("QR Code - Invalid Short Code", False, 
+                            f"Expected 404, got {response.status_code}")
+        except Exception as e:
+            self.log_test("QR Code - Invalid Short Code", False, 
+                        f"Exception during invalid short code test: {e}")
+        
+        # Test 16: DELETE /qr-codes/{qr_id} - Delete QR code
+        if test_qr_id:
+            print("\n--- Testing QR Code Deletion ---")
+            response = self.make_request("DELETE", f"/qr-codes/{test_qr_id}")
+            
+            if response is not None and response.status_code == 200:
+                try:
+                    result = response.json()
+                    if "message" in result and "deleted" in result["message"].lower():
+                        self.log_test("QR Code - Delete QR Code", True, 
+                                    f"Deleted QR code: {result['message']}")
+                        success_count += 1
+                        
+                        # Verify QR code is actually deleted
+                        verify_response = self.make_request("GET", f"/qr-codes/{test_qr_id}")
+                        if verify_response and verify_response.status_code == 404:
+                            self.log_test("QR Code - Verify Deletion", True, 
+                                        "QR code successfully deleted from database")
+                            success_count += 1
+                        else:
+                            self.log_test("QR Code - Verify Deletion", False, 
+                                        "QR code still exists after deletion")
+                    else:
+                        self.log_test("QR Code - Delete QR Code", False, 
+                                    "Unexpected response format", result)
+                except json.JSONDecodeError:
+                    self.log_test("QR Code - Delete QR Code", False, 
+                                "Invalid JSON response", response.text)
+            else:
+                error_msg = "Network error" if not response else f"Status {response.status_code}"
+                self.log_test("QR Code - Delete QR Code", False, error_msg, 
+                            response.text if response else None)
+        
+        return success_count >= 10  # At least 10 out of 16 tests should pass
+
     def run_all_tests(self):
         """Run all backend tests"""
         print("🚀 Starting Comprehensive Testing - Driver Onboarding Two-Way Sync with ID-Based Reconciliation")
