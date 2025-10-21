@@ -3417,9 +3417,13 @@ class NuraPulseBackendTester:
         # Overall success if the main priority feature works
         overall_success = two_way_sync_success and failed_tests <= 10  # Allow some minor failures in additional tests
         
+        # Count working priority features
+        priority_features = [two_way_sync_success, payment_screenshots_success, analytics_endpoints_success, analytics_workflow_success]
+        priority_success_count = sum(priority_features)
+        
         status = "✅ COMPREHENSIVE TESTING COMPLETE" if overall_success else "❌ CRITICAL ISSUES FOUND"
         print(f"\n{status}")
-        print(f"Priority Features Working: {priority_success_count}/3")
+        print(f"Priority Features Working: {priority_success_count}/4")
         
         return overall_success
 
