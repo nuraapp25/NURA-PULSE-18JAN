@@ -165,6 +165,18 @@ backend:
           agent: "testing"
           comment: "✅ TESTED: GET /driver-onboarding/leads returns 40 leads successfully. Leads data properly stored and accessible. Import functionality working as expected."
 
+  - task: "Driver Onboarding - Two-Way Google Sheets Sync with ID-Based Reconciliation"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "IMPLEMENTATION COMPLETE: Two-way sync between Driver Onboarding app and Google Sheets. Backend endpoint POST /driver-onboarding/webhook/sync-from-sheets handles sheets-to-app sync with ID-based reconciliation: (1) Uses lead ID as unique identifier (2) Overwrites existing leads when ID matches (3) Creates new leads for new IDs (4) Deletes leads from DB if removed from Google Sheet. Frontend has 3 buttons: 'Sync to Google Sheets', 'Sync from Google Sheets', 'Google Sheets Link'. Google Apps Script (google-sheets-driver-onboarding-sync.gs) handles sheet-side logic. Ready for comprehensive testing to verify: create/update/delete operations, ID preservation, data consistency."
+
   - task: "Payment Reconciliation APIs"
     implemented: true
     working: true
