@@ -4640,8 +4640,22 @@ async def create_qr_code(
         
         # Get backend URL from environment
         backend_url = os.environ.get('BACKEND_URL', 'https://driver-sync-hub.preview.emergentagent.com/api')
-        # Create QR redirect URL
-        qr_redirect_url = f"{backend_url}/qr/{unique_code}"
+        
+        # Get destination URL for display purposes
+        if qr_data.landing_page_type == 'single':
+            dest_url = qr_data.landing_page_single
+        else:
+            # Use mobile as default for multi-URL QR codes
+            dest_url = (qr_data.landing_page_mobile or qr_data.landing_page_desktop or 
+                       qr_data.landing_page_ios or qr_data.landing_page_android)
+        
+        # Extract clean domain for scanner preview
+        from urllib.parse import urlparse
+        parsed = urlparse(dest_url)
+        dest_display = f"{parsed.netloc}{parsed.path}" if parsed.netloc else dest_url
+        
+        # Create QR redirect URL with destination hint for scanner apps
+        qr_redirect_url = f"{backend_url}/qr/{unique_code}?to={dest_display}"
         
         # Generate QR code image
         qr = qrcode.QRCode(
