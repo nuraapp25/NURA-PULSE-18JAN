@@ -631,6 +631,8 @@ metadata:
 
 test_plan:
   current_focus:
+    - "QR Code Management - Backend APIs"
+    - "QR Code Management - Frontend Interface"
     - "Driver Onboarding - Two-Way Google Sheets Sync with ID-Based Reconciliation"
     - "Expense Tracker - Add Expense Dialog"
     - "Expense Tracker - Expense List Table"
