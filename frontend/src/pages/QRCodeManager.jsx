@@ -169,6 +169,11 @@ export default function QRCodeManager() {
     navigate(`/dashboard/qr-codes/${qrId}/analytics`);
   };
 
+  const handleViewQR = (qr) => {
+    setViewingQR(qr);
+    setViewModalOpen(true);
+  };
+
   const resetForm = () => {
     setFormData({
       name: '',
