@@ -442,27 +442,71 @@ export default function QRAnalytics() {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Time</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Device</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">IP</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date & Time</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Device & Browser</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Detailed Location</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Coordinates</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">IP Address</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {scans.map((scan) => (
-                    <tr key={scan.id}>
-                      <td className="px-4 py-3 text-sm">{scan.scan_date}</td>
-                      <td className="px-4 py-3 text-sm">{scan.scan_time}</td>
+                    <tr key={scan.id} className="hover:bg-gray-50">
                       <td className="px-4 py-3 text-sm">
-                        <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs capitalize">
-                          {scan.device_type}
-                        </span>
+                        <div>{scan.scan_date}</div>
+                        <div className="text-xs text-gray-500">{scan.scan_time}</div>
                       </td>
                       <td className="px-4 py-3 text-sm">
-                        {scan.country ? `${scan.city || 'Unknown'}, ${scan.country}` : 'Unknown'}
+                        <div className="flex flex-col gap-1">
+                          <span className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-xs capitalize w-fit">
+                            {scan.device_type}
+                          </span>
+                          <span className="text-xs text-gray-600">
+                            {scan.browser} on {scan.os}
+                          </span>
+                        </div>
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-600">{scan.ip_address}</td>
+                      <td className="px-4 py-3 text-sm">
+                        {scan.city || scan.region || scan.country ? (
+                          <div className="flex flex-col gap-0.5">
+                            <span className="font-medium">
+                              {scan.city || 'Unknown City'}
+                            </span>
+                            {scan.region && (
+                              <span className="text-xs text-gray-600">{scan.region}</span>
+                            )}
+                            <span className="text-xs text-gray-600">
+                              {scan.country || 'Unknown Country'}
+                            </span>
+                            {scan.timezone && (
+                              <span className="text-xs text-gray-500 italic">{scan.timezone}</span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">Unknown</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-600">
+                        {scan.latitude && scan.longitude ? (
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-xs">Lat: {scan.latitude.toFixed(6)}</span>
+                            <span className="text-xs">Lng: {scan.longitude.toFixed(6)}</span>
+                            <span className="text-xs text-gray-400">
+                              ({scan.location_source?.toUpperCase()})
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="font-mono text-xs">{scan.ip_address}</span>
+                          {scan.isp && (
+                            <span className="text-xs text-gray-500">{scan.isp}</span>
+                          )}
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
