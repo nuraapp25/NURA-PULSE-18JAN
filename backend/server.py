@@ -4590,6 +4590,617 @@ async def get_expense_receipt(
         raise HTTPException(status_code=500, detail="Failed to retrieve receipt")
 
 
+
+
+# ==================== QR Code Management ====================
+
+@api_router.post("/qr-codes/create")
+async def create_qr_code(
+    qr_data: QRCodeCreate,
+    current_user: User = Depends(get_current_user)
+):
+    """Create a new dynamic QR code - Master Admin only"""
+    try:
+        # Check master admin permission
+        if current_user.account_type != "master_admin":
+            raise HTTPException(status_code=403, detail="Only master admin can create QR codes")
+        
+        import qrcode
+        from io import BytesIO
+        
+        # Generate unique short code
+        unique_code = str(uuid.uuid4())[:8]
+        
+        # Get backend URL from environment
+        backend_url = os.environ.get('REACT_APP_BACKEND_URL', 'http://localhost:8001/api')
+        # Create QR redirect URL
+        qr_redirect_url = f"{backend_url}/qr/{unique_code}"
+        
+        # Generate QR code image
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,
+            box_size=10,
+            border=4,
+        )
+        qr.add_data(qr_redirect_url)
+        qr.make(fit=True)
+        
+        img = qr.make_image(fill_color="black", back_color="white")
+        
+        # Save QR code image
+        qr_filename = f"qr_{unique_code}.png"
+        qr_path = f"/app/backend/qr_codes/{qr_filename}"
+        img.save(qr_path)
+        
+        logger.info(f"QR code image saved: {qr_path}")
+        
+        # Create QR code document
+        qr_code = QRCode(
+            name=qr_data.name,
+            landing_page_type=qr_data.landing_page_type,
+            landing_page_single=qr_data.landing_page_single,
+            landing_page_ios=qr_data.landing_page_ios,
+            landing_page_android=qr_data.landing_page_android,
+            landing_page_mobile=qr_data.landing_page_mobile,
+            landing_page_desktop=qr_data.landing_page_desktop,
+            qr_image_filename=qr_filename,
+            unique_short_code=unique_code,
+            created_by=current_user.id,
+        )
+        
+        # Save to database
+        await db.qr_codes.insert_one(qr_code.model_dump())
+        
+        logger.info(f"QR code created: {qr_code.id} by {current_user.username}")
+        
+        return {
+            "success": True,
+            "message": "QR code created successfully",
+            "qr_code": {
+                "id": qr_code.id,
+                "name": qr_code.name,
+                "unique_code": unique_code,
+                "qr_url": qr_redirect_url,
+                "qr_image": qr_filename
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to create QR code: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Failed to create QR code: {str(e)}")
+
+
+@api_router.get("/qr-codes")
+async def get_qr_codes(
+    current_user: User = Depends(get_current_user),
+    skip: int = 0,
+    limit: int = 100
+):
+    """Get all QR codes - Master Admin only"""
+    try:
+        if current_user.account_type != "master_admin":
+            raise HTTPException(status_code=403, detail="Only master admin can view QR codes")
+        
+        # Get QR codes with pagination
+        qr_codes = await db.qr_codes.find().sort("created_at", -1).skip(skip).limit(limit).to_list(length=None)
+        
+        # Get total count
+        total_count = await db.qr_codes.count_documents({})
+        
+        # Calculate total scans across all QR codes
+        total_scans = sum(qr.get('total_scans', 0) for qr in qr_codes)
+        
+        return {
+            "success": True,
+            "qr_codes": qr_codes,
+            "total_count": total_count,
+            "total_scans": total_scans,
+            "skip": skip,
+            "limit": limit
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get QR codes: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get QR codes: {str(e)}")
+
+
+@api_router.get("/qr-codes/{qr_id}")
+async def get_qr_code(
+    qr_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get specific QR code details - Master Admin only"""
+    try:
+        if current_user.account_type != "master_admin":
+            raise HTTPException(status_code=403, detail="Only master admin can view QR codes")
+        
+        qr_code = await db.qr_codes.find_one({"id": qr_id})
+        
+        if not qr_code:
+            raise HTTPException(status_code=404, detail="QR code not found")
+        
+        return {
+            "success": True,
+            "qr_code": qr_code
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get QR code: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get QR code: {str(e)}")
+
+
+@api_router.get("/qr-codes/{qr_id}/download")
+async def download_qr_code(
+    qr_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Download QR code image - Master Admin only"""
+    try:
+        if current_user.account_type != "master_admin":
+            raise HTTPException(status_code=403, detail="Only master admin can download QR codes")
+        
+        qr_code = await db.qr_codes.find_one({"id": qr_id})
+        
+        if not qr_code:
+            raise HTTPException(status_code=404, detail="QR code not found")
+        
+        qr_image_path = f"/app/backend/qr_codes/{qr_code['qr_image_filename']}"
+        
+        if not os.path.exists(qr_image_path):
+            raise HTTPException(status_code=404, detail="QR code image not found")
+        
+        return FileResponse(
+            path=qr_image_path,
+            media_type="image/png",
+            filename=f"{qr_code['name']}_QR.png"
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to download QR code: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to download QR code: {str(e)}")
+
+
+@api_router.get("/qr-codes/{qr_id}/analytics")
+async def get_qr_analytics(
+    qr_id: str,
+    current_user: User = Depends(get_current_user),
+    filter_type: str = "all",
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None
+):
+    """Get QR code analytics with date filters - Master Admin only"""
+    try:
+        if current_user.account_type != "master_admin":
+            raise HTTPException(status_code=403, detail="Only master admin can view analytics")
+        
+        qr_code = await db.qr_codes.find_one({"id": qr_id})
+        
+        if not qr_code:
+            raise HTTPException(status_code=404, detail="QR code not found")
+        
+        # Build date filter query
+        query = {"qr_code_id": qr_id}
+        
+        from datetime import datetime, timedelta
+        now = datetime.now()
+        
+        if filter_type == "today":
+            start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            query["scan_datetime"] = {"$gte": start}
+        elif filter_type == "yesterday":
+            yesterday = now - timedelta(days=1)
+            start = yesterday.replace(hour=0, minute=0, second=0, microsecond=0)
+            end = yesterday.replace(hour=23, minute=59, second=59, microsecond=999999)
+            query["scan_datetime"] = {"$gte": start, "$lte": end}
+        elif filter_type == "last_7_days":
+            start = now - timedelta(days=7)
+            query["scan_datetime"] = {"$gte": start}
+        elif filter_type == "last_30_days":
+            start = now - timedelta(days=30)
+            query["scan_datetime"] = {"$gte": start}
+        elif filter_type == "last_3_months":
+            start = now - timedelta(days=90)
+            query["scan_datetime"] = {"$gte": start}
+        elif filter_type == "custom" and start_date and end_date:
+            start = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
+            end = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
+            query["scan_datetime"] = {"$gte": start, "$lte": end}
+        
+        # Get all scans with filter
+        scans = await db.qr_scans.find(query).sort("scan_datetime", -1).to_list(length=None)
+        
+        # Group scans by date for graph
+        from collections import defaultdict
+        scans_by_date = defaultdict(int)
+        
+        for scan in scans:
+            scan_date = scan.get('scan_date', '')
+            scans_by_date[scan_date] += 1
+        
+        # Convert to sorted list
+        graph_data = [
+            {"date": date, "scans": count}
+            for date, count in sorted(scans_by_date.items())
+        ]
+        
+        # Device type breakdown
+        device_breakdown = defaultdict(int)
+        for scan in scans:
+            device_type = scan.get('device_type', 'unknown')
+            device_breakdown[device_type] += 1
+        
+        # Location breakdown (top 10 countries)
+        location_breakdown = defaultdict(int)
+        for scan in scans:
+            country = scan.get('country', 'Unknown')
+            if country:
+                location_breakdown[country] += 1
+        
+        top_locations = sorted(
+            [{"country": k, "scans": v} for k, v in location_breakdown.items()],
+            key=lambda x: x['scans'],
+            reverse=True
+        )[:10]
+        
+        return {
+            "success": True,
+            "qr_code": qr_code,
+            "analytics": {
+                "total_scans": len(scans),
+                "graph_data": graph_data,
+                "device_breakdown": dict(device_breakdown),
+                "top_locations": top_locations,
+                "filter_applied": filter_type
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get analytics: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Failed to get analytics: {str(e)}")
+
+
+@api_router.get("/qr-codes/{qr_id}/scans")
+async def get_qr_scans(
+    qr_id: str,
+    current_user: User = Depends(get_current_user),
+    skip: int = 0,
+    limit: int = 50
+):
+    """Get QR code scan history - Master Admin only"""
+    try:
+        if current_user.account_type != "master_admin":
+            raise HTTPException(status_code=403, detail="Only master admin can view scan history")
+        
+        # Get scans with pagination
+        scans = await db.qr_scans.find({"qr_code_id": qr_id}).sort("scan_datetime", -1).skip(skip).limit(limit).to_list(length=None)
+        
+        # Get total count
+        total_count = await db.qr_scans.count_documents({"qr_code_id": qr_id})
+        
+        return {
+            "success": True,
+            "scans": scans,
+            "total_count": total_count,
+            "skip": skip,
+            "limit": limit
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get scans: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get scans: {str(e)}")
+
+
+@api_router.get("/qr-codes/{qr_id}/export-csv")
+async def export_qr_scans_csv(
+    qr_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Export QR scan data as CSV - Master Admin only"""
+    try:
+        if current_user.account_type != "master_admin":
+            raise HTTPException(status_code=403, detail="Only master admin can export scan data")
+        
+        qr_code = await db.qr_codes.find_one({"id": qr_id})
+        if not qr_code:
+            raise HTTPException(status_code=404, detail="QR code not found")
+        
+        # Get all scans
+        scans = await db.qr_scans.find({"qr_code_id": qr_id}).sort("scan_datetime", -1).to_list(length=None)
+        
+        # Create CSV
+        import csv
+        from io import StringIO
+        
+        output = StringIO()
+        writer = csv.writer(output)
+        
+        # Write header
+        writer.writerow([
+            "Date", "Time", "Device Type", "Browser", "OS",
+            "IP Address", "Country", "City",
+            "Latitude", "Longitude", "Location Source",
+            "Landing Page"
+        ])
+        
+        # Write data
+        for scan in scans:
+            writer.writerow([
+                scan.get('scan_date', ''),
+                scan.get('scan_time', ''),
+                scan.get('device_type', ''),
+                scan.get('browser', ''),
+                scan.get('os', ''),
+                scan.get('ip_address', ''),
+                scan.get('country', ''),
+                scan.get('city', ''),
+                scan.get('latitude', ''),
+                scan.get('longitude', ''),
+                scan.get('location_source', ''),
+                scan.get('landing_page_redirected', '')
+            ])
+        
+        # Create response
+        from fastapi.responses import StreamingResponse
+        output.seek(0)
+        
+        return StreamingResponse(
+            iter([output.getvalue()]),
+            media_type="text/csv",
+            headers={
+                "Content-Disposition": f"attachment; filename={qr_code['name']}_scans.csv"
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to export CSV: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to export CSV: {str(e)}")
+
+
+@api_router.put("/qr-codes/{qr_id}")
+async def update_qr_code(
+    qr_id: str,
+    qr_update: QRCodeUpdate,
+    current_user: User = Depends(get_current_user)
+):
+    """Update QR code settings - Master Admin only"""
+    try:
+        if current_user.account_type != "master_admin":
+            raise HTTPException(status_code=403, detail="Only master admin can update QR codes")
+        
+        qr_code = await db.qr_codes.find_one({"id": qr_id})
+        if not qr_code:
+            raise HTTPException(status_code=404, detail="QR code not found")
+        
+        # Prepare update data (only non-None fields)
+        update_data = {k: v for k, v in qr_update.model_dump().items() if v is not None}
+        
+        if not update_data:
+            raise HTTPException(status_code=400, detail="No fields to update")
+        
+        # Update in database
+        await db.qr_codes.update_one(
+            {"id": qr_id},
+            {"$set": update_data}
+        )
+        
+        logger.info(f"QR code updated: {qr_id} by {current_user.username}")
+        
+        return {
+            "success": True,
+            "message": "QR code updated successfully"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to update QR code: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to update QR code: {str(e)}")
+
+
+@api_router.delete("/qr-codes/{qr_id}")
+async def delete_qr_code(
+    qr_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Delete QR code - Master Admin only"""
+    try:
+        if current_user.account_type != "master_admin":
+            raise HTTPException(status_code=403, detail="Only master admin can delete QR codes")
+        
+        qr_code = await db.qr_codes.find_one({"id": qr_id})
+        if not qr_code:
+            raise HTTPException(status_code=404, detail="QR code not found")
+        
+        # Delete QR code image
+        qr_image_path = f"/app/backend/qr_codes/{qr_code['qr_image_filename']}"
+        if os.path.exists(qr_image_path):
+            os.remove(qr_image_path)
+        
+        # Delete from database
+        await db.qr_codes.delete_one({"id": qr_id})
+        
+        # Delete all associated scans
+        await db.qr_scans.delete_many({"qr_code_id": qr_id})
+        
+        logger.info(f"QR code deleted: {qr_id} by {current_user.username}")
+        
+        return {
+            "success": True,
+            "message": "QR code and all associated scans deleted successfully"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to delete QR code: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete QR code: {str(e)}")
+
+
+# PUBLIC ENDPOINT - No authentication required
+@api_router.get("/qr/{short_code}")
+async def qr_redirect(
+    short_code: str,
+    request: Request,
+    lat: Optional[float] = None,
+    lng: Optional[float] = None
+):
+    """Public QR redirect endpoint - tracks scan and redirects to landing page"""
+    try:
+        # Find QR code by short code
+        qr_code = await db.qr_codes.find_one({"unique_short_code": short_code})
+        
+        if not qr_code:
+            raise HTTPException(status_code=404, detail="QR code not found")
+        
+        if not qr_code.get('is_active', True):
+            raise HTTPException(status_code=410, detail="QR code is inactive")
+        
+        # Extract request information
+        from datetime import datetime
+        import requests
+        from user_agents import parse
+        
+        now = datetime.now()
+        
+        # Get IP address
+        forwarded = request.headers.get("X-Forwarded-For")
+        if forwarded:
+            ip_address = forwarded.split(",")[0]
+        else:
+            ip_address = request.client.host
+        
+        # Parse user agent
+        user_agent_string = request.headers.get("User-Agent", "")
+        user_agent = parse(user_agent_string)
+        
+        # Determine device type
+        if user_agent.is_mobile:
+            if user_agent.os.family == "iOS":
+                device_type = "ios"
+            elif user_agent.os.family == "Android":
+                device_type = "android"
+            else:
+                device_type = "mobile"
+        elif user_agent.is_tablet:
+            device_type = "mobile"
+        else:
+            device_type = "desktop"
+        
+        # Get location from IP
+        location_source = "none"
+        country = None
+        city = None
+        ip_lat = None
+        ip_lng = None
+        
+        try:
+            # Use free IP geolocation API
+            ip_response = requests.get(f"http://ip-api.com/json/{ip_address}", timeout=2)
+            if ip_response.status_code == 200:
+                ip_data = ip_response.json()
+                if ip_data.get('status') == 'success':
+                    country = ip_data.get('country')
+                    city = ip_data.get('city')
+                    ip_lat = ip_data.get('lat')
+                    ip_lng = ip_data.get('lon')
+                    location_source = "ip"
+        except:
+            logger.warning(f"IP geolocation failed for {ip_address}")
+        
+        # Use GPS coordinates if provided
+        final_lat = lat if lat is not None else ip_lat
+        final_lng = lng if lng is not None else ip_lng
+        if lat is not None and lng is not None:
+            location_source = "gps"
+        
+        # Determine landing page
+        landing_page = None
+        if qr_code.get('landing_page_type') == 'single':
+            landing_page = qr_code.get('landing_page_single')
+        else:
+            # Multiple landing pages
+            if device_type == "ios" and qr_code.get('landing_page_ios'):
+                landing_page = qr_code['landing_page_ios']
+            elif device_type == "android" and qr_code.get('landing_page_android'):
+                landing_page = qr_code['landing_page_android']
+            elif device_type == "mobile" and qr_code.get('landing_page_mobile'):
+                landing_page = qr_code['landing_page_mobile']
+            elif device_type == "desktop" and qr_code.get('landing_page_desktop'):
+                landing_page = qr_code['landing_page_desktop']
+            else:
+                # Fallback to any available landing page
+                landing_page = (
+                    qr_code.get('landing_page_mobile') or
+                    qr_code.get('landing_page_desktop') or
+                    qr_code.get('landing_page_ios') or
+                    qr_code.get('landing_page_android')
+                )
+        
+        if not landing_page:
+            raise HTTPException(status_code=500, detail="No landing page configured")
+        
+        # Create scan record
+        scan = QRScan(
+            qr_code_id=qr_code['id'],
+            scan_date=now.strftime("%Y-%m-%d"),
+            scan_time=now.strftime("%H:%M:%S"),
+            scan_datetime=now,
+            latitude=final_lat,
+            longitude=final_lng,
+            location_source=location_source,
+            ip_address=ip_address,
+            device_type=device_type,
+            device_info=user_agent_string,
+            browser=user_agent.browser.family,
+            os=user_agent.os.family,
+            landing_page_redirected=landing_page,
+            country=country,
+            city=city
+        )
+        
+        # Save scan to database
+        await db.qr_scans.insert_one(scan.model_dump())
+        
+        # Increment total scans counter
+        await db.qr_codes.update_one(
+            {"id": qr_code['id']},
+            {"$inc": {"total_scans": 1}}
+        )
+        
+        logger.info(f"QR scan recorded: {short_code} -> {device_type} -> {landing_page}")
+        
+        # Redirect to landing page
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(url=landing_page, status_code=302)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"QR redirect failed: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"QR redirect failed: {str(e)}")
+
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
