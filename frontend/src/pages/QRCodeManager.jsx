@@ -310,14 +310,23 @@ export default function QRCodeManager() {
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="grid grid-cols-2 gap-2 pt-2">
+                  <div className="grid grid-cols-3 gap-2 pt-2">
+                    <Button
+                      onClick={() => handleViewQR(qr)}
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                    >
+                      <Eye className="w-4 h-4 mr-1" />
+                      View
+                    </Button>
                     <Button
                       onClick={() => handleViewAnalytics(qr.id)}
                       variant="outline"
                       size="sm"
                       className="w-full"
                     >
-                      <Eye className="w-4 h-4 mr-1" />
+                      <BarChart3 className="w-4 h-4 mr-1" />
                       Analytics
                     </Button>
                     <Button
@@ -334,7 +343,7 @@ export default function QRCodeManager() {
                     onClick={() => handleDeleteQR(qr.id, qr.name)}
                     variant="outline"
                     size="sm"
-                    className="w-full text-red-600 hover:bg-red-50"
+                    className="w-full text-red-600 hover:bg-red-50 mt-2"
                   >
                     <Trash2 className="w-4 h-4 mr-1" />
                     Delete
