@@ -4653,7 +4653,7 @@ async def create_qr_code(
         # Save to database
         await db.qr_codes.insert_one(qr_code.model_dump())
         
-        logger.info(f"QR code created: {qr_code.id} by {current_user.username}")
+        logger.info(f"QR code created: {qr_code.id} by {current_user.email}")
         
         return {
             "success": True,
