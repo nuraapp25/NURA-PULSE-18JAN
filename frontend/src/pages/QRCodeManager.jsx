@@ -17,6 +17,7 @@ export default function QRCodeManager() {
   const [qrCodes, setQrCodes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState({ total_count: 0, total_scans: 0 });
+  const [qrImages, setQrImages] = useState({}); // Store QR images as blob URLs
   
   // Create QR Dialog State
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
