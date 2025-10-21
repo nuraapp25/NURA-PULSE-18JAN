@@ -243,8 +243,16 @@ export default function QRAnalytics() {
       <Card>
         <CardContent className="p-6">
           <div className="flex items-center gap-6">
-            <div className="bg-gray-100 rounded-lg p-8">
-              <QrCodeIcon className="h-32 w-32 text-gray-400" />
+            <div className="bg-white border-2 border-gray-200 rounded-lg p-4">
+              {qrImageUrl ? (
+                <img 
+                  src={qrImageUrl}
+                  alt="QR Code"
+                  className="h-32 w-32 object-contain"
+                />
+              ) : (
+                <QrCodeIcon className="h-32 w-32 text-gray-400" />
+              )}
             </div>
             <div className="flex-1 space-y-2">
               <div>
