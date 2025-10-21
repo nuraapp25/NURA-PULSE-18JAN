@@ -5039,7 +5039,7 @@ async def delete_qr_code(
         # Delete all associated scans
         await db.qr_scans.delete_many({"qr_code_id": qr_id})
         
-        logger.info(f"QR code deleted: {qr_id} by {current_user.username}")
+        logger.info(f"QR code deleted: {qr_id} by {current_user.email}")
         
         return {
             "success": True,
