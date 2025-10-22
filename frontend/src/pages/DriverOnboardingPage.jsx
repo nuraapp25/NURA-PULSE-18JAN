@@ -424,6 +424,32 @@ const DriverOnboardingPage = () => {
       setUpdatingStatus(false);
     }
   };
+  
+  // Handle inline status change (directly in table)
+  const handleInlineStatusChange = async (leadId, newStatus) => {
+    try {
+      const token = localStorage.getItem("token");
+      const lead = leads.find(l => l.id === leadId);
+      
+      if (!lead) return;
+      
+      const updatedLead = { ...lead, status: newStatus };
+      
+      await axios.put(`${API}/driver-onboarding/leads/${leadId}`, updatedLead, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      // Update local state
+      setLeads(prevLeads =>
+        prevLeads.map(l => (l.id === leadId ? updatedLead : l))
+      );
+      
+      setInlineEditingId(null);
+      toast.success("Status updated successfully");
+    } catch (error) {
+      toast.error("Failed to update status");
+    }
+  };
 
   const handleStatusUpdate = async (newStatus) => {
     if (!selectedLead) return;
