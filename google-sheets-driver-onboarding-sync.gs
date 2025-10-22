@@ -332,9 +332,9 @@ function updateSheetFromApp(leads) {
     const headers = [
       'ID', 'Name', 'Phone Number', 'Vehicle', 'Driving License', 
       'Experience', 'Interested EV', 'Monthly Salary', 'Current Location',
-      'Lead Stage', 'Status', 'Driver Readiness', 'Docs Collection',
-      'Customer Readiness', 'Assigned Telecaller', 'Telecaller Notes',
-      'Notes', 'Import Date', 'Created At'
+      'Lead Stage', 'Status', 'Driver Readiness', 'Lead Source', 'Lead Date',
+      'Docs Collection', 'Customer Readiness', 'Assigned Telecaller', 
+      'Telecaller Notes', 'Notes', 'Import Date', 'Created At'
     ];
     sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
     sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
