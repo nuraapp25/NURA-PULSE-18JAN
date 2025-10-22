@@ -629,17 +629,6 @@ const DriverOnboardingPage = () => {
             <span className="sm:hidden">Stages</span>
           </Button>
           <Button
-            onClick={fetchPerformanceData}
-            variant="outline"
-            className="border-orange-600 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20 text-sm"
-            disabled={loadingPerformance}
-            size="sm"
-          >
-            <Users size={16} className="mr-1 sm:mr-2" />
-            <span className="hidden sm:inline">Performance</span>
-            <span className="sm:hidden">Perf</span>
-          </Button>
-          <Button
             onClick={handleSyncToSheets}
             variant="outline"
             className="border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 text-sm"
