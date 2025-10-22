@@ -2966,49 +2966,56 @@ async def process_payment_screenshots(
         if not files:
             raise HTTPException(status_code=400, detail="No files uploaded")
         
-        if len(files) > 10:
-            raise HTTPException(status_code=400, detail="Maximum 10 files allowed per batch")
+        if len(files) > 20:
+            raise HTTPException(status_code=400, detail="Maximum 20 files allowed per batch")
         
         # Get the emergent LLM key
         api_key = os.environ.get("EMERGENT_LLM_KEY")
         if not api_key:
             raise HTTPException(status_code=500, detail="Emergent LLM API key not configured")
         
-        # Initialize OpenAI GPT-4o with Vision capabilities
-        chat = LlmChat(
-            api_key=api_key,
-            session_id=f"payment-extraction-{uuid.uuid4()}",
-            system_message="You are an expert at extracting ride payment details from screenshots. Extract ONLY visible data accurately. DO NOT assume or guess missing information. DO NOT copy data from one ride to another. Return structured information with N/A for any data that is not clearly visible."
-        ).with_model("openai", "gpt-4o")
-        
         extracted_results = []
         processing_errors = []
         temp_files = []
         file_mapping = {}  # Map original filename to temp file path
         
-        try:
-            # Process each file - collect all results first
-            for i, file in enumerate(files):
-                try:
-                    # Read file content
-                    file_content = await file.read()
-                    
-                    # Create temporary file
-                    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=f".{file.filename.split('.')[-1]}")
-                    temp_file.write(file_content)
-                    temp_file.close()
-                    temp_files.append(temp_file.name)
-                    
-                    # Map original filename to temp file path
-                    file_mapping[file.filename] = temp_file.name
-                    
-                    # Read image and encode as base64 for OpenAI GPT-4o Vision
-                    with open(temp_file.name, 'rb') as img_file:
-                        image_bytes = img_file.read()
-                        image_base64 = base64.b64encode(image_bytes).decode('utf-8')
-                    
-                    # Create ImageContent with base64 encoding
-                    image_content = ImageContent(image_base64=image_base64)
+        # Process files in parallel batches of 5 for optimal speed
+        import asyncio
+        
+        async def process_single_file(file, index):
+            """Process a single file and return results"""
+            try:
+                from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
+                import base64
+                import tempfile
+                import uuid
+                from datetime import datetime
+                
+                # Read file content
+                file_content = await file.read()
+                
+                # Create temporary file
+                temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=f".{file.filename.split('.')[-1]}")
+                temp_file.write(file_content)
+                temp_file.close()
+                
+                # Map original filename to temp file path
+                temp_path = temp_file.name
+                
+                # Read image and encode as base64 for OpenAI GPT-4o Vision
+                with open(temp_path, 'rb') as img_file:
+                    image_bytes = img_file.read()
+                    image_base64 = base64.b64encode(image_bytes).decode('utf-8')
+                
+                # Create ImageContent with base64 encoding
+                image_content = ImageContent(image_base64=image_base64)
+                
+                # Initialize OpenAI GPT-4o with Vision (separate instance per file)
+                chat = LlmChat(
+                    api_key=api_key,
+                    session_id=f"payment-extraction-{uuid.uuid4()}",
+                    system_message="You are an expert at extracting ride payment details from screenshots. Extract ONLY visible data accurately. DO NOT assume or guess missing information. DO NOT copy data from one ride to another. Return structured information with N/A for any data that is not clearly visible."
+                ).with_model("openai", "gpt-4o")
                     
                     # Create extraction prompt - Enhanced for Tamil auto-rickshaw receipts (multiple formats)
                     extraction_prompt = """You are analyzing ride-sharing receipt screenshots (Tamil/English). These can be in multiple formats:
