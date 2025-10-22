@@ -189,39 +189,30 @@ const DriverOnboardingPage = () => {
       });
     }
 
-    // Stage filters - updated to use new stage-based filtering
-    if (leadStageFilter && leadStageFilter !== "all") {
-      if (leadStageFilter === "filtering") {
+    // Stage filters - New hierarchical filtering
+    if (activeStageFilter !== "all") {
+      if (activeStageFilter === "filtering") {
         const filteringStatuses = FILTERING_OPTIONS.map(opt => opt.value);
         filtered = filtered.filter(lead => filteringStatuses.includes(lead.status));
-      } else if (leadStageFilter === "docs_collection") {
+      } else if (activeStageFilter === "docs") {
         const docsStatuses = DOCS_COLLECTION_OPTIONS.map(opt => opt.value);
         filtered = filtered.filter(lead => docsStatuses.includes(lead.status));
-      } else if (leadStageFilter === "driver_readiness") {
+      } else if (activeStageFilter === "driver") {
         const driverStatuses = DRIVER_READINESS_OPTIONS.map(opt => opt.value);
         filtered = filtered.filter(lead => driverStatuses.includes(lead.status));
-      } else if (leadStageFilter === "customer_readiness") {
+      } else if (activeStageFilter === "customer") {
         const customerStatuses = CUSTOMER_READINESS_OPTIONS.map(opt => opt.value);
         filtered = filtered.filter(lead => customerStatuses.includes(lead.status));
       }
     }
     
-    // Individual status filter
-    if (statusFilter !== "All") {
-      filtered = filtered.filter(lead => (lead.status || "New") === statusFilter);
-    }
-    if (driverReadinessFilter !== "All") {
-      filtered = filtered.filter(lead => (lead.driver_readiness || "Not Started") === driverReadinessFilter);
-    }
-    if (docsCollectionFilter !== "All") {
-      filtered = filtered.filter(lead => (lead.docs_collection || "Pending") === docsCollectionFilter);
-    }
-    if (customerReadinessFilter !== "All") {
-      filtered = filtered.filter(lead => (lead.customer_readiness || "Not Ready") === customerReadinessFilter);
+    // Sub-status filter (specific status within a stage)
+    if (activeSubStatus) {
+      filtered = filtered.filter(lead => lead.status === activeSubStatus);
     }
 
     setFilteredLeads(filtered);
-  }, [startDate, endDate, leadStageFilter, statusFilter, driverReadinessFilter, docsCollectionFilter, customerReadinessFilter, leads]);
+  }, [startDate, endDate, activeStageFilter, activeSubStatus, leads]);
 
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
