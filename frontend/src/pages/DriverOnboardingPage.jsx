@@ -413,6 +413,7 @@ const DriverOnboardingPage = () => {
       setLeads(updatedLeads);
       setSelectedLead(response.data.lead);
       setIsEditMode(false);
+      setHasUnsavedChanges(false);
       
       // Update last sync time after edit
       await fetchLastSyncTime();
