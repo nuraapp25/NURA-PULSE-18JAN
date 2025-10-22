@@ -94,6 +94,12 @@ const DriverOnboardingPage = () => {
   const [leadSource, setLeadSource] = useState("");
   const [leadDate, setLeadDate] = useState("");
   
+  // Inline editing state
+  const [inlineEditingId, setInlineEditingId] = useState(null);
+  
+  // Track changes in edit dialog
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  
   // Bulk selection states
   const [selectedLeadIds, setSelectedLeadIds] = useState([]);
   const [bulkStatus, setBulkStatus] = useState("");
