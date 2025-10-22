@@ -766,13 +766,22 @@ import io
 
 @api_router.post("/driver-onboarding/import-leads")
 async def import_leads(
-    file: UploadFile = File(...), 
+    request: Request,
     duplicate_action: Optional[str] = Query(None),
     current_user: User = Depends(get_current_user)
 ):
     """Import driver leads from CSV or XLSX with duplicate detection"""
     logger.info(f"Import request received. Duplicate action: {duplicate_action}")
     try:
+        # Parse form data
+        form = await request.form()
+        file = form.get('file')
+        lead_source = form.get('lead_source', '')
+        lead_date = form.get('lead_date', '')
+        
+        if not file:
+            raise HTTPException(status_code=400, detail="No file uploaded")
+        
         # Read file content
         content = await file.read()
         
@@ -805,6 +814,8 @@ async def import_leads(
                     "residing_chennai": None,
                     "current_location": None,
                     "import_date": import_date,
+                    "lead_source": lead_source,
+                    "lead_date": lead_date,
                     "status": "New",
                     "lead_stage": "New",
                     "driver_readiness": "Not Started",
