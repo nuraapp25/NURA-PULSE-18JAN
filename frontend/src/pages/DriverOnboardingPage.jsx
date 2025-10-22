@@ -110,11 +110,8 @@ const DriverOnboardingPage = () => {
   const [showDateFilter, setShowDateFilter] = useState(false);
   
   // Stage filter states
-  const [leadStageFilter, setLeadStageFilter] = useState("All");
-  const [statusFilter, setStatusFilter] = useState("All");
-  const [driverReadinessFilter, setDriverReadinessFilter] = useState("All");
-  const [docsCollectionFilter, setDocsCollectionFilter] = useState("All");
-  const [customerReadinessFilter, setCustomerReadinessFilter] = useState("All");
+  const [activeStageFilter, setActiveStageFilter] = useState("all"); // "all", "filtering", "docs", "driver", "customer"
+  const [activeSubStatus, setActiveSubStatus] = useState(null); // Specific status within a stage
   const [showStageFilters, setShowStageFilters] = useState(false);
   
   // Filter states
