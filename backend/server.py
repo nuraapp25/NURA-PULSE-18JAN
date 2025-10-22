@@ -2948,7 +2948,7 @@ async def process_payment_screenshots(
     from dotenv import load_dotenv
     from datetime import datetime
     import asyncio
-    load_env()
+    load_dotenv()
     
     try:
         from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
