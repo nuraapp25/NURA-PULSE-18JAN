@@ -1066,9 +1066,67 @@ const DriverOnboardingPage = () => {
                       </td>
                       <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm text-gray-600 dark:text-gray-400">{lead.phone_number}</td>
                       <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm">
-                        <span className={`px-1 sm:px-2 py-1 rounded text-xs font-medium ${getStatusColor(lead.status || "New")}`}>
-                          {lead.status || "New"}
-                        </span>
+                        {inlineEditingId === lead.id ? (
+                          <Select
+                            value={lead.status || "New"}
+                            onValueChange={(value) => handleInlineStatusChange(lead.id, value)}
+                          >
+                            <SelectTrigger className="w-full h-8 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="dark:bg-gray-800 max-h-[300px]">
+                              {/* Stage 1 */}
+                              <div className="px-2 py-1 text-xs font-semibold text-gray-500 bg-gray-100 dark:bg-gray-900">
+                                Stage 1: Filtering
+                              </div>
+                              {FILTERING_OPTIONS.map((opt) => (
+                                <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                                  {opt.label}
+                                </SelectItem>
+                              ))}
+                              {/* Stage 2 */}
+                              <div className="px-2 py-1 text-xs font-semibold text-gray-500 bg-gray-100 dark:bg-gray-900 mt-1">
+                                Stage 2: Docs Collection
+                              </div>
+                              {DOCS_COLLECTION_OPTIONS.map((opt) => (
+                                <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                                  {opt.label}
+                                </SelectItem>
+                              ))}
+                              {/* Stage 3 */}
+                              <div className="px-2 py-1 text-xs font-semibold text-gray-500 bg-gray-100 dark:bg-gray-900 mt-1">
+                                Stage 3: Driver Readiness
+                              </div>
+                              {DRIVER_READINESS_OPTIONS.map((opt) => (
+                                <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                                  {opt.label}
+                                </SelectItem>
+                              ))}
+                              {/* Stage 4 */}
+                              <div className="px-2 py-1 text-xs font-semibold text-gray-500 bg-gray-100 dark:bg-gray-900 mt-1">
+                                Stage 4: Customer Readiness
+                              </div>
+                              {CUSTOMER_READINESS_OPTIONS.map((opt) => (
+                                <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                                  {opt.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setInlineEditingId(lead.id);
+                            }}
+                            className="group flex items-center gap-1 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 rounded px-2 py-1 transition-colors w-full"
+                          >
+                            <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(lead.status || "New")}`}>
+                              {STATUS_OPTIONS.find(opt => opt.value === lead.status)?.label || lead.status || "New"}
+                            </span>
+                            <ChevronDown className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </button>
+                        )}
                       </td>
                       <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm text-gray-600 dark:text-gray-400 hidden md:table-cell">{lead.current_location || '-'}</td>
                       <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs text-gray-500 dark:text-gray-500 hidden lg:table-cell">
