@@ -1195,14 +1195,57 @@ const DriverOnboardingPage = () => {
                 </Label>
                 <Select
                   value={selectedLead.status || "New"}
-                  onValueChange={handleStatusUpdate}
+                  onValueChange={(value) => {
+                    handleStatusUpdate(value);
+                    setHasUnsavedChanges(true);
+                  }}
                   disabled={updatingStatus}
                 >
                   <SelectTrigger className="w-full dark:bg-gray-700 dark:border-gray-600">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
-                    {STATUS_OPTIONS.map((option) => (
+                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700 max-h-[400px]">
+                    {/* Stage 1: Filtering */}
+                    <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-900 sticky top-0">
+                      Stage 1: Filtering
+                    </div>
+                    {FILTERING_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        <span className={`px-2 py-1 rounded text-xs ${option.color}`}>
+                          {option.label}
+                        </span>
+                      </SelectItem>
+                    ))}
+                    
+                    {/* Stage 2: Docs Collection */}
+                    <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-900 sticky top-0 mt-1">
+                      Stage 2: Docs Collection
+                    </div>
+                    {DOCS_COLLECTION_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        <span className={`px-2 py-1 rounded text-xs ${option.color}`}>
+                          {option.label}
+                        </span>
+                      </SelectItem>
+                    ))}
+                    
+                    {/* Stage 3: Driver Readiness */}
+                    <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-900 sticky top-0 mt-1">
+                      Stage 3: Driver Readiness
+                    </div>
+                    {DRIVER_READINESS_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        <span className={`px-2 py-1 rounded text-xs ${option.color}`}>
+                          {option.label}
+                        </span>
+                      </SelectItem>
+                    ))}
+                    
+                    {/* Stage 4: Customer Readiness */}
+                    <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-900 sticky top-0 mt-1">
+                      Stage 4: Customer Readiness
+                    </div>
+                    {CUSTOMER_READINESS_OPTIONS.map((option) => (
                       <SelectItem key={option.value} value={option.value}>
                         <span className={`px-2 py-1 rounded text-xs ${option.color}`}>
                           {option.label}
