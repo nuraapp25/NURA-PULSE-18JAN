@@ -1080,8 +1080,35 @@ const DriverOnboardingPage = () => {
             </div>
 
             <div>
+              <Label htmlFor="lead-source" className="text-gray-700 dark:text-gray-300">
+                Lead Source *
+              </Label>
+              <Input
+                id="lead-source"
+                type="text"
+                placeholder="e.g., Facebook Ad, Referral, Walk-in"
+                value={leadSource}
+                onChange={(e) => setLeadSource(e.target.value)}
+                className="mt-1.5 dark:bg-gray-700 dark:border-gray-600"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="lead-date" className="text-gray-700 dark:text-gray-300">
+                Lead Date *
+              </Label>
+              <Input
+                id="lead-date"
+                type="date"
+                value={leadDate}
+                onChange={(e) => setLeadDate(e.target.value)}
+                className="mt-1.5 dark:bg-gray-700 dark:border-gray-600"
+              />
+            </div>
+
+            <div>
               <Label htmlFor="file-upload" className="text-gray-700 dark:text-gray-300">
-                Select CSV or XLSX File
+                Select CSV or XLSX File *
               </Label>
               <Input
                 id="file-upload"
@@ -1099,7 +1126,7 @@ const DriverOnboardingPage = () => {
 
             <Button
               onClick={handleImport}
-              disabled={!selectedFile || importing}
+              disabled={!selectedFile || !leadSource || !leadDate || importing}
               className="w-full bg-blue-600 hover:bg-blue-700"
             >
               {importing ? (
