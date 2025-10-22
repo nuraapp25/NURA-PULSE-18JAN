@@ -66,11 +66,11 @@ const STATUS_OPTIONS = [
 ];
 
 const LEAD_STAGE_OPTIONS = [
-  { value: "New", label: "New" },
-  { value: "Contacted", label: "Contacted" },
-  { value: "Qualified", label: "Qualified" },
-  { value: "Assigned to Telecaller", label: "Assigned to Telecaller" },
-  { value: "In Progress", label: "In Progress" },
+  { value: "all", label: "All Status" },
+  { value: "filtering", label: "Filtering Stage" },
+  { value: "docs_collection", label: "Docs Collection" },
+  { value: "driver_readiness", label: "Driver Readiness" },
+  { value: "customer_readiness", label: "Customer Readiness" },
 ];
 
 const DriverOnboardingPage = () => {
