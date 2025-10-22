@@ -224,12 +224,19 @@ const DriverOnboardingPage = () => {
       toast.error("Please select a file to import");
       return;
     }
+    
+    if (!leadSource || !leadDate) {
+      toast.error("Please enter lead source and date");
+      return;
+    }
 
     setImporting(true);
 
     try {
       const formData = new FormData();
       formData.append('file', selectedFile);
+      formData.append('lead_source', leadSource);
+      formData.append('lead_date', leadDate);
 
       const token = localStorage.getItem("token");
       
