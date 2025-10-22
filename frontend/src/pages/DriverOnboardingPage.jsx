@@ -72,6 +72,10 @@ const DriverOnboardingPage = () => {
   const [importing, setImporting] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
   
+  // Lead source and date for imports
+  const [leadSource, setLeadSource] = useState("");
+  const [leadDate, setLeadDate] = useState("");
+  
   // Bulk selection states
   const [selectedLeadIds, setSelectedLeadIds] = useState([]);
   const [bulkStatus, setBulkStatus] = useState("");
