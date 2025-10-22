@@ -413,6 +413,8 @@ function leadToRow(lead) {
     lead.lead_stage || 'New',
     lead.status || 'New',
     lead.driver_readiness || 'Not Started',
+    lead.lead_source || '',
+    lead.lead_date || '',
     lead.docs_collection || 'Pending',
     lead.customer_readiness || 'Not Ready',
     lead.assigned_telecaller || '',
