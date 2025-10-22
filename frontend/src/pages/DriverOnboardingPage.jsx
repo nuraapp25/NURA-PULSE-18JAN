@@ -93,11 +93,6 @@ const DriverOnboardingPage = () => {
   const [customerReadinessFilter, setCustomerReadinessFilter] = useState("All");
   const [showStageFilters, setShowStageFilters] = useState(false);
   
-  // Performance tracking
-  const [performanceDialogOpen, setPerformanceDialogOpen] = useState(false);
-  const [performanceData, setPerformanceData] = useState(null);
-  const [loadingPerformance, setLoadingPerformance] = useState(false);
-  
   // Edit mode for lead details
   const [isEditMode, setIsEditMode] = useState(false);
   const [editedLead, setEditedLead] = useState(null);
