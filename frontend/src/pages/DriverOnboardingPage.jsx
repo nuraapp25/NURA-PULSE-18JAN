@@ -776,86 +776,193 @@ const DriverOnboardingPage = () => {
       {showStageFilters && (
         <Card className="dark:bg-gray-800 dark:border-gray-700">
           <CardContent className="pt-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
-              <div>
-                <Label className="text-sm text-gray-700 dark:text-gray-300 mb-2">Lead Stage</Label>
-                <Select value={leadStageFilter} onValueChange={setLeadStageFilter}>
-                  <SelectTrigger className="dark:bg-gray-700 dark:border-gray-600">
-                    <SelectValue placeholder="All" />
-                  </SelectTrigger>
-                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
-                    <SelectItem value="All">All</SelectItem>
-                    {LEAD_STAGE_OPTIONS.map(option => (
-                      <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="flex flex-wrap items-center gap-3 mb-4">
+              {/* All Status Button */}
+              <Button
+                onClick={() => {
+                  setActiveStageFilter("all");
+                  setActiveSubStatus(null);
+                }}
+                variant={activeStageFilter === "all" ? "default" : "outline"}
+                className={activeStageFilter === "all" ? "bg-blue-600 text-white" : "border-gray-300 dark:border-gray-600"}
+                size="sm"
+              >
+                All Status
+              </Button>
 
-              <div>
-                <Label className="text-sm text-gray-700 dark:text-gray-300 mb-2">Status</Label>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="dark:bg-gray-700 dark:border-gray-600">
-                    <SelectValue placeholder="All" />
-                  </SelectTrigger>
-                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
-                    <SelectItem value="All">All</SelectItem>
-                    {STATUS_OPTIONS.map(option => (
-                      <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+              {/* Filtering Stage Dropdown */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={activeStageFilter === "filtering" ? "default" : "outline"}
+                    className={activeStageFilter === "filtering" ? "bg-green-600 text-white" : "border-green-600 text-green-600"}
+                    size="sm"
+                  >
+                    FILTERING STAGE
+                    <ChevronDown size={16} className="ml-2" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-56 dark:bg-gray-800 dark:border-gray-700">
+                  <div className="space-y-1">
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start text-sm"
+                      onClick={() => {
+                        setActiveStageFilter("filtering");
+                        setActiveSubStatus(null);
+                      }}
+                    >
+                      All Filtering Statuses
+                    </Button>
+                    {FILTERING_OPTIONS.map((option) => (
+                      <Button
+                        key={option.value}
+                        variant="ghost"
+                        className="w-full justify-start text-xs"
+                        onClick={() => {
+                          setActiveStageFilter("filtering");
+                          setActiveSubStatus(option.value);
+                        }}
+                      >
+                        {option.label}
+                      </Button>
                     ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
 
-              <div>
-                <Label className="text-sm text-gray-700 dark:text-gray-300 mb-2">Driver Readiness</Label>
-                <Select value={driverReadinessFilter} onValueChange={setDriverReadinessFilter}>
-                  <SelectTrigger className="dark:bg-gray-700 dark:border-gray-600">
-                    <SelectValue placeholder="All" />
-                  </SelectTrigger>
-                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
-                    <SelectItem value="All">All</SelectItem>
-                    {DRIVER_READINESS_OPTIONS.map(option => (
-                      <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+              {/* Docs Collection Dropdown */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={activeStageFilter === "docs" ? "default" : "outline"}
+                    className={activeStageFilter === "docs" ? "bg-orange-600 text-white" : "border-orange-600 text-orange-600"}
+                    size="sm"
+                  >
+                    DOCS_COLLECTION
+                    <ChevronDown size={16} className="ml-2" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-56 dark:bg-gray-800 dark:border-gray-700">
+                  <div className="space-y-1">
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start text-sm"
+                      onClick={() => {
+                        setActiveStageFilter("docs");
+                        setActiveSubStatus(null);
+                      }}
+                    >
+                      All Docs Statuses
+                    </Button>
+                    {DOCS_COLLECTION_OPTIONS.map((option) => (
+                      <Button
+                        key={option.value}
+                        variant="ghost"
+                        className="w-full justify-start text-xs"
+                        onClick={() => {
+                          setActiveStageFilter("docs");
+                          setActiveSubStatus(option.value);
+                        }}
+                      >
+                        {option.label}
+                      </Button>
                     ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
 
-              <div>
-                <Label className="text-sm text-gray-700 dark:text-gray-300 mb-2">Docs Collection</Label>
-                <Select value={docsCollectionFilter} onValueChange={setDocsCollectionFilter}>
-                  <SelectTrigger className="dark:bg-gray-700 dark:border-gray-600">
-                    <SelectValue placeholder="All" />
-                  </SelectTrigger>
-                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
-                    <SelectItem value="All">All</SelectItem>
-                    {DOCS_COLLECTION_OPTIONS.map(option => (
-                      <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+              {/* Driver Readiness Dropdown */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={activeStageFilter === "driver" ? "default" : "outline"}
+                    className={activeStageFilter === "driver" ? "bg-purple-600 text-white" : "border-purple-600 text-purple-600"}
+                    size="sm"
+                  >
+                    DRIVER READINESS
+                    <ChevronDown size={16} className="ml-2" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-56 dark:bg-gray-800 dark:border-gray-700">
+                  <div className="space-y-1">
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start text-sm"
+                      onClick={() => {
+                        setActiveStageFilter("driver");
+                        setActiveSubStatus(null);
+                      }}
+                    >
+                      All Driver Statuses
+                    </Button>
+                    {DRIVER_READINESS_OPTIONS.map((option) => (
+                      <Button
+                        key={option.value}
+                        variant="ghost"
+                        className="w-full justify-start text-xs"
+                        onClick={() => {
+                          setActiveStageFilter("driver");
+                          setActiveSubStatus(option.value);
+                        }}
+                      >
+                        {option.label}
+                      </Button>
                     ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
 
-              <div>
-                <Label className="text-sm text-gray-700 dark:text-gray-300 mb-2">Customer Readiness</Label>
-                <Select value={customerReadinessFilter} onValueChange={setCustomerReadinessFilter}>
-                  <SelectTrigger className="dark:bg-gray-700 dark:border-gray-600">
-                    <SelectValue placeholder="All" />
-                  </SelectTrigger>
-                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
-                    <SelectItem value="All">All</SelectItem>
-                    {CUSTOMER_READINESS_OPTIONS.map(option => (
-                      <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+              {/* Customer Readiness Dropdown */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={activeStageFilter === "customer" ? "default" : "outline"}
+                    className={activeStageFilter === "customer" ? "bg-pink-600 text-white" : "border-pink-600 text-pink-600"}
+                    size="sm"
+                  >
+                    CUSTOMER READINESS
+                    <ChevronDown size={16} className="ml-2" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-56 dark:bg-gray-800 dark:border-gray-700">
+                  <div className="space-y-1">
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start text-sm"
+                      onClick={() => {
+                        setActiveStageFilter("customer");
+                        setActiveSubStatus(null);
+                      }}
+                    >
+                      All Customer Statuses
+                    </Button>
+                    {CUSTOMER_READINESS_OPTIONS.map((option) => (
+                      <Button
+                        key={option.value}
+                        variant="ghost"
+                        className="w-full justify-start text-xs"
+                        onClick={() => {
+                          setActiveStageFilter("customer");
+                          setActiveSubStatus(option.value);
+                        }}
+                      >
+                        {option.label}
+                      </Button>
                     ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
 
             <div className="flex items-center justify-between">
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 Showing {filteredLeads.length} of {leads.length} leads
+                {activeSubStatus && (
+                  <span className="ml-2 text-blue-600 dark:text-blue-400 font-medium">
+                    • Filtered by: {STATUS_OPTIONS.find(opt => opt.value === activeSubStatus)?.label}
+                  </span>
+                )}
               </p>
               <Button
                 onClick={clearAllFilters}
