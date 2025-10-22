@@ -621,12 +621,16 @@ const PaymentReconciliation = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      // Clear frontend data after successful sync
+      // Clear ALL frontend state after successful sync to enable next batch
       setExtractedData([]);
       setUploadedFiles([]);
+      setSelectedDriver("");
+      setSelectedVehicle("");
+      setSelectedPlatform("");
+      setFilesImported(false);
       setLastSync(new Date().toISOString());
       
-      toast.success("Successfully synced to Google Sheets and cleared local data");
+      toast.success("Successfully synced to Google Sheets! Ready for next batch.");
     } catch (error) {
       toast.error("Failed to sync to Google Sheets");
       console.error("Sync error:", error);
