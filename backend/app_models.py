@@ -160,6 +160,10 @@ class DriverLead(BaseModel):
     current_location: Optional[str] = None
     import_date: str
     
+    # Lead source and date tracking
+    lead_source: Optional[str] = None
+    lead_date: Optional[str] = None
+    
     # Stage fields
     lead_stage: str = "New"  # New, Contacted, Qualified, Assigned to Telecaller, In Progress
     status: str = "New"  # Status/Filtration stage
