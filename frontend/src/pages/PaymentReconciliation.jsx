@@ -298,6 +298,9 @@ const PaymentReconciliation = () => {
 
     setShowDriverDialog(false);
     setProcessing(true);
+    setProcessingProgress(0);
+    setProcessingStatus("Preparing files...");
+    
     try {
       const token = localStorage.getItem("token");
       const formData = new FormData();
@@ -313,6 +316,29 @@ const PaymentReconciliation = () => {
       formData.append("vehicle_number", selectedVehicle);
       formData.append("platform", selectedPlatform);
       
+      // Simulate progress (since backend processes in batches of 3)
+      const totalFiles = uploadedFiles.length;
+      const progressInterval = setInterval(() => {
+        setProcessingProgress(prev => {
+          if (prev < 90) {
+            // Progress to 90% while processing
+            const increment = Math.random() * 15;
+            return Math.min(prev + increment, 90);
+          }
+          return prev;
+        });
+      }, 800);
+      
+      // Update status messages
+      setTimeout(() => setProcessingStatus(`Processing ${Math.min(3, totalFiles)} files...`), 500);
+      setTimeout(() => setProcessingStatus(`Extracting payment data...`), 3000);
+      if (totalFiles > 3) {
+        setTimeout(() => setProcessingStatus(`Processing next batch...`), 6000);
+      }
+      if (totalFiles > 6) {
+        setTimeout(() => setProcessingStatus(`Processing final batch...`), 9000);
+      }
+      
       const response = await axios.post(
         `${API}/payment-reconciliation/process-screenshots`,
         formData,
@@ -321,9 +347,13 @@ const PaymentReconciliation = () => {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'multipart/form-data'
           },
-          timeout: 120000 // 2 minutes timeout for processing
+          timeout: 180000 // 3 minutes timeout (increased for parallel processing)
         }
       );
+      
+      clearInterval(progressInterval);
+      setProcessingProgress(100);
+      setProcessingStatus("Complete!");
       
       if (response.data.success) {
         // Map the extracted data to our table format
@@ -351,7 +381,9 @@ const PaymentReconciliation = () => {
         // Don't clear uploadedFiles - we need them for importing to backend
         setFilesImported(false); // Reset import status
         
-        toast.success(`Successfully processed all ${response.data.processed_files} screenshots!`);
+        toast.success(`Successfully processed all ${response.data.processed_files} screenshots!`, {
+          description: `Extracted ${response.data.total_rides_extracted} ride(s)`
+        });
       } else {
         toast.error("Failed to process screenshots");
       }
@@ -373,6 +405,8 @@ const PaymentReconciliation = () => {
       }
     } finally {
       setProcessing(false);
+      setProcessingProgress(0);
+      setProcessingStatus("");
     }
   };
 
