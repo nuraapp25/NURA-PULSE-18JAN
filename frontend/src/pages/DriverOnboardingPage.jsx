@@ -14,15 +14,55 @@ import { toast } from "sonner";
 import { Upload, Users, FileSpreadsheet, RefreshCw, Plus, Calendar as CalendarIcon, Filter, X, CheckSquare, Square, XCircle } from "lucide-react";
 import { format } from "date-fns";
 
+// Stage 1: Filtering
+const FILTERING_OPTIONS = [
+  { value: "Not interested", label: "Not interested", color: "bg-gray-100 text-gray-700" },
+  { value: "Interested, No Driving License", label: "Interested, No DL", color: "bg-yellow-100 text-yellow-700" },
+  { value: "Highly Interested", label: "Highly Interested", color: "bg-green-100 text-green-700" },
+  { value: "Call back 1D", label: "Call back 1D", color: "bg-blue-100 text-blue-700" },
+  { value: "Call back 1W", label: "Call back 1W", color: "bg-blue-100 text-blue-700" },
+  { value: "Call back 2W", label: "Call back 2W", color: "bg-blue-100 text-blue-700" },
+  { value: "Call back 1M", label: "Call back 1M", color: "bg-blue-100 text-blue-700" },
+];
+
+// Stage 2: Docs Collection
+const DOCS_COLLECTION_OPTIONS = [
+  { value: "Docs Upload Pending", label: "Docs Upload Pending", color: "bg-orange-100 text-orange-700" },
+  { value: "Verification Pending", label: "Verification Pending", color: "bg-yellow-100 text-yellow-700" },
+  { value: "Duplicate License", label: "Duplicate License", color: "bg-red-100 text-red-700" },
+  { value: "DL - Amount", label: "DL - Amount", color: "bg-purple-100 text-purple-700" },
+  { value: "Verified", label: "Verified", color: "bg-green-100 text-green-700" },
+];
+
+// Stage 3: Driver Readiness
+const DRIVER_READINESS_OPTIONS = [
+  { value: "Schedule_Pending", label: "Schedule Pending", color: "bg-orange-100 text-orange-700" },
+  { value: "Training WIP", label: "Training WIP", color: "bg-blue-100 text-blue-700" },
+  { value: "Training Completed", label: "Training Completed", color: "bg-green-100 text-green-700" },
+  { value: "Training Rejected", label: "Training Rejected", color: "bg-red-100 text-red-700" },
+  { value: "Re-Training", label: "Re-Training", color: "bg-yellow-100 text-yellow-700" },
+  { value: "Absent for training", label: "Absent for training", color: "bg-gray-100 text-gray-700" },
+  { value: "Approved", label: "Approved", color: "bg-green-100 text-green-700" },
+];
+
+// Stage 4: Customer Readiness
+const CUSTOMER_READINESS_OPTIONS = [
+  { value: "CT_Pending", label: "CT Pending", color: "bg-orange-100 text-orange-700" },
+  { value: "CT_WIP", label: "CT WIP", color: "bg-blue-100 text-blue-700" },
+  { value: "Shift details pending", label: "Shift Details Pending", color: "bg-yellow-100 text-yellow-700" },
+  { value: "DONE!", label: "DONE!", color: "bg-green-100 text-green-700" },
+  { value: "Training Rejected", label: "Training Rejected", color: "bg-red-100 text-red-700" },
+  { value: "Re-Training", label: "Re-Training", color: "bg-yellow-100 text-yellow-700" },
+  { value: "Absent for training", label: "Absent for training", color: "bg-gray-100 text-gray-700" },
+  { value: "Terminated", label: "Terminated", color: "bg-red-100 text-red-700" },
+];
+
+// Combined status options (for backward compatibility)
 const STATUS_OPTIONS = [
-  { value: "New", label: "New", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" },
-  { value: "Contacted", label: "Contacted", color: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400" },
-  { value: "Interested", label: "Interested", color: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" },
-  { value: "Documents Pending", label: "Documents Pending", color: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400" },
-  { value: "Scheduled", label: "Scheduled", color: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400" },
-  { value: "Onboarded", label: "Onboarded", color: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" },
-  { value: "Rejected", label: "Rejected", color: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" },
-  { value: "Not Interested", label: "Not Interested", color: "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400" },
+  ...FILTERING_OPTIONS,
+  ...DOCS_COLLECTION_OPTIONS,
+  ...DRIVER_READINESS_OPTIONS,
+  ...CUSTOMER_READINESS_OPTIONS
 ];
 
 const LEAD_STAGE_OPTIONS = [
@@ -31,28 +71,6 @@ const LEAD_STAGE_OPTIONS = [
   { value: "Qualified", label: "Qualified" },
   { value: "Assigned to Telecaller", label: "Assigned to Telecaller" },
   { value: "In Progress", label: "In Progress" },
-];
-
-const DRIVER_READINESS_OPTIONS = [
-  { value: "Not Started", label: "Not Started" },
-  { value: "Training Pending", label: "Training Pending" },
-  { value: "In Training", label: "In Training" },
-  { value: "Training Completed", label: "Training Completed" },
-];
-
-const DOCS_COLLECTION_OPTIONS = [
-  { value: "Pending", label: "Pending" },
-  { value: "Documents Submitted", label: "Documents Submitted" },
-  { value: "Documents Verified", label: "Documents Verified" },
-  { value: "Road Test Scheduled", label: "Road Test Scheduled" },
-  { value: "Road Test Passed", label: "Road Test Passed" },
-  { value: "Road Test Failed", label: "Road Test Failed" },
-];
-
-const CUSTOMER_READINESS_OPTIONS = [
-  { value: "Not Ready", label: "Not Ready" },
-  { value: "Ready for Onboarding", label: "Ready for Onboarding" },
-  { value: "Onboarded", label: "Onboarded" },
 ];
 
 const DriverOnboardingPage = () => {
