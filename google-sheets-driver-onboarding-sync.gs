@@ -22,13 +22,15 @@ const COLUMNS = {
   LEAD_STAGE: 10,           // J
   STATUS: 11,               // K
   DRIVER_READINESS: 12,     // L
-  DOCS_COLLECTION: 13,      // M
-  CUSTOMER_READINESS: 14,   // N
-  ASSIGNED_TELECALLER: 15,  // O
-  TELECALLER_NOTES: 16,     // P
-  NOTES: 17,                // Q
-  IMPORT_DATE: 18,          // R
-  CREATED_AT: 19            // S
+  LEAD_SOURCE: 13,          // M
+  LEAD_DATE: 14,            // N
+  DOCS_COLLECTION: 15,      // O
+  CUSTOMER_READINESS: 16,   // P
+  ASSIGNED_TELECALLER: 17,  // Q
+  TELECALLER_NOTES: 18,     // R
+  NOTES: 19,                // S
+  IMPORT_DATE: 20,          // T
+  CREATED_AT: 21            // U
 };
 
 // ======================== MAIN FUNCTIONS ========================
