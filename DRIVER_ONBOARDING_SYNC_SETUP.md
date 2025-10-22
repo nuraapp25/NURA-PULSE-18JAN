@@ -12,7 +12,7 @@ This setup enables **automatic two-way synchronization** between Google Sheets a
 ## 📋 Prerequisites
 
 1. Access to the Google Sheet: https://docs.google.com/spreadsheets/d/1FfZYvc9EpSE03myhp3yk8lfOzCJoibVmaJ74Xm-qhv0/edit
-2. Backend URL: `https://driver-sync-hub.preview.emergentagent.com/api`
+2. Backend URL: `https://driver-sync.preview.emergentagent.com/api`
 3. The backend webhook endpoint is already deployed and ready
 
 ---
@@ -40,7 +40,7 @@ Ensure your sheet has the following columns (in order):
 4. Paste it into the Apps Script editor
 5. **IMPORTANT**: Update the configuration at the top of the script:
    ```javascript
-   const APP_WEBHOOK_URL = 'https://driver-sync-hub.preview.emergentagent.com/api/driver-onboarding/webhook/sync-from-sheets';
+   const APP_WEBHOOK_URL = 'https://driver-sync.preview.emergentagent.com/api/driver-onboarding/webhook/sync-from-sheets';
    const SHEET_NAME = 'Driver Leads'; // Your sheet tab name
    ```
 6. Click the **Save** icon (💾) and name your project "Nura Pulse Sync"
