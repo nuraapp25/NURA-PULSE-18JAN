@@ -597,11 +597,8 @@ const DriverOnboardingPage = () => {
   const clearAllFilters = () => {
     setStartDate(null);
     setEndDate(null);
-    setLeadStageFilter("All");
-    setStatusFilter("All");
-    setDriverReadinessFilter("All");
-    setDocsCollectionFilter("All");
-    setCustomerReadinessFilter("All");
+    setActiveStageFilter("all");
+    setActiveSubStatus(null);
   };
 
   const getStatusColor = (status) => {
