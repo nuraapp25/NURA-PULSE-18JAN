@@ -859,6 +859,8 @@ async def import_leads(
                     "residing_chennai": None,
                     "current_location": location,
                     "import_date": import_date,
+                    "lead_source": lead_source,
+                    "lead_date": lead_date,
                     "status": "New",
                     "lead_stage": "New",
                     "driver_readiness": "Not Started",
