@@ -44,6 +44,8 @@ const PaymentReconciliation = () => {
   const [extractedData, setExtractedData] = useState([]);
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [processing, setProcessing] = useState(false);
+  const [processingProgress, setProcessingProgress] = useState(0); // 0-100
+  const [processingStatus, setProcessingStatus] = useState(""); // Status message
   const [loadingData, setLoadingData] = useState(false);
   const [editingAmount, setEditingAmount] = useState(null);
   const [editValue, setEditValue] = useState("");
