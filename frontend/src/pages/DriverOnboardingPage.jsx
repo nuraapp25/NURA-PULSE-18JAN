@@ -117,6 +117,11 @@ const DriverOnboardingPage = () => {
   const [customerReadinessFilter, setCustomerReadinessFilter] = useState("All");
   const [showStageFilters, setShowStageFilters] = useState(false);
   
+  // Filter states
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedStage, setSelectedStage] = useState("all"); // Stage category
+  const [selectedStatus, setSelectedStatus] = useState("all"); // Specific status within stage
+  
   // Edit mode for lead details
   const [isEditMode, setIsEditMode] = useState(false);
   const [editedLead, setEditedLead] = useState(null);
