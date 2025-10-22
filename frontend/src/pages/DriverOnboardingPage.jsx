@@ -373,6 +373,7 @@ const DriverOnboardingPage = () => {
       ...prev,
       [field]: value
     }));
+    setHasUnsavedChanges(true);
   };
 
   const handleSaveChanges = async () => {
