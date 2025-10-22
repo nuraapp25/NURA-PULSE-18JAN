@@ -2944,10 +2944,284 @@ async def process_payment_screenshots(
     request: Request,
     current_user: User = Depends(get_current_user)
 ):
-    """Process uploaded screenshots using OpenAI GPT-4o Vision to extract payment data"""
+    """Process uploaded screenshots using OpenAI GPT-4o Vision to extract payment data - PARALLEL PROCESSING"""
     from dotenv import load_dotenv
     from datetime import datetime
-    load_dotenv()
+    import asyncio
+    load_env()
+    
+    try:
+        from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
+        import base64
+        import tempfile
+        import uuid
+        
+        # Parse form data
+        form = await request.form()
+        files = form.getlist("files")
+        month_year = form.get("month_year", "")
+        driver_name = form.get("driver_name", "")
+        vehicle_number = form.get("vehicle_number", "")
+        platform = form.get("platform", "")
+        
+        if not files:
+            raise HTTPException(status_code=400, detail="No files uploaded")
+        
+        if len(files) > 10:
+            raise HTTPException(status_code=400, detail="Maximum 10 files allowed per batch")
+        
+        # Get the emergent LLM key
+        api_key = os.environ.get("EMERGENT_LLM_KEY")
+        if not api_key:
+            raise HTTPException(status_code=500, detail="Emergent LLM API key not configured")
+        
+        logger.info(f"🚀 Starting parallel processing of {len(files)} files")
+        
+        # Extraction prompt (keeping the same detailed prompt)
+        extraction_prompt = """You are analyzing ride-sharing receipt screenshots (Tamil/English). These can be in multiple formats:
+
+**FORMAT TYPES:**
+1. Simple cash receipts: "Auto", time, கேஷ், ₹amount
+2. Detailed app receipts: "Auto", ₹amount, distance (கி.மீ), duration (நிமி, வி), time
+3. Paytm detailed receipts: "மதிப்பிடப்பட்ட வருவாய்" (Estimated Fare), distance with decimals (2.36 km), duration with decimals (16.67 min), pickup/drop locations
+4. Ride history list: Multiple rides with timestamps like "10:59 pm", "10:18 pm", pickup/drop locations, fare amounts
+5. Surge pricing: Upward arrow ↑ with "அதிகரித்துள்ளது" (increased)
+6. Cancellations: "வாடிக்கையாளர் ரத்துசெய்தார்" (customer cancelled) or "வண்டிக்கையாளர் ரத்துசெய்தார்" (driver cancelled)
+7. Zero-fare rides: ₹0.00 with promotional text or cancellation
+
+**TAMIL TEXT MEANINGS:**
+- கேஷ் = Cash
+- கி.மீ / km = Kilometers
+- நிமி = Minutes (நிமிடம்)
+- வி = Seconds (விநாடி)
+- ம.நே = Hours (மணிநேரம்)
+- மதிப்பிடப்பட்ட வருவாய் / மதிப்பிடப்பட்ட வரு... = Estimated Fare
+- பிக்கப் = Pickup
+- முரபி / டிராப் = Dropoff/Drop
+- அதிகரித்துள்ளது = Surge/Increased pricing
+- வாடிக்கையாளர் ரத்துசெய்தார் = Customer cancelled
+- வண்டிக்கையாளர் ரத்துசெய்தார் = Driver cancelled
+- பயணச் சவால் = Travel challenge (promotional)
+- ஆட்டோ ஆர்டர் = Auto Order
+- முடிந்த ஆர்டர்கள் = Completed orders/rides
+
+**EXTRACT EACH RIDE AS JSON:**
+
+[
+  {
+    "driver": "Driver name if visible, otherwise N/A",
+    "vehicle": "Vehicle number if visible, otherwise N/A", 
+    "description": "Auto, Bike, Car, etc. If surge add (Surge), if cancelled add (Cancelled)",
+    "date": "DD/MM/YYYY format (convert DD MMM or date from screenshot)",
+    "time": "HH:MM AM/PM format",
+    "amount": "Fare amount as NUMBER only (no ₹, commas). Use 0 for ₹0.00 rides",
+    "payment_mode": "Cash/UPI/Card if visible, otherwise N/A",
+    "distance": "Extract km as NUMBER only (e.g., '3.57' from '3.57 கி.மீ'), or N/A",
+    "duration": "Convert to MINUTES as NUMBER (e.g., '16' for '16 நிமி', '71' for '1 ம.நே 11 நிமி'), or N/A", 
+    "pickup_km": "N/A",
+    "drop_km": "N/A",
+    "pickup_location": "N/A",
+    "drop_location": "N/A"
+  }
+]
+
+**EXTRACTION RULES:**
+✅ Extract EVERY visible ride (including ₹0.00 if cancelled/promotional)
+✅ For duration: Convert hours to minutes (1 hour 11 min = 71 min)
+✅ Accept decimal distances: "2.36 km" → 2.36
+✅ Accept decimal durations: "16.67 min" → 16.67
+✅ For surge pricing: Include in description (e.g., "Auto (Surge)")
+✅ For cancellations: Set amount to 0, add to description (e.g., "Auto (Cancelled)")
+✅ Skip only "Bank Transfer" entries or unrelated promotional banners
+✅ Extract distance/duration as numbers (remove Tamil/English text)
+✅ If screenshot shows "26 September" or "செப்." convert to DD/MM/2024 format
+✅ Extract pickup/drop locations if visible (e.g., "Crown Residences", "Mogappair West")
+✅ For ride history lists: Extract each ride separately with its timestamp
+
+⚠️ **CRITICAL RULES - NO ASSUMPTIONS:**
+❌ DO NOT copy or assume data from other rides in the same screenshot
+❌ DO NOT guess missing pickup/drop locations - use "N/A" if not visible
+❌ DO NOT assume the same location repeats across multiple rides
+❌ DO NOT fill in missing data based on other rides
+✅ ONLY extract data that is CLEARLY VISIBLE for each specific ride
+✅ If a ride has no visible pickup location, use "N/A" - DO NOT copy from other rides
+✅ If a ride has no visible drop location, use "N/A" - DO NOT copy from other rides
+✅ Each ride is independent - treat them separately
+
+**EXAMPLE CONVERSIONS:**
+- "3.57 கி.மீ" / "2.36 km" → distance: "3.57" / "2.36"
+- "16 நிமி 55 வி" → duration: "16" (ignore seconds)
+- "16.67 min" → duration: "16.67"
+- "1 ம.நே 11 நிமி" → duration: "71"
+- "₹126.45" / "₹89" → amount: "126.45" / "89"
+- "திங்கள்., 29 செப்." / "26 September" → date: "29/09/2024" / "26/09/2024"
+- "10:59 pm" → time: "10:59 PM"
+- "Crown Residences" → pickup_location: "Crown Residences"
+- "8/25, Srinivasa Nagar, Virugambakkam" → drop_location: "8/25, Srinivasa Nagar, Virugambakkam"
+- "B1 Entrance, Thirumangalam Metro St..." → pickup_location: "B1 Entrance, Thirumangalam Metro Station"
+
+Be precise and extract ALL rides shown in the screenshot. If a screenshot shows multiple rides (like a ride history list), extract each as a separate record.
+"""
+        
+        # Function to process a single file
+        async def process_single_file(file, index):
+            """Process one file and return results"""
+            try:
+                logger.info(f"  📄 Processing file {index + 1}/{len(files)}: {file.filename}")
+                
+                # Read file content
+                file_content = await file.read()
+                
+                # Create temporary file
+                temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=f".{file.filename.split('.')[-1]}")
+                temp_file.write(file_content)
+                temp_file.close()
+                temp_path = temp_file.name
+                
+                # Read image and encode as base64
+                with open(temp_path, 'rb') as img_file:
+                    image_bytes = img_file.read()
+                    image_base64 = base64.b64encode(image_bytes).decode('utf-8')
+                
+                # Create ImageContent
+                image_content = ImageContent(image_base64=image_base64)
+                
+                # Initialize separate chat instance for this file (thread-safe)
+                chat = LlmChat(
+                    api_key=api_key,
+                    session_id=f"payment-extraction-{uuid.uuid4()}",
+                    system_message="You are an expert at extracting ride payment details from screenshots. Extract ONLY visible data accurately."
+                ).with_model("openai", "gpt-4o")
+                
+                # Send to OpenAI GPT-4o Vision
+                user_message = UserMessage(
+                    text=extraction_prompt,
+                    file_contents=[image_content]
+                )
+                
+                response = await chat.send_message(user_message)
+                
+                # Parse JSON response
+                import json
+                clean_response = response.strip()
+                if clean_response.startswith("```json"):
+                    clean_response = clean_response[7:]
+                if clean_response.endswith("```"):
+                    clean_response = clean_response[:-3]
+                clean_response = clean_response.strip()
+                
+                parsed_data = json.loads(clean_response)
+                
+                # Handle both single object and array responses
+                results = []
+                if isinstance(parsed_data, list):
+                    for ride_data in parsed_data:
+                        ride_data["screenshot_filename"] = file.filename
+                        ride_data["id"] = str(uuid.uuid4())
+                        ride_data["processed_at"] = datetime.now().isoformat()
+                        results.append(ride_data)
+                else:
+                    parsed_data["screenshot_filename"] = file.filename
+                    parsed_data["id"] = str(uuid.uuid4())
+                    parsed_data["processed_at"] = datetime.now().isoformat()
+                    results.append(parsed_data)
+                
+                # Cleanup temp file
+                try:
+                    if os.path.exists(temp_path):
+                        os.unlink(temp_path)
+                except:
+                    pass
+                
+                logger.info(f"  ✅ File {index + 1} processed: {len(results)} ride(s) extracted")
+                return {"success": True, "results": results, "filename": file.filename}
+                
+            except Exception as e:
+                logger.error(f"  ❌ Error processing file {index + 1} ({file.filename}): {str(e)}")
+                return {"success": False, "error": str(e), "filename": file.filename}
+        
+        # Process files in parallel (3 files at a time to avoid rate limits)
+        batch_size = 3
+        all_results = []
+        errors = []
+        
+        for i in range(0, len(files), batch_size):
+            batch = files[i:i+batch_size]
+            batch_indices = list(range(i, min(i+batch_size, len(files))))
+            
+            logger.info(f"🔄 Processing batch {i//batch_size + 1}: files {i+1}-{min(i+batch_size, len(files))}")
+            
+            # Process batch in parallel
+            tasks = [process_single_file(file, idx) for file, idx in zip(batch, batch_indices)]
+            batch_results = await asyncio.gather(*tasks, return_exceptions=True)
+            
+            # Collect results
+            for result in batch_results:
+                if isinstance(result, Exception):
+                    errors.append(str(result))
+                elif result["success"]:
+                    all_results.extend(result["results"])
+                else:
+                    errors.append(f"{result['filename']}: {result['error']}")
+            
+            # Small delay between batches to respect rate limits
+            if i + batch_size < len(files):
+                await asyncio.sleep(0.5)
+        
+        # Check if we got results
+        if errors and not all_results:
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "message": "All files failed to process",
+                    "errors": errors,
+                    "failed_batch": True
+                }
+            )
+        
+        # Add metadata and save to MongoDB
+        if all_results:
+            for record in all_results:
+                record["user_id"] = current_user.id
+                record["month_year"] = month_year
+                record["driver"] = driver_name or record.get("driver", "N/A")
+                record["vehicle"] = vehicle_number or record.get("vehicle", "N/A")
+                record["platform"] = platform or record.get("platform", "N/A")
+                record["uploaded_at"] = datetime.now().isoformat()
+                record["status"] = "pending"
+                record["files_imported"] = False
+            
+            # Save to MongoDB
+            try:
+                records_to_insert = [record.copy() for record in all_results]
+                await db.payment_records.insert_many(records_to_insert)
+                logger.info(f"✅ Saved {len(all_results)} payment records to MongoDB")
+                
+                # Clean up _id
+                for record in all_results:
+                    if "_id" in record:
+                        del record["_id"]
+            except Exception as e:
+                logger.error(f"❌ Failed to save to MongoDB: {str(e)}")
+        
+        logger.info(f"🎉 Processing complete: {len(all_results)} rides from {len(files)} files")
+        
+        return {
+            "success": True,
+            "extracted_data": all_results,
+            "processed_files": len(files),
+            "total_rides_extracted": len(all_results),
+            "errors": errors if errors else None,
+            "message": f"Successfully processed {len(files)} screenshots and extracted {len(all_results)} ride(s)"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Fatal error in process_payment_screenshots: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Processing failed: {str(e)}")
     
     try:
         from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
