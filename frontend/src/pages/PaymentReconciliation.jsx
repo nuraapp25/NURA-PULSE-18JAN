@@ -835,7 +835,7 @@ const PaymentReconciliation = () => {
                 {processing ? (
                   <>
                     <Clock className="mr-2 h-4 w-4 animate-spin" />
-                    Processing {uploadedFiles.length} File(s)...
+                    Processing...
                   </>
                 ) : (
                   <>
@@ -845,19 +845,67 @@ const PaymentReconciliation = () => {
               </Button>
             </div>
           )}
+          
+          {/* Processing Progress Bar */}
+          {processing && (
+            <div className="mt-6 p-6 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg border-2 border-blue-200 dark:border-blue-800">
+              <div className="flex flex-col items-center space-y-4">
+                {/* Circular Progress */}
+                <div className="relative w-32 h-32">
+                  <svg className="transform -rotate-90 w-32 h-32">
+                    <circle
+                      cx="64"
+                      cy="64"
+                      r="56"
+                      stroke="currentColor"
+                      strokeWidth="8"
+                      fill="transparent"
+                      className="text-gray-200 dark:text-gray-700"
+                    />
+                    <circle
+                      cx="64"
+                      cy="64"
+                      r="56"
+                      stroke="currentColor"
+                      strokeWidth="8"
+                      fill="transparent"
+                      strokeDasharray={`${2 * Math.PI * 56}`}
+                      strokeDashoffset={`${2 * Math.PI * 56 * (1 - processingProgress / 100)}`}
+                      className="text-blue-600 dark:text-blue-400 transition-all duration-500"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                      {Math.round(processingProgress)}%
+                    </span>
+                  </div>
+                </div>
+                
+                {/* Status Text */}
+                <div className="text-center">
+                  <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                    {processingStatus || "Processing screenshots..."}
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    Extracting payment data from {uploadedFiles.length} file(s)
+                  </p>
+                </div>
+                
+                {/* Pulse Animation */}
+                <div className="flex space-x-2">
+                  <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></div>
+                  <div className="w-2 h-2 bg-purple-600 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
+                  <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
+                </div>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
       {/* Extracted Payment Data */}
       <Card className="dark:bg-gray-800 dark:border-gray-700">
-          {/* Important Note */}
-          <div className="px-6 pt-4 pb-2">
-            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
-              <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                <span className="font-semibold">NOTE:</span> Refresh the page after each batch of images are successfully synced to Google Sheets. Do not upload next batch without refreshing.
-              </p>
-            </div>
-          </div>
           
           <CardHeader>
             <CardTitle className="flex items-center justify-between dark:text-white">
