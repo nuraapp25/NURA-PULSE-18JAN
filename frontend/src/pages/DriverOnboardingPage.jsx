@@ -1544,12 +1544,23 @@ const DriverOnboardingPage = () => {
                     onClick={() => {
                       setDetailDialogOpen(false);
                       setIsEditMode(false);
+                      setHasUnsavedChanges(false);
                     }}
                     variant="outline"
                     className="dark:border-gray-600"
                   >
                     Close
                   </Button>
+                  
+                  {isEditMode && hasUnsavedChanges && (
+                    <Button
+                      onClick={handleSaveChanges}
+                      className="bg-blue-600 hover:bg-blue-700 animate-pulse"
+                    >
+                      <Save className="w-4 h-4 mr-2" />
+                      Save Changes
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
