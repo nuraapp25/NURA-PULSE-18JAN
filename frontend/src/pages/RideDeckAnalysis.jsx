@@ -74,8 +74,20 @@ const RideDeckAnalysis = () => {
       clearInterval(progressInterval);
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to process file');
+        let errorMessage = 'Failed to process file';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.detail || errorMessage;
+        } catch (e) {
+          // If JSON parse fails, try to get text
+          try {
+            const errorText = await response.text();
+            errorMessage = errorText || `HTTP ${response.status}: ${response.statusText}`;
+          } catch (e2) {
+            errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+          }
+        }
+        throw new Error(errorMessage);
       }
 
       // Get the blob from response
