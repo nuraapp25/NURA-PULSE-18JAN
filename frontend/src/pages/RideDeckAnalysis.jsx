@@ -9,12 +9,20 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || '';
 const API = `${BACKEND_URL}/api`;
 
 const RideDeckAnalysis = () => {
+  // Distance calculation state
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [downloadUrl, setDownloadUrl] = useState(null);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  
+  // Data import state
+  const [importType, setImportType] = useState(null); // 'customer' or 'ride'
+  const [importFile, setImportFile] = useState(null);
+  const [importing, setImporting] = useState(false);
+  const [importStats, setImportStats] = useState(null);
+  const [stats, setStats] = useState(null);
 
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
