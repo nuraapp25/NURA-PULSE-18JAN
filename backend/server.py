@@ -815,8 +815,85 @@ async def import_leads(
         leads = []
         import_date = datetime.now(timezone.utc).isoformat()
         
-        # Check column count to determine format
-        if len(df.columns) == 4:
+        # Detect format by checking column names or structure
+        # Format 3: Check if it has the new format with headers like "Name ", "Phone No", "Address ", etc.
+        has_name_col = any('Name' in str(col) for col in df.columns)
+        has_phone_col = any('Phone' in str(col) for col in df.columns)
+        has_address_col = any('Address' in str(col) for col in df.columns)
+        has_stage_col = any('Stage' in str(col) for col in df.columns)
+        
+        # Check if first row might be headers (for Excel files with headers in row 2)
+        first_row_values = df.iloc[0].values if len(df) > 0 else []
+        is_first_row_header = any(str(val).lower() in ['sl.no', 'name', 'phone no', 'address'] for val in first_row_values if pd.notna(val))
+        
+        if is_first_row_header:
+            # Format 3: New comprehensive format with headers in first data row
+            logger.info("Detected Format 3 (Comprehensive format with multiple fields)")
+            
+            # Use first row as headers
+            df.columns = df.iloc[0]
+            df = df.iloc[1:].reset_index(drop=True)
+            
+            for _, row in df.iterrows():
+                # Skip empty rows
+                if pd.isna(row.get('Name ')) and pd.isna(row.get('Phone No')):
+                    continue
+                
+                # Get lead source from file or use manual input
+                row_lead_source = lead_source
+                if read_source_from_file and lead_source_column:
+                    row_lead_source = str(row[lead_source_column]) if pd.notna(row[lead_source_column]) else ""
+                elif 'Lead Generator' in row and pd.notna(row['Lead Generator']):
+                    # Use Lead Generator column as source if available
+                    row_lead_source = str(row['Lead Generator'])
+                
+                # Parse phone number
+                raw_phone = str(row.get('Phone No', '')) if pd.notna(row.get('Phone No')) else ""
+                phone_number = raw_phone.strip()
+                
+                # Map Stage to our status system
+                stage_val = str(row.get('Stage', 'New')) if pd.notna(row.get('Stage')) else 'New'
+                status_val = str(row.get('Status', 'New')) if pd.notna(row.get('Status')) else 'New'
+                
+                # Determine our app's status based on their Stage and Status
+                app_status = "New"
+                if "DOCS_COLLECTION" in stage_val:
+                    app_status = "Docs Upload Pending"  # S2-a
+                elif "ROAD_TEST" in stage_val:
+                    app_status = "Training WIP"  # S3-b
+                
+                # Get lead date from file or use manual input
+                row_lead_date = lead_date
+                if 'Lead Creation Date' in row and pd.notna(row['Lead Creation Date']):
+                    row_lead_date = str(row['Lead Creation Date'])
+                
+                lead = {
+                    "id": str(uuid.uuid4()),
+                    "name": str(row.get('Name ', '')) if pd.notna(row.get('Name ')) else "",
+                    "phone_number": phone_number,
+                    "vehicle": None,
+                    "driving_license": None,
+                    "experience": None,
+                    "interested_ev": None,
+                    "monthly_salary": None,
+                    "residing_chennai": None,
+                    "current_location": str(row.get('Address ', '')) if pd.notna(row.get('Address ')) else "",
+                    "import_date": import_date,
+                    "lead_source": row_lead_source,
+                    "lead_date": row_lead_date,
+                    "status": app_status,
+                    "lead_stage": stage_val,
+                    "driver_readiness": str(row.get('Classroom Training ', 'Not Started')) if pd.notna(row.get('Classroom Training ')) else "Not Started",
+                    "docs_collection": str(row.get('Ground Trainig', 'Pending')) if pd.notna(row.get('Ground Trainig')) else "Pending",
+                    "customer_readiness": "Not Ready",
+                    "assigned_telecaller": str(row.get('POC', '')) if pd.notna(row.get('POC')) else None,
+                    "telecaller_notes": str(row.get('Next Action', '')) if pd.notna(row.get('Next Action')) else None,
+                    "notes": str(row.get('Remarks', '')) if pd.notna(row.get('Remarks')) else None,
+                    "created_at": import_date
+                }
+                leads.append(lead)
+        
+        elif len(df.columns) == 4:
             # Format 1: S. No., Name, Vehicle, Phone Number
             logger.info("Detected Format 1 (4 columns)")
             for _, row in df.iterrows():
