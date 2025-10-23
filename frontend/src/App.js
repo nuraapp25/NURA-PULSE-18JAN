@@ -134,6 +134,7 @@ function App() {
                 <Route path="hotspot-planning" element={<HotspotPlanning />} />
                 <Route path="qr-codes" element={<QRCodeManager />} />
                 <Route path="qr-codes/:qrId/analytics" element={<QRAnalytics />} />
+                <Route path="ride-deck-analysis" element={<RideDeckAnalysis />} />
                 <Route path="admin/analytics" element={<Analytics />} />
                 <Route path="admin/files" element={<Files />} />
                 <Route path="admin/payment-screenshots" element={<PaymentScreenshots />} />
