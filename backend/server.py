@@ -817,22 +817,28 @@ async def import_leads(
             df.columns = df.iloc[0]
             df = df.iloc[1:].reset_index(drop=True)
             
-            # Now check for lead source column if read_source_from_file is True
+            # For Format 3, automatically detect lead source column
+            # This format typically has "Lead Generator" column
             lead_source_column = None
-            if read_source_from_file:
-                # Look for common lead source column names
-                possible_names = ['Lead Source', 'lead_source', 'Source', 'source', 'LeadSource', 'lead source', 'Lead Generator', 'lead_generator']
-                for col_name in possible_names:
-                    if col_name in df.columns:
-                        lead_source_column = col_name
-                        logger.info(f"Found lead source column in Format 3: {col_name}")
-                        break
-                
-                if not lead_source_column:
-                    raise HTTPException(
-                        status_code=400, 
-                        detail="Lead Source column not found in file. Please ensure your file has a 'Lead Source' or 'Lead Generator' column."
-                    )
+            
+            # Check for lead source column in the processed headers
+            possible_names = ['Lead Generator', 'Lead Source', 'lead_source', 'lead_generator', 'Source', 'source', 'LeadSource', 'lead source']
+            for col_name in possible_names:
+                if col_name in df.columns:
+                    lead_source_column = col_name
+                    logger.info(f"Found lead source column in Format 3: {col_name}")
+                    break
+            
+            # If checkbox is checked but column not found, raise error
+            if read_source_from_file and not lead_source_column:
+                raise HTTPException(
+                    status_code=400, 
+                    detail="Lead Source column not found in file. Please ensure your file has a 'Lead Source' or 'Lead Generator' column."
+                )
+            
+            # If column exists but checkbox not checked, still use it (Format 3 special behavior)
+            if lead_source_column and not read_source_from_file:
+                logger.info(f"Format 3: Auto-using '{lead_source_column}' column for lead sources")
             
             for _, row in df.iterrows():
                 # Skip empty rows
@@ -841,11 +847,14 @@ async def import_leads(
                 
                 # Get lead source from file or use manual input
                 row_lead_source = lead_source
-                if read_source_from_file and lead_source_column:
-                    row_lead_source = str(row[lead_source_column]) if pd.notna(row[lead_source_column]) else ""
-                elif 'Lead Generator' in row and pd.notna(row['Lead Generator']):
-                    # Use Lead Generator column as source if available
-                    row_lead_source = str(row['Lead Generator'])
+                
+                # For Format 3, prioritize Lead Generator column if it exists
+                if lead_source_column and lead_source_column in row:
+                    row_lead_source = str(row[lead_source_column]) if pd.notna(row[lead_source_column]) else lead_source
+                    logger.info(f"Using source from column '{lead_source_column}': {row_lead_source}")
+                # If no column but manual input provided, use that
+                elif not lead_source_column and lead_source:
+                    row_lead_source = lead_source
                 
                 # Parse phone number
                 raw_phone = str(row.get('Phone No', '')) if pd.notna(row.get('Phone No')) else ""
