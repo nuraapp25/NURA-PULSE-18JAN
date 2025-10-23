@@ -870,6 +870,11 @@ async def import_leads(
                     if len(phone_number) > 10:
                         phone_number = phone_number[-10:]  # Get last 10 digits
                 
+                # Get lead source from file or use manual input
+                row_lead_source = lead_source
+                if read_source_from_file and lead_source_column:
+                    row_lead_source = str(row[lead_source_column]) if pd.notna(row[lead_source_column]) else ""
+                
                 lead = {
                     "id": str(uuid.uuid4()),
                     "name": str(row.iloc[0]) if pd.notna(row.iloc[0]) else "",
@@ -882,7 +887,7 @@ async def import_leads(
                     "residing_chennai": None,
                     "current_location": location,
                     "import_date": import_date,
-                    "lead_source": lead_source,
+                    "lead_source": row_lead_source,
                     "lead_date": lead_date,
                     "status": "New",
                     "lead_stage": "New",
