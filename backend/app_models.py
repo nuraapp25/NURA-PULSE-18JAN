@@ -297,3 +297,96 @@ class QRScan(BaseModel):
     city: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+
+
+# ==================== Ride Deck Data Management ====================
+
+class Customer(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str  # Primary key from CSV
+    name: Optional[str] = None
+    email: Optional[str] = None
+    phoneNumber: Optional[str] = None
+    gender: Optional[str] = None
+    rideOtp: Optional[str] = None
+    referredById: Optional[str] = None
+    nuraCoins: Optional[int] = 0
+    dateOfBirth: Optional[str] = None
+    emergencyContact: Optional[str] = None
+    userReferralCode: Optional[str] = None
+    createdAt: Optional[str] = None
+    updatedAt: Optional[str] = None
+    date: Optional[str] = None
+    time: Optional[str] = None
+    hour: Optional[int] = None
+    source: Optional[str] = None
+    Channel: Optional[str] = None
+    imported_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class Ride(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str  # Primary key from CSV
+    customerId: Optional[str] = None
+    driverId: Optional[str] = None
+    rideStatus: Optional[str] = None
+    rideType: Optional[str] = None
+    pickupPoint: Optional[str] = None
+    pickupLat: Optional[float] = None
+    pickupLong: Optional[float] = None
+    dropPoint: Optional[str] = None
+    dropLat: Optional[float] = None
+    dropLong: Optional[float] = None
+    initialDistance: Optional[float] = None
+    initialDuration: Optional[int] = None
+    finalDistance: Optional[float] = None
+    finalDuration: Optional[int] = None
+    payWithNuraCoins: Optional[str] = None
+    appliedVoucherId: Optional[str] = None
+    appliedCouponId: Optional[str] = None
+    rideAssignedLat: Optional[float] = None
+    rideAssignedLong: Optional[float] = None
+    initialFare: Optional[float] = None
+    finalFare: Optional[float] = None
+    payableAmount: Optional[float] = None
+    rideStartTime: Optional[str] = None
+    rideEndTime: Optional[str] = None
+    rideAssignedTime: Optional[str] = None
+    initialOdometer: Optional[float] = None
+    finalOdometer: Optional[float] = None
+    createdAt: Optional[str] = None
+    updatedAt: Optional[str] = None
+    date: Optional[str] = None
+    time_est: Optional[str] = None
+    hour: Optional[int] = None
+    source: Optional[str] = None
+    dd: Optional[str] = None
+    dd1: Optional[str] = None
+    dd2: Optional[str] = None
+    dd3: Optional[str] = None
+    dd4: Optional[str] = None
+    dd5: Optional[str] = None
+    
+    # Computed fields
+    pickupLocality: Optional[str] = None
+    dropLocality: Optional[str] = None
+    pickupDistanceFromDepot: Optional[float] = None
+    dropDistanceFromDepot: Optional[float] = None
+    mostCommonPickupPoint: Optional[str] = None  # Format: "lat,long"
+    mostCommonPickupLocality: Optional[str] = None
+    statusReason: Optional[str] = None
+    statusDetail: Optional[str] = None  # Username who updated
+    
+    imported_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class ImportStats(BaseModel):
+    """Statistics returned after import"""
+    total_rows: int
+    new_records: int
+    duplicate_records: int
+    errors: int
+    error_details: Optional[List[str]] = None
+
