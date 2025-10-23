@@ -1331,7 +1331,7 @@ const DriverOnboardingPage = () => {
 
             <Button
               onClick={handleImport}
-              disabled={!selectedFile || !leadSource || !leadDate || importing}
+              disabled={!selectedFile || (!readSourceFromFile && !leadSource) || !leadDate || importing}
               className="w-full bg-blue-600 hover:bg-blue-700"
             >
               {importing ? (
