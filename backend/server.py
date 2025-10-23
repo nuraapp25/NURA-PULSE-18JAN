@@ -817,6 +817,23 @@ async def import_leads(
             df.columns = df.iloc[0]
             df = df.iloc[1:].reset_index(drop=True)
             
+            # Now check for lead source column if read_source_from_file is True
+            lead_source_column = None
+            if read_source_from_file:
+                # Look for common lead source column names
+                possible_names = ['Lead Source', 'lead_source', 'Source', 'source', 'LeadSource', 'lead source', 'Lead Generator', 'lead_generator']
+                for col_name in possible_names:
+                    if col_name in df.columns:
+                        lead_source_column = col_name
+                        logger.info(f"Found lead source column in Format 3: {col_name}")
+                        break
+                
+                if not lead_source_column:
+                    raise HTTPException(
+                        status_code=400, 
+                        detail="Lead Source column not found in file. Please ensure your file has a 'Lead Source' or 'Lead Generator' column."
+                    )
+            
             for _, row in df.iterrows():
                 # Skip empty rows
                 if pd.isna(row.get('Name ')) and pd.isna(row.get('Phone No')):
