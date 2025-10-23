@@ -5652,13 +5652,20 @@ async def analyze_ride_deck(
                 pickup_to_drop_times.append(None)
                 logger.error(f"Row {idx}: Error processing: {str(e)}")
         
-        # Add new columns to dataframe
-        # Find column index for AO (column 41) and AP (column 42)
-        # AO = 14 (since A=0, B=1, ... O=14, P=15, ... AO=40)
-        # Excel columns: A=0, Z=25, AA=26, AB=27, ... AO=40, AP=41
+        # Add new columns to dataframe in the specified order
+        # AO: Pickup Locality
+        # AP: Distance VR Mall to Pickup (km)
+        # AQ: Pickup Time (mins)
+        # AR: Drop Locality
+        # AS: Distance Pickup to Drop (km)
+        # AT: Drop Time (mins)
         
+        df['Pickup_Locality'] = pickup_localities
         df['VR_to_Pickup_Distance_KM'] = vr_to_pickup_distances
+        df['VR_to_Pickup_Time_Mins'] = vr_to_pickup_times
+        df['Drop_Locality'] = drop_localities
         df['Pickup_to_Drop_Distance_KM'] = pickup_to_drop_distances
+        df['Pickup_to_Drop_Time_Mins'] = pickup_to_drop_times
         
         # Save to new Excel file
         output = io.BytesIO()
