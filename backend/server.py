@@ -794,32 +794,6 @@ async def import_leads(
         else:
             raise HTTPException(status_code=400, detail="Invalid file type. Only CSV and XLSX are supported.")
         
-        # Check if lead source column exists in file when read_source_from_file is True
-        lead_source_column = None
-        if read_source_from_file:
-            # Look for common lead source column names (including Lead Generator for Format 3)
-            possible_names = ['Lead Source', 'lead_source', 'Source', 'source', 'LeadSource', 'lead source', 'Lead Generator', 'lead_generator']
-            for col_name in possible_names:
-                if col_name in df.columns:
-                    lead_source_column = col_name
-                    logger.info(f"Found lead source column: {col_name}")
-                    break
-            
-            # For Format 3, check after header detection (first row might be headers)
-            if not lead_source_column and len(df) > 0:
-                # Check if first row contains headers
-                first_row_values = df.iloc[0].values
-                first_row_str = [str(val) for val in first_row_values if pd.notna(val)]
-                if 'Lead Generator' in first_row_str:
-                    logger.info("Found 'Lead Generator' in first row (Format 3 headers)")
-                    lead_source_column = 'Lead Generator'
-            
-            if not lead_source_column:
-                raise HTTPException(
-                    status_code=400, 
-                    detail="Lead Source column not found in file. Please ensure your file has a 'Lead Source' or 'Lead Generator' column."
-                )
-        
         # Detect format and map columns
         leads = []
         import_date = datetime.now(timezone.utc).isoformat()
