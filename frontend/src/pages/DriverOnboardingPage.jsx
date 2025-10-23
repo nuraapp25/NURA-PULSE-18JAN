@@ -239,8 +239,14 @@ const DriverOnboardingPage = () => {
       return;
     }
     
-    if (!leadSource || !leadDate) {
-      toast.error("Please enter lead source and date");
+    // Validate inputs based on checkbox state
+    if (!readSourceFromFile && !leadSource) {
+      toast.error("Please enter lead source or check 'Read Source from file'");
+      return;
+    }
+    
+    if (!leadDate) {
+      toast.error("Please enter lead date");
       return;
     }
 
@@ -249,8 +255,9 @@ const DriverOnboardingPage = () => {
     try {
       const formData = new FormData();
       formData.append('file', selectedFile);
-      formData.append('lead_source', leadSource);
+      formData.append('lead_source', readSourceFromFile ? '' : leadSource);
       formData.append('lead_date', leadDate);
+      formData.append('read_source_from_file', readSourceFromFile);
 
       const token = localStorage.getItem("token");
       
