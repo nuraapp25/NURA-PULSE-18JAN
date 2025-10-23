@@ -896,6 +896,23 @@ async def import_leads(
         elif len(df.columns) == 4:
             # Format 1: S. No., Name, Vehicle, Phone Number
             logger.info("Detected Format 1 (4 columns)")
+            
+            # Check for lead source column if read_source_from_file is True
+            lead_source_column = None
+            if read_source_from_file:
+                possible_names = ['Lead Source', 'lead_source', 'Source', 'source', 'LeadSource', 'lead source', 'Lead Generator', 'lead_generator']
+                for col_name in possible_names:
+                    if col_name in df.columns:
+                        lead_source_column = col_name
+                        logger.info(f"Found lead source column in Format 1: {col_name}")
+                        break
+                
+                if not lead_source_column:
+                    raise HTTPException(
+                        status_code=400, 
+                        detail="Lead Source column not found in file. Please ensure your file has a 'Lead Source' or 'Lead Generator' column."
+                    )
+            
             for _, row in df.iterrows():
                 # Get lead source from file or use manual input
                 row_lead_source = lead_source
