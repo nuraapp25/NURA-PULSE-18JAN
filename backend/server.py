@@ -948,6 +948,23 @@ async def import_leads(
         elif len(df.columns) >= 8:
             # Format 2: 8 columns with Tamil
             logger.info("Detected Format 2 (8+ columns)")
+            
+            # Check for lead source column if read_source_from_file is True
+            lead_source_column = None
+            if read_source_from_file:
+                possible_names = ['Lead Source', 'lead_source', 'Source', 'source', 'LeadSource', 'lead source', 'Lead Generator', 'lead_generator']
+                for col_name in possible_names:
+                    if col_name in df.columns:
+                        lead_source_column = col_name
+                        logger.info(f"Found lead source column in Format 2: {col_name}")
+                        break
+                
+                if not lead_source_column:
+                    raise HTTPException(
+                        status_code=400, 
+                        detail="Lead Source column not found in file. Please ensure your file has a 'Lead Source' or 'Lead Generator' column."
+                    )
+            
             for _, row in df.iterrows():
                 # Map Tamil questions to English fields
                 driving_license = str(row.iloc[3]) if pd.notna(row.iloc[3]) else ""
