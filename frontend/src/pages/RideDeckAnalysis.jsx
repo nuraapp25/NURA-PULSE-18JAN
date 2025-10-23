@@ -283,9 +283,21 @@ const RideDeckAnalysis = () => {
             </h4>
             <ul className="text-xs text-blue-800 dark:text-blue-300 space-y-1 list-disc list-inside">
               <li>Excel file (.xlsx or .xls format)</li>
-              <li>Must contain columns: <code className="bg-blue-100 dark:bg-blue-800 px-1 rounded">pickupLat, pickupLong, dropLat, dropLong</code></li>
+              <li>Must contain columns: <code className="bg-blue-100 dark:bg-blue-800 px-1 rounded">pickupPoint, pickupLat, pickupLong, dropPoint, dropLat, dropLong</code></li>
+              <li>Addresses in pickupPoint (Column F) and dropPoint (Column I)</li>
               <li>Coordinates should be in decimal format (e.g., 13.0795762)</li>
-              <li>Results will be added to columns <code className="bg-blue-100 dark:bg-blue-800 px-1 rounded">VR_to_Pickup_Distance_KM</code> and <code className="bg-blue-100 dark:bg-blue-800 px-1 rounded">Pickup_to_Drop_Distance_KM</code></li>
+            </ul>
+            
+            <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-200 mt-3 mb-2">
+              📊 Output Columns:
+            </h4>
+            <ul className="text-xs text-blue-800 dark:text-blue-300 space-y-1 list-disc list-inside">
+              <li><strong>Pickup Locality</strong> - Extracted area/locality from pickup address</li>
+              <li><strong>VR to Pickup Distance (km)</strong> - Driving distance from VR Mall to pickup</li>
+              <li><strong>VR to Pickup Time (mins)</strong> - Estimated driving time</li>
+              <li><strong>Drop Locality</strong> - Extracted area/locality from drop address</li>
+              <li><strong>Pickup to Drop Distance (km)</strong> - Driving distance from pickup to drop</li>
+              <li><strong>Pickup to Drop Time (mins)</strong> - Estimated driving time</li>
             </ul>
           </div>
 
