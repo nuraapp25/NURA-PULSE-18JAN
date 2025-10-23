@@ -1454,7 +1454,7 @@ async def sync_from_google_sheets(request: Request):
             # Check if lead exists by ID
             existing_lead = await db.driver_leads.find_one({"id": lead_id})
             
-            # Prepare lead data with all fields
+            # Prepare lead data with all fields (including new document fields)
             lead_data = {
                 "id": lead_id,
                 "name": lead.get('name', ''),
@@ -1466,16 +1466,28 @@ async def sync_from_google_sheets(request: Request):
                 "monthly_salary": lead.get('monthly_salary'),
                 "residing_chennai": lead.get('residing_chennai'),
                 "current_location": lead.get('current_location'),
-                "lead_stage": lead.get('lead_stage', 'New'),
+                "lead_source": lead.get('lead_source'),
+                "stage": lead.get('stage', 'New'),
                 "status": lead.get('status', 'New'),
-                "driver_readiness": lead.get('driver_readiness', 'Not Started'),
-                "docs_collection": lead.get('docs_collection', 'Pending'),
-                "customer_readiness": lead.get('customer_readiness', 'Not Ready'),
                 "assigned_telecaller": lead.get('assigned_telecaller'),
                 "telecaller_notes": lead.get('telecaller_notes'),
                 "notes": lead.get('notes'),
                 "import_date": lead.get('import_date', ''),
-                "created_at": lead.get('created_at', '')
+                "created_at": lead.get('created_at', ''),
+                # New document fields
+                "dl_no": lead.get('dl_no'),
+                "badge_no": lead.get('badge_no'),
+                "aadhar_card": lead.get('aadhar_card'),
+                "pan_card": lead.get('pan_card'),
+                "gas_bill": lead.get('gas_bill'),
+                "bank_passbook": lead.get('bank_passbook'),
+                # Shift fields
+                "preferred_shift": lead.get('preferred_shift'),
+                "allotted_shift": lead.get('allotted_shift'),
+                # Vehicle assignment
+                "default_vehicle": lead.get('default_vehicle'),
+                # End date
+                "end_date": lead.get('end_date')
             }
             
             if existing_lead:
