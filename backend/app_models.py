@@ -160,16 +160,12 @@ class DriverLead(BaseModel):
     current_location: Optional[str] = None
     import_date: str
     
-    # Lead source and date tracking
+    # Lead source tracking
     lead_source: Optional[str] = None
-    lead_date: Optional[str] = None
     
-    # Stage fields
-    lead_stage: str = "New"  # New, Contacted, Qualified, Assigned to Telecaller, In Progress
-    status: str = "New"  # Status/Filtration stage
-    driver_readiness: str = "Not Started"  # Not Started, Training Pending, In Training, Training Completed
-    docs_collection: str = "Pending"  # Pending, Documents Submitted, Documents Verified, Road Test Scheduled, Road Test Passed, Road Test Failed
-    customer_readiness: str = "Not Ready"  # Not Ready, Ready for Onboarding, Onboarded
+    # Stage and Status
+    stage: str = "New"  # Stage field (renamed from lead_stage)
+    status: str = "New"  # Status field
     
     # Telecaller assignment
     assigned_telecaller: Optional[str] = None
@@ -177,6 +173,24 @@ class DriverLead(BaseModel):
     
     notes: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    
+    # New document fields
+    dl_no: Optional[str] = None  # DL No.
+    badge_no: Optional[str] = None  # Badge No.
+    aadhar_card: Optional[str] = None  # Aadhar card
+    pan_card: Optional[str] = None  # Pan card
+    gas_bill: Optional[str] = None  # Gas bill
+    bank_passbook: Optional[str] = None  # Bank passbook
+    
+    # Shift fields
+    preferred_shift: Optional[str] = None  # preferred shift
+    allotted_shift: Optional[str] = None  # alotted shift
+    
+    # Vehicle assignment
+    default_vehicle: Optional[str] = None  # Default Vehicle
+    
+    # End date
+    end_date: Optional[str] = None  # End Date
 
 
 class DriverLeadUpdate(BaseModel):
