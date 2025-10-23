@@ -5513,8 +5513,12 @@ async def analyze_ride_deck(
             )
         
         # Initialize new columns
+        pickup_localities = []
         vr_to_pickup_distances = []
+        vr_to_pickup_times = []
+        drop_localities = []
         pickup_to_drop_distances = []
+        pickup_to_drop_times = []
         
         total_rows = len(df)
         
