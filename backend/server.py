@@ -5638,6 +5638,409 @@ async def analyze_ride_deck(
                     pickup_to_drop_times.append(None)
                     logger.error(f"Row {idx}: Error calculating pickup to drop distance: {str(e)}")
                 
+
+
+
+# ==================== RIDE DECK DATA IMPORT & MANAGEMENT ====================
+
+from app_models import Customer, Ride, ImportStats
+from collections import Counter
+
+@api_router.post("/ride-deck/import-customers", response_model=ImportStats)
+async def import_customers(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Import customer data from CSV file
+    - Merges with existing data (no duplicates based on 'id')
+    - Returns import statistics
+    """
+    try:
+        logger.info(f"Customer import started by user: {current_user.email}")
+        
+        # Read CSV file
+        content = await file.read()
+        df = pd.read_csv(io.BytesIO(content))
+        
+        logger.info(f"Customer CSV loaded: {len(df)} rows")
+        
+        # Get MongoDB database
+        db = get_database()
+        customers_collection = db['customers']
+        
+        # Track statistics
+        total_rows = len(df)
+        new_records = 0
+        duplicate_records = 0
+        errors = 0
+        error_details = []
+        
+        # Get existing customer IDs
+        existing_ids = set()
+        existing_customers = customers_collection.find({}, {'id': 1})
+        for customer in existing_customers:
+            existing_ids.add(str(customer['id']))
+        
+        logger.info(f"Existing customers in DB: {len(existing_ids)}")
+        
+        # Process each row
+        for idx, row in df.iterrows():
+            try:
+                customer_id = str(row.get('id', ''))
+                
+                if not customer_id or pd.isna(customer_id):
+                    errors += 1
+                    error_details.append(f"Row {idx}: Missing customer ID")
+                    continue
+                
+                # Check if customer already exists
+                if customer_id in existing_ids:
+                    duplicate_records += 1
+                    logger.debug(f"Customer {customer_id} already exists, skipping")
+                    continue
+                
+                # Create customer object
+                customer_data = {
+                    'id': customer_id,
+                    'name': str(row.get('name', '')) if pd.notna(row.get('name')) else None,
+                    'email': str(row.get('email', '')) if pd.notna(row.get('email')) else None,
+                    'phoneNumber': str(row.get('phoneNumber', '')) if pd.notna(row.get('phoneNumber')) else None,
+                    'gender': str(row.get('gender', '')) if pd.notna(row.get('gender')) else None,
+                    'rideOtp': str(row.get('rideOtp', '')) if pd.notna(row.get('rideOtp')) else None,
+                    'referredById': str(row.get('referredById', '')) if pd.notna(row.get('referredById')) else None,
+                    'nuraCoins': int(row.get('nuraCoins', 0)) if pd.notna(row.get('nuraCoins')) else 0,
+                    'dateOfBirth': str(row.get('dateOfBirth', '')) if pd.notna(row.get('dateOfBirth')) else None,
+                    'emergencyContact': str(row.get('emergencyContact', '')) if pd.notna(row.get('emergencyContact')) else None,
+                    'userReferralCode': str(row.get('userReferralCode', '')) if pd.notna(row.get('userReferralCode')) else None,
+                    'createdAt': str(row.get('createdAt', '')) if pd.notna(row.get('createdAt')) else None,
+                    'updatedAt': str(row.get('updatedAt', '')) if pd.notna(row.get('updatedAt')) else None,
+                    'date': str(row.get('date', '')) if pd.notna(row.get('date')) else None,
+                    'time': str(row.get('time', '')) if pd.notna(row.get('time')) else None,
+                    'hour': int(row.get('hour', 0)) if pd.notna(row.get('hour')) else None,
+                    'source': str(row.get('source', '')) if pd.notna(row.get('source')) else None,
+                    'Channel': str(row.get('Channel', '')) if pd.notna(row.get('Channel')) else None,
+                    'imported_at': datetime.now(timezone.utc).isoformat()
+                }
+                
+                # Insert into database
+                customers_collection.insert_one(customer_data)
+                new_records += 1
+                existing_ids.add(customer_id)
+                
+            except Exception as e:
+                errors += 1
+                error_msg = f"Row {idx}: {str(e)}"
+                error_details.append(error_msg)
+                logger.error(error_msg)
+        
+        logger.info(f"Customer import complete: {new_records} new, {duplicate_records} duplicates, {errors} errors")
+        
+        return ImportStats(
+            total_rows=total_rows,
+            new_records=new_records,
+            duplicate_records=duplicate_records,
+            errors=errors,
+            error_details=error_details[:10] if error_details else None  # Limit to 10 errors
+        )
+        
+    except Exception as e:
+        logger.error(f"Customer import failed: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Customer import failed: {str(e)}")
+
+
+@api_router.post("/ride-deck/import-rides", response_model=ImportStats)
+async def import_rides(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Import ride data from CSV file
+    - Merges with existing data (no duplicates based on 'id')
+    - Computes additional fields for NEW rides only
+    - Returns import statistics
+    """
+    try:
+        logger.info(f"Ride import started by user: {current_user.email}")
+        
+        # Read CSV file
+        content = await file.read()
+        df = pd.read_csv(io.BytesIO(content))
+        
+        logger.info(f"Ride CSV loaded: {len(df)} rows")
+        
+        # Get MongoDB database
+        db = get_database()
+        rides_collection = db['rides']
+        
+        # Get Google Maps API key
+        gmaps_api_key = os.environ.get('GOOGLE_MAPS_API_KEY')
+        if not gmaps_api_key:
+            raise HTTPException(status_code=500, detail="Google Maps API key not configured")
+        
+        gmaps = googlemaps.Client(key=gmaps_api_key)
+        
+        # Track statistics
+        total_rows = len(df)
+        new_records = 0
+        duplicate_records = 0
+        errors = 0
+        error_details = []
+        
+        # Get existing ride IDs
+        existing_ids = set()
+        existing_rides = rides_collection.find({}, {'id': 1})
+        for ride in existing_rides:
+            existing_ids.add(str(ride['id']))
+        
+        logger.info(f"Existing rides in DB: {len(existing_ids)}")
+        
+        # Helper function to extract locality
+        def extract_locality(address):
+            if pd.isna(address) or not address:
+                return None
+            
+            address_str = str(address)
+            parts = [p.strip() for p in address_str.split(',')]
+            
+            for i, part in enumerate(parts):
+                if 'Chennai' in part or 'chennai' in part:
+                    if i > 0:
+                        locality_parts = []
+                        for j in range(max(0, i-2), i):
+                            if parts[j] and not any(word in parts[j].lower() for word in ['india', 'tamil nadu', 'tamilnadu']):
+                                locality_parts.append(parts[j])
+                        
+                        if locality_parts:
+                            return ', '.join(locality_parts[-2:]) if len(locality_parts) >= 2 else locality_parts[-1]
+                    return None
+            
+            if len(parts) >= 2:
+                for part in reversed(parts[:-1]):
+                    if part and not any(word in part.lower() for word in ['india', 'tamil nadu', 'tamilnadu']) and not part.strip().isdigit():
+                        return part
+            
+            return None
+        
+        # Build historical pickup data for each customer (for most common pickup point calculation)
+        customer_pickup_history = {}
+        all_rides = rides_collection.find({}, {'customerId': 1, 'pickupLat': 1, 'pickupLong': 1})
+        for ride in all_rides:
+            customer_id = ride.get('customerId')
+            pickup_lat = ride.get('pickupLat')
+            pickup_long = ride.get('pickupLong')
+            
+            if customer_id and pickup_lat and pickup_long:
+                if customer_id not in customer_pickup_history:
+                    customer_pickup_history[customer_id] = []
+                customer_pickup_history[customer_id].append((pickup_lat, pickup_long))
+        
+        logger.info(f"Built pickup history for {len(customer_pickup_history)} customers")
+        
+        # Process each row
+        for idx, row in df.iterrows():
+            try:
+                ride_id = str(row.get('id', ''))
+                
+                if not ride_id or pd.isna(ride_id):
+                    errors += 1
+                    error_details.append(f"Row {idx}: Missing ride ID")
+                    continue
+                
+                # Check if ride already exists
+                if ride_id in existing_ids:
+                    duplicate_records += 1
+                    logger.debug(f"Ride {ride_id} already exists, skipping")
+                    continue
+                
+                # This is a NEW ride - compute additional fields
+                customer_id = str(row.get('customerId', '')) if pd.notna(row.get('customerId')) else None
+                pickup_lat = float(row.get('pickupLat')) if pd.notna(row.get('pickupLat')) else None
+                pickup_long = float(row.get('pickupLong')) if pd.notna(row.get('pickupLong')) else None
+                drop_lat = float(row.get('dropLat')) if pd.notna(row.get('dropLat')) else None
+                drop_long = float(row.get('dropLong')) if pd.notna(row.get('dropLong')) else None
+                pickup_point = str(row.get('pickupPoint', '')) if pd.notna(row.get('pickupPoint')) else None
+                drop_point = str(row.get('dropPoint', '')) if pd.notna(row.get('dropPoint')) else None
+                
+                # Compute Pickup and Drop Locality
+                pickup_locality = extract_locality(pickup_point)
+                drop_locality = extract_locality(drop_point)
+                
+                # Compute Pickup Distance from DEPOT (VR Mall)
+                pickup_distance_from_depot = None
+                if pickup_lat and pickup_long:
+                    try:
+                        result = gmaps.distance_matrix(
+                            origins=[(VR_MALL_LAT, VR_MALL_LNG)],
+                            destinations=[(pickup_lat, pickup_long)],
+                            mode="driving"
+                        )
+                        if result['rows'][0]['elements'][0]['status'] == 'OK':
+                            distance_meters = result['rows'][0]['elements'][0]['distance']['value']
+                            pickup_distance_from_depot = round(distance_meters / 1000, 2)
+                        await asyncio.sleep(0.05)  # Rate limiting
+                    except Exception as e:
+                        logger.warning(f"Row {idx}: Could not calculate pickup distance from depot: {str(e)}")
+                
+                # Compute Drop Distance from DEPOT (VR Mall)
+                drop_distance_from_depot = None
+                if drop_lat and drop_long:
+                    try:
+                        result = gmaps.distance_matrix(
+                            origins=[(VR_MALL_LAT, VR_MALL_LNG)],
+                            destinations=[(drop_lat, drop_long)],
+                            mode="driving"
+                        )
+                        if result['rows'][0]['elements'][0]['status'] == 'OK':
+                            distance_meters = result['rows'][0]['elements'][0]['distance']['value']
+                            drop_distance_from_depot = round(distance_meters / 1000, 2)
+                        await asyncio.sleep(0.05)  # Rate limiting
+                    except Exception as e:
+                        logger.warning(f"Row {idx}: Could not calculate drop distance from depot: {str(e)}")
+                
+                # Compute Most Common Pickup Point
+                most_common_pickup_point = None
+                most_common_pickup_locality = None
+                if customer_id:
+                    # Add current pickup to history
+                    if customer_id not in customer_pickup_history:
+                        customer_pickup_history[customer_id] = []
+                    if pickup_lat and pickup_long:
+                        customer_pickup_history[customer_id].append((pickup_lat, pickup_long))
+                    
+                    # Find most common pickup point (rounded to 4 decimal places for grouping)
+                    if customer_pickup_history[customer_id]:
+                        pickup_points = [
+                            (round(lat, 4), round(long, 4))
+                            for lat, long in customer_pickup_history[customer_id]
+                        ]
+                        most_common = Counter(pickup_points).most_common(1)
+                        if most_common:
+                            most_common_lat, most_common_long = most_common[0][0]
+                            most_common_pickup_point = f"{most_common_lat},{most_common_long}"
+                            
+                            # Get locality for most common pickup point
+                            # We need to reverse geocode this - but to save API calls, we'll try to find it in existing data
+                            # For now, we'll leave it as None and can enhance later
+                            most_common_pickup_locality = None
+                
+                # Create ride object with all fields
+                ride_data = {
+                    'id': ride_id,
+                    'customerId': customer_id,
+                    'driverId': str(row.get('driverId', '')) if pd.notna(row.get('driverId')) else None,
+                    'rideStatus': str(row.get('rideStatus', '')) if pd.notna(row.get('rideStatus')) else None,
+                    'rideType': str(row.get('rideType', '')) if pd.notna(row.get('rideType')) else None,
+                    'pickupPoint': pickup_point,
+                    'pickupLat': pickup_lat,
+                    'pickupLong': pickup_long,
+                    'dropPoint': drop_point,
+                    'dropLat': drop_lat,
+                    'dropLong': drop_long,
+                    'initialDistance': float(row.get('initialDistance')) if pd.notna(row.get('initialDistance')) else None,
+                    'initialDuration': int(row.get('initialDuration')) if pd.notna(row.get('initialDuration')) else None,
+                    'finalDistance': float(row.get('finalDistance')) if pd.notna(row.get('finalDistance')) else None,
+                    'finalDuration': int(row.get('finalDuration')) if pd.notna(row.get('finalDuration')) else None,
+                    'payWithNuraCoins': str(row.get('payWithNuraCoins', '')) if pd.notna(row.get('payWithNuraCoins')) else None,
+                    'appliedVoucherId': str(row.get('appliedVoucherId', '')) if pd.notna(row.get('appliedVoucherId')) else None,
+                    'appliedCouponId': str(row.get('appliedCouponId', '')) if pd.notna(row.get('appliedCouponId')) else None,
+                    'rideAssignedLat': float(row.get('rideAssignedLat')) if pd.notna(row.get('rideAssignedLat')) else None,
+                    'rideAssignedLong': float(row.get('rideAssignedLong')) if pd.notna(row.get('rideAssignedLong')) else None,
+                    'initialFare': float(row.get('initialFare')) if pd.notna(row.get('initialFare')) else None,
+                    'finalFare': float(row.get('finalFare')) if pd.notna(row.get('finalFare')) else None,
+                    'payableAmount': float(row.get('payableAmount')) if pd.notna(row.get('payableAmount')) else None,
+                    'rideStartTime': str(row.get('rideStartTime', '')) if pd.notna(row.get('rideStartTime')) else None,
+                    'rideEndTime': str(row.get('rideEndTime', '')) if pd.notna(row.get('rideEndTime')) else None,
+                    'rideAssignedTime': str(row.get('rideAssignedTime', '')) if pd.notna(row.get('rideAssignedTime')) else None,
+                    'initialOdometer': float(row.get('initialOdometer')) if pd.notna(row.get('initialOdometer')) else None,
+                    'finalOdometer': float(row.get('finalOdometer')) if pd.notna(row.get('finalOdometer')) else None,
+                    'createdAt': str(row.get('createdAt', '')) if pd.notna(row.get('createdAt')) else None,
+                    'updatedAt': str(row.get('updatedAt', '')) if pd.notna(row.get('updatedAt')) else None,
+                    'date': str(row.get('date', '')) if pd.notna(row.get('date')) else None,
+                    'time_est': str(row.get('time_est', '')) if pd.notna(row.get('time_est')) else None,
+                    'hour': int(row.get('hour')) if pd.notna(row.get('hour')) else None,
+                    'source': str(row.get('source', '')) if pd.notna(row.get('source')) else None,
+                    'dd': str(row.get('dd', '')) if pd.notna(row.get('dd')) else None,
+                    'dd1': str(row.get('dd1', '')) if pd.notna(row.get('dd1')) else None,
+                    'dd2': str(row.get('dd2', '')) if pd.notna(row.get('dd2')) else None,
+                    'dd3': str(row.get('dd3', '')) if pd.notna(row.get('dd3')) else None,
+                    'dd4': str(row.get('dd4', '')) if pd.notna(row.get('dd4')) else None,
+                    'dd5': str(row.get('dd5', '')) if pd.notna(row.get('dd5')) else None,
+                    # Computed fields
+                    'pickupLocality': pickup_locality,
+                    'dropLocality': drop_locality,
+                    'pickupDistanceFromDepot': pickup_distance_from_depot,
+                    'dropDistanceFromDepot': drop_distance_from_depot,
+                    'mostCommonPickupPoint': most_common_pickup_point,
+                    'mostCommonPickupLocality': most_common_pickup_locality,
+                    'statusReason': None,  # Empty by default
+                    'statusDetail': None,  # Empty by default
+                    'imported_at': datetime.now(timezone.utc).isoformat()
+                }
+                
+                # Insert into database
+                rides_collection.insert_one(ride_data)
+                new_records += 1
+                existing_ids.add(ride_id)
+                
+                if (idx + 1) % 10 == 0:
+                    logger.info(f"Processed {idx + 1}/{total_rows} rides")
+                
+            except Exception as e:
+                errors += 1
+                error_msg = f"Row {idx}: {str(e)}"
+                error_details.append(error_msg)
+                logger.error(error_msg)
+        
+        logger.info(f"Ride import complete: {new_records} new, {duplicate_records} duplicates, {errors} errors")
+        
+        return ImportStats(
+            total_rows=total_rows,
+            new_records=new_records,
+            duplicate_records=duplicate_records,
+            errors=errors,
+            error_details=error_details[:10] if error_details else None
+        )
+        
+    except Exception as e:
+        logger.error(f"Ride import failed: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Ride import failed: {str(e)}")
+
+
+@api_router.get("/ride-deck/stats")
+async def get_ride_deck_stats(
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get statistics about imported data
+    """
+    try:
+        db = get_database()
+        
+        customers_count = db['customers'].count_documents({})
+        rides_count = db['rides'].count_documents({})
+        
+        # Get ride status distribution
+        ride_status_pipeline = [
+            {"$group": {"_id": "$rideStatus", "count": {"$sum": 1}}}
+        ]
+        ride_status_dist = list(db['rides'].aggregate(ride_status_pipeline))
+        
+        return {
+            "success": True,
+            "customers_count": customers_count,
+            "rides_count": rides_count,
+            "ride_status_distribution": {item['_id']: item['count'] for item in ride_status_dist}
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get stats: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get stats: {str(e)}")
+
                 # Small delay to avoid rate limiting
                 await asyncio.sleep(0.1)
                 
