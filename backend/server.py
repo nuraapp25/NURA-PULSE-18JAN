@@ -978,7 +978,10 @@ async def import_leads(
                 }
                 leads.append(lead)
         else:
-            raise HTTPException(status_code=400, detail=f"Unsupported format. Expected 4 or 8 columns, got {len(df.columns)}")
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Unsupported format. Expected Format 1 (4 columns), Format 2 (8 columns), or Format 3 (comprehensive with headers). Got {len(df.columns)} columns."
+            )
         
         # Check for duplicates by phone number
         if leads:
