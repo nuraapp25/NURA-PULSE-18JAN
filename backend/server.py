@@ -5464,6 +5464,185 @@ async def qr_redirect(
         raise HTTPException(status_code=500, detail=f"QR redirect failed: {str(e)}")
 
 
+
+# ==================== RIDE DECK DATA ANALYSIS ====================
+
+import googlemaps
+import pandas as pd
+import io
+from openpyxl import load_workbook
+from openpyxl.utils.dataframe import dataframe_to_rows
+import asyncio
+
+# VR Mall coordinates
+VR_MALL_LAT = 13.0795762
+VR_MALL_LNG = 80.1956368
+
+@api_router.post("/ride-deck/analyze")
+async def analyze_ride_deck(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Analyze ride deck data by calculating distances using Google Maps API
+    - Distance from VR Mall to pickup location
+    - Distance from pickup location to drop location
+    """
+    try:
+        logger.info(f"Ride deck analysis started by user: {current_user.email}")
+        
+        # Get Google Maps API key from environment
+        gmaps_api_key = os.environ.get('GOOGLE_MAPS_API_KEY')
+        if not gmaps_api_key:
+            raise HTTPException(status_code=500, detail="Google Maps API key not configured")
+        
+        # Initialize Google Maps client
+        gmaps = googlemaps.Client(key=gmaps_api_key)
+        
+        # Read the uploaded Excel file
+        content = await file.read()
+        
+        # Load with pandas
+        df = pd.read_excel(io.BytesIO(content))
+        
+        logger.info(f"File loaded: {len(df)} rows, Columns: {list(df.columns)}")
+        
+        # Check if required columns exist
+        required_columns = ['pickupLat', 'pickupLong', 'dropLat', 'dropLong']
+        missing_columns = [col for col in required_columns if col not in df.columns]
+        
+        if missing_columns:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Missing required columns: {', '.join(missing_columns)}"
+            )
+        
+        # Initialize new columns
+        vr_to_pickup_distances = []
+        pickup_to_drop_distances = []
+        
+        total_rows = len(df)
+        
+        # Process each row
+        for idx, row in df.iterrows():
+            try:
+                pickup_lat = row['pickupLat']
+                pickup_lng = row['pickupLong']
+                drop_lat = row['dropLat']
+                drop_lng = row['dropLong']
+                
+                # Skip if any coordinate is missing
+                if pd.isna(pickup_lat) or pd.isna(pickup_lng) or pd.isna(drop_lat) or pd.isna(drop_lng):
+                    vr_to_pickup_distances.append(None)
+                    pickup_to_drop_distances.append(None)
+                    logger.warning(f"Row {idx}: Missing coordinates, skipping")
+                    continue
+                
+                # Calculate distance from VR Mall to pickup
+                try:
+                    result1 = gmaps.distance_matrix(
+                        origins=[(VR_MALL_LAT, VR_MALL_LNG)],
+                        destinations=[(pickup_lat, pickup_lng)],
+                        mode="driving"
+                    )
+                    
+                    if result1['rows'][0]['elements'][0]['status'] == 'OK':
+                        distance_meters = result1['rows'][0]['elements'][0]['distance']['value']
+                        distance_km = round(distance_meters / 1000, 2)
+                        vr_to_pickup_distances.append(distance_km)
+                    else:
+                        vr_to_pickup_distances.append(None)
+                        logger.warning(f"Row {idx}: VR to pickup distance not available")
+                except Exception as e:
+                    vr_to_pickup_distances.append(None)
+                    logger.error(f"Row {idx}: Error calculating VR to pickup distance: {str(e)}")
+                
+                # Small delay to avoid rate limiting
+                await asyncio.sleep(0.1)
+                
+                # Calculate distance from pickup to drop
+                try:
+                    result2 = gmaps.distance_matrix(
+                        origins=[(pickup_lat, pickup_lng)],
+                        destinations=[(drop_lat, drop_lng)],
+                        mode="driving"
+                    )
+                    
+                    if result2['rows'][0]['elements'][0]['status'] == 'OK':
+                        distance_meters = result2['rows'][0]['elements'][0]['distance']['value']
+                        distance_km = round(distance_meters / 1000, 2)
+                        pickup_to_drop_distances.append(distance_km)
+                    else:
+                        pickup_to_drop_distances.append(None)
+                        logger.warning(f"Row {idx}: Pickup to drop distance not available")
+                except Exception as e:
+                    pickup_to_drop_distances.append(None)
+                    logger.error(f"Row {idx}: Error calculating pickup to drop distance: {str(e)}")
+                
+                # Small delay to avoid rate limiting
+                await asyncio.sleep(0.1)
+                
+                logger.info(f"Processed row {idx + 1}/{total_rows}")
+                
+            except Exception as e:
+                vr_to_pickup_distances.append(None)
+                pickup_to_drop_distances.append(None)
+                logger.error(f"Row {idx}: Error processing: {str(e)}")
+        
+        # Add new columns to dataframe
+        # Find column index for AO (column 41) and AP (column 42)
+        # AO = 14 (since A=0, B=1, ... O=14, P=15, ... AO=40)
+        # Excel columns: A=0, Z=25, AA=26, AB=27, ... AO=40, AP=41
+        
+        df['VR_to_Pickup_Distance_KM'] = vr_to_pickup_distances
+        df['Pickup_to_Drop_Distance_KM'] = pickup_to_drop_distances
+        
+        # Save to new Excel file
+        output = io.BytesIO()
+        
+        # Use openpyxl to maintain original formatting if needed
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False, sheet_name='Sheet1')
+        
+        output.seek(0)
+        
+        logger.info(f"Ride deck analysis completed: {total_rows} rows processed")
+        
+        # Return the file as response
+        from fastapi.responses import StreamingResponse
+        
+        return StreamingResponse(
+            output,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={
+                "Content-Disposition": f"attachment; filename=ride_deck_analyzed.xlsx"
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Ride deck analysis failed: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Ride deck analysis failed: {str(e)}")
+
+
+@api_router.post("/ride-deck/progress")
+async def get_ride_deck_progress(
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get progress of ride deck analysis (placeholder for real-time progress)
+    In production, this would use WebSocket or server-sent events
+    """
+    return {
+        "success": True,
+        "progress": 100,
+        "message": "Analysis complete"
+    }
+
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
