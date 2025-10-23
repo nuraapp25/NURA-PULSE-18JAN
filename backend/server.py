@@ -820,6 +820,11 @@ async def import_leads(
             # Format 1: S. No., Name, Vehicle, Phone Number
             logger.info("Detected Format 1 (4 columns)")
             for _, row in df.iterrows():
+                # Get lead source from file or use manual input
+                row_lead_source = lead_source
+                if read_source_from_file and lead_source_column:
+                    row_lead_source = str(row[lead_source_column]) if pd.notna(row[lead_source_column]) else ""
+                
                 lead = {
                     "id": str(uuid.uuid4()),
                     "name": str(row.iloc[1]) if pd.notna(row.iloc[1]) else "",
@@ -832,7 +837,7 @@ async def import_leads(
                     "residing_chennai": None,
                     "current_location": None,
                     "import_date": import_date,
-                    "lead_source": lead_source,
+                    "lead_source": row_lead_source,
                     "lead_date": lead_date,
                     "status": "New",
                     "lead_stage": "New",
