@@ -202,11 +202,9 @@ class DriverLeadUpdate(BaseModel):
     interested_ev: Optional[str] = None
     monthly_salary: Optional[str] = None
     current_location: Optional[str] = None
-    lead_stage: Optional[str] = None
+    lead_source: Optional[str] = None
+    stage: Optional[str] = None
     status: Optional[str] = None
-    driver_readiness: Optional[str] = None
-    docs_collection: Optional[str] = None
-    customer_readiness: Optional[str] = None
     assigned_telecaller: Optional[str] = None
     telecaller_notes: Optional[str] = None
     notes: Optional[str] = None
