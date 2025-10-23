@@ -1264,17 +1264,38 @@ const DriverOnboardingPage = () => {
             </div>
 
             <div>
-              <Label htmlFor="lead-source" className="text-gray-700 dark:text-gray-300">
-                Lead Source *
-              </Label>
+              <div className="flex items-center justify-between mb-2">
+                <Label htmlFor="lead-source" className="text-gray-700 dark:text-gray-300">
+                  Lead Source {!readSourceFromFile && '*'}
+                </Label>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="read-source-from-file"
+                    checked={readSourceFromFile}
+                    onCheckedChange={setReadSourceFromFile}
+                  />
+                  <label
+                    htmlFor="read-source-from-file"
+                    className="text-sm text-gray-600 dark:text-gray-400 cursor-pointer"
+                  >
+                    Read Source from file
+                  </label>
+                </div>
+              </div>
               <Input
                 id="lead-source"
                 type="text"
-                placeholder="e.g., Facebook Ad, Referral, Walk-in"
-                value={leadSource}
+                placeholder={readSourceFromFile ? "Will be read from file..." : "e.g., Facebook Ad, Referral, Walk-in"}
+                value={readSourceFromFile ? "" : leadSource}
                 onChange={(e) => setLeadSource(e.target.value)}
-                className="mt-1.5 dark:bg-gray-700 dark:border-gray-600"
+                disabled={readSourceFromFile}
+                className="mt-1.5 dark:bg-gray-700 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
               />
+              {readSourceFromFile && (
+                <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                  ℹ️ Lead sources will be read from a "Lead Source" column in your file
+                </p>
+              )}
             </div>
 
             <div>
