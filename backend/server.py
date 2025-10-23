@@ -778,6 +778,7 @@ async def import_leads(
         file = form.get('file')
         lead_source = form.get('lead_source', '')
         lead_date = form.get('lead_date', '')
+        read_source_from_file = form.get('read_source_from_file', 'false').lower() == 'true'
         
         if not file:
             raise HTTPException(status_code=400, detail="No file uploaded")
@@ -792,6 +793,23 @@ async def import_leads(
             df = pd.read_excel(io.BytesIO(content))
         else:
             raise HTTPException(status_code=400, detail="Invalid file type. Only CSV and XLSX are supported.")
+        
+        # Check if lead source column exists in file when read_source_from_file is True
+        lead_source_column = None
+        if read_source_from_file:
+            # Look for common lead source column names
+            possible_names = ['Lead Source', 'lead_source', 'Source', 'source', 'LeadSource', 'lead source']
+            for col_name in possible_names:
+                if col_name in df.columns:
+                    lead_source_column = col_name
+                    logger.info(f"Found lead source column: {col_name}")
+                    break
+            
+            if not lead_source_column:
+                raise HTTPException(
+                    status_code=400, 
+                    detail="Lead Source column not found in file. Please ensure your file has a 'Lead Source' column."
+                )
         
         # Detect format and map columns
         leads = []
