@@ -208,6 +208,16 @@ class DriverLeadUpdate(BaseModel):
     assigned_telecaller: Optional[str] = None
     telecaller_notes: Optional[str] = None
     notes: Optional[str] = None
+    dl_no: Optional[str] = None
+    badge_no: Optional[str] = None
+    aadhar_card: Optional[str] = None
+    pan_card: Optional[str] = None
+    gas_bill: Optional[str] = None
+    bank_passbook: Optional[str] = None
+    preferred_shift: Optional[str] = None
+    allotted_shift: Optional[str] = None
+    default_vehicle: Optional[str] = None
+    end_date: Optional[str] = None
 
 
 class BulkLeadStatusUpdate(BaseModel):
