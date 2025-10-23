@@ -5469,13 +5469,6 @@ async def qr_redirect(
 
 # ==================== RIDE DECK DATA ANALYSIS ====================
 
-import googlemaps
-import pandas as pd
-import io
-from openpyxl import load_workbook
-from openpyxl.utils.dataframe import dataframe_to_rows
-import asyncio
-
 # VR Mall coordinates
 VR_MALL_LAT = 13.0795762
 VR_MALL_LNG = 80.1956368
