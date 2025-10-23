@@ -1294,7 +1294,7 @@ const DriverOnboardingPage = () => {
               />
               {readSourceFromFile && (
                 <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                  ℹ️ Lead sources will be read from a "Lead Source" column in your file
+                  ℹ️ Lead sources will be read from "Lead Source" or "Lead Generator" column in your file
                 </p>
               )}
             </div>
