@@ -5522,6 +5522,40 @@ async def analyze_ride_deck(
         
         total_rows = len(df)
         
+        # Helper function to extract locality from address
+        def extract_locality(address):
+            if pd.isna(address) or not address:
+                return None
+            
+            address_str = str(address)
+            # Split by comma and look for the part before "Chennai"
+            parts = [p.strip() for p in address_str.split(',')]
+            
+            # Find the locality (usually the part before Chennai)
+            for i, part in enumerate(parts):
+                if 'Chennai' in part or 'chennai' in part:
+                    # Get the previous part (locality)
+                    if i > 0:
+                        # Sometimes there are multiple parts before Chennai
+                        # Try to get the most specific locality
+                        locality_parts = []
+                        for j in range(max(0, i-2), i):
+                            if parts[j] and not any(word in parts[j].lower() for word in ['india', 'tamil nadu', 'tamilnadu']):
+                                locality_parts.append(parts[j])
+                        
+                        if locality_parts:
+                            return ', '.join(locality_parts[-2:]) if len(locality_parts) >= 2 else locality_parts[-1]
+                    return None
+            
+            # If Chennai not found, return the second-to-last part (before state/country)
+            if len(parts) >= 2:
+                # Skip parts that are likely state/country/pincode
+                for part in reversed(parts[:-1]):
+                    if part and not any(word in part.lower() for word in ['india', 'tamil nadu', 'tamilnadu']) and not part.strip().isdigit():
+                        return part
+            
+            return None
+        
         # Process each row
         for idx, row in df.iterrows():
             try:
@@ -5530,14 +5564,28 @@ async def analyze_ride_deck(
                 drop_lat = row['dropLat']
                 drop_lng = row['dropLong']
                 
+                # Extract addresses from columns F and I (pickupPoint and dropPoint)
+                # Column F is usually index 5, Column I is index 8
+                pickup_address = row.get('pickupPoint', '')
+                drop_address = row.get('dropPoint', '')
+                
+                # Extract localities
+                pickup_locality = extract_locality(pickup_address)
+                drop_locality = extract_locality(drop_address)
+                
+                pickup_localities.append(pickup_locality)
+                drop_localities.append(drop_locality)
+                
                 # Skip if any coordinate is missing
                 if pd.isna(pickup_lat) or pd.isna(pickup_lng) or pd.isna(drop_lat) or pd.isna(drop_lng):
                     vr_to_pickup_distances.append(None)
+                    vr_to_pickup_times.append(None)
                     pickup_to_drop_distances.append(None)
+                    pickup_to_drop_times.append(None)
                     logger.warning(f"Row {idx}: Missing coordinates, skipping")
                     continue
                 
-                # Calculate distance from VR Mall to pickup
+                # Calculate distance and time from VR Mall to pickup
                 try:
                     result1 = gmaps.distance_matrix(
                         origins=[(VR_MALL_LAT, VR_MALL_LNG)],
@@ -5548,18 +5596,24 @@ async def analyze_ride_deck(
                     if result1['rows'][0]['elements'][0]['status'] == 'OK':
                         distance_meters = result1['rows'][0]['elements'][0]['distance']['value']
                         distance_km = round(distance_meters / 1000, 2)
+                        duration_seconds = result1['rows'][0]['elements'][0]['duration']['value']
+                        duration_mins = round(duration_seconds / 60, 1)
+                        
                         vr_to_pickup_distances.append(distance_km)
+                        vr_to_pickup_times.append(duration_mins)
                     else:
                         vr_to_pickup_distances.append(None)
+                        vr_to_pickup_times.append(None)
                         logger.warning(f"Row {idx}: VR to pickup distance not available")
                 except Exception as e:
                     vr_to_pickup_distances.append(None)
+                    vr_to_pickup_times.append(None)
                     logger.error(f"Row {idx}: Error calculating VR to pickup distance: {str(e)}")
                 
                 # Small delay to avoid rate limiting
                 await asyncio.sleep(0.1)
                 
-                # Calculate distance from pickup to drop
+                # Calculate distance and time from pickup to drop
                 try:
                     result2 = gmaps.distance_matrix(
                         origins=[(pickup_lat, pickup_lng)],
@@ -5570,12 +5624,18 @@ async def analyze_ride_deck(
                     if result2['rows'][0]['elements'][0]['status'] == 'OK':
                         distance_meters = result2['rows'][0]['elements'][0]['distance']['value']
                         distance_km = round(distance_meters / 1000, 2)
+                        duration_seconds = result2['rows'][0]['elements'][0]['duration']['value']
+                        duration_mins = round(duration_seconds / 60, 1)
+                        
                         pickup_to_drop_distances.append(distance_km)
+                        pickup_to_drop_times.append(duration_mins)
                     else:
                         pickup_to_drop_distances.append(None)
+                        pickup_to_drop_times.append(None)
                         logger.warning(f"Row {idx}: Pickup to drop distance not available")
                 except Exception as e:
                     pickup_to_drop_distances.append(None)
+                    pickup_to_drop_times.append(None)
                     logger.error(f"Row {idx}: Error calculating pickup to drop distance: {str(e)}")
                 
                 # Small delay to avoid rate limiting
@@ -5584,8 +5644,12 @@ async def analyze_ride_deck(
                 logger.info(f"Processed row {idx + 1}/{total_rows}")
                 
             except Exception as e:
+                pickup_localities.append(None)
                 vr_to_pickup_distances.append(None)
+                vr_to_pickup_times.append(None)
+                drop_localities.append(None)
                 pickup_to_drop_distances.append(None)
+                pickup_to_drop_times.append(None)
                 logger.error(f"Row {idx}: Error processing: {str(e)}")
         
         # Add new columns to dataframe
