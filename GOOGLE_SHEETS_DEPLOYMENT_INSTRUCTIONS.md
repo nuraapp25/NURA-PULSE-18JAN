@@ -25,7 +25,7 @@ Find these lines at the top and update them:
 ```javascript
 const CONFIG = {
   SHEET_ID: 'YOUR_SHEET_ID_HERE', // Replace with your Sheet ID from Step 1
-  BACKEND_URL: 'YOUR_BACKEND_URL_HERE' // Replace with: https://driver-sync.preview.emergentagent.com/api
+  BACKEND_URL: 'YOUR_BACKEND_URL_HERE' // Replace with: https://nura-pulse-dash.preview.emergentagent.com/api
 };
 ```
 
@@ -33,7 +33,7 @@ const CONFIG = {
 ```javascript
 const CONFIG = {
   SHEET_ID: '1CLhARhllhqZuDzkzNRqFcOGqjrSDzPgmC6gd3-AWOTs', // Your actual Sheet ID
-  BACKEND_URL: 'https://driver-sync.preview.emergentagent.com/api'
+  BACKEND_URL: 'https://nura-pulse-dash.preview.emergentagent.com/api'
 };
 ```
 
