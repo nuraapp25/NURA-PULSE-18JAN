@@ -5,7 +5,8 @@ import { Button } from '../components/ui/button';
 import { Progress } from '../components/ui/progress';
 import { Alert, AlertDescription } from '../components/ui/alert';
 
-const API = process.env.REACT_APP_BACKEND_URL || '';
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || '';
+const API = `${BACKEND_URL}/api`;
 
 const RideDeckAnalysis = () => {
   const [selectedFile, setSelectedFile] = useState(null);
