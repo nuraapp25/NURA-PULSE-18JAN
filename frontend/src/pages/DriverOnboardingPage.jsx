@@ -1260,6 +1260,7 @@ const DriverOnboardingPage = () => {
               <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
                 <li>• Format 1: S. No., Name, Vehicle, Phone Number</li>
                 <li>• Format 2: Full form with Tamil questions (8 columns)</li>
+                <li>• Format 3: Comprehensive sheet with Name, Phone No, Address, Stage, Status, etc.</li>
               </ul>
             </div>
 
