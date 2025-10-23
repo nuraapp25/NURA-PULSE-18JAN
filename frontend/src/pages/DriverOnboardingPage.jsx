@@ -93,6 +93,7 @@ const DriverOnboardingPage = () => {
   // Lead source and date for imports
   const [leadSource, setLeadSource] = useState("");
   const [leadDate, setLeadDate] = useState("");
+  const [readSourceFromFile, setReadSourceFromFile] = useState(false);
   
   // Inline editing state
   const [inlineEditingId, setInlineEditingId] = useState(null);
