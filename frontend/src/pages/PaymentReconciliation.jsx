@@ -18,6 +18,10 @@ import { useAuth } from "@/App";
 const PaymentReconciliation = () => {
   const { user } = useAuth();
   
+  // App enabled state
+  const [appEnabled, setAppEnabled] = useState(true);
+  const [checkingAppStatus, setCheckingAppStatus] = useState(true);
+  
   // New workflow states
   const [currentView, setCurrentView] = useState("folder-selection"); // "folder-selection" | "main-interface"
   const [selectedPeriod, setSelectedPeriod] = useState(""); // e.g., "Sep 2025"
