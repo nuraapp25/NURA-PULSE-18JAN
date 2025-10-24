@@ -1113,7 +1113,7 @@ const PaymentReconciliation = () => {
                             <span className={`font-semibold ${row.hasAmountError ? 'text-red-600' : 'text-green-600'}`}>
                               {row.amount === "N/A" ? "N/A" : `₹${row.amount}`}
                             </span>
-                            {row.hasAmountError && (
+                            {row.hasAmountError && (user?.account_type === 'master_admin' || user?.account_type === 'admin') && (
                               <Button
                                 onClick={() => handleEditAmount(row.id)}
                                 variant="ghost"
