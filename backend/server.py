@@ -5851,28 +5851,29 @@ async def import_rides(
         
         # Helper function to extract locality
         def extract_locality(address):
+            """
+            Extract locality name from full address.
+            Example: "Pattalam, Choolai for 5/3, Jai Nagar, Pattalam, Choolai, Chennai, Tamil Nadu 600012, India"
+            Should return: "Choolai" (the last part before ", Chennai")
+            """
             if pd.isna(address) or not address:
                 return None
             
             address_str = str(address)
             parts = [p.strip() for p in address_str.split(',')]
             
+            # Find the locality (the part immediately before Chennai)
             for i, part in enumerate(parts):
                 if 'Chennai' in part or 'chennai' in part:
+                    # Get the previous part (locality) - just the immediate previous one
                     if i > 0:
-                        locality_parts = []
-                        for j in range(max(0, i-2), i):
-                            if parts[j] and not any(word in parts[j].lower() for word in ['india', 'tamil nadu', 'tamilnadu']):
-                                locality_parts.append(parts[j])
-                        
-                        if locality_parts:
-                            return ', '.join(locality_parts[-2:]) if len(locality_parts) >= 2 else locality_parts[-1]
+                        return parts[i-1]
                     return None
             
-            if len(parts) >= 2:
-                for part in reversed(parts[:-1]):
-                    if part and not any(word in part.lower() for word in ['india', 'tamil nadu', 'tamilnadu']) and not part.strip().isdigit():
-                        return part
+            # If Chennai not found, return the last part that's not a state/country/postal code
+            for part in reversed(parts):
+                if part and not any(word in part.lower() for word in ['india', 'tamil nadu', 'tamilnadu']) and not part.strip().isdigit():
+                    return part
             
             return None
         
