@@ -58,6 +58,7 @@ const Dashboard = () => {
   // Filter apps based on user account type
   const allApps = [
     { name: "Payment Data Extractor", icon: FileText, path: "/dashboard/payment-reconciliation", roles: ["master_admin", "admin", "standard", "ops_team"] },
+    { name: "Ride Pay Extract v2", icon: Zap, path: "/dashboard/ride-pay-extract-v2", roles: ["master_admin", "admin", "standard", "ops_team"] },
     { name: "Driver Onboarding", icon: Car, path: "/dashboard/driver-onboarding", roles: ["master_admin", "admin", "standard"] },
     { name: "Telecaller's Desk", icon: Phone, path: "/dashboard/telecaller-queue", roles: ["master_admin", "admin", "standard"] },
     { name: "Montra Vehicle Insights", icon: BarChart3, path: "/dashboard/montra-vehicle", roles: ["master_admin", "admin", "standard"] },
