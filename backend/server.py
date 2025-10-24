@@ -6017,8 +6017,6 @@ async def get_ride_deck_stats(
     Get statistics about imported data
     """
     try:
-        db = get_database()
-        
         customers_count = db['customers'].count_documents({})
         rides_count = db['rides'].count_documents({})
         
