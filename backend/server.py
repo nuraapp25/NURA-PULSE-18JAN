@@ -1133,13 +1133,56 @@ async def get_leads(current_user: User = Depends(get_current_user)):
 async def sync_leads_to_sheets(current_user: User = Depends(get_current_user)):
     """Sync all leads to Google Sheets"""
     try:
+        # Get all leads from database
         leads = await db.driver_leads.find({}, {"_id": 0}).to_list(10000)
-        success = sync_all_records('leads', leads)
-        if success:
-            return {"message": f"Successfully synced {len(leads)} leads to Google Sheets"}
-        raise HTTPException(status_code=500, detail="Failed to sync leads to Google Sheets")
+        
+        if not leads:
+            return {"message": "No leads to sync", "count": 0}
+        
+        # Get Google Sheets Web App URL
+        web_app_url = os.environ.get('GOOGLE_SHEETS_WEB_APP_URL')
+        
+        if not web_app_url:
+            raise HTTPException(status_code=500, detail="GOOGLE_SHEETS_WEB_APP_URL not configured")
+        
+        # Prepare payload for Google Sheets
+        payload = {
+            "action": "sync_from_app",
+            "leads": leads
+        }
+        
+        # Send to Google Sheets Web App
+        import requests
+        response = requests.post(
+            web_app_url,
+            json=payload,
+            headers={'Content-Type': 'application/json'},
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            if result.get('success'):
+                return {
+                    "success": True,
+                    "message": f"Successfully synced {len(leads)} leads to Google Sheets",
+                    "updated": result.get('updated', 0),
+                    "created": result.get('created', 0)
+                }
+            else:
+                raise HTTPException(status_code=500, detail=f"Google Sheets sync failed: {result.get('message', 'Unknown error')}")
+        else:
+            raise HTTPException(status_code=500, detail=f"Google Sheets API error: {response.status_code}")
+            
+    except requests.exceptions.Timeout:
+        raise HTTPException(status_code=504, detail="Google Sheets sync timed out. Please try again.")
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Request error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to connect to Google Sheets: {str(e)}")
     except Exception as e:
         logger.error(f"Sync error: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Failed to sync: {str(e)}")
 
 
