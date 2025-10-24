@@ -865,38 +865,25 @@ const PaymentReconciliation = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {!appEnabled ? (
-            <div className="bg-red-50 border-2 border-red-200 dark:bg-red-900/20 dark:border-red-800 rounded-lg p-6 text-center">
-              <AlertCircle className="h-12 w-12 text-red-600 dark:text-red-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-red-800 dark:text-red-300 mb-2">
-                Upload Functionality Disabled
-              </h3>
-              <p className="text-red-700 dark:text-red-400">
-                Please contact your Master Admin for the new app link.
+          <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center">
+            <input
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={handleFileSelect}
+              className="hidden"
+              id="receipt-upload"
+            />
+            <label htmlFor="receipt-upload" className="cursor-pointer">
+              <Upload size={48} className="mx-auto text-gray-400 mb-4" />
+              <p className="text-lg text-gray-600 dark:text-gray-400 mb-2">
+                Drag & drop images here
               </p>
-            </div>
-          ) : (
-            <>
-              <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center">
-                <input
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                  id="receipt-upload"
-                  disabled={!appEnabled}
-                />
-                <label htmlFor="receipt-upload" className={`cursor-pointer ${!appEnabled ? 'opacity-50 pointer-events-none' : ''}`}>
-                  <Upload size={48} className="mx-auto text-gray-400 mb-4" />
-                  <p className="text-lg text-gray-600 dark:text-gray-400 mb-2">
-                    Drag & drop images here
-                  </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-500">
-                    or click to select files • Max 10 files • PNG, JPG, JPEG supported
-                  </p>
-                </label>
-              </div>
+              <p className="text-sm text-gray-500 dark:text-gray-500">
+                or click to select files • Max 10 files • PNG, JPG, JPEG supported
+              </p>
+            </label>
+          </div>
               
               {uploadedFiles.length > 0 && (
                 <div className="mt-6">
