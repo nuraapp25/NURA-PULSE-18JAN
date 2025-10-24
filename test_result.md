@@ -754,6 +754,7 @@ metadata:
 
 test_plan:
   current_focus:
+    - "Analytics Dashboards - Pivot Tables Backend"
     - "Payment Data Extractor - Performance Optimization"
     - "Ride Deck Data Analysis - Frontend Interface"
     - "Driver Form Enhancement - New Document Fields"
