@@ -341,15 +341,18 @@ backend:
 
   - task: "Analytics Dashboards - Pivot Tables Backend"
     implemented: true
-    working: false
+    working: "NA"
     file: "/app/backend/server.py"
     stuck_count: 1
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: false
           agent: "testing"
           comment: "❌ TESTED: Analytics Dashboards Pivot Tables have critical issues. SUCCESS: 1) Authentication working correctly (403 without token for both endpoints). 2) Response structure correct with all required fields (success, data, columns, row_field, column_field, value_operation, filter_options, total_records). 3) Default configurations working (ride-status-pivot: date/rideStatus/count, signups-pivot: date/source/count). 4) Filters working correctly. 5) Value operations (sum, average) working. 6) SignUps pivot UTC to IST conversion working correctly (dates in YYYY-MM-DD format). CRITICAL ISSUES: 1) Ride Status Pivot dates showing as Excel serial numbers (45928, 45929) instead of IST dates - UTC to IST conversion not working for rides data. 2) Alternate configuration with pickupLocality fails with TypeError: '<' not supported between instances of 'NoneType' and 'str' during sorting - needs null value handling. Root cause: Rides data has dates in Excel serial format while customers data has DD-MM-YYYY format. UTC to IST conversion function needs to handle Excel serial numbers and null values in sorting. Success rate: 13/16 tests passed (81.25%)."
+        - working: "NA"
+          agent: "main"
+          comment: "FIXES IMPLEMENTED: Fixed both critical issues in Analytics Dashboards. 1) Enhanced convert_utc_to_ist() function: Added robust Excel serial number detection (range 1-100000), improved string serial number parsing with whitespace handling, added support for multiple date formats including datetime objects, enhanced logging for debugging, returns None instead of original value on error to prevent sorting issues. 2) Improved pivot table data processing: Added None value checks in both ride-status-pivot and signups-pivot endpoints, filter out None values before adding to row/column sets, convert both row AND column values if they are date fields, skip records with None values to prevent sorting errors. Expected results: Excel serial numbers (45928, 45929) now properly convert to IST dates (YYYY-MM-DD format), pickupLocality and other fields with None values now handled gracefully without TypeError. Ready for comprehensive backend testing."
 
   - task: "Analytics Integration Workflow"
     implemented: true
