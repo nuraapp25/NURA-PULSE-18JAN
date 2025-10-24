@@ -4825,6 +4825,7 @@ class NuraPulseBackendTester:
         
         # Priority test results
         print(f"\n🎯 PRIORITY TEST RESULTS:")
+        print(f"   Locality Extraction Fix: {'✅ PASS' if locality_extraction_success else '❌ FAIL'}")
         print(f"   QR Code Management APIs: {'✅ PASS' if qr_code_success else '❌ FAIL'}")
         print(f"   Ride Deck Data Analysis APIs: {'✅ PASS' if ride_deck_success else '❌ FAIL'}")
         print(f"   RCA Management Backend APIs: {'✅ PASS' if rca_management_success else '❌ FAIL'}")
