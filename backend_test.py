@@ -5693,6 +5693,9 @@ class NuraPulseBackendTester:
         # PRIORITY: Test Ride Deck Data Management Endpoints as requested
         ride_deck_data_mgmt_success = self.test_ride_deck_data_management_endpoints()
         
+        # PRIORITY: Test Optimized Payment Data Extractor as requested in review
+        payment_extractor_success = self.test_payment_data_extractor_optimization()
+        
         # ADDITIONAL: Test Driver Onboarding Two-Way Sync with ID-Based Reconciliation
         two_way_sync_success = self.test_driver_onboarding_two_way_sync()
         
