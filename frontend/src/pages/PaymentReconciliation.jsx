@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Check, ChevronDown, Upload, FileText, Copy, Download, FileSpreadsheet, Trash2, Clock, Edit, ExternalLink, RefreshCw } from "lucide-react";
+import { Check, ChevronDown, Upload, FileText, Copy, Download, FileSpreadsheet, Trash2, Clock, Edit, ExternalLink, RefreshCw, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import axios from "axios";
 import { API } from "@/App";
