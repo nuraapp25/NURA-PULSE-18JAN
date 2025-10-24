@@ -5771,7 +5771,6 @@ async def import_rides(
         logger.info(f"Ride CSV loaded: {len(df)} rows")
         
         # Get MongoDB database
-        db = get_database()
         rides_collection = db['rides']
         
         # Get Google Maps API key
