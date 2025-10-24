@@ -719,28 +719,37 @@ const PaymentReconciliation = () => {
 
   // Folder Selection View
   if (currentView === "folder-selection") {
-    return (
-      <div className="space-y-6" data-testid="payment-reconciliation-page">
-        {/* App Disabled Banner - No Popup */}
-        {!appEnabled && (
-          <div className="bg-red-50 border-2 border-red-200 dark:bg-red-900/20 dark:border-red-800 rounded-lg p-6 mb-6">
-            <div className="flex items-start gap-4">
-              <AlertCircle className="h-6 w-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-1" />
+    // If app is disabled, show only the notification
+    if (!appEnabled) {
+      return (
+        <div className="container mx-auto p-6 max-w-4xl">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Payment Data Extractor</h1>
+            <p className="text-gray-600 dark:text-gray-400">AI-powered payment screenshot analysis</p>
+          </div>
+          
+          <div className="bg-red-50 border-2 border-red-200 dark:bg-red-900/20 dark:border-red-800 rounded-lg p-8">
+            <div className="flex flex-col items-center text-center gap-4">
+              <AlertCircle className="h-16 w-16 text-red-600 dark:text-red-400" />
               <div>
-                <h3 className="text-lg font-semibold text-red-800 dark:text-red-300 mb-2">
-                  Payment Data Extractor is Currently Disabled
-                </h3>
-                <p className="text-red-700 dark:text-red-400 mb-2">
-                  This app has been temporarily disabled due to upgrade.
+                <h2 className="text-2xl font-bold text-red-800 dark:text-red-300 mb-3">
+                  App Currently Disabled
+                </h2>
+                <p className="text-lg text-red-700 dark:text-red-400 mb-2">
+                  The Payment Data Extractor has been temporarily disabled due to upgrade.
                 </p>
-                <p className="text-red-600 dark:text-red-500 text-sm">
+                <p className="text-red-600 dark:text-red-500">
                   Please contact your <strong>Master Admin</strong> for the new app link or further information.
                 </p>
               </div>
             </div>
           </div>
-        )}
-
+        </div>
+      );
+    }
+    
+    return (
+      <div className="space-y-6" data-testid="payment-reconciliation-page">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Payment Data Extractor</h1>
         </div>
