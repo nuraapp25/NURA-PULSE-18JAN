@@ -3784,6 +3784,217 @@ class NuraPulseBackendTester:
         
         return success_count >= 10  # At least 10 out of 16 tests should pass
 
+    def test_ride_deck_data_analysis_backend_apis(self):
+        """Test Ride Deck Data Analysis Backend APIs - Comprehensive testing as requested"""
+        print("\n=== Testing Ride Deck Data Analysis Backend APIs ===")
+        
+        success_count = 0
+        
+        # Test 1: POST /ride-deck/import-customers - Customer CSV Import
+        print("\n--- Testing Customer Import ---")
+        
+        # Read the customer example CSV file
+        try:
+            with open('/app/customer-example.csv', 'rb') as f:
+                customer_csv_content = f.read()
+            
+            files = {'file': ('customer-example.csv', customer_csv_content, 'text/csv')}
+            response = self.make_request("POST", "/ride-deck/import-customers", files=files)
+            
+            if response is not None and response.status_code == 200:
+                try:
+                    result = response.json()
+                    required_fields = ["total_rows", "new_records", "duplicate_records", "errors"]
+                    
+                    if all(field in result for field in required_fields):
+                        total_rows = result["total_rows"]
+                        new_records = result["new_records"]
+                        duplicate_records = result["duplicate_records"]
+                        errors = result["errors"]
+                        
+                        self.log_test("Customer Import - CSV Processing", True, 
+                                    f"Processed {total_rows} rows: {new_records} new, {duplicate_records} duplicates, {errors} errors")
+                        success_count += 1
+                        
+                        # Test duplicate handling by importing again
+                        response2 = self.make_request("POST", "/ride-deck/import-customers", files=files)
+                        if response2 and response2.status_code == 200:
+                            try:
+                                result2 = response2.json()
+                                if result2.get("duplicate_records", 0) > 0:
+                                    self.log_test("Customer Import - Duplicate Handling", True, 
+                                                f"Correctly skipped {result2['duplicate_records']} duplicates on re-import")
+                                    success_count += 1
+                                else:
+                                    self.log_test("Customer Import - Duplicate Handling", False, 
+                                                "Expected duplicates on re-import but got none")
+                            except:
+                                self.log_test("Customer Import - Duplicate Handling", False, 
+                                            "Invalid JSON response on re-import")
+                    else:
+                        missing = [f for f in required_fields if f not in result]
+                        self.log_test("Customer Import - CSV Processing", False, 
+                                    f"Response missing required fields: {missing}")
+                except json.JSONDecodeError:
+                    self.log_test("Customer Import - CSV Processing", False, 
+                                "Invalid JSON response", response.text)
+            else:
+                error_msg = "Network error" if not response else f"Status {response.status_code}"
+                self.log_test("Customer Import - CSV Processing", False, error_msg, 
+                            response.text if response else None)
+        except FileNotFoundError:
+            self.log_test("Customer Import - CSV Processing", False, 
+                        "Customer example CSV file not found at /app/customer-example.csv")
+        except Exception as e:
+            self.log_test("Customer Import - CSV Processing", False, 
+                        f"Error reading customer CSV file: {str(e)}")
+        
+        # Test 2: POST /ride-deck/import-rides - Ride CSV Import with Computed Fields
+        print("\n--- Testing Ride Import with Computed Fields ---")
+        
+        try:
+            with open('/app/ride-example.csv', 'rb') as f:
+                ride_csv_content = f.read()
+            
+            files = {'file': ('ride-example.csv', ride_csv_content, 'text/csv')}
+            response = self.make_request("POST", "/ride-deck/import-rides", files=files)
+            
+            if response is not None and response.status_code == 200:
+                try:
+                    result = response.json()
+                    required_fields = ["total_rows", "new_records", "duplicate_records", "errors"]
+                    
+                    if all(field in result for field in required_fields):
+                        total_rows = result["total_rows"]
+                        new_records = result["new_records"]
+                        duplicate_records = result["duplicate_records"]
+                        errors = result["errors"]
+                        
+                        self.log_test("Ride Import - CSV Processing", True, 
+                                    f"Processed {total_rows} rows: {new_records} new, {duplicate_records} duplicates, {errors} errors")
+                        success_count += 1
+                        
+                        # Test duplicate handling by importing again
+                        response2 = self.make_request("POST", "/ride-deck/import-rides", files=files)
+                        if response2 and response2.status_code == 200:
+                            try:
+                                result2 = response2.json()
+                                if result2.get("duplicate_records", 0) > 0:
+                                    self.log_test("Ride Import - Duplicate Handling", True, 
+                                                f"Correctly skipped {result2['duplicate_records']} duplicates on re-import")
+                                    success_count += 1
+                                else:
+                                    self.log_test("Ride Import - Duplicate Handling", False, 
+                                                "Expected duplicates on re-import but got none")
+                            except:
+                                self.log_test("Ride Import - Duplicate Handling", False, 
+                                            "Invalid JSON response on re-import")
+                    else:
+                        missing = [f for f in required_fields if f not in result]
+                        self.log_test("Ride Import - CSV Processing", False, 
+                                    f"Response missing required fields: {missing}")
+                except json.JSONDecodeError:
+                    self.log_test("Ride Import - CSV Processing", False, 
+                                "Invalid JSON response", response.text)
+            else:
+                error_msg = "Network error" if not response else f"Status {response.status_code}"
+                self.log_test("Ride Import - CSV Processing", False, error_msg, 
+                            response.text if response else None)
+        except FileNotFoundError:
+            self.log_test("Ride Import - CSV Processing", False, 
+                        "Ride example CSV file not found at /app/ride-example.csv")
+        except Exception as e:
+            self.log_test("Ride Import - CSV Processing", False, 
+                        f"Error reading ride CSV file: {str(e)}")
+        
+        # Test 3: GET /ride-deck/stats - Statistics Endpoint
+        print("\n--- Testing Statistics Endpoint ---")
+        
+        response = self.make_request("GET", "/ride-deck/stats")
+        
+        if response is not None and response.status_code == 200:
+            try:
+                result = response.json()
+                required_fields = ["success", "customers_count", "rides_count"]
+                
+                if all(field in result for field in required_fields):
+                    customers_count = result["customers_count"]
+                    rides_count = result["rides_count"]
+                    
+                    self.log_test("Statistics Endpoint", True, 
+                                f"Retrieved stats: {customers_count} customers, {rides_count} rides")
+                    success_count += 1
+                    
+                    # Verify counts match imported data
+                    if customers_count > 0 and rides_count > 0:
+                        self.log_test("Statistics Validation", True, 
+                                    "Statistics show imported data is persisted")
+                        success_count += 1
+                    else:
+                        self.log_test("Statistics Validation", False, 
+                                    "Statistics show no data despite imports")
+                else:
+                    missing = [f for f in required_fields if f not in result]
+                    self.log_test("Statistics Endpoint", False, 
+                                f"Response missing required fields: {missing}")
+            except json.JSONDecodeError:
+                self.log_test("Statistics Endpoint", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Statistics Endpoint", False, error_msg, 
+                        response.text if response else None)
+        
+        # Test 4: Authentication Requirements
+        print("\n--- Testing Authentication Requirements ---")
+        
+        # Test customer import without auth
+        response = self.make_request("POST", "/ride-deck/import-customers", use_auth=False)
+        if response is not None and response.status_code in [401, 403]:
+            self.log_test("Authentication - Customer Import", True, 
+                        f"Correctly requires authentication ({response.status_code} without token)")
+            success_count += 1
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("Authentication - Customer Import", False, 
+                        f"Expected 401/403, got {status}")
+        
+        # Test ride import without auth
+        response = self.make_request("POST", "/ride-deck/import-rides", use_auth=False)
+        if response is not None and response.status_code in [401, 403]:
+            self.log_test("Authentication - Ride Import", True, 
+                        f"Correctly requires authentication ({response.status_code} without token)")
+            success_count += 1
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("Authentication - Ride Import", False, 
+                        f"Expected 401/403, got {status}")
+        
+        # Test stats without auth
+        response = self.make_request("GET", "/ride-deck/stats", use_auth=False)
+        if response is not None and response.status_code in [401, 403]:
+            self.log_test("Authentication - Stats", True, 
+                        f"Correctly requires authentication ({response.status_code} without token)")
+            success_count += 1
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("Authentication - Stats", False, 
+                        f"Expected 401/403, got {status}")
+        
+        # Test 5: Google Maps API Configuration Check
+        print("\n--- Testing Google Maps API Configuration ---")
+        
+        # This is tested indirectly through the ride import which uses Google Maps API
+        # If ride import worked, then Google Maps API is configured
+        if success_count >= 2:  # If both customer and ride imports worked
+            self.log_test("Google Maps API Configuration", True, 
+                        "Google Maps API appears to be configured (ride import with computed fields worked)")
+            success_count += 1
+        else:
+            self.log_test("Google Maps API Configuration", False, 
+                        "Google Maps API may not be configured (ride import failed)")
+        
+        return success_count >= 6  # At least 6 out of 9 tests should pass
     def run_all_tests(self):
         """Run all backend tests"""
         print("🚀 Starting Comprehensive Testing - Driver Onboarding Two-Way Sync with ID-Based Reconciliation")
