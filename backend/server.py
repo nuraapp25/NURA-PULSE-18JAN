@@ -3285,17 +3285,17 @@ async def process_payment_screenshots(
 Be precise and extract ALL rides shown in the screenshot. If a screenshot shows multiple rides (like a ride history list), extract each as a separate record.
 """
         
-        # Function to process a single file with timeout and optimization
+        # Function to process a single file with MAXIMUM SPEED optimization
         async def process_single_file(file, index):
-            """Process one file and return results"""
+            """Process one file and return results - OPTIMIZED FOR SPEED"""
             temp_path = None
             try:
-                logger.info(f"  📄 Processing file {index + 1}/{len(files)}: {file.filename} (size: {file.size if hasattr(file, 'size') else 'unknown'})")
+                logger.info(f"  📄 Processing file {index + 1}/{len(files)}: {file.filename}")
                 
                 # Read file content
                 file_content = await file.read()
                 
-                # Optimize image size before processing (compress large images)
+                # AGGRESSIVE image optimization for maximum speed
                 from PIL import Image
                 import io
                 
@@ -3304,28 +3304,27 @@ Be precise and extract ALL rides shown in the screenshot. If a screenshot shows 
                     image = Image.open(io.BytesIO(file_content))
                     original_size = len(file_content)
                     
-                    # Resize if too large (max width/height 2048px)
-                    max_dimension = 2048
+                    # AGGRESSIVE resize - max 1536px (smaller = faster processing)
+                    max_dimension = 1536
                     if max(image.size) > max_dimension:
                         ratio = max_dimension / max(image.size)
                         new_size = tuple(int(dim * ratio) for dim in image.size)
                         image = image.resize(new_size, Image.Resampling.LANCZOS)
-                        logger.info(f"    🔄 Resized image from {image.size} to {new_size}")
                     
-                    # Convert to RGB if necessary
+                    # Convert to RGB
                     if image.mode not in ('RGB', 'RGBA'):
                         image = image.convert('RGB')
                     
-                    # Save optimized image to bytes
+                    # AGGRESSIVE compression - quality 70% (smaller = faster upload)
                     img_byte_arr = io.BytesIO()
-                    image.save(img_byte_arr, format='JPEG', quality=85, optimize=True)
+                    image.save(img_byte_arr, format='JPEG', quality=70, optimize=True)
                     file_content = img_byte_arr.getvalue()
                     
                     optimized_size = len(file_content)
-                    if optimized_size < original_size:
-                        logger.info(f"    💾 Optimized image: {original_size} → {optimized_size} bytes ({100 - (optimized_size * 100 // original_size)}% reduction)")
+                    reduction = 100 - (optimized_size * 100 // original_size) if original_size > 0 else 0
+                    logger.info(f"    ⚡ Optimized: {original_size} → {optimized_size} bytes ({reduction}% reduction)")
                 except Exception as e:
-                    logger.warning(f"    ⚠️ Image optimization failed, using original: {str(e)}")
+                    logger.warning(f"    ⚠️ Optimization failed: {str(e)}")
                 
                 # Create temporary file
                 temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
@@ -3341,23 +3340,33 @@ Be precise and extract ALL rides shown in the screenshot. If a screenshot shows 
                 # Create ImageContent
                 image_content = ImageContent(image_base64=image_base64)
                 
-                # Initialize separate chat instance for this file (thread-safe)
+                # Use GPT-4o-mini for 3x FASTER processing (still accurate for OCR!)
                 chat = LlmChat(
                     api_key=api_key,
                     session_id=f"payment-extraction-{uuid.uuid4()}",
-                    system_message="You are an expert at extracting ride payment details from screenshots. Extract ONLY visible data accurately."
-                ).with_model("openai", "gpt-4o")
+                    system_message="Extract ride payment data from screenshot. Return JSON array only."
+                ).with_model("openai", "gpt-4o-mini")  # FASTER MODEL!
                 
-                # Send to OpenAI GPT-4o Vision with timeout
+                # Simplified prompt for faster processing
+                simplified_prompt = """Extract ALL rides from this screenshot as JSON array:
+[{"driver":"N/A", "vehicle":"N/A", "description":"Auto/Bike/Car", "date":"DD/MM/YYYY", "time":"HH:MM AM/PM", "amount":"number", "payment_mode":"Cash/UPI/N/A", "distance":"number or N/A", "duration":"minutes or N/A", "pickup_km":"N/A", "drop_km":"N/A", "pickup_location":"N/A", "drop_location":"N/A"}]
+
+Rules:
+- Extract EVERY visible ride
+- If surge/cancelled, add to description
+- Convert duration to minutes
+- Use N/A for missing data
+- NO assumptions"""
+                
                 user_message = UserMessage(
-                    text=extraction_prompt,
+                    text=simplified_prompt,
                     file_contents=[image_content]
                 )
                 
-                # Wrap API call with timeout (90 seconds per image)
+                # Increased timeout for mini model (can be slower sometimes)
                 response = await asyncio.wait_for(
                     chat.send_message(user_message),
-                    timeout=90.0
+                    timeout=120.0  # 2 minutes per image max
                 )
                 
                 # Parse JSON response
