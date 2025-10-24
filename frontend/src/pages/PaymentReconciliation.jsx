@@ -912,7 +912,7 @@ const PaymentReconciliation = () => {
                 <div className="mt-6 text-center">
                   <Button
                     onClick={processFiles}
-                    disabled={processing || !appEnabled}
+                    disabled={processing}
                     className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 px-8 py-3"
                   >
                     {processing ? (
