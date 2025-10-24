@@ -704,6 +704,18 @@ frontend:
           agent: "testing"
           comment: "✅ RCA MANAGEMENT BACKEND TESTING COMPLETE: Successfully tested all 3 RCA Management backend APIs with 83.3% success rate (10/12 tests passed). Core functionality verified: 1) GET /api/ride-deck/rca/cancelled - Retrieved 235 cancelled rides with empty statusReason, proper response structure with all required fields (id, customerId, customerName, rideStartTime, pickupLocality, dropLocality, statusReason, statusDetail), customer names properly enriched from customer_data collection. 2) GET /api/ride-deck/rca/driver-not-found - Retrieved 106 driver not found rides with empty statusReason, same response structure as cancelled rides. 3) PUT /api/ride-deck/rca/update/{ride_id} - Successfully updated ride statusReason and statusDetail, verified ride removal from RCA lists after update, supports both required statusReason and optional statusDetail parameters, returns proper response format (success, message, ride_id). 4) Authentication working correctly (all endpoints require Bearer token). 5) Database verification confirms updates persist and rides disappear from RCA lists after statusReason assignment. 6) Proper error handling for non-existent ride IDs (404). Minor: Some authentication tests showed network errors instead of expected 403 codes, but actual authentication is working. All RCA Management endpoints fully operational and ready for production use."
 
+  - task: "Ride Deck Data Management Endpoints"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "❌ RIDE DECK DATA MANAGEMENT ENDPOINTS TESTING COMPLETE: Tested all 6 new data management endpoints with mixed results. SUCCESS: 1) GET /api/ride-deck/customers - Working correctly with pagination (limit=100, skip=0), retrieved 389 customers, proper response structure (success, data, total, limit, skip), correctly excludes _id field, authentication required (403 without token). 2) GET /api/ride-deck/rides - Working correctly with pagination, retrieved 790 rides, proper response structure, excludes _id field, contains computed fields (pickupLocality, dropLocality), authentication required. CRITICAL ISSUES: 3) GET /api/ride-deck/export-customers - Returns 500 error due to missing imports (StreamingResponse, pandas, io not imported at top level). 4) GET /api/ride-deck/export-rides - Same 500 error, missing imports. 5) DELETE /api/ride-deck/delete-customers - Returns 500 error due to BUG: endpoint uses 'current_user.role' but User model has 'account_type' field (AttributeError: 'User' object has no attribute 'role'). 6) DELETE /api/ride-deck/delete-rides - Same role checking bug. Authentication working for all endpoints (403 without token). SUCCESS RATE: 50% (10/20 tests passed). FIXES NEEDED: Add missing imports at top level, change current_user.role to current_user.account_type in delete endpoints."
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
