@@ -6067,14 +6067,14 @@ async def get_ride_deck_stats(
     Get statistics about imported data
     """
     try:
-        customers_count = db['customers'].count_documents({})
-        rides_count = db['rides'].count_documents({})
+        customers_count = await db['customers'].count_documents({})
+        rides_count = await db['rides'].count_documents({})
         
         # Get ride status distribution
         ride_status_pipeline = [
             {"$group": {"_id": "$rideStatus", "count": {"$sum": 1}}}
         ]
-        ride_status_dist = list(db['rides'].aggregate(ride_status_pipeline))
+        ride_status_dist = await db['rides'].aggregate(ride_status_pipeline).to_list(None)
         
         return {
             "success": True,
