@@ -298,7 +298,16 @@ const PaymentReconciliation = () => {
       toast.error("Please select only image files (PNG, JPG, JPEG)");
     }
     
-    setUploadedFiles(prev => [...prev, ...validFiles].slice(0, 10)); // Max 10 files
+    // Check if adding new files would exceed limit
+    const currentCount = uploadedFiles.length;
+    const totalCount = currentCount + validFiles.length;
+    
+    if (totalCount > 10) {
+      toast.warning(`Can only upload 10 files total. ${totalCount - 10} file(s) will be skipped.`);
+      setUploadedFiles(prev => [...prev, ...validFiles].slice(0, 10));
+    } else {
+      setUploadedFiles(prev => [...prev, ...validFiles]);
+    }
   };
 
   const removeFile = (index) => {
