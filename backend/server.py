@@ -6666,6 +6666,261 @@ async def get_signups_pivot(
         raise HTTPException(status_code=500, detail=f"Failed to generate pivot table: {str(e)}")
 
 
+# ==================== APP SETTINGS MANAGEMENT (Master Admin) ====================
+
+@api_router.get("/app-settings")
+async def get_app_settings(
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get application settings
+    """
+    try:
+        settings_collection = db['app_settings']
+        
+        # Get or create default settings
+        settings = await settings_collection.find_one({'_id': 'global_settings'})
+        
+        if not settings:
+            # Create default settings
+            default_settings = {
+                '_id': 'global_settings',
+                'payment_extractor_enabled': True,
+                'updated_at': datetime.now(timezone.utc).isoformat(),
+                'updated_by': 'system'
+            }
+            await settings_collection.insert_one(default_settings)
+            settings = default_settings
+        
+        return {
+            "success": True,
+            "settings": {
+                "payment_extractor_enabled": settings.get('payment_extractor_enabled', True)
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get app settings: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get settings: {str(e)}")
+
+
+@api_router.put("/app-settings")
+async def update_app_settings(
+    payment_extractor_enabled: bool,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Update application settings (Master Admin only)
+    """
+    if current_user.account_type != "master_admin":
+        raise HTTPException(status_code=403, detail="Only Master Admins can update app settings")
+    
+    try:
+        settings_collection = db['app_settings']
+        
+        update_data = {
+            'payment_extractor_enabled': payment_extractor_enabled,
+            'updated_at': datetime.now(timezone.utc).isoformat(),
+            'updated_by': current_user.email
+        }
+        
+        result = await settings_collection.update_one(
+            {'_id': 'global_settings'},
+            {'$set': update_data},
+            upsert=True
+        )
+        
+        # Log this action
+        await log_user_activity(
+            user_email=current_user.email,
+            action="update_app_settings",
+            details=f"Payment Extractor {'enabled' if payment_extractor_enabled else 'disabled'}",
+            module="App Settings"
+        )
+        
+        return {
+            "success": True,
+            "message": f"Payment Data Extractor has been {'enabled' if payment_extractor_enabled else 'disabled'}",
+            "settings": {
+                "payment_extractor_enabled": payment_extractor_enabled
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to update app settings: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to update settings: {str(e)}")
+
+
+# ==================== USER ACTIVITY LOGGING ====================
+
+async def log_user_activity(
+    user_email: str,
+    action: str,
+    details: str = None,
+    module: str = None,
+    ip_address: str = None
+):
+    """
+    Log user activity to database
+    """
+    try:
+        activity_logs = db['user_activity_logs']
+        
+        log_entry = {
+            'id': str(uuid.uuid4()),
+            'user_email': user_email,
+            'action': action,
+            'details': details,
+            'module': module,
+            'ip_address': ip_address,
+            'timestamp': datetime.now(timezone.utc).isoformat(),
+            'date': datetime.now(timezone.utc).strftime('%Y-%m-%d')
+        }
+        
+        await activity_logs.insert_one(log_entry)
+        
+    except Exception as e:
+        logger.error(f"Failed to log activity: {str(e)}")
+
+
+@api_router.get("/analytics/user-activity")
+async def get_user_activity_logs(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    user_email: Optional[str] = None,
+    module: Optional[str] = None,
+    limit: int = 100,
+    skip: int = 0,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get user activity logs (Master Admin and Admin only)
+    """
+    if current_user.account_type not in ["master_admin", "admin"]:
+        raise HTTPException(status_code=403, detail="Only Admins can view activity logs")
+    
+    try:
+        activity_logs = db['user_activity_logs']
+        
+        # Build query
+        query = {}
+        
+        if start_date and end_date:
+            query['date'] = {'$gte': start_date, '$lte': end_date}
+        elif start_date:
+            query['date'] = {'$gte': start_date}
+        elif end_date:
+            query['date'] = {'$lte': end_date}
+        
+        if user_email:
+            query['user_email'] = user_email
+        
+        if module:
+            query['module'] = module
+        
+        # Get logs
+        logs = await activity_logs.find(query).sort('timestamp', -1).skip(skip).limit(limit).to_list(None)
+        total_count = await activity_logs.count_documents(query)
+        
+        # Remove _id field
+        for log in logs:
+            if '_id' in log:
+                del log['_id']
+        
+        return {
+            "success": True,
+            "logs": logs,
+            "total": total_count,
+            "limit": limit,
+            "skip": skip
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get activity logs: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get logs: {str(e)}")
+
+
+@api_router.get("/analytics/active-users")
+async def get_active_users(
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get currently active users (users who had activity in last 5 minutes)
+    """
+    if current_user.account_type not in ["master_admin", "admin"]:
+        raise HTTPException(status_code=403, detail="Only Admins can view active users")
+    
+    try:
+        activity_logs = db['user_activity_logs']
+        
+        # Get activity from last 5 minutes
+        five_minutes_ago = datetime.now(timezone.utc) - timedelta(minutes=5)
+        five_minutes_ago_iso = five_minutes_ago.isoformat()
+        
+        # Aggregate to get latest activity per user
+        pipeline = [
+            {"$match": {"timestamp": {"$gte": five_minutes_ago_iso}}},
+            {"$sort": {"timestamp": -1}},
+            {"$group": {
+                "_id": "$user_email",
+                "latest_action": {"$first": "$action"},
+                "latest_module": {"$first": "$module"},
+                "latest_timestamp": {"$first": "$timestamp"},
+                "activity_count": {"$sum": 1}
+            }}
+        ]
+        
+        active_users_data = await activity_logs.aggregate(pipeline).to_list(None)
+        
+        active_users = []
+        for user_data in active_users_data:
+            active_users.append({
+                "user_email": user_data['_id'],
+                "current_module": user_data['latest_module'],
+                "latest_action": user_data['latest_action'],
+                "last_activity": user_data['latest_timestamp'],
+                "activity_count": user_data['activity_count']
+            })
+        
+        return {
+            "success": True,
+            "active_users": active_users,
+            "count": len(active_users)
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get active users: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get active users: {str(e)}")
+
+
+@api_router.post("/analytics/log-activity")
+async def log_activity(
+    action: str,
+    module: str,
+    details: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Log user activity from frontend
+    """
+    try:
+        await log_user_activity(
+            user_email=current_user.email,
+            action=action,
+            details=details,
+            module=module
+        )
+        
+        return {
+            "success": True,
+            "message": "Activity logged"
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to log activity: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to log activity: {str(e)}")
+
+
 # ==================== RCA (Root Cause Analysis) Management ====================
 
 @api_router.get("/ride-deck/rca/cancelled")
