@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, Query, Request, Form, UploadFile, File
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, Query, Request, Form, UploadFile, File, BackgroundTasks
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
