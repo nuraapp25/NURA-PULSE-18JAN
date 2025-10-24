@@ -726,9 +726,9 @@ const PaymentReconciliation = () => {
   if (currentView === "folder-selection") {
     return (
       <div className="space-y-6" data-testid="payment-reconciliation-page">
-        {/* App Disabled Message */}
+        {/* App Disabled Dialog */}
         {!appEnabled && (
-          <Dialog open={true}>
+          <Dialog open={showDisabledDialog} onOpenChange={setShowDisabledDialog}>
             <DialogContent className="dark:bg-gray-800">
               <DialogHeader>
                 <DialogTitle className="text-red-600 dark:text-red-400 flex items-center gap-2">
@@ -746,6 +746,16 @@ const PaymentReconciliation = () => {
               </div>
             </DialogContent>
           </Dialog>
+        )}
+
+        {/* Persistent Banner when app is disabled */}
+        {!appEnabled && !showDisabledDialog && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              <strong>Payment Data Extractor is currently disabled.</strong> Contact your Master Admin for the new app link.
+            </AlertDescription>
+          </Alert>
         )}
 
         <div className="text-center mb-8">
