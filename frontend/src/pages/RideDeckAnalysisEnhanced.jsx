@@ -13,6 +13,8 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || '';
 const API = `${BACKEND_URL}/api`;
 
 const RideDeckAnalysisEnhanced = () => {
+  const { user } = useAuth();
+  
   // Distance calculation state
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploading, setUploading] = useState(false);
@@ -30,6 +32,17 @@ const RideDeckAnalysisEnhanced = () => {
   const [rideImportStats, setRideImportStats] = useState(null);
   const [stats, setStats] = useState(null);
   const [importError, setImportError] = useState(null);
+  
+  // View data state
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [viewDataType, setViewDataType] = useState(null); // 'customers' or 'rides'
+  const [viewData, setViewData] = useState([]);
+  const [loadingViewData, setLoadingViewData] = useState(false);
+  
+  // Delete confirmation state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteDataType, setDeleteDataType] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   // Fetch stats on component mount
   useEffect(() => {
