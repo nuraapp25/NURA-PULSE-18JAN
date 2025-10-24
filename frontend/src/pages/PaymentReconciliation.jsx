@@ -381,7 +381,7 @@ const PaymentReconciliation = () => {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'multipart/form-data'
           },
-          timeout: 180000 // 3 minutes timeout (increased for parallel processing)
+          timeout: 300000 // 5 minutes timeout (increased for 10 file processing)
         }
       );
       
