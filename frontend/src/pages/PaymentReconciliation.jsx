@@ -93,6 +93,7 @@ const PaymentReconciliation = () => {
   const platforms = ["Rapido", "Uber", "Ola", "Nura", "Adhoc"];
 
   useEffect(() => {
+    checkAppStatus();
     loadExistingFolders();
   }, []);
 
@@ -101,6 +102,26 @@ const PaymentReconciliation = () => {
       fetchSyncStatus();
     }
   }, [currentView]);
+
+  const checkAppStatus = async () => {
+    setCheckingAppStatus(true);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(`${API}/app-settings`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.success) {
+        setAppEnabled(response.data.settings.payment_extractor_enabled);
+      }
+    } catch (error) {
+      console.error('Error checking app status:', error);
+      // Default to enabled if check fails
+      setAppEnabled(true);
+    } finally {
+      setCheckingAppStatus(false);
+    }
+  };
 
   const fetchStoredRecords = async (monthYear) => {
     try {
