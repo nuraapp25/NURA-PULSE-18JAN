@@ -287,15 +287,17 @@ const RideDeckAnalysisEnhanced = () => {
   };
 
   // View data handlers
-  const handleViewData = async (dataType) => {
+  const handleViewData = async (dataType, page = 1) => {
     setViewDataType(dataType);
     setViewDialogOpen(true);
     setLoadingViewData(true);
+    setCurrentPage(page);
     
     try {
       const token = localStorage.getItem('token');
       const endpoint = dataType === 'customers' ? 'customers' : 'rides';
-      const response = await fetch(`${API}/ride-deck/${endpoint}?limit=100`, {
+      const skip = (page - 1) * pageSize;
+      const response = await fetch(`${API}/ride-deck/${endpoint}?limit=${pageSize}&skip=${skip}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -307,13 +309,59 @@ const RideDeckAnalysisEnhanced = () => {
 
       const result = await response.json();
       setViewData(result.data || []);
+      setTotalRecords(result.total || 0);
     } catch (err) {
       console.error('Error fetching data:', err);
       toast.error(`Failed to load ${dataType} data`);
       setViewData([]);
+      setTotalRecords(0);
     } finally {
       setLoadingViewData(false);
     }
+  };
+
+  const handlePageChange = (page) => {
+    if (page < 1 || page > totalPages) return;
+    handleViewData(viewDataType, page);
+  };
+
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisible = 7; // Show max 7 page numbers
+    
+    if (totalPages <= maxVisible) {
+      // Show all pages if total is less than max
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Show first page
+      pages.push(1);
+      
+      // Calculate range around current page
+      let start = Math.max(2, currentPage - 2);
+      let end = Math.min(totalPages - 1, currentPage + 2);
+      
+      // Add ellipsis if needed
+      if (start > 2) {
+        pages.push('...');
+      }
+      
+      // Add middle pages
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+      
+      // Add ellipsis if needed
+      if (end < totalPages - 1) {
+        pages.push('...');
+      }
+      
+      // Show last page
+      pages.push(totalPages);
+    }
+    
+    return pages;
   };
 
   const handleDownloadExcel = async (dataType) => {
