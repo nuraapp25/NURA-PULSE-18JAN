@@ -74,8 +74,13 @@ const Dashboard = () => {
   );
 
   const manageItems = [
-    { name: "Manage", icon: FolderOpen, path: "/dashboard/manage" },
-    { name: "Payment Screenshots", icon: Image, path: "/dashboard/admin/payment-screenshots" },
+    { name: "Manage", icon: FolderOpen, path: "/dashboard/manage", roles: ["master_admin", "admin"] },
+    { name: "Payment Screenshots", icon: Image, path: "/dashboard/admin/payment-screenshots", roles: ["master_admin", "admin"] },
+    { name: "App Settings", icon: Settings, path: "/dashboard/app-settings", roles: ["master_admin"] },
+  ];
+
+  const analyticsItems = [
+    { name: "User Activity", icon: Activity, path: "/dashboard/user-activity", roles: ["master_admin", "admin"] },
   ];
 
   const settingsItems = [
