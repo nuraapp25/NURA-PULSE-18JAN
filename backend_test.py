@@ -4043,6 +4043,8 @@ class NuraPulseBackendTester:
         
         # Priority test results
         print(f"\n🎯 PRIORITY TEST RESULTS:")
+        print(f"   QR Code Management APIs: {'✅ PASS' if qr_code_success else '❌ FAIL'}")
+        print(f"   Ride Deck Data Analysis APIs: {'✅ PASS' if ride_deck_success else '❌ FAIL'}")
         print(f"   Driver Onboarding Two-Way Sync: {'✅ PASS' if two_way_sync_success else '❌ FAIL'}")
         print(f"   Payment Screenshots Delete: {'✅ PASS' if payment_screenshots_success else '❌ FAIL'}")
         print(f"   Analytics Endpoints: {'✅ PASS' if analytics_endpoints_success else '❌ FAIL'}")
