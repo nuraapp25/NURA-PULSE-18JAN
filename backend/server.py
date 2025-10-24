@@ -6332,7 +6332,7 @@ async def delete_all_rides(
     """
     Delete all ride data (Master Admin only)
     """
-    if current_user.role != "master_admin":
+    if current_user.account_type != "master_admin":
         raise HTTPException(status_code=403, detail="Only Master Admins can delete all ride data")
     
     try:
