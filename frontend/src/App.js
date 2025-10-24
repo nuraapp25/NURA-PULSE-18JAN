@@ -128,6 +128,7 @@ function App() {
                   <Route path="users" element={<UserManagement />} />
                 )}
                 <Route path="payment-reconciliation" element={<PaymentReconciliation />} />
+                <Route path="ride-pay-extract-v2" element={<RidePayExtractV2 />} />
                 <Route path="driver-onboarding" element={<DriverOnboarding />} />
                 <Route path="telecaller-queue" element={<TelecallerQueue />} />
                 <Route path="montra-vehicle" element={<MontraVehicle />} />
