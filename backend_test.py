@@ -4785,6 +4785,9 @@ class NuraPulseBackendTester:
             print("\n❌ Authentication failed - cannot proceed with other tests")
             return False
         
+        # PRIORITY: Test Locality Extraction Fix as requested in review
+        locality_extraction_success = self.test_locality_extraction_fix()
+        
         # PRIORITY: Test QR Code Management APIs as requested
         qr_code_success = self.test_qr_code_management_apis()
         
