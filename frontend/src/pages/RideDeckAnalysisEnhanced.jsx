@@ -805,32 +805,52 @@ const RideDeckAnalysisEnhanced = () => {
 
                   {/* Action Buttons */}
                   {stats && stats.rides_count > 0 && (
-                    <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-                      <Button
-                        onClick={() => handleViewData('rides')}
-                        variant="outline"
-                        className="flex-1"
-                      >
-                        <Eye className="mr-2 h-4 w-4" />
-                        View Data
-                      </Button>
-                      <Button
-                        onClick={() => handleDownloadExcel('rides')}
-                        variant="outline"
-                        className="flex-1"
-                      >
-                        <FileDown className="mr-2 h-4 w-4" />
-                        Download Excel
-                      </Button>
-                      {user?.role === 'master_admin' && (
+                    <div className="space-y-3">
+                      <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
                         <Button
-                          onClick={() => handleDeleteConfirm('rides')}
-                          variant="destructive"
+                          onClick={() => handleViewData('rides')}
+                          variant="outline"
                           className="flex-1"
                         >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete All
+                          <Eye className="mr-2 h-4 w-4" />
+                          View Data
                         </Button>
+                        <Button
+                          onClick={() => handleDownloadExcel('rides')}
+                          variant="outline"
+                          className="flex-1"
+                        >
+                          <FileDown className="mr-2 h-4 w-4" />
+                          Download Excel
+                        </Button>
+                        {user?.role === 'master_admin' && (
+                          <Button
+                            onClick={() => handleDeleteConfirm('rides')}
+                            variant="destructive"
+                            className="flex-1"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete All
+                          </Button>
+                        )}
+                      </div>
+                      {user?.role === 'master_admin' && (
+                        <Alert className="bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800">
+                          <AlertCircle className="h-4 w-4 text-blue-600" />
+                          <AlertDescription className="text-blue-800 dark:text-blue-200 flex items-center justify-between">
+                            <span className="text-sm">
+                              <strong>Fix Duplicate Localities:</strong> If you see duplicate locality names like "Area, Area", click to re-process all rides with the latest extraction logic.
+                            </span>
+                            <Button
+                              onClick={handleFixLocalities}
+                              size="sm"
+                              variant="outline"
+                              className="ml-4 bg-white dark:bg-gray-700"
+                            >
+                              Fix Localities
+                            </Button>
+                          </AlertDescription>
+                        </Alert>
                       )}
                     </div>
                   )}
