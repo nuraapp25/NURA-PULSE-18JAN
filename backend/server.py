@@ -17,6 +17,7 @@ import secrets
 import string
 import base64
 import googlemaps
+import requests
 import asyncio
 
 ROOT_DIR = Path(__file__).parent
