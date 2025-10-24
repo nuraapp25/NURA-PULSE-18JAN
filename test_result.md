@@ -688,7 +688,6 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Ride Deck Data Analysis - Backend APIs"
     - "Ride Deck Data Analysis - Frontend Interface"
     - "Driver Form Enhancement - New Document Fields"
     - "Expense Tracker - Add Expense Dialog"
