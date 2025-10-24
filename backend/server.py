@@ -6666,6 +6666,192 @@ async def get_signups_pivot(
         raise HTTPException(status_code=500, detail=f"Failed to generate pivot table: {str(e)}")
 
 
+# ==================== DRIVER ONBOARDING - DOCUMENT UPLOAD & OCR ====================
+
+from emergentintegrations.llm.chat import LlmChat, UserMessage
+import base64
+
+# Document upload folder
+DRIVER_DOCUMENTS_FOLDER = "driver_documents"
+os.makedirs(DRIVER_DOCUMENTS_FOLDER, exist_ok=True)
+
+@api_router.post("/driver-onboarding/upload-document/{lead_id}")
+async def upload_driver_document(
+    lead_id: str,
+    document_type: str,  # dl, aadhar, pan, gas_bill, bank_passbook
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Upload document for a driver lead
+    """
+    try:
+        # Validate document type
+        valid_types = ['dl', 'aadhar', 'pan', 'gas_bill', 'bank_passbook']
+        if document_type not in valid_types:
+            raise HTTPException(status_code=400, detail=f"Invalid document type. Must be one of: {', '.join(valid_types)}")
+        
+        # Validate file type
+        allowed_extensions = ['.png', '.jpg', '.jpeg', '.pdf']
+        file_ext = os.path.splitext(file.filename)[1].lower()
+        if file_ext not in allowed_extensions:
+            raise HTTPException(status_code=400, detail=f"Invalid file type. Allowed: {', '.join(allowed_extensions)}")
+        
+        # Create folder for this lead
+        lead_folder = os.path.join(DRIVER_DOCUMENTS_FOLDER, lead_id)
+        os.makedirs(lead_folder, exist_ok=True)
+        
+        # Save file with document type name
+        filename = f"{document_type}{file_ext}"
+        file_path = os.path.join(lead_folder, filename)
+        
+        # Save the file
+        with open(file_path, "wb") as f:
+            content = await file.read()
+            f.write(content)
+        
+        # Update lead record with document path
+        leads_collection = db['driver_leads']
+        field_name = f"{document_type}_document_path"
+        
+        await leads_collection.update_one(
+            {'id': lead_id},
+            {'$set': {
+                field_name: file_path,
+                f"{document_type}_document_uploaded_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        
+        return {
+            "success": True,
+            "message": f"{document_type.upper()} document uploaded successfully",
+            "file_path": file_path,
+            "document_type": document_type
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to upload document: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to upload document: {str(e)}")
+
+
+@api_router.post("/driver-onboarding/scan-document/{lead_id}")
+async def scan_driver_document(
+    lead_id: str,
+    document_type: str,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Scan uploaded document and extract information using GPT-4o Vision
+    """
+    try:
+        # Get the document path from database
+        leads_collection = db['driver_leads']
+        lead = await leads_collection.find_one({'id': lead_id})
+        
+        if not lead:
+            raise HTTPException(status_code=404, detail="Lead not found")
+        
+        field_name = f"{document_type}_document_path"
+        file_path = lead.get(field_name)
+        
+        if not file_path or not os.path.exists(file_path):
+            raise HTTPException(status_code=404, detail=f"No {document_type} document found for this lead")
+        
+        # Get API key
+        api_key = os.environ.get('EMERGENT_LLM_KEY')
+        if not api_key:
+            raise HTTPException(status_code=500, detail="EMERGENT_LLM_KEY not configured")
+        
+        # Read the file and convert to base64
+        with open(file_path, 'rb') as f:
+            file_content = f.read()
+            base64_image = base64.b64encode(file_content).decode('utf-8')
+        
+        # Determine file mime type
+        file_ext = os.path.splitext(file_path)[1].lower()
+        mime_types = {
+            '.png': 'image/png',
+            '.jpg': 'image/jpeg',
+            '.jpeg': 'image/jpeg',
+            '.pdf': 'application/pdf'
+        }
+        mime_type = mime_types.get(file_ext, 'image/jpeg')
+        
+        # Create extraction prompt based on document type
+        prompts = {
+            'dl': "Extract the Driver License Number from this image. Return ONLY the license number, nothing else.",
+            'aadhar': "Extract the Aadhar Card Number (12-digit number) from this image. Return ONLY the number, nothing else.",
+            'pan': "Extract the PAN Card Number (10-character alphanumeric) from this image. Return ONLY the PAN number, nothing else.",
+            'gas_bill': "Extract the complete address from this gas bill. Return ONLY the address, nothing else.",
+            'bank_passbook': "Extract the Bank Account Number from this bank passbook image. Return ONLY the account number, nothing else."
+        }
+        
+        prompt = prompts.get(document_type, "Extract relevant information from this document.")
+        
+        # Use OpenAI GPT-4o Vision for OCR
+        import openai
+        openai.api_key = api_key
+        
+        response = openai.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": prompt},
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:{mime_type};base64,{base64_image}"
+                            }
+                        }
+                    ]
+                }
+            ],
+            max_tokens=300
+        )
+        
+        extracted_text = response.choices[0].message.content.strip()
+        
+        # Map document type to field name
+        field_mappings = {
+            'dl': 'dl_no',
+            'aadhar': 'aadhar_card',
+            'pan': 'pan_card',
+            'gas_bill': 'gas_bill',
+            'bank_passbook': 'bank_passbook'
+        }
+        
+        field_name_to_update = field_mappings.get(document_type)
+        
+        # Update the lead with extracted information
+        if field_name_to_update:
+            await leads_collection.update_one(
+                {'id': lead_id},
+                {'$set': {
+                    field_name_to_update: extracted_text,
+                    f"{document_type}_scanned_at": datetime.now(timezone.utc).isoformat()
+                }}
+            )
+        
+        return {
+            "success": True,
+            "extracted_data": extracted_text,
+            "field_updated": field_name_to_update,
+            "document_type": document_type
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to scan document: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Failed to scan document: {str(e)}")
+
+
 # ==================== APP SETTINGS MANAGEMENT (Master Admin) ====================
 
 @api_router.get("/app-settings")
