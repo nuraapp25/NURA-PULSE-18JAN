@@ -5773,7 +5773,7 @@ async def import_customers(
                 }
                 
                 # Insert into database
-                customers_collection.insert_one(customer_data)
+                await customers_collection.insert_one(customer_data)
                 new_records += 1
                 existing_ids.add(customer_id)
                 
