@@ -4316,6 +4316,9 @@ class NuraPulseBackendTester:
         # PRIORITY: Test Ride Deck Data Analysis APIs as requested
         ride_deck_success = self.test_ride_deck_data_analysis_backend_apis()
         
+        # PRIORITY: Test RCA Management Backend APIs as requested
+        rca_management_success = self.test_rca_management_backend_apis()
+        
         # ADDITIONAL: Test Driver Onboarding Two-Way Sync with ID-Based Reconciliation
         two_way_sync_success = self.test_driver_onboarding_two_way_sync()
         
