@@ -6221,9 +6221,9 @@ async def get_ride_status_pivot(
                 pivot_data['avg_data'][row_val][col_val]['sum'] += float(ride.get(value_field, 0))
                 pivot_data['avg_data'][row_val][col_val]['count'] += 1
         
-        # Convert to sorted list format
-        sorted_rows = sorted(list(row_values))
-        sorted_columns = sorted(list(column_values))
+        # Convert to sorted list format (filter out None values before sorting)
+        sorted_rows = sorted([r for r in row_values if r is not None])
+        sorted_columns = sorted([c for c in column_values if c is not None])
         
         # Build final pivot table
         table_data = []
@@ -6327,9 +6327,9 @@ async def get_signups_pivot(
                 pivot_data['avg_data'][row_val][col_val]['sum'] += float(customer.get(value_field, 0))
                 pivot_data['avg_data'][row_val][col_val]['count'] += 1
         
-        # Convert to sorted list format
-        sorted_rows = sorted(list(row_values))
-        sorted_columns = sorted(list(column_values))
+        # Convert to sorted list format (filter out None values before sorting)
+        sorted_rows = sorted([r for r in row_values if r is not None])
+        sorted_columns = sorted([c for c in column_values if c is not None])
         
         # Build final pivot table
         table_data = []
