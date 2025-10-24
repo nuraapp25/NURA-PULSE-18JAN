@@ -613,6 +613,38 @@ const RideDeckAnalysisEnhanced = () => {
                       </AlertDescription>
                     </Alert>
                   )}
+
+                  {/* Action Buttons */}
+                  {stats && stats.customers_count > 0 && (
+                    <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                      <Button
+                        onClick={() => handleViewData('customers')}
+                        variant="outline"
+                        className="flex-1"
+                      >
+                        <Eye className="mr-2 h-4 w-4" />
+                        View Data
+                      </Button>
+                      <Button
+                        onClick={() => handleDownloadExcel('customers')}
+                        variant="outline"
+                        className="flex-1"
+                      >
+                        <FileDown className="mr-2 h-4 w-4" />
+                        Download Excel
+                      </Button>
+                      {user?.role === 'master_admin' && (
+                        <Button
+                          onClick={() => handleDeleteConfirm('customers')}
+                          variant="destructive"
+                          className="flex-1"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete All
+                        </Button>
+                      )}
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
