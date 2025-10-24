@@ -590,8 +590,8 @@ frontend:
           comment: "IMPLEMENTATION COMPLETE: Full frontend component with tabbed interface. TAB 1 - Distance Analysis: Excel file upload, progress bar, download analyzed file with distances/localities. TAB 2 - Data Import: Customer import section (CSV upload, stats display), Ride import section (CSV upload, computed fields info), Database statistics cards (customer/ride counts). Features: File validation, loading states, success/error alerts, import statistics (total rows, new records, duplicates, errors). Info panel explaining computed fields for rides. Ready for comprehensive frontend testing."
 
   - task: "Driver Form Enhancement - New Document Fields"
-    implemented: false
-    working: "NA"
+    implemented: true
+    working: true
     file: "/app/frontend/src/pages/DriverOnboardingPage.jsx"
     stuck_count: 0
     priority: "high"
@@ -600,6 +600,9 @@ frontend:
         - working: "NA"
           agent: "main"
           comment: "PENDING IMPLEMENTATION: Need to add new fields to driver form UI: DL No., Badge No., Aadhar Card, Pan Card, Gas Bill, Bank Passbook, Preferred Shift, Allotted Shift, Default Vehicle, End Date. Backend models already have these fields. Need to update form dialog and table display."
+        - working: true
+          agent: "main"
+          comment: "✅ IMPLEMENTATION COMPLETE: Added all new document and shift fields to driver form edit dialog. Added 3 new sections: (1) Document Details - DL No., Badge No., Aadhar Card, Pan Card, Gas Bill, Bank Passbook with input fields and edit/view modes. (2) Shift & Vehicle Assignment - Preferred Shift (dropdown: Morning/Afternoon/Night/Flexible), Allotted Shift (dropdown), Default Vehicle (text input), End Date (date picker). All fields properly integrated with existing form structure, supporting both edit and view modes. Fields positioned logically between Pipeline Stages section and Import Date. Frontend restarted. Driver onboarding form now has complete document management capabilities matching backend model fields."
 
 
   - task: "QR Code Management - Backend APIs"
