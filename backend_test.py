@@ -4012,6 +4012,9 @@ class NuraPulseBackendTester:
         # PRIORITY: Test QR Code Management APIs as requested
         qr_code_success = self.test_qr_code_management_apis()
         
+        # PRIORITY: Test Ride Deck Data Analysis APIs as requested
+        ride_deck_success = self.test_ride_deck_data_analysis_backend_apis()
+        
         # ADDITIONAL: Test Driver Onboarding Two-Way Sync with ID-Based Reconciliation
         two_way_sync_success = self.test_driver_onboarding_two_way_sync()
         
