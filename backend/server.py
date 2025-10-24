@@ -6969,6 +6969,365 @@ async def scan_driver_document(
         raise HTTPException(status_code=500, detail=f"Failed to scan document: {str(e)}")
 
 
+# ==================== RIDE PAY EXTRACT V2 - UPLOAD FIRST, PROCESS IN BACKGROUND ====================
+
+# Storage folder for uploaded images
+RIDE_PAY_V2_FOLDER = "ride_pay_v2_uploads"
+os.makedirs(RIDE_PAY_V2_FOLDER, exist_ok=True)
+
+@api_router.post("/ride-pay-v2/upload")
+async def upload_ride_pay_images(
+    request: Request,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Upload images to folder WITHOUT processing (instant upload)
+    """
+    try:
+        # Parse form data
+        form = await request.form()
+        files = form.getlist("files")
+        month_year = form.get("month_year", "")
+        driver_name = form.get("driver_name", "")
+        vehicle_number = form.get("vehicle_number", "")
+        platform = form.get("platform", "")
+        folder_id = form.get("folder_id", "")  # If appending to existing folder
+        
+        if not files:
+            raise HTTPException(status_code=400, detail="No files uploaded")
+        
+        if len(files) > 10:
+            raise HTTPException(status_code=400, detail="Maximum 10 files allowed per upload")
+        
+        if not month_year or not driver_name:
+            raise HTTPException(status_code=400, detail="month_year and driver_name are required")
+        
+        # Check if folder exists or create new
+        if folder_id:
+            folder = await db.ride_pay_folders.find_one({'id': folder_id})
+            if not folder:
+                raise HTTPException(status_code=404, detail="Folder not found")
+        else:
+            # Create new folder
+            folder_id = str(uuid.uuid4())
+            folder_doc = {
+                "id": folder_id,
+                "month_year": month_year,
+                "driver_name": driver_name,
+                "vehicle_number": vehicle_number,
+                "platform": platform,
+                "user_id": current_user.id,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "status": "pending",  # pending, processing, completed, failed
+                "total_images": 0,
+                "processed_images": 0,
+                "failed_images": 0
+            }
+            await db.ride_pay_folders.insert_one(folder_doc)
+        
+        # Create folder directory
+        folder_path = os.path.join(RIDE_PAY_V2_FOLDER, folder_id)
+        os.makedirs(folder_path, exist_ok=True)
+        
+        # Save all files instantly
+        uploaded_images = []
+        for file in files:
+            # Generate unique filename
+            file_id = str(uuid.uuid4())
+            file_ext = os.path.splitext(file.filename)[1]
+            filename = f"{file_id}{file_ext}"
+            filepath = os.path.join(folder_path, filename)
+            
+            # Save file
+            content = await file.read()
+            with open(filepath, 'wb') as f:
+                f.write(content)
+            
+            # Save image record to database
+            image_doc = {
+                "id": file_id,
+                "folder_id": folder_id,
+                "filename": file.filename,
+                "filepath": filepath,
+                "status": "pending",  # pending, processing, completed, failed
+                "uploaded_at": datetime.now(timezone.utc).isoformat(),
+                "rides_extracted": 0
+            }
+            await db.ride_pay_images.insert_one(image_doc)
+            uploaded_images.append(image_doc)
+        
+        # Update folder total_images count
+        await db.ride_pay_folders.update_one(
+            {'id': folder_id},
+            {'$inc': {'total_images': len(files)}}
+        )
+        
+        logger.info(f"✅ Uploaded {len(files)} images to folder {folder_id}")
+        
+        return {
+            "success": True,
+            "folder_id": folder_id,
+            "uploaded_images": len(files),
+            "message": f"Successfully uploaded {len(files)} images. Ready to process."
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to upload images: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Failed to upload images: {str(e)}")
+
+
+@api_router.post("/ride-pay-v2/process-folder/{folder_id}")
+async def process_ride_pay_folder(
+    folder_id: str,
+    background_tasks: BackgroundTasks,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Trigger background processing for a folder
+    """
+    try:
+        # Check if folder exists
+        folder = await db.ride_pay_folders.find_one({'id': folder_id})
+        if not folder:
+            raise HTTPException(status_code=404, detail="Folder not found")
+        
+        # Check if folder is already processing
+        if folder.get('status') == 'processing':
+            raise HTTPException(status_code=400, detail="Folder is already being processed")
+        
+        # Import worker function
+        from ride_pay_v2_worker import process_folder_worker
+        
+        # Add to background tasks
+        background_tasks.add_task(process_folder_worker, folder_id)
+        
+        # Update folder status
+        await db.ride_pay_folders.update_one(
+            {'id': folder_id},
+            {'$set': {
+                'status': 'queued',
+                'queued_at': datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        
+        return {
+            "success": True,
+            "message": "Folder processing started in background",
+            "folder_id": folder_id
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to start folder processing: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to start processing: {str(e)}")
+
+
+@api_router.get("/ride-pay-v2/status/{folder_id}")
+async def get_folder_status(
+    folder_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get processing status for a folder with real-time progress
+    """
+    try:
+        # Get folder
+        folder = await db.ride_pay_folders.find_one({'id': folder_id})
+        if not folder:
+            raise HTTPException(status_code=404, detail="Folder not found")
+        
+        # Get image counts
+        total_images = await db.ride_pay_images.count_documents({'folder_id': folder_id})
+        pending_images = await db.ride_pay_images.count_documents({
+            'folder_id': folder_id,
+            'status': 'pending'
+        })
+        processing_images = await db.ride_pay_images.count_documents({
+            'folder_id': folder_id,
+            'status': 'processing'
+        })
+        completed_images = await db.ride_pay_images.count_documents({
+            'folder_id': folder_id,
+            'status': 'completed'
+        })
+        failed_images = await db.ride_pay_images.count_documents({
+            'folder_id': folder_id,
+            'status': 'failed'
+        })
+        
+        # Calculate progress percentage
+        progress = 0
+        if total_images > 0:
+            progress = int((completed_images / total_images) * 100)
+        
+        # Estimate time remaining (assume 20 seconds per image)
+        estimated_seconds = pending_images * 20
+        estimated_minutes = estimated_seconds // 60
+        
+        # Remove _id from folder
+        if '_id' in folder:
+            del folder['_id']
+        
+        return {
+            "success": True,
+            "folder": folder,
+            "total_images": total_images,
+            "pending_images": pending_images,
+            "processing_images": processing_images,
+            "completed_images": completed_images,
+            "failed_images": failed_images,
+            "progress_percentage": progress,
+            "estimated_time_remaining": f"{estimated_minutes} minutes" if estimated_minutes > 0 else "Less than 1 minute"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get folder status: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get status: {str(e)}")
+
+
+@api_router.get("/ride-pay-v2/folders")
+async def get_all_folders(
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get all folders with status and stats
+    """
+    try:
+        # Get all folders
+        folders = await db.ride_pay_folders.find({}).sort('created_at', -1).to_list(None)
+        
+        # Get image counts for each folder
+        for folder in folders:
+            folder_id = folder['id']
+            total_images = await db.ride_pay_images.count_documents({'folder_id': folder_id})
+            completed_images = await db.ride_pay_images.count_documents({
+                'folder_id': folder_id,
+                'status': 'completed'
+            })
+            failed_images = await db.ride_pay_images.count_documents({
+                'folder_id': folder_id,
+                'status': 'failed'
+            })
+            
+            folder['total_images'] = total_images
+            folder['completed_images'] = completed_images
+            folder['failed_images'] = failed_images
+            
+            # Calculate progress
+            if total_images > 0:
+                folder['progress_percentage'] = int((completed_images / total_images) * 100)
+            else:
+                folder['progress_percentage'] = 0
+            
+            # Remove _id
+            if '_id' in folder:
+                del folder['_id']
+        
+        return {
+            "success": True,
+            "folders": folders,
+            "total_folders": len(folders)
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get folders: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get folders: {str(e)}")
+
+
+@api_router.get("/ride-pay-v2/data/{folder_id}")
+async def get_folder_data(
+    folder_id: str,
+    skip: int = 0,
+    limit: int = 100,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get extracted data table for a folder with pagination
+    """
+    try:
+        # Get folder
+        folder = await db.ride_pay_folders.find_one({'id': folder_id})
+        if not folder:
+            raise HTTPException(status_code=404, detail="Folder not found")
+        
+        # Get extracted data
+        data = await db.ride_pay_data.find({
+            'folder_id': folder_id
+        }).skip(skip).limit(limit).to_list(None)
+        
+        # Get total count
+        total_records = await db.ride_pay_data.count_documents({'folder_id': folder_id})
+        
+        # Remove _id from records
+        for record in data:
+            if '_id' in record:
+                del record['_id']
+        
+        return {
+            "success": True,
+            "data": data,
+            "total_records": total_records,
+            "skip": skip,
+            "limit": limit,
+            "folder_id": folder_id,
+            "month_year": folder.get('month_year'),
+            "driver_name": folder.get('driver_name')
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get folder data: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get data: {str(e)}")
+
+
+@api_router.delete("/ride-pay-v2/folder/{folder_id}")
+async def delete_folder(
+    folder_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Delete a folder and all its data (Master Admin only)
+    """
+    if current_user.account_type != 'master_admin':
+        raise HTTPException(status_code=403, detail="Only Master Admin can delete folders")
+    
+    try:
+        # Get folder
+        folder = await db.ride_pay_folders.find_one({'id': folder_id})
+        if not folder:
+            raise HTTPException(status_code=404, detail="Folder not found")
+        
+        # Delete folder directory
+        folder_path = os.path.join(RIDE_PAY_V2_FOLDER, folder_id)
+        if os.path.exists(folder_path):
+            import shutil
+            shutil.rmtree(folder_path)
+        
+        # Delete from database
+        await db.ride_pay_images.delete_many({'folder_id': folder_id})
+        await db.ride_pay_data.delete_many({'folder_id': folder_id})
+        await db.ride_pay_folders.delete_one({'id': folder_id})
+        
+        return {
+            "success": True,
+            "message": "Folder deleted successfully"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to delete folder: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete folder: {str(e)}")
+
+
 # ==================== APP SETTINGS MANAGEMENT (Master Admin) ====================
 
 @api_router.get("/app-settings")
