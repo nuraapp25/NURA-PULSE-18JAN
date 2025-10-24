@@ -5990,6 +5990,9 @@ class NuraPulseBackendTester:
         # ADDITIONAL: Test Analytics Integration Workflow
         analytics_workflow_success = self.test_analytics_integration_workflow()
         
+        # PRIORITY: Test Analytics Dashboards Pivot Tables (Fixed Version) as requested in review
+        analytics_pivot_success = self.test_analytics_dashboards_pivot_tables()
+        
         # Summary
         print("\n" + "="*80)
         print("📊 TEST SUMMARY - DRIVER ONBOARDING TWO-WAY SYNC WITH ID-BASED RECONCILIATION")
