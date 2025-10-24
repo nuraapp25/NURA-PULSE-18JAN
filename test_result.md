@@ -324,6 +324,18 @@ backend:
           agent: "testing"
           comment: "✅ TESTED: Analytics Dashboard endpoints fully functional. 1) POST /analytics/track-page-view successfully tracks page views for multiple pages (/dashboard, /payment-reconciliation, /driver-onboarding, /expense-tracker) with proper response messages. 2) GET /analytics/active-users returns correct structure with active_users array containing all required fields (user_id, username, email, account_type, current_page, last_seen). Master Admin only access properly enforced (403 for unauthorized). 3) GET /analytics/page-views returns page_views array sorted by views descending and accurate total_views count. Master Admin only access enforced. 4) POST /analytics/logout successfully tracks logout and removes users from active sessions. All analytics endpoints working correctly with proper authentication and permission restrictions."
 
+  - task: "Analytics Dashboards - Pivot Tables Backend"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "❌ TESTED: Analytics Dashboards Pivot Tables have critical issues. SUCCESS: 1) Authentication working correctly (403 without token for both endpoints). 2) Response structure correct with all required fields (success, data, columns, row_field, column_field, value_operation, filter_options, total_records). 3) Default configurations working (ride-status-pivot: date/rideStatus/count, signups-pivot: date/source/count). 4) Filters working correctly. 5) Value operations (sum, average) working. 6) SignUps pivot UTC to IST conversion working correctly (dates in YYYY-MM-DD format). CRITICAL ISSUES: 1) Ride Status Pivot dates showing as Excel serial numbers (45928, 45929) instead of IST dates - UTC to IST conversion not working for rides data. 2) Alternate configuration with pickupLocality fails with TypeError: '<' not supported between instances of 'NoneType' and 'str' during sorting - needs null value handling. Root cause: Rides data has dates in Excel serial format while customers data has DD-MM-YYYY format. UTC to IST conversion function needs to handle Excel serial numbers and null values in sorting. Success rate: 13/16 tests passed (81.25%)."
+
   - task: "Analytics Integration Workflow"
     implemented: true
     working: true
