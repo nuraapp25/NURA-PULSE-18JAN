@@ -4612,6 +4612,166 @@ class NuraPulseBackendTester:
         
         return success_count >= 10  # At least 10 out of 16 tests should pass
 
+    def test_locality_extraction_fix(self):
+        """Test the locality extraction fix in ride-deck/analyze endpoint"""
+        print("\n=== Testing Locality Extraction Fix ===")
+        
+        success_count = 0
+        
+        # Create sample XLSX data with Chennai addresses
+        import pandas as pd
+        import io
+        
+        # Sample data with Chennai addresses for testing locality extraction
+        sample_data = {
+            'pickupLat': [13.0827, 13.0795, 13.0850],
+            'pickupLong': [80.2707, 80.1956, 80.2800],
+            'dropLat': [13.0795, 13.0827, 13.0900],
+            'dropLong': [80.1956, 80.2707, 80.2900],
+            'pickupPoint': [
+                "Pattalam, Choolai for 5/3, Jai Nagar, Pattalam, Choolai, Chennai, Tamil Nadu 600012, India",
+                "Anna Nagar East, Chennai, Tamil Nadu 600102, India",
+                "T. Nagar, Chennai, Tamil Nadu 600017, India"
+            ],
+            'dropPoint': [
+                "VR Mall, Anna Nagar, Chennai, Tamil Nadu 600040, India",
+                "Egmore, Chennai, Tamil Nadu 600008, India", 
+                "Mylapore, Chennai, Tamil Nadu 600004, India"
+            ]
+        }
+        
+        # Create DataFrame and save to Excel
+        df = pd.DataFrame(sample_data)
+        excel_buffer = io.BytesIO()
+        
+        with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False, sheet_name='Sheet1')
+        
+        excel_buffer.seek(0)
+        
+        # Test the analyze endpoint
+        print("\n--- Testing POST /ride-deck/analyze with Chennai addresses ---")
+        
+        files = {
+            'file': ('test_ride_data.xlsx', excel_buffer.getvalue(), 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        }
+        
+        response = self.make_request("POST", "/ride-deck/analyze", files=files)
+        
+        if response is not None and response.status_code == 200:
+            try:
+                # The response should be an Excel file
+                if response.headers.get('content-type') == 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+                    self.log_test("Locality Extraction - File Processing", True, 
+                                "Successfully processed XLSX file and returned analyzed Excel file")
+                    success_count += 1
+                    
+                    # Read the returned Excel file to check locality extraction
+                    try:
+                        returned_df = pd.read_excel(io.BytesIO(response.content))
+                        
+                        # Check if Pickup_Locality and Drop_Locality columns exist
+                        if 'Pickup_Locality' in returned_df.columns and 'Drop_Locality' in returned_df.columns:
+                            self.log_test("Locality Extraction - Column Creation", True, 
+                                        "Pickup_Locality and Drop_Locality columns created successfully")
+                            success_count += 1
+                            
+                            # Check specific locality extractions
+                            pickup_localities = returned_df['Pickup_Locality'].tolist()
+                            drop_localities = returned_df['Drop_Locality'].tolist()
+                            
+                            # Test case 1: "Pattalam, Choolai for 5/3, Jai Nagar, Pattalam, Choolai, Chennai, Tamil Nadu 600012, India"
+                            # Should extract "Choolai" (the part immediately before ", Chennai")
+                            if len(pickup_localities) > 0 and pickup_localities[0] == "Choolai":
+                                self.log_test("Locality Extraction - Test Case 1", True, 
+                                            f"Correctly extracted 'Choolai' from complex address (got: '{pickup_localities[0]}')")
+                                success_count += 1
+                            else:
+                                self.log_test("Locality Extraction - Test Case 1", False, 
+                                            f"Expected 'Choolai', got: '{pickup_localities[0] if len(pickup_localities) > 0 else 'None'}'")
+                            
+                            # Test case 2: "Anna Nagar East, Chennai, Tamil Nadu 600102, India"
+                            # Should extract "Anna Nagar East"
+                            if len(pickup_localities) > 1 and pickup_localities[1] == "Anna Nagar East":
+                                self.log_test("Locality Extraction - Test Case 2", True, 
+                                            f"Correctly extracted 'Anna Nagar East' from address (got: '{pickup_localities[1]}')")
+                                success_count += 1
+                            else:
+                                self.log_test("Locality Extraction - Test Case 2", False, 
+                                            f"Expected 'Anna Nagar East', got: '{pickup_localities[1] if len(pickup_localities) > 1 else 'None'}'")
+                            
+                            # Test case 3: "T. Nagar, Chennai, Tamil Nadu 600017, India"
+                            # Should extract "T. Nagar"
+                            if len(pickup_localities) > 2 and pickup_localities[2] == "T. Nagar":
+                                self.log_test("Locality Extraction - Test Case 3", True, 
+                                            f"Correctly extracted 'T. Nagar' from address (got: '{pickup_localities[2]}')")
+                                success_count += 1
+                            else:
+                                self.log_test("Locality Extraction - Test Case 3", False, 
+                                            f"Expected 'T. Nagar', got: '{pickup_localities[2] if len(pickup_localities) > 2 else 'None'}'")
+                            
+                            # Check drop localities as well
+                            expected_drop_localities = ["Anna Nagar", "Egmore", "Mylapore"]
+                            correct_drop_count = 0
+                            for i, expected in enumerate(expected_drop_localities):
+                                if i < len(drop_localities) and drop_localities[i] == expected:
+                                    correct_drop_count += 1
+                            
+                            if correct_drop_count >= 2:  # At least 2 out of 3 should be correct
+                                self.log_test("Locality Extraction - Drop Localities", True, 
+                                            f"Correctly extracted {correct_drop_count}/3 drop localities: {drop_localities}")
+                                success_count += 1
+                            else:
+                                self.log_test("Locality Extraction - Drop Localities", False, 
+                                            f"Only {correct_drop_count}/3 drop localities correct: {drop_localities}")
+                            
+                            # Verify no multiple comma-separated values in locality fields
+                            has_multiple_parts = any(',' in str(loc) for loc in pickup_localities + drop_localities if loc)
+                            if not has_multiple_parts:
+                                self.log_test("Locality Extraction - Single Locality Names", True, 
+                                            "All locality fields contain single locality names (no comma-separated values)")
+                                success_count += 1
+                            else:
+                                self.log_test("Locality Extraction - Single Locality Names", False, 
+                                            "Some locality fields contain multiple comma-separated values")
+                            
+                        else:
+                            self.log_test("Locality Extraction - Column Creation", False, 
+                                        f"Missing locality columns. Available columns: {list(returned_df.columns)}")
+                        
+                    except Exception as e:
+                        self.log_test("Locality Extraction - Result Analysis", False, 
+                                    f"Error reading returned Excel file: {str(e)}")
+                else:
+                    self.log_test("Locality Extraction - File Processing", False, 
+                                f"Unexpected content type: {response.headers.get('content-type')}")
+            except Exception as e:
+                self.log_test("Locality Extraction - File Processing", False, 
+                            f"Error processing response: {str(e)}")
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Locality Extraction - File Processing", False, error_msg, 
+                        response.text if response else None)
+        
+        # Test authentication requirement
+        print("\n--- Testing Authentication Requirement ---")
+        files = {
+            'file': ('test_ride_data.xlsx', excel_buffer.getvalue(), 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        }
+        
+        response = self.make_request("POST", "/ride-deck/analyze", files=files, use_auth=False)
+        
+        if response is not None and response.status_code in [401, 403]:
+            self.log_test("Locality Extraction - Authentication Required", True, 
+                        f"Correctly requires authentication ({response.status_code} without token)")
+            success_count += 1
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("Locality Extraction - Authentication Required", False, 
+                        f"Expected 401/403, got {status}")
+        
+        return success_count >= 5  # At least 5 out of 8 tests should pass
+
     def run_all_tests(self):
         """Run all backend tests"""
         print("🚀 Starting Comprehensive Testing - Driver Onboarding Two-Way Sync with ID-Based Reconciliation")
