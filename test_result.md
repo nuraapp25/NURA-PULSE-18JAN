@@ -736,6 +736,7 @@ metadata:
 
 test_plan:
   current_focus:
+    - "Payment Data Extractor - Performance Optimization"
     - "Ride Deck Data Analysis - Frontend Interface"
     - "Driver Form Enhancement - New Document Fields"
     - "Expense Tracker - Add Expense Dialog"
