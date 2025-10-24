@@ -350,26 +350,24 @@ const PaymentReconciliation = () => {
       formData.append("vehicle_number", selectedVehicle);
       formData.append("platform", selectedPlatform);
       
-      // Simulate progress (backend processes in batches of 5)
+      // Update status messages based on parallel processing (ALL AT ONCE!)
       const totalFiles = uploadedFiles.length;
       const progressInterval = setInterval(() => {
         setProcessingProgress(prev => {
           if (prev < 90) {
             // Progress to 90% while processing
-            const increment = Math.random() * 12;
+            const increment = Math.random() * 15;
             return Math.min(prev + increment, 90);
           }
           return prev;
         });
-      }, 1000);
+      }, 800);
       
-      // Update status messages based on batch processing
-      setTimeout(() => setProcessingStatus(`Processing batch 1 (${Math.min(5, totalFiles)} files)...`), 500);
-      setTimeout(() => setProcessingStatus(`Extracting payment data from images...`), 3000);
-      if (totalFiles > 5) {
-        setTimeout(() => setProcessingStatus(`Processing batch 2 (${totalFiles - 5} files)...`), 8000);
-      }
-      setTimeout(() => setProcessingStatus(`Saving extracted data...`), totalFiles > 5 ? 15000 : 10000);
+      // Status messages for simultaneous processing
+      setTimeout(() => setProcessingStatus(`🚀 TURBO MODE: Processing all ${totalFiles} files simultaneously...`), 500);
+      setTimeout(() => setProcessingStatus(`Extracting payment data from ${totalFiles} images...`), 2000);
+      setTimeout(() => setProcessingStatus(`Using GPT-4o-mini for faster processing...`), 5000);
+      setTimeout(() => setProcessingStatus(`Finalizing extracted data...`), Math.min(totalFiles * 8000, 60000));
       
       const response = await axios.post(
         `${API}/payment-reconciliation/process-screenshots`,
