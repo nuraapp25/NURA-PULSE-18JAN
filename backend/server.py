@@ -6109,10 +6109,31 @@ from datetime import datetime, timedelta, timezone as dt_timezone
 from collections import defaultdict
 
 def convert_utc_to_ist(utc_date_str):
-    """Convert UTC date string to IST date"""
+    """Convert UTC date string to IST date, handling Excel serial numbers"""
     try:
         if not utc_date_str:
             return None
+        
+        # Handle Excel serial date numbers (e.g., 45928)
+        if isinstance(utc_date_str, (int, float)):
+            # Convert Excel serial number to datetime
+            # Excel epoch starts at 1899-12-30
+            import pandas as pd
+            utc_dt = pd.to_datetime(utc_date_str, origin='1899-12-30', unit='D')
+            # Convert to IST (UTC+5:30)
+            ist_dt = utc_dt + timedelta(hours=5, minutes=30)
+            return ist_dt.strftime('%Y-%m-%d')
+        
+        # Try converting string serial numbers
+        try:
+            serial_num = float(utc_date_str)
+            if serial_num > 40000:  # Likely an Excel serial number
+                import pandas as pd
+                utc_dt = pd.to_datetime(serial_num, origin='1899-12-30', unit='D')
+                ist_dt = utc_dt + timedelta(hours=5, minutes=30)
+                return ist_dt.strftime('%Y-%m-%d')
+        except (ValueError, TypeError):
+            pass
         
         # Parse the date string (handle various formats)
         if isinstance(utc_date_str, str):
