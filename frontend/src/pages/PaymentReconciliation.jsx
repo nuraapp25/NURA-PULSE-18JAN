@@ -21,7 +21,6 @@ const PaymentReconciliation = () => {
   // App enabled state
   const [appEnabled, setAppEnabled] = useState(true);
   const [checkingAppStatus, setCheckingAppStatus] = useState(true);
-  const [showDisabledDialog, setShowDisabledDialog] = useState(false);
   
   // New workflow states
   const [currentView, setCurrentView] = useState("folder-selection"); // "folder-selection" | "main-interface"
