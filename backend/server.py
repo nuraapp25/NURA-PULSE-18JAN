@@ -6103,6 +6103,256 @@ async def get_ride_deck_progress(
     }
 
 
+# ==================== ANALYTICS DASHBOARDS - PIVOT TABLES ====================
+
+from datetime import datetime, timedelta, timezone as dt_timezone
+from collections import defaultdict
+
+def convert_utc_to_ist(utc_date_str):
+    """Convert UTC date string to IST date"""
+    try:
+        if not utc_date_str:
+            return None
+        
+        # Parse the date string (handle various formats)
+        if isinstance(utc_date_str, str):
+            # Try parsing as ISO format first
+            try:
+                utc_dt = datetime.fromisoformat(utc_date_str.replace('Z', '+00:00'))
+            except:
+                # Try other common formats
+                for fmt in ['%Y-%m-%d', '%d-%m-%Y', '%Y/%m/%d', '%d/%m/%Y']:
+                    try:
+                        utc_dt = datetime.strptime(utc_date_str, fmt)
+                        utc_dt = utc_dt.replace(tzinfo=dt_timezone.utc)
+                        break
+                    except:
+                        continue
+                else:
+                    return utc_date_str  # Return original if can't parse
+        else:
+            utc_dt = utc_date_str
+        
+        # Convert to IST (UTC+5:30)
+        ist_dt = utc_dt + timedelta(hours=5, minutes=30)
+        return ist_dt.strftime('%Y-%m-%d')
+    except Exception as e:
+        logger.error(f"Error converting UTC to IST: {str(e)}")
+        return utc_date_str
+
+
+@api_router.get("/analytics/ride-status-pivot")
+async def get_ride_status_pivot(
+    row_field: str = "date",
+    column_field: str = "rideStatus",
+    value_field: str = "count",
+    value_operation: str = "count",  # count, sum, average
+    filter_field: Optional[str] = None,
+    filter_value: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get ride status pivot table data
+    Supports customizable row, column, value fields
+    All dates converted from UTC to IST
+    """
+    try:
+        rides_collection = db['rides']
+        
+        # Build query with filters
+        query = {}
+        if filter_field and filter_value and filter_value != 'all':
+            query[filter_field] = filter_value
+        
+        # Fetch all rides
+        rides = await rides_collection.find(query).to_list(None)
+        
+        # Convert UTC dates to IST and build pivot data
+        pivot_data = defaultdict(lambda: defaultdict(int))
+        row_values = set()
+        column_values = set()
+        
+        for ride in rides:
+            # Get row value (convert date to IST if it's a date field)
+            row_val = ride.get(row_field, 'N/A')
+            if row_field == 'date' or 'date' in row_field.lower():
+                row_val = convert_utc_to_ist(row_val)
+            
+            # Get column value
+            col_val = ride.get(column_field, 'N/A')
+            
+            # Skip if essential values are missing
+            if row_val == 'N/A' or col_val == 'N/A':
+                continue
+            
+            row_values.add(row_val)
+            column_values.add(col_val)
+            
+            # Apply value operation
+            if value_operation == 'count':
+                pivot_data[row_val][col_val] += 1
+            elif value_operation == 'sum' and value_field in ride:
+                pivot_data[row_val][col_val] += float(ride.get(value_field, 0))
+            elif value_operation == 'average' and value_field in ride:
+                # Store sum and count for later average calculation
+                if 'avg_data' not in pivot_data:
+                    pivot_data['avg_data'] = defaultdict(lambda: defaultdict(lambda: {'sum': 0, 'count': 0}))
+                pivot_data['avg_data'][row_val][col_val]['sum'] += float(ride.get(value_field, 0))
+                pivot_data['avg_data'][row_val][col_val]['count'] += 1
+        
+        # Convert to sorted list format
+        sorted_rows = sorted(list(row_values))
+        sorted_columns = sorted(list(column_values))
+        
+        # Build final pivot table
+        table_data = []
+        for row_val in sorted_rows:
+            row_data = {'rowLabel': row_val}
+            for col_val in sorted_columns:
+                if value_operation == 'average' and 'avg_data' in pivot_data:
+                    avg_info = pivot_data['avg_data'][row_val][col_val]
+                    if avg_info['count'] > 0:
+                        row_data[col_val] = round(avg_info['sum'] / avg_info['count'], 2)
+                    else:
+                        row_data[col_val] = 0
+                else:
+                    row_data[col_val] = pivot_data[row_val][col_val]
+            table_data.append(row_data)
+        
+        # Get unique filter values if filter field is specified
+        filter_options = []
+        if filter_field:
+            filter_values_set = set()
+            for ride in rides:
+                filter_val = ride.get(filter_field)
+                if filter_val:
+                    filter_values_set.add(str(filter_val))
+            filter_options = sorted(list(filter_values_set))
+        
+        return {
+            "success": True,
+            "data": table_data,
+            "columns": sorted_columns,
+            "row_field": row_field,
+            "column_field": column_field,
+            "value_operation": value_operation,
+            "filter_options": filter_options,
+            "total_records": len(rides)
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to generate ride status pivot: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Failed to generate pivot table: {str(e)}")
+
+
+@api_router.get("/analytics/signups-pivot")
+async def get_signups_pivot(
+    row_field: str = "date",
+    column_field: str = "source",
+    value_field: str = "count",
+    value_operation: str = "count",  # count, sum, average
+    filter_field: Optional[str] = None,
+    filter_value: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get customer signups pivot table data
+    Supports customizable row, column, value fields
+    All dates converted from UTC to IST
+    """
+    try:
+        customers_collection = db['customers']
+        
+        # Build query with filters
+        query = {}
+        if filter_field and filter_value and filter_value != 'all':
+            query[filter_field] = filter_value
+        
+        # Fetch all customers
+        customers = await customers_collection.find(query).to_list(None)
+        
+        # Convert UTC dates to IST and build pivot data
+        pivot_data = defaultdict(lambda: defaultdict(int))
+        row_values = set()
+        column_values = set()
+        
+        for customer in customers:
+            # Get row value (convert date to IST if it's a date field)
+            row_val = customer.get(row_field, 'N/A')
+            if row_field == 'date' or 'date' in row_field.lower():
+                row_val = convert_utc_to_ist(row_val)
+            
+            # Get column value
+            col_val = customer.get(column_field, 'N/A')
+            
+            # Skip if essential values are missing
+            if row_val == 'N/A' or col_val == 'N/A':
+                continue
+            
+            row_values.add(row_val)
+            column_values.add(col_val)
+            
+            # Apply value operation
+            if value_operation == 'count':
+                pivot_data[row_val][col_val] += 1
+            elif value_operation == 'sum' and value_field in customer:
+                pivot_data[row_val][col_val] += float(customer.get(value_field, 0))
+            elif value_operation == 'average' and value_field in customer:
+                # Store sum and count for later average calculation
+                if 'avg_data' not in pivot_data:
+                    pivot_data['avg_data'] = defaultdict(lambda: defaultdict(lambda: {'sum': 0, 'count': 0}))
+                pivot_data['avg_data'][row_val][col_val]['sum'] += float(customer.get(value_field, 0))
+                pivot_data['avg_data'][row_val][col_val]['count'] += 1
+        
+        # Convert to sorted list format
+        sorted_rows = sorted(list(row_values))
+        sorted_columns = sorted(list(column_values))
+        
+        # Build final pivot table
+        table_data = []
+        for row_val in sorted_rows:
+            row_data = {'rowLabel': row_val}
+            for col_val in sorted_columns:
+                if value_operation == 'average' and 'avg_data' in pivot_data:
+                    avg_info = pivot_data['avg_data'][row_val][col_val]
+                    if avg_info['count'] > 0:
+                        row_data[col_val] = round(avg_info['sum'] / avg_info['count'], 2)
+                    else:
+                        row_data[col_val] = 0
+                else:
+                    row_data[col_val] = pivot_data[row_val][col_val]
+            table_data.append(row_data)
+        
+        # Get unique filter values if filter field is specified
+        filter_options = []
+        if filter_field:
+            filter_values_set = set()
+            for customer in customers:
+                filter_val = customer.get(filter_field)
+                if filter_val:
+                    filter_values_set.add(str(filter_val))
+            filter_options = sorted(list(filter_values_set))
+        
+        return {
+            "success": True,
+            "data": table_data,
+            "columns": sorted_columns,
+            "row_field": row_field,
+            "column_field": column_field,
+            "value_operation": value_operation,
+            "filter_options": filter_options,
+            "total_records": len(customers)
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to generate signups pivot: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Failed to generate pivot table: {str(e)}")
+
+
 # ==================== RCA (Root Cause Analysis) Management ====================
 
 @api_router.get("/ride-deck/rca/cancelled")
