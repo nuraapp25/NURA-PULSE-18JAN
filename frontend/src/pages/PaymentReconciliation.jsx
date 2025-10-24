@@ -350,28 +350,26 @@ const PaymentReconciliation = () => {
       formData.append("vehicle_number", selectedVehicle);
       formData.append("platform", selectedPlatform);
       
-      // Simulate progress (since backend processes in batches of 3)
+      // Simulate progress (backend processes in batches of 5)
       const totalFiles = uploadedFiles.length;
       const progressInterval = setInterval(() => {
         setProcessingProgress(prev => {
           if (prev < 90) {
             // Progress to 90% while processing
-            const increment = Math.random() * 15;
+            const increment = Math.random() * 12;
             return Math.min(prev + increment, 90);
           }
           return prev;
         });
-      }, 800);
+      }, 1000);
       
-      // Update status messages
-      setTimeout(() => setProcessingStatus(`Processing ${Math.min(3, totalFiles)} files...`), 500);
-      setTimeout(() => setProcessingStatus(`Extracting payment data...`), 3000);
-      if (totalFiles > 3) {
-        setTimeout(() => setProcessingStatus(`Processing next batch...`), 6000);
+      // Update status messages based on batch processing
+      setTimeout(() => setProcessingStatus(`Processing batch 1 (${Math.min(5, totalFiles)} files)...`), 500);
+      setTimeout(() => setProcessingStatus(`Extracting payment data from images...`), 3000);
+      if (totalFiles > 5) {
+        setTimeout(() => setProcessingStatus(`Processing batch 2 (${totalFiles - 5} files)...`), 8000);
       }
-      if (totalFiles > 6) {
-        setTimeout(() => setProcessingStatus(`Processing final batch...`), 9000);
-      }
+      setTimeout(() => setProcessingStatus(`Saving extracted data...`), totalFiles > 5 ? 15000 : 10000);
       
       const response = await axios.post(
         `${API}/payment-reconciliation/process-screenshots`,
