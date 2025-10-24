@@ -6306,7 +6306,7 @@ async def delete_all_customers(
     """
     Delete all customer data (Master Admin only)
     """
-    if current_user.role != "master_admin":
+    if current_user.account_type != "master_admin":
         raise HTTPException(status_code=403, detail="Only Master Admins can delete all customer data")
     
     try:
