@@ -25,6 +25,7 @@ import QRCodeManager from "@/pages/QRCodeManager";
 import QRAnalytics from "@/pages/QRAnalytics";
 import RideDeckAnalysis from "@/pages/RideDeckAnalysisEnhanced";
 import RCAManagement from "@/pages/RCAManagement";
+import AnalyticsDashboards from "@/pages/AnalyticsDashboards";
 import ManagePage from "@/pages/ManagePage";
 import SettingsPage from "@/pages/SettingsPage";
 
