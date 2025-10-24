@@ -3414,35 +3414,27 @@ Rules:
                     except Exception as e:
                         logger.warning(f"    ⚠️ Failed to cleanup temp file: {str(e)}")
         
-        # Process files in parallel (5 files at a time for better speed)
-        batch_size = 5
+        # Process ALL files simultaneously (MAXIMUM SPEED - NO BATCHING!)
+        logger.info(f"🚀 TURBO MODE: Processing ALL {len(files)} files simultaneously!")
         all_results = []
         errors = []
         
-        for i in range(0, len(files), batch_size):
-            batch = files[i:i+batch_size]
-            batch_indices = list(range(i, min(i+batch_size, len(files))))
-            
-            logger.info(f"🔄 Processing batch {i//batch_size + 1}: files {i+1}-{min(i+batch_size, len(files))}")
-            
-            # Process batch in parallel
-            tasks = [process_single_file(file, idx) for file, idx in zip(batch, batch_indices)]
-            batch_results = await asyncio.gather(*tasks, return_exceptions=True)
-            
-            # Collect results
-            for result in batch_results:
-                if isinstance(result, Exception):
-                    error_msg = f"Unexpected error: {str(result)}"
-                    logger.error(f"  ❌ {error_msg}")
-                    errors.append(error_msg)
-                elif result["success"]:
-                    all_results.extend(result["results"])
-                else:
-                    errors.append(f"{result['filename']}: {result['error']}")
-            
-            # Small delay between batches to respect rate limits
-            if i + batch_size < len(files):
-                await asyncio.sleep(0.3)
+        # Create tasks for all files at once
+        tasks = [process_single_file(file, idx) for idx, file in enumerate(files)]
+        
+        # Process all in parallel - NO WAITING!
+        batch_results = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        # Collect results
+        for result in batch_results:
+            if isinstance(result, Exception):
+                error_msg = f"Unexpected error: {str(result)}"
+                logger.error(f"  ❌ {error_msg}")
+                errors.append(error_msg)
+            elif result["success"]:
+                all_results.extend(result["results"])
+            else:
+                errors.append(f"{result['filename']}: {result['error']}")
         
         # Check if we got results
         if errors and not all_results:
