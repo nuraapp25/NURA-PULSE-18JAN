@@ -6490,57 +6490,81 @@ from datetime import datetime, timedelta, timezone as dt_timezone
 from collections import defaultdict
 
 def convert_utc_to_ist(utc_date_str):
-    """Convert UTC date string to IST date, handling Excel serial numbers"""
+    """Convert UTC date string to IST date, handling Excel serial numbers and various formats"""
     try:
-        if not utc_date_str:
+        if not utc_date_str or utc_date_str == 'N/A':
             return None
         
-        # Handle Excel serial date numbers (e.g., 45928)
+        # Handle Excel serial date numbers (e.g., 45928, 45929)
         if isinstance(utc_date_str, (int, float)):
             # Convert Excel serial number to datetime
             # Excel epoch starts at 1899-12-30
-            import pandas as pd
             utc_dt = pd.to_datetime(utc_date_str, origin='1899-12-30', unit='D')
             # Convert to IST (UTC+5:30)
             ist_dt = utc_dt + timedelta(hours=5, minutes=30)
             return ist_dt.strftime('%Y-%m-%d')
         
-        # Try converting string serial numbers
-        try:
-            serial_num = float(utc_date_str)
-            if serial_num > 40000:  # Likely an Excel serial number
-                import pandas as pd
-                utc_dt = pd.to_datetime(serial_num, origin='1899-12-30', unit='D')
-                ist_dt = utc_dt + timedelta(hours=5, minutes=30)
-                return ist_dt.strftime('%Y-%m-%d')
-        except (ValueError, TypeError):
-            pass
-        
-        # Parse the date string (handle various formats)
+        # Try converting string serial numbers (handle both integer and decimal strings)
         if isinstance(utc_date_str, str):
-            # Try parsing as ISO format first
+            # Remove whitespace
+            utc_date_str = utc_date_str.strip()
+            
+            # Try parsing as numeric (Excel serial number)
+            try:
+                serial_num = float(utc_date_str)
+                # Excel serial numbers for dates are typically > 1 and < 100000
+                if 1 < serial_num < 100000:
+                    utc_dt = pd.to_datetime(serial_num, origin='1899-12-30', unit='D')
+                    ist_dt = utc_dt + timedelta(hours=5, minutes=30)
+                    result = ist_dt.strftime('%Y-%m-%d')
+                    logger.info(f"Converted Excel serial {serial_num} to IST date {result}")
+                    return result
+            except (ValueError, TypeError) as e:
+                # Not a numeric string, try other formats
+                pass
+            
+            # Try parsing as ISO format
             try:
                 utc_dt = datetime.fromisoformat(utc_date_str.replace('Z', '+00:00'))
+                ist_dt = utc_dt + timedelta(hours=5, minutes=30)
+                return ist_dt.strftime('%Y-%m-%d')
             except:
-                # Try other common formats
-                for fmt in ['%Y-%m-%d', '%d-%m-%Y', '%Y/%m/%d', '%d/%m/%Y']:
-                    try:
-                        utc_dt = datetime.strptime(utc_date_str, fmt)
+                pass
+            
+            # Try other common date formats
+            for fmt in ['%Y-%m-%d', '%d-%m-%Y', '%Y/%m/%d', '%d/%m/%Y', '%d/%m/%y', '%Y-%m-%d %H:%M:%S']:
+                try:
+                    utc_dt = datetime.strptime(utc_date_str, fmt)
+                    # If no timezone, assume UTC
+                    if utc_dt.tzinfo is None:
                         utc_dt = utc_dt.replace(tzinfo=dt_timezone.utc)
-                        break
-                    except:
-                        continue
-                else:
-                    return utc_date_str  # Return original if can't parse
-        else:
-            utc_dt = utc_date_str
+                    ist_dt = utc_dt + timedelta(hours=5, minutes=30)
+                    return ist_dt.strftime('%Y-%m-%d')
+                except:
+                    continue
+            
+            # If we couldn't parse the string, return it as-is
+            logger.warning(f"Could not parse date string: {utc_date_str}")
+            return utc_date_str
         
-        # Convert to IST (UTC+5:30)
-        ist_dt = utc_dt + timedelta(hours=5, minutes=30)
-        return ist_dt.strftime('%Y-%m-%d')
+        # Handle datetime objects
+        if isinstance(utc_date_str, datetime):
+            utc_dt = utc_date_str
+            if utc_dt.tzinfo is None:
+                utc_dt = utc_dt.replace(tzinfo=dt_timezone.utc)
+            ist_dt = utc_dt + timedelta(hours=5, minutes=30)
+            return ist_dt.strftime('%Y-%m-%d')
+        
+        # Fallback: return original value
+        logger.warning(f"Unhandled date type: {type(utc_date_str)} - {utc_date_str}")
+        return str(utc_date_str)
+        
     except Exception as e:
-        logger.error(f"Error converting UTC to IST: {str(e)}")
-        return utc_date_str
+        logger.error(f"Error converting UTC to IST for value '{utc_date_str}' (type: {type(utc_date_str)}): {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        # Return None instead of original value to avoid sorting errors
+        return None
 
 
 @api_router.get("/analytics/ride-status-pivot")
