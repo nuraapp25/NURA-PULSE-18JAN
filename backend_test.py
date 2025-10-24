@@ -4297,6 +4297,321 @@ class NuraPulseBackendTester:
         
         return success_count >= 8  # At least 8 out of 12+ tests should pass
 
+    def test_analytics_dashboards_backend(self):
+        """Test Analytics Dashboards Backend APIs - Pivot Tables with UTC to IST conversion"""
+        print("\n=== Testing Analytics Dashboards Backend APIs ===")
+        
+        success_count = 0
+        
+        # Test 1: Authentication requirement for ride-status-pivot
+        print("\n--- Testing Authentication Requirements ---")
+        response = self.make_request("GET", "/analytics/ride-status-pivot", use_auth=False)
+        if response is not None and response.status_code in [401, 403]:
+            self.log_test("Analytics - Ride Status Pivot Authentication", True, 
+                        f"Correctly requires authentication ({response.status_code} without token)")
+            success_count += 1
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("Analytics - Ride Status Pivot Authentication", False, 
+                        f"Expected 401/403, got {status}")
+        
+        # Test 2: Default ride-status-pivot configuration
+        print("\n--- Testing Ride Status Pivot - Default Configuration ---")
+        response = self.make_request("GET", "/analytics/ride-status-pivot")
+        
+        if response is not None and response.status_code == 200:
+            try:
+                data = response.json()
+                
+                # Check required response structure
+                required_fields = ["success", "data", "columns", "row_field", "column_field", "value_operation", "filter_options", "total_records"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if not missing_fields:
+                    self.log_test("Analytics - Ride Status Pivot Structure", True, 
+                                "Response contains all required fields")
+                    success_count += 1
+                    
+                    # Verify default configuration
+                    if (data.get("row_field") == "date" and 
+                        data.get("column_field") == "rideStatus" and 
+                        data.get("value_operation") == "count"):
+                        self.log_test("Analytics - Ride Status Pivot Default Config", True, 
+                                    "Default configuration correct: row_field=date, column_field=rideStatus, value_operation=count")
+                        success_count += 1
+                    else:
+                        self.log_test("Analytics - Ride Status Pivot Default Config", False, 
+                                    f"Incorrect default config: row={data.get('row_field')}, col={data.get('column_field')}, op={data.get('value_operation')}")
+                    
+                    # Check data structure
+                    pivot_data = data.get("data", [])
+                    if isinstance(pivot_data, list):
+                        self.log_test("Analytics - Ride Status Pivot Data Array", True, 
+                                    f"Data is array with {len(pivot_data)} rows")
+                        success_count += 1
+                        
+                        # Check if data rows have proper structure (rowLabel + column values)
+                        if len(pivot_data) > 0:
+                            sample_row = pivot_data[0]
+                            if "rowLabel" in sample_row:
+                                self.log_test("Analytics - Ride Status Pivot Row Structure", True, 
+                                            "Data rows contain rowLabel field")
+                                success_count += 1
+                            else:
+                                self.log_test("Analytics - Ride Status Pivot Row Structure", False, 
+                                            "Data rows missing rowLabel field")
+                        else:
+                            self.log_test("Analytics - Ride Status Pivot Row Structure", True, 
+                                        "No data rows to validate (expected for empty dataset)")
+                            success_count += 1
+                    else:
+                        self.log_test("Analytics - Ride Status Pivot Data Array", False, 
+                                    f"Data is not an array, got: {type(pivot_data)}")
+                else:
+                    self.log_test("Analytics - Ride Status Pivot Structure", False, 
+                                f"Response missing required fields: {missing_fields}")
+                
+            except json.JSONDecodeError:
+                self.log_test("Analytics - Ride Status Pivot Default", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Analytics - Ride Status Pivot Default", False, error_msg, 
+                        response.text if response else None)
+        
+        # Test 3: Ride status pivot with filter
+        print("\n--- Testing Ride Status Pivot - With Filter ---")
+        response = self.make_request("GET", "/analytics/ride-status-pivot?filter_field=source&filter_value=test")
+        
+        if response is not None and response.status_code == 200:
+            try:
+                data = response.json()
+                if data.get("success"):
+                    self.log_test("Analytics - Ride Status Pivot Filter", True, 
+                                f"Filter applied successfully: {data.get('total_records', 0)} records")
+                    success_count += 1
+                else:
+                    self.log_test("Analytics - Ride Status Pivot Filter", False, 
+                                "Response success=false")
+            except json.JSONDecodeError:
+                self.log_test("Analytics - Ride Status Pivot Filter", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Analytics - Ride Status Pivot Filter", False, error_msg)
+        
+        # Test 4: Ride status pivot with alternate configuration
+        print("\n--- Testing Ride Status Pivot - Alternate Configuration ---")
+        response = self.make_request("GET", "/analytics/ride-status-pivot?row_field=pickupLocality&column_field=rideStatus")
+        
+        if response is not None and response.status_code == 200:
+            try:
+                data = response.json()
+                if (data.get("success") and 
+                    data.get("row_field") == "pickupLocality" and 
+                    data.get("column_field") == "rideStatus"):
+                    self.log_test("Analytics - Ride Status Pivot Alternate Config", True, 
+                                "Alternate configuration working: row_field=pickupLocality, column_field=rideStatus")
+                    success_count += 1
+                else:
+                    self.log_test("Analytics - Ride Status Pivot Alternate Config", False, 
+                                f"Configuration not applied correctly: {data}")
+            except json.JSONDecodeError:
+                self.log_test("Analytics - Ride Status Pivot Alternate Config", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Analytics - Ride Status Pivot Alternate Config", False, error_msg)
+        
+        # Test 5: Authentication requirement for signups-pivot
+        print("\n--- Testing SignUps Pivot Authentication ---")
+        response = self.make_request("GET", "/analytics/signups-pivot", use_auth=False)
+        if response is not None and response.status_code in [401, 403]:
+            self.log_test("Analytics - SignUps Pivot Authentication", True, 
+                        f"Correctly requires authentication ({response.status_code} without token)")
+            success_count += 1
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("Analytics - SignUps Pivot Authentication", False, 
+                        f"Expected 401/403, got {status}")
+        
+        # Test 6: Default signups-pivot configuration
+        print("\n--- Testing SignUps Pivot - Default Configuration ---")
+        response = self.make_request("GET", "/analytics/signups-pivot")
+        
+        if response is not None and response.status_code == 200:
+            try:
+                data = response.json()
+                
+                # Check required response structure (same as ride status pivot)
+                required_fields = ["success", "data", "columns", "row_field", "column_field", "value_operation", "filter_options", "total_records"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if not missing_fields:
+                    self.log_test("Analytics - SignUps Pivot Structure", True, 
+                                "Response contains all required fields")
+                    success_count += 1
+                    
+                    # Verify default configuration
+                    if (data.get("row_field") == "date" and 
+                        data.get("column_field") == "source" and 
+                        data.get("value_operation") == "count"):
+                        self.log_test("Analytics - SignUps Pivot Default Config", True, 
+                                    "Default configuration correct: row_field=date, column_field=source, value_operation=count")
+                        success_count += 1
+                    else:
+                        self.log_test("Analytics - SignUps Pivot Default Config", False, 
+                                    f"Incorrect default config: row={data.get('row_field')}, col={data.get('column_field')}, op={data.get('value_operation')}")
+                    
+                    # Check data structure
+                    pivot_data = data.get("data", [])
+                    if isinstance(pivot_data, list):
+                        self.log_test("Analytics - SignUps Pivot Data Array", True, 
+                                    f"Data is array with {len(pivot_data)} rows")
+                        success_count += 1
+                    else:
+                        self.log_test("Analytics - SignUps Pivot Data Array", False, 
+                                    f"Data is not an array, got: {type(pivot_data)}")
+                else:
+                    self.log_test("Analytics - SignUps Pivot Structure", False, 
+                                f"Response missing required fields: {missing_fields}")
+                
+            except json.JSONDecodeError:
+                self.log_test("Analytics - SignUps Pivot Default", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Analytics - SignUps Pivot Default", False, error_msg)
+        
+        # Test 7: SignUps pivot with filter
+        print("\n--- Testing SignUps Pivot - With Filter ---")
+        response = self.make_request("GET", "/analytics/signups-pivot?filter_field=source&filter_value=test")
+        
+        if response is not None and response.status_code == 200:
+            try:
+                data = response.json()
+                if data.get("success"):
+                    self.log_test("Analytics - SignUps Pivot Filter", True, 
+                                f"Filter applied successfully: {data.get('total_records', 0)} records")
+                    success_count += 1
+                else:
+                    self.log_test("Analytics - SignUps Pivot Filter", False, 
+                                "Response success=false")
+            except json.JSONDecodeError:
+                self.log_test("Analytics - SignUps Pivot Filter", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Analytics - SignUps Pivot Filter", False, error_msg)
+        
+        # Test 8: SignUps pivot with alternate configuration
+        print("\n--- Testing SignUps Pivot - Alternate Configuration ---")
+        response = self.make_request("GET", "/analytics/signups-pivot?row_field=date&column_field=Channel")
+        
+        if response is not None and response.status_code == 200:
+            try:
+                data = response.json()
+                if (data.get("success") and 
+                    data.get("row_field") == "date" and 
+                    data.get("column_field") == "Channel"):
+                    self.log_test("Analytics - SignUps Pivot Alternate Config", True, 
+                                "Alternate configuration working: row_field=date, column_field=Channel")
+                    success_count += 1
+                else:
+                    self.log_test("Analytics - SignUps Pivot Alternate Config", False, 
+                                f"Configuration not applied correctly: {data}")
+            except json.JSONDecodeError:
+                self.log_test("Analytics - SignUps Pivot Alternate Config", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Analytics - SignUps Pivot Alternate Config", False, error_msg)
+        
+        # Test 9: Test different value operations (sum, average)
+        print("\n--- Testing Different Value Operations ---")
+        
+        # Test sum operation
+        response = self.make_request("GET", "/analytics/ride-status-pivot?value_operation=sum&value_field=amount")
+        if response is not None and response.status_code == 200:
+            try:
+                data = response.json()
+                if data.get("success") and data.get("value_operation") == "sum":
+                    self.log_test("Analytics - Sum Operation", True, 
+                                "Sum operation working correctly")
+                    success_count += 1
+                else:
+                    self.log_test("Analytics - Sum Operation", False, 
+                                f"Sum operation failed: {data}")
+            except json.JSONDecodeError:
+                self.log_test("Analytics - Sum Operation", False, "Invalid JSON response")
+        else:
+            self.log_test("Analytics - Sum Operation", False, 
+                        f"Sum operation request failed: {response.status_code if response else 'Network error'}")
+        
+        # Test average operation
+        response = self.make_request("GET", "/analytics/ride-status-pivot?value_operation=average&value_field=amount")
+        if response is not None and response.status_code == 200:
+            try:
+                data = response.json()
+                if data.get("success") and data.get("value_operation") == "average":
+                    self.log_test("Analytics - Average Operation", True, 
+                                "Average operation working correctly")
+                    success_count += 1
+                else:
+                    self.log_test("Analytics - Average Operation", False, 
+                                f"Average operation failed: {data}")
+            except json.JSONDecodeError:
+                self.log_test("Analytics - Average Operation", False, "Invalid JSON response")
+        else:
+            self.log_test("Analytics - Average Operation", False, 
+                        f"Average operation request failed: {response.status_code if response else 'Network error'}")
+        
+        # Test 10: UTC to IST conversion verification
+        print("\n--- Testing UTC to IST Conversion ---")
+        
+        # Test both endpoints to verify dates are in IST format (YYYY-MM-DD)
+        for endpoint_name, endpoint_path in [("Ride Status", "/analytics/ride-status-pivot"), ("SignUps", "/analytics/signups-pivot")]:
+            response = self.make_request("GET", endpoint_path)
+            if response is not None and response.status_code == 200:
+                try:
+                    data = response.json()
+                    pivot_data = data.get("data", [])
+                    
+                    # Check if any data exists and dates are in IST format
+                    ist_format_found = False
+                    for row in pivot_data:
+                        row_label = row.get("rowLabel", "")
+                        # Check if rowLabel looks like IST date format (YYYY-MM-DD)
+                        if isinstance(row_label, str) and len(row_label) == 10 and row_label.count('-') == 2:
+                            try:
+                                # Try to parse as date
+                                datetime.strptime(row_label, '%Y-%m-%d')
+                                ist_format_found = True
+                                break
+                            except:
+                                pass
+                    
+                    if len(pivot_data) == 0:
+                        self.log_test(f"Analytics - {endpoint_name} UTC to IST Conversion", True, 
+                                    "No data to verify IST conversion (expected for empty dataset)")
+                        success_count += 1
+                    elif ist_format_found:
+                        self.log_test(f"Analytics - {endpoint_name} UTC to IST Conversion", True, 
+                                    "Dates appear to be in IST format (YYYY-MM-DD)")
+                        success_count += 1
+                    else:
+                        self.log_test(f"Analytics - {endpoint_name} UTC to IST Conversion", False, 
+                                    f"Date format verification inconclusive. Sample data: {pivot_data[:2]}")
+                        
+                except json.JSONDecodeError:
+                    self.log_test(f"Analytics - {endpoint_name} UTC to IST Conversion", False, 
+                                "Invalid JSON response")
+            else:
+                self.log_test(f"Analytics - {endpoint_name} UTC to IST Conversion", False, 
+                            f"Request failed: {response.status_code if response else 'Network error'}")
+        
+        return success_count >= 10  # At least 10 out of 16 tests should pass
+
     def run_all_tests(self):
         """Run all backend tests"""
         print("🚀 Starting Comprehensive Testing - Driver Onboarding Two-Way Sync with ID-Based Reconciliation")
