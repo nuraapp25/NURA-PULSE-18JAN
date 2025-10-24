@@ -1687,6 +1687,194 @@ const DriverOnboardingPage = () => {
                 </div>
               </div>
 
+              {/* Document Details Section */}
+              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Document Details</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm text-gray-600 dark:text-gray-400">DL No.</Label>
+                    {isEditMode ? (
+                      <Input
+                        value={editedLead.dl_no || ''}
+                        onChange={(e) => handleFieldChange('dl_no', e.target.value)}
+                        className="mt-1 dark:bg-gray-700 dark:border-gray-600"
+                        placeholder="Enter DL number"
+                      />
+                    ) : (
+                      <p className="text-base text-gray-900 dark:text-white mt-1">
+                        {selectedLead.dl_no || '-'}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label className="text-sm text-gray-600 dark:text-gray-400">Badge No.</Label>
+                    {isEditMode ? (
+                      <Input
+                        value={editedLead.badge_no || ''}
+                        onChange={(e) => handleFieldChange('badge_no', e.target.value)}
+                        className="mt-1 dark:bg-gray-700 dark:border-gray-600"
+                        placeholder="Enter badge number"
+                      />
+                    ) : (
+                      <p className="text-base text-gray-900 dark:text-white mt-1">
+                        {selectedLead.badge_no || '-'}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label className="text-sm text-gray-600 dark:text-gray-400">Aadhar Card</Label>
+                    {isEditMode ? (
+                      <Input
+                        value={editedLead.aadhar_card || ''}
+                        onChange={(e) => handleFieldChange('aadhar_card', e.target.value)}
+                        className="mt-1 dark:bg-gray-700 dark:border-gray-600"
+                        placeholder="Enter Aadhar card number"
+                      />
+                    ) : (
+                      <p className="text-base text-gray-900 dark:text-white mt-1">
+                        {selectedLead.aadhar_card || '-'}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label className="text-sm text-gray-600 dark:text-gray-400">Pan Card</Label>
+                    {isEditMode ? (
+                      <Input
+                        value={editedLead.pan_card || ''}
+                        onChange={(e) => handleFieldChange('pan_card', e.target.value)}
+                        className="mt-1 dark:bg-gray-700 dark:border-gray-600"
+                        placeholder="Enter PAN card number"
+                      />
+                    ) : (
+                      <p className="text-base text-gray-900 dark:text-white mt-1">
+                        {selectedLead.pan_card || '-'}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label className="text-sm text-gray-600 dark:text-gray-400">Gas Bill</Label>
+                    {isEditMode ? (
+                      <Input
+                        value={editedLead.gas_bill || ''}
+                        onChange={(e) => handleFieldChange('gas_bill', e.target.value)}
+                        className="mt-1 dark:bg-gray-700 dark:border-gray-600"
+                        placeholder="Gas bill number/status"
+                      />
+                    ) : (
+                      <p className="text-base text-gray-900 dark:text-white mt-1">
+                        {selectedLead.gas_bill || '-'}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label className="text-sm text-gray-600 dark:text-gray-400">Bank Passbook</Label>
+                    {isEditMode ? (
+                      <Input
+                        value={editedLead.bank_passbook || ''}
+                        onChange={(e) => handleFieldChange('bank_passbook', e.target.value)}
+                        className="mt-1 dark:bg-gray-700 dark:border-gray-600"
+                        placeholder="Bank passbook details"
+                      />
+                    ) : (
+                      <p className="text-base text-gray-900 dark:text-white mt-1">
+                        {selectedLead.bank_passbook || '-'}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Shift and Vehicle Details Section */}
+              <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Shift & Vehicle Assignment</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm text-gray-600 dark:text-gray-400">Preferred Shift</Label>
+                    {isEditMode ? (
+                      <Select
+                        value={editedLead.preferred_shift || ""}
+                        onValueChange={(value) => handleFieldChange('preferred_shift', value)}
+                      >
+                        <SelectTrigger className="mt-1 dark:bg-gray-700 dark:border-gray-600">
+                          <SelectValue placeholder="Select shift" />
+                        </SelectTrigger>
+                        <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                          <SelectItem value="Morning">Morning (6 AM - 2 PM)</SelectItem>
+                          <SelectItem value="Afternoon">Afternoon (2 PM - 10 PM)</SelectItem>
+                          <SelectItem value="Night">Night (10 PM - 6 AM)</SelectItem>
+                          <SelectItem value="Flexible">Flexible</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <p className="text-base text-gray-900 dark:text-white mt-1">
+                        {selectedLead.preferred_shift || '-'}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label className="text-sm text-gray-600 dark:text-gray-400">Allotted Shift</Label>
+                    {isEditMode ? (
+                      <Select
+                        value={editedLead.allotted_shift || ""}
+                        onValueChange={(value) => handleFieldChange('allotted_shift', value)}
+                      >
+                        <SelectTrigger className="mt-1 dark:bg-gray-700 dark:border-gray-600">
+                          <SelectValue placeholder="Select shift" />
+                        </SelectTrigger>
+                        <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                          <SelectItem value="Morning">Morning (6 AM - 2 PM)</SelectItem>
+                          <SelectItem value="Afternoon">Afternoon (2 PM - 10 PM)</SelectItem>
+                          <SelectItem value="Night">Night (10 PM - 6 AM)</SelectItem>
+                          <SelectItem value="Flexible">Flexible</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <p className="text-base text-gray-900 dark:text-white mt-1">
+                        {selectedLead.allotted_shift || '-'}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label className="text-sm text-gray-600 dark:text-gray-400">Default Vehicle</Label>
+                    {isEditMode ? (
+                      <Input
+                        value={editedLead.default_vehicle || ''}
+                        onChange={(e) => handleFieldChange('default_vehicle', e.target.value)}
+                        className="mt-1 dark:bg-gray-700 dark:border-gray-600"
+                        placeholder="Vehicle number or ID"
+                      />
+                    ) : (
+                      <p className="text-base text-gray-900 dark:text-white mt-1">
+                        {selectedLead.default_vehicle || '-'}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label className="text-sm text-gray-600 dark:text-gray-400">End Date</Label>
+                    {isEditMode ? (
+                      <Input
+                        type="date"
+                        value={editedLead.end_date || ''}
+                        onChange={(e) => handleFieldChange('end_date', e.target.value)}
+                        className="mt-1 dark:bg-gray-700 dark:border-gray-600"
+                      />
+                    ) : (
+                      <p className="text-base text-gray-900 dark:text-white mt-1">
+                        {selectedLead.end_date || '-'}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
                   <Label className="text-sm text-gray-600 dark:text-gray-400">Import Date</Label>
