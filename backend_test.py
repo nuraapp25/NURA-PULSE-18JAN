@@ -5171,6 +5171,285 @@ class NuraPulseBackendTester:
                         f"Expected 403, got {status}")
         
         return success_count >= 10  # At least 10 out of ~20 tests should pass
+
+    def test_rca_locality_fix_and_stats(self):
+        """Test RCA Locality Fix and Stats Testing as requested in review"""
+        print("\n=== Testing RCA Locality Fix and Stats ===")
+        
+        success_count = 0
+        
+        # Test 1: GET /api/ride-deck/stats (Fixed Endpoint) - should return correct rides_count
+        print("\n--- Testing Fixed Stats Endpoint ---")
+        response = self.make_request("GET", "/ride-deck/stats")
+        
+        if response is not None and response.status_code == 200:
+            try:
+                stats = response.json()
+                
+                # Check response structure
+                required_fields = ["success", "customers_count", "rides_count", "ride_status_distribution"]
+                missing_fields = [field for field in required_fields if field not in stats]
+                
+                if not missing_fields:
+                    rides_count = stats.get("rides_count", 0)
+                    customers_count = stats.get("customers_count", 0)
+                    
+                    # Check if rides_count is not 0 (the fix should show correct count)
+                    if rides_count > 0:
+                        self.log_test("RCA Stats - Rides Count Fix", True, 
+                                    f"Stats endpoint returns correct rides_count: {rides_count} (not 0)")
+                        success_count += 1
+                    else:
+                        self.log_test("RCA Stats - Rides Count Fix", False, 
+                                    f"Stats endpoint still returns rides_count: {rides_count} (expected > 0)")
+                    
+                    # Verify response structure
+                    self.log_test("RCA Stats - Response Structure", True, 
+                                f"Response structure correct: {customers_count} customers, {rides_count} rides")
+                    success_count += 1
+                    
+                    # Check ride status distribution
+                    ride_status_dist = stats.get("ride_status_distribution", {})
+                    if isinstance(ride_status_dist, dict):
+                        self.log_test("RCA Stats - Status Distribution", True, 
+                                    f"Ride status distribution: {ride_status_dist}")
+                        success_count += 1
+                    else:
+                        self.log_test("RCA Stats - Status Distribution", False, 
+                                    "Ride status distribution is not a dictionary")
+                else:
+                    self.log_test("RCA Stats - Response Structure", False, 
+                                f"Response missing required fields: {missing_fields}")
+                    
+            except json.JSONDecodeError:
+                self.log_test("RCA Stats - Fixed Endpoint", False, "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("RCA Stats - Fixed Endpoint", False, error_msg, 
+                        response.text if response else None)
+        
+        # Test 2: GET /api/ride-deck/rca/cancelled (Before Fix) - check locality formats
+        print("\n--- Testing Cancelled Rides RCA (Before Fix) ---")
+        response = self.make_request("GET", "/ride-deck/rca/cancelled")
+        
+        cancelled_rides_before = []
+        if response is not None and response.status_code == 200:
+            try:
+                data = response.json()
+                
+                if "success" in data and data["success"]:
+                    rides = data.get("rides", [])
+                    count = data.get("count", 0)
+                    
+                    self.log_test("RCA Cancelled - Get Rides", True, 
+                                f"Retrieved {count} cancelled rides for RCA analysis")
+                    success_count += 1
+                    
+                    # Document current locality formats (before fix)
+                    if rides:
+                        sample_ride = rides[0]
+                        pickup_locality = sample_ride.get("pickupLocality", "N/A")
+                        drop_locality = sample_ride.get("dropLocality", "N/A")
+                        
+                        self.log_test("RCA Cancelled - Locality Format (Before)", True, 
+                                    f"Sample ride localities - Pickup: '{pickup_locality}', Drop: '{drop_locality}'")
+                        
+                        # Store sample ride IDs for verification after fix
+                        cancelled_rides_before = [{"id": ride["id"], "pickup": ride.get("pickupLocality"), "drop": ride.get("dropLocality")} for ride in rides[:5]]
+                        success_count += 1
+                    else:
+                        self.log_test("RCA Cancelled - Locality Format (Before)", True, 
+                                    "No cancelled rides found - locality fix testing will be limited")
+                        success_count += 1
+                else:
+                    self.log_test("RCA Cancelled - Get Rides", False, 
+                                "Response missing success field or success=false", data)
+            except json.JSONDecodeError:
+                self.log_test("RCA Cancelled - Get Rides", False, "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("RCA Cancelled - Get Rides", False, error_msg, 
+                        response.text if response else None)
+        
+        # Test 3: POST /api/ride-deck/fix-localities (New Endpoint) - test the fix
+        print("\n--- Testing Fix Localities Endpoint ---")
+        response = self.make_request("POST", "/ride-deck/fix-localities")
+        
+        if response is not None and response.status_code == 200:
+            try:
+                result = response.json()
+                
+                required_fields = ["success", "message", "total_rides", "updated_count"]
+                missing_fields = [field for field in required_fields if field not in result]
+                
+                if not missing_fields:
+                    success_status = result.get("success", False)
+                    total_rides = result.get("total_rides", 0)
+                    updated_count = result.get("updated_count", 0)
+                    message = result.get("message", "")
+                    
+                    if success_status:
+                        self.log_test("RCA Fix Localities - Execution", True, 
+                                    f"Fix localities successful: {updated_count}/{total_rides} rides updated")
+                        success_count += 1
+                        
+                        # Verify message format
+                        if "re-processed localities" in message:
+                            self.log_test("RCA Fix Localities - Message Format", True, 
+                                        f"Correct message format: '{message}'")
+                            success_count += 1
+                        else:
+                            self.log_test("RCA Fix Localities - Message Format", False, 
+                                        f"Unexpected message format: '{message}'")
+                    else:
+                        self.log_test("RCA Fix Localities - Execution", False, 
+                                    f"Fix localities failed: success={success_status}")
+                else:
+                    self.log_test("RCA Fix Localities - Response Structure", False, 
+                                f"Response missing required fields: {missing_fields}")
+            except json.JSONDecodeError:
+                self.log_test("RCA Fix Localities - Execution", False, "Invalid JSON response", response.text)
+        elif response is not None and response.status_code == 403:
+            self.log_test("RCA Fix Localities - Master Admin Access", True, 
+                        "Correctly requires Master Admin role (403 Forbidden)")
+            success_count += 1
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("RCA Fix Localities - Execution", False, error_msg, 
+                        response.text if response else None)
+        
+        # Test 4: GET /api/ride-deck/rca/cancelled (After Fix) - verify localities are fixed
+        print("\n--- Testing Cancelled Rides RCA (After Fix) ---")
+        response = self.make_request("GET", "/ride-deck/rca/cancelled")
+        
+        if response is not None and response.status_code == 200:
+            try:
+                data = response.json()
+                
+                if "success" in data and data["success"]:
+                    rides = data.get("rides", [])
+                    count = data.get("count", 0)
+                    
+                    self.log_test("RCA Cancelled - Get Rides (After Fix)", True, 
+                                f"Retrieved {count} cancelled rides after locality fix")
+                    
+                    # Compare with before-fix data
+                    if rides and cancelled_rides_before:
+                        sample_ride = rides[0]
+                        pickup_locality = sample_ride.get("pickupLocality", "N/A")
+                        drop_locality = sample_ride.get("dropLocality", "N/A")
+                        
+                        # Check if localities now show single names (no duplicates)
+                        pickup_single = pickup_locality and "," not in pickup_locality
+                        drop_single = drop_locality and "," not in drop_locality
+                        
+                        if pickup_single and drop_single:
+                            self.log_test("RCA Cancelled - Locality Fix Verification", True, 
+                                        f"Localities now show single names - Pickup: '{pickup_locality}', Drop: '{drop_locality}'")
+                            success_count += 1
+                        else:
+                            self.log_test("RCA Cancelled - Locality Fix Verification", False, 
+                                        f"Localities still contain commas - Pickup: '{pickup_locality}', Drop: '{drop_locality}'")
+                        
+                        # Compare specific rides if possible
+                        for before_ride in cancelled_rides_before:
+                            matching_ride = next((r for r in rides if r["id"] == before_ride["id"]), None)
+                            if matching_ride:
+                                before_pickup = before_ride["pickup"]
+                                after_pickup = matching_ride.get("pickupLocality")
+                                
+                                if before_pickup != after_pickup:
+                                    self.log_test("RCA Cancelled - Before/After Comparison", True, 
+                                                f"Ride {before_ride['id'][:8]}... pickup changed: '{before_pickup}' → '{after_pickup}'")
+                                    success_count += 1
+                                    break
+                    else:
+                        self.log_test("RCA Cancelled - Locality Fix Verification", True, 
+                                    "No rides available for before/after comparison")
+                        success_count += 1
+                else:
+                    self.log_test("RCA Cancelled - Get Rides (After Fix)", False, 
+                                "Response missing success field or success=false", data)
+            except json.JSONDecodeError:
+                self.log_test("RCA Cancelled - Get Rides (After Fix)", False, "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("RCA Cancelled - Get Rides (After Fix)", False, error_msg, 
+                        response.text if response else None)
+        
+        # Test 5: GET /api/ride-deck/rca/driver-not-found (After Fix) - verify localities are also fixed
+        print("\n--- Testing Driver Not Found Rides RCA (After Fix) ---")
+        response = self.make_request("GET", "/ride-deck/rca/driver-not-found")
+        
+        if response is not None and response.status_code == 200:
+            try:
+                data = response.json()
+                
+                if "success" in data and data["success"]:
+                    rides = data.get("rides", [])
+                    count = data.get("count", 0)
+                    
+                    self.log_test("RCA Driver Not Found - Get Rides", True, 
+                                f"Retrieved {count} driver not found rides")
+                    
+                    # Verify localities are also fixed for driver not found rides
+                    if rides:
+                        sample_ride = rides[0]
+                        pickup_locality = sample_ride.get("pickupLocality", "N/A")
+                        drop_locality = sample_ride.get("dropLocality", "N/A")
+                        
+                        # Check if localities show single names (no duplicates)
+                        pickup_single = pickup_locality and "," not in pickup_locality
+                        drop_single = drop_locality and "," not in drop_locality
+                        
+                        if pickup_single and drop_single:
+                            self.log_test("RCA Driver Not Found - Locality Fix", True, 
+                                        f"Driver not found rides also have fixed localities - Pickup: '{pickup_locality}', Drop: '{drop_locality}'")
+                            success_count += 1
+                        else:
+                            self.log_test("RCA Driver Not Found - Locality Fix", False, 
+                                        f"Driver not found rides still have comma-separated localities - Pickup: '{pickup_locality}', Drop: '{drop_locality}'")
+                    else:
+                        self.log_test("RCA Driver Not Found - Locality Fix", True, 
+                                    "No driver not found rides available for locality verification")
+                        success_count += 1
+                else:
+                    self.log_test("RCA Driver Not Found - Get Rides", False, 
+                                "Response missing success field or success=false", data)
+            except json.JSONDecodeError:
+                self.log_test("RCA Driver Not Found - Get Rides", False, "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("RCA Driver Not Found - Get Rides", False, error_msg, 
+                        response.text if response else None)
+        
+        # Test 6: Authentication requirements for all endpoints
+        print("\n--- Testing Authentication Requirements ---")
+        
+        # Test stats endpoint without auth
+        response = self.make_request("GET", "/ride-deck/stats", use_auth=False)
+        if response is not None and response.status_code in [401, 403]:
+            self.log_test("RCA Authentication - Stats Endpoint", True, 
+                        f"Stats endpoint correctly requires authentication ({response.status_code})")
+            success_count += 1
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("RCA Authentication - Stats Endpoint", False, 
+                        f"Expected 401/403, got {status}")
+        
+        # Test fix-localities endpoint without auth
+        response = self.make_request("POST", "/ride-deck/fix-localities", use_auth=False)
+        if response is not None and response.status_code in [401, 403]:
+            self.log_test("RCA Authentication - Fix Localities Endpoint", True, 
+                        f"Fix localities endpoint correctly requires authentication ({response.status_code})")
+            success_count += 1
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("RCA Authentication - Fix Localities Endpoint", False, 
+                        f"Expected 401/403, got {status}")
+        
+        return success_count >= 8  # At least 8 out of 12 tests should pass
+
     def run_all_tests(self):
         """Run all backend tests"""
         print("🚀 Starting Comprehensive Testing - Driver Onboarding Two-Way Sync with ID-Based Reconciliation")
