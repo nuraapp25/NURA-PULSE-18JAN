@@ -726,36 +726,24 @@ const PaymentReconciliation = () => {
   if (currentView === "folder-selection") {
     return (
       <div className="space-y-6" data-testid="payment-reconciliation-page">
-        {/* App Disabled Dialog */}
+        {/* App Disabled Banner - No Popup */}
         {!appEnabled && (
-          <Dialog open={showDisabledDialog} onOpenChange={setShowDisabledDialog}>
-            <DialogContent className="dark:bg-gray-800">
-              <DialogHeader>
-                <DialogTitle className="text-red-600 dark:text-red-400 flex items-center gap-2">
-                  <AlertCircle className="h-6 w-6" />
-                  App Disabled
-                </DialogTitle>
-              </DialogHeader>
-              <div className="py-4">
-                <p className="text-gray-700 dark:text-gray-300 mb-4">
-                  The <strong>Payment Data Extractor</strong> app is currently disabled due to upgrade.
+          <div className="bg-red-50 border-2 border-red-200 dark:bg-red-900/20 dark:border-red-800 rounded-lg p-6 mb-6">
+            <div className="flex items-start gap-4">
+              <AlertCircle className="h-6 w-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-1" />
+              <div>
+                <h3 className="text-lg font-semibold text-red-800 dark:text-red-300 mb-2">
+                  Payment Data Extractor is Currently Disabled
+                </h3>
+                <p className="text-red-700 dark:text-red-400 mb-2">
+                  This app has been temporarily disabled due to upgrade.
                 </p>
-                <p className="text-gray-600 dark:text-gray-400 text-sm">
-                  Please contact your Master Admin for the new app link.
+                <p className="text-red-600 dark:text-red-500 text-sm">
+                  Please contact your <strong>Master Admin</strong> for the new app link or further information.
                 </p>
               </div>
-            </DialogContent>
-          </Dialog>
-        )}
-
-        {/* Persistent Banner when app is disabled */}
-        {!appEnabled && !showDisabledDialog && (
-          <Alert variant="destructive" className="mb-6">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              <strong>Payment Data Extractor is currently disabled.</strong> Contact your Master Admin for the new app link.
-            </AlertDescription>
-          </Alert>
+            </div>
+          </div>
         )}
 
         <div className="text-center mb-8">
