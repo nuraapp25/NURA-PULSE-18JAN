@@ -6601,14 +6601,16 @@ async def get_ride_status_pivot(
         for ride in rides:
             # Get row value (convert date to IST if it's a date field)
             row_val = ride.get(row_field, 'N/A')
-            if row_field == 'date' or 'date' in row_field.lower():
+            if row_field == 'date' or 'date' in row_field.lower() or 'time' in row_field.lower():
                 row_val = convert_utc_to_ist(row_val)
             
-            # Get column value
+            # Get column value  (also convert if it's a date field)
             col_val = ride.get(column_field, 'N/A')
+            if column_field == 'date' or 'date' in column_field.lower() or 'time' in column_field.lower():
+                col_val = convert_utc_to_ist(col_val)
             
-            # Skip if essential values are missing
-            if row_val == 'N/A' or col_val == 'N/A':
+            # Skip if essential values are missing or None
+            if row_val is None or row_val == 'N/A' or col_val is None or col_val == 'N/A':
                 continue
             
             row_values.add(row_val)
