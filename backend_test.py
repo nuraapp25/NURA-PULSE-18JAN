@@ -5475,6 +5475,9 @@ class NuraPulseBackendTester:
         # PRIORITY: Test RCA Management Backend APIs as requested
         rca_management_success = self.test_rca_management_backend_apis()
         
+        # PRIORITY: Test RCA Locality Fix and Stats as requested in review
+        rca_locality_fix_success = self.test_rca_locality_fix_and_stats()
+        
         # PRIORITY: Test Ride Deck Data Management Endpoints as requested
         ride_deck_data_mgmt_success = self.test_ride_deck_data_management_endpoints()
         
