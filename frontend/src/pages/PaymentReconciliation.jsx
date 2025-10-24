@@ -844,60 +844,70 @@ const PaymentReconciliation = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center">
-            <input
-              type="file"
-              multiple
-              accept="image/*"
-              onChange={handleFileSelect}
-              className="hidden"
-              id="receipt-upload"
-            />
-            <label htmlFor="receipt-upload" className="cursor-pointer">
-              <Upload size={48} className="mx-auto text-gray-400 mb-4" />
-              <p className="text-lg text-gray-600 dark:text-gray-400 mb-2">
-                Drag & drop images here
-              </p>
-              <p className="text-sm text-gray-500 dark:text-gray-500">
-                or click to select files • Max 10 files • PNG, JPG, JPEG supported
-              </p>
-            </label>
-          </div>
-          
-          {uploadedFiles.length > 0 && (
-            <div className="mt-6">
-              <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                Selected Files ({uploadedFiles.length}/10):
-              </h4>
-              <div className="space-y-2">
-                {uploadedFiles.map((file, index) => (
-                  <div key={index} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded">
-                    <span className="text-sm text-gray-700 dark:text-gray-300 truncate">{file.name}</span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeFile(index)}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      ×
-                    </Button>
-                  </div>
-                ))}
+          {!appEnabled ? (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Upload functionality is currently disabled. Please contact your Master Admin for the new app link.
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <>
+              <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center">
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                  id="receipt-upload"
+                  disabled={!appEnabled}
+                />
+                <label htmlFor="receipt-upload" className={`cursor-pointer ${!appEnabled ? 'opacity-50 pointer-events-none' : ''}`}>
+                  <Upload size={48} className="mx-auto text-gray-400 mb-4" />
+                  <p className="text-lg text-gray-600 dark:text-gray-400 mb-2">
+                    Drag & drop images here
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-500">
+                    or click to select files • Max 10 files • PNG, JPG, JPEG supported
+                  </p>
+                </label>
               </div>
-            </div>
-          )}
-          
-          {uploadedFiles.length > 0 && (
-            <div className="mt-6 text-center">
-              <Button
-                onClick={processFiles}
-                disabled={processing}
-                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 px-8 py-3"
-              >
-                {processing ? (
-                  <>
-                    <Clock className="mr-2 h-4 w-4 animate-spin" />
-                    Processing...
+              
+              {uploadedFiles.length > 0 && (
+                <div className="mt-6">
+                  <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                    Selected Files ({uploadedFiles.length}/10):
+                  </h4>
+                  <div className="space-y-2">
+                    {uploadedFiles.map((file, index) => (
+                      <div key={index} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded">
+                        <span className="text-sm text-gray-700 dark:text-gray-300 truncate">{file.name}</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeFile(index)}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          ×
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {uploadedFiles.length > 0 && (
+                <div className="mt-6 text-center">
+                  <Button
+                    onClick={processFiles}
+                    disabled={processing || !appEnabled}
+                    className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 px-8 py-3"
+                  >
+                    {processing ? (
+                      <>
+                        <Clock className="mr-2 h-4 w-4 animate-spin" />
+                        Processing...
                   </>
                 ) : (
                   <>
