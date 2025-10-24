@@ -447,6 +447,18 @@ backend:
           agent: "main"
           comment: "✅ TESTED & VERIFIED: POST /hotspot-planning/analyze endpoint fully functional. Tested with real CSV data (Book3.csv, 389 rides). Key features working: 1) CSV file upload and parsing. 2) UTC to IST time conversion. 3) Time slot-based analysis (6 slots: Morning Rush, Mid-Morning, Afternoon, Evening Rush, Night, Late Night). 4) K-Means clustering (up to 10 locations per slot). 5) Coverage calculation (5-minute pickup radius, 5 km/hr speed). 6) Handles empty slots, low data slots, and successful analysis. Results: Morning Rush: 33 rides, 90.91% coverage | Mid-Morning: 74 rides, 44.59% coverage | Afternoon: 121 rides, 39.67% coverage | Evening Rush: 83 rides, 27.71% coverage | Night: 52 rides, 17.31% coverage | Late Night: 23 rides, 34.78% coverage. Each location includes lat/long, rides assigned, rides within 5min, and coverage percentage. Authentication required. Backend API fully operational and ready for production."
 
+  - task: "Ride Deck Data Analysis - Backend APIs"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "IMPLEMENTATION COMPLETE: 4 backend endpoints created. (1) POST /ride-deck/analyze - Upload XLSX, calculate Google Maps distances from VR Mall to pickup/drop, extract localities and times. (2) POST /ride-deck/import-customers - Import customer CSV with upsert by ID, skip duplicates. (3) POST /ride-deck/import-rides - Import ride CSV with upsert by ID, compute fields (pickupLocality, dropLocality, distances from depot, mostCommonPickupPoint/Locality). Uses Google Maps API for geocoding and distance calculation. (4) GET /ride-deck/stats - Returns customer and ride counts. All endpoints require authentication. Ready for comprehensive backend testing with sample CSV files."
+
 frontend:
   - task: "Login Page"
     implemented: true
