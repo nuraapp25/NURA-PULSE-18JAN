@@ -5666,7 +5666,6 @@ async def import_customers(
         logger.info(f"Customer CSV loaded: {len(df)} rows")
         
         # Get MongoDB database
-        db = get_database()
         customers_collection = db['customers']
         
         # Track statistics
