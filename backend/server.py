@@ -6108,41 +6108,6 @@ async def get_ride_deck_progress(
     }
 
 
-@api_router.get("/ride-deck/stats")
-async def get_ride_deck_stats(
-    current_user: User = Depends(get_current_user)
-):
-    """
-    Get ride deck statistics (customer and ride counts)
-    """
-    try:
-        customers_collection = db['customers']
-        rides_collection = db['rides']
-        
-        customer_count = await customers_collection.count_documents({})
-        ride_count = await rides_collection.count_documents({})
-        
-        # Get ride status distribution
-        pipeline = [
-            {"$group": {"_id": "$rideStatus", "count": {"$sum": 1}}}
-        ]
-        status_distribution = {}
-        async for doc in rides_collection.aggregate(pipeline):
-            if doc['_id']:
-                status_distribution[doc['_id']] = doc['count']
-        
-        return {
-            "success": True,
-            "customers_count": customer_count,
-            "rides_count": ride_count,
-            "ride_status_distribution": status_distribution
-        }
-        
-    except Exception as e:
-        logger.error(f"Failed to get ride deck stats: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to get stats: {str(e)}")
-
-
 @api_router.get("/ride-deck/customers")
 async def get_customers_data(
     limit: int = 100,
