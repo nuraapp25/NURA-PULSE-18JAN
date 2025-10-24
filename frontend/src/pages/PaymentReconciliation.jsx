@@ -721,6 +721,28 @@ const PaymentReconciliation = () => {
   if (currentView === "folder-selection") {
     return (
       <div className="space-y-6" data-testid="payment-reconciliation-page">
+        {/* App Disabled Message */}
+        {!appEnabled && (
+          <Dialog open={true}>
+            <DialogContent className="dark:bg-gray-800">
+              <DialogHeader>
+                <DialogTitle className="text-red-600 dark:text-red-400 flex items-center gap-2">
+                  <AlertCircle className="h-6 w-6" />
+                  App Disabled
+                </DialogTitle>
+              </DialogHeader>
+              <div className="py-4">
+                <p className="text-gray-700 dark:text-gray-300 mb-4">
+                  The <strong>Payment Data Extractor</strong> app is currently disabled due to upgrade.
+                </p>
+                <p className="text-gray-600 dark:text-gray-400 text-sm">
+                  Please contact your Master Admin for the new app link.
+                </p>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
+
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Payment Data Extractor</h1>
         </div>
