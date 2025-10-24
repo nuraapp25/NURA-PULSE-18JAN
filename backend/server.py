@@ -5638,7 +5638,57 @@ async def analyze_ride_deck(
                     pickup_to_drop_times.append(None)
                     logger.error(f"Row {idx}: Error calculating pickup to drop distance: {str(e)}")
                 
-
+                # Small delay to avoid rate limiting
+                await asyncio.sleep(0.1)
+                
+                logger.info(f"Processed row {idx + 1}/{total_rows}")
+                
+            except Exception as e:
+                pickup_localities.append(None)
+                vr_to_pickup_distances.append(None)
+                vr_to_pickup_times.append(None)
+                drop_localities.append(None)
+                pickup_to_drop_distances.append(None)
+                pickup_to_drop_times.append(None)
+                logger.error(f"Row {idx}: Error processing: {str(e)}")
+        
+        # Add new columns to dataframe in the specified order
+        df['Pickup_Locality'] = pickup_localities
+        df['VR_to_Pickup_Distance_KM'] = vr_to_pickup_distances
+        df['VR_to_Pickup_Time_Mins'] = vr_to_pickup_times
+        df['Drop_Locality'] = drop_localities
+        df['Pickup_to_Drop_Distance_KM'] = pickup_to_drop_distances
+        df['Pickup_to_Drop_Time_Mins'] = pickup_to_drop_times
+        
+        # Save to new Excel file
+        output = io.BytesIO()
+        
+        # Use openpyxl to maintain original formatting if needed
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False, sheet_name='Sheet1')
+        
+        output.seek(0)
+        
+        logger.info(f"Ride deck analysis completed: {total_rows} rows processed")
+        
+        # Return the file as response
+        from fastapi.responses import StreamingResponse
+        
+        return StreamingResponse(
+            output,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={
+                "Content-Disposition": f"attachment; filename=ride_deck_analyzed.xlsx"
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Ride deck analysis failed: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Ride deck analysis failed: {str(e)}")
 
 
 # ==================== RIDE DECK DATA IMPORT & MANAGEMENT ====================
