@@ -280,6 +280,109 @@ const RideDeckAnalysisEnhanced = () => {
     }
   };
 
+  // View data handlers
+  const handleViewData = async (dataType) => {
+    setViewDataType(dataType);
+    setViewDialogOpen(true);
+    setLoadingViewData(true);
+    
+    try {
+      const token = localStorage.getItem('token');
+      const endpoint = dataType === 'customers' ? 'customers' : 'rides';
+      const response = await fetch(`${API}/ride-deck/${endpoint}?limit=100`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch data');
+      }
+
+      const result = await response.json();
+      setViewData(result.data || []);
+    } catch (err) {
+      console.error('Error fetching data:', err);
+      toast.error(`Failed to load ${dataType} data`);
+      setViewData([]);
+    } finally {
+      setLoadingViewData(false);
+    }
+  };
+
+  const handleDownloadExcel = async (dataType) => {
+    try {
+      const token = localStorage.getItem('token');
+      const endpoint = dataType === 'customers' ? 'export-customers' : 'export-rides';
+      const response = await fetch(`${API}/ride-deck/${endpoint}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to export data');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${dataType}_export_${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      toast.success(`${dataType} data exported successfully`);
+    } catch (err) {
+      console.error('Export error:', err);
+      toast.error(`Failed to export ${dataType} data`);
+    }
+  };
+
+  const handleDeleteConfirm = (dataType) => {
+    setDeleteDataType(dataType);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteData = async () => {
+    setDeleting(true);
+    
+    try {
+      const token = localStorage.getItem('token');
+      const endpoint = deleteDataType === 'customers' ? 'delete-customers' : 'delete-rides';
+      const response = await fetch(`${API}/ride-deck/${endpoint}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Delete failed');
+      }
+
+      const result = await response.json();
+      toast.success(result.message);
+      setDeleteDialogOpen(false);
+      fetchStats(); // Refresh stats
+      
+      // Reset import stats
+      if (deleteDataType === 'customers') {
+        setCustomerImportStats(null);
+      } else {
+        setRideImportStats(null);
+      }
+    } catch (err) {
+      console.error('Delete error:', err);
+      toast.error(err.message || `Failed to delete ${deleteDataType} data`);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <div className="container mx-auto p-6 max-w-6xl">
       <div className="mb-6">
