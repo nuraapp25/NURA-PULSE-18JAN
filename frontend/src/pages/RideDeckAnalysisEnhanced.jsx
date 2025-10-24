@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Upload, Download, AlertCircle, CheckCircle, Loader2, Database, TrendingUp } from 'lucide-react';
+import { Upload, Download, AlertCircle, CheckCircle, Loader2, Database, TrendingUp, Eye, FileDown, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Progress } from '../components/ui/progress';
 import { Alert, AlertDescription } from '../components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../components/ui/dialog';
+import { toast } from 'sonner';
+import { useAuth } from '@/App';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || '';
 const API = `${BACKEND_URL}/api`;
