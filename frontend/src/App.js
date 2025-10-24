@@ -26,6 +26,8 @@ import QRAnalytics from "@/pages/QRAnalytics";
 import RideDeckAnalysis from "@/pages/RideDeckAnalysisEnhanced";
 import RCAManagement from "@/pages/RCAManagement";
 import AnalyticsDashboards from "@/pages/AnalyticsDashboards";
+import AppSettings from "@/pages/AppSettings";
+import UserActivityAnalytics from "@/pages/UserActivityAnalytics";
 import ManagePage from "@/pages/ManagePage";
 import SettingsPage from "@/pages/SettingsPage";
 
