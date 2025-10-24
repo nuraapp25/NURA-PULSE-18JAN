@@ -113,7 +113,11 @@ const PaymentReconciliation = () => {
       });
       
       if (response.data.success) {
-        setAppEnabled(response.data.settings.payment_extractor_enabled);
+        const enabled = response.data.settings.payment_extractor_enabled;
+        setAppEnabled(enabled);
+        if (!enabled) {
+          setShowDisabledDialog(true);
+        }
       }
     } catch (error) {
       console.error('Error checking app status:', error);
