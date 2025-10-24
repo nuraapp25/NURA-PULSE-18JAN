@@ -6108,6 +6108,249 @@ async def get_ride_deck_progress(
     }
 
 
+@api_router.get("/ride-deck/stats")
+async def get_ride_deck_stats(
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get ride deck statistics (customer and ride counts)
+    """
+    try:
+        customers_collection = db['customers']
+        rides_collection = db['rides']
+        
+        customer_count = await customers_collection.count_documents({})
+        ride_count = await rides_collection.count_documents({})
+        
+        # Get ride status distribution
+        pipeline = [
+            {"$group": {"_id": "$rideStatus", "count": {"$sum": 1}}}
+        ]
+        status_distribution = {}
+        async for doc in rides_collection.aggregate(pipeline):
+            if doc['_id']:
+                status_distribution[doc['_id']] = doc['count']
+        
+        return {
+            "success": True,
+            "customers_count": customer_count,
+            "rides_count": ride_count,
+            "ride_status_distribution": status_distribution
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get ride deck stats: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get stats: {str(e)}")
+
+
+@api_router.get("/ride-deck/customers")
+async def get_customers_data(
+    limit: int = 100,
+    skip: int = 0,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get customer data with pagination
+    """
+    try:
+        customers_collection = db['customers']
+        
+        customers = await customers_collection.find({}).skip(skip).limit(limit).to_list(None)
+        total_count = await customers_collection.count_documents({})
+        
+        # Convert ObjectId to string if present
+        for customer in customers:
+            if '_id' in customer:
+                del customer['_id']
+        
+        return {
+            "success": True,
+            "data": customers,
+            "total": total_count,
+            "limit": limit,
+            "skip": skip
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get customers data: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get customers: {str(e)}")
+
+
+@api_router.get("/ride-deck/rides")
+async def get_rides_data(
+    limit: int = 100,
+    skip: int = 0,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get ride data with pagination
+    """
+    try:
+        rides_collection = db['rides']
+        
+        rides = await rides_collection.find({}).skip(skip).limit(limit).to_list(None)
+        total_count = await rides_collection.count_documents({})
+        
+        # Convert ObjectId to string if present
+        for ride in rides:
+            if '_id' in ride:
+                del ride['_id']
+        
+        return {
+            "success": True,
+            "data": rides,
+            "total": total_count,
+            "limit": limit,
+            "skip": skip
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get rides data: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get rides: {str(e)}")
+
+
+@api_router.get("/ride-deck/export-customers")
+async def export_customers_excel(
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Export all customer data as Excel file
+    """
+    try:
+        customers_collection = db['customers']
+        
+        customers = await customers_collection.find({}).to_list(None)
+        
+        if not customers:
+            raise HTTPException(status_code=404, detail="No customer data found")
+        
+        # Remove MongoDB _id field
+        for customer in customers:
+            if '_id' in customer:
+                del customer['_id']
+        
+        # Convert to DataFrame
+        df = pd.DataFrame(customers)
+        
+        # Create Excel file in memory
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False, sheet_name='Customers')
+        
+        output.seek(0)
+        
+        return StreamingResponse(
+            output,
+            media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            headers={
+                'Content-Disposition': f'attachment; filename=customers_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to export customers: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to export customers: {str(e)}")
+
+
+@api_router.get("/ride-deck/export-rides")
+async def export_rides_excel(
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Export all ride data as Excel file
+    """
+    try:
+        rides_collection = db['rides']
+        
+        rides = await rides_collection.find({}).to_list(None)
+        
+        if not rides:
+            raise HTTPException(status_code=404, detail="No ride data found")
+        
+        # Remove MongoDB _id field
+        for ride in rides:
+            if '_id' in ride:
+                del ride['_id']
+        
+        # Convert to DataFrame
+        df = pd.DataFrame(rides)
+        
+        # Create Excel file in memory
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False, sheet_name='Rides')
+        
+        output.seek(0)
+        
+        return StreamingResponse(
+            output,
+            media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            headers={
+                'Content-Disposition': f'attachment; filename=rides_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to export rides: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to export rides: {str(e)}")
+
+
+@api_router.delete("/ride-deck/delete-customers")
+async def delete_all_customers(
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Delete all customer data (Master Admin only)
+    """
+    if current_user.role != "master_admin":
+        raise HTTPException(status_code=403, detail="Only Master Admins can delete all customer data")
+    
+    try:
+        customers_collection = db['customers']
+        
+        result = await customers_collection.delete_many({})
+        
+        return {
+            "success": True,
+            "message": f"Successfully deleted {result.deleted_count} customer records",
+            "deleted_count": result.deleted_count
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to delete customers: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete customers: {str(e)}")
+
+
+@api_router.delete("/ride-deck/delete-rides")
+async def delete_all_rides(
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Delete all ride data (Master Admin only)
+    """
+    if current_user.role != "master_admin":
+        raise HTTPException(status_code=403, detail="Only Master Admins can delete all ride data")
+    
+    try:
+        rides_collection = db['rides']
+        
+        result = await rides_collection.delete_many({})
+        
+        return {
+            "success": True,
+            "message": f"Successfully deleted {result.deleted_count} ride records",
+            "deleted_count": result.deleted_count
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to delete rides: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete rides: {str(e)}")
+
+
 # ==================== ANALYTICS DASHBOARDS - PIVOT TABLES ====================
 
 from datetime import datetime, timedelta, timezone as dt_timezone
