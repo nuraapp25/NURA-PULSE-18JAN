@@ -437,6 +437,36 @@ const RideDeckAnalysisEnhanced = () => {
     }
   };
 
+  const handleFixLocalities = async () => {
+    const confirmed = window.confirm(
+      'This will re-process locality extraction for all rides using the latest logic. This may take a few minutes. Continue?'
+    );
+    
+    if (!confirmed) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API}/ride-deck/fix-localities`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Fix localities failed');
+      }
+
+      const result = await response.json();
+      toast.success(result.message);
+      fetchStats(); // Refresh stats
+    } catch (err) {
+      console.error('Fix localities error:', err);
+      toast.error(err.message || 'Failed to fix localities');
+    }
+  };
+
   return (
     <div className="container mx-auto p-6 max-w-6xl">
       <div className="mb-6">
