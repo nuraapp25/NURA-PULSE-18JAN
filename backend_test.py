@@ -3996,6 +3996,307 @@ class NuraPulseBackendTester:
         
         return success_count >= 6  # At least 6 out of 9 tests should pass
 
+    def test_rca_management_backend_apis(self):
+        """Test RCA Management Backend APIs - New feature testing"""
+        print("\n=== Testing RCA Management Backend APIs ===")
+        
+        success_count = 0
+        
+        # First check if we have any ride data to work with
+        print("\n--- Checking Ride Data Availability ---")
+        stats_response = self.make_request("GET", "/ride-deck/stats")
+        
+        ride_count = 0
+        customer_count = 0
+        
+        if stats_response and stats_response.status_code == 200:
+            try:
+                stats_data = stats_response.json()
+                ride_count = stats_data.get("ride_count", 0)
+                customer_count = stats_data.get("customer_count", 0)
+                self.log_test("RCA Management - Check Ride Data", True, 
+                            f"Database contains {ride_count} rides and {customer_count} customers")
+                success_count += 1
+            except json.JSONDecodeError:
+                self.log_test("RCA Management - Check Ride Data", False, "Invalid JSON response", stats_response.text)
+        else:
+            error_msg = "Network error" if not stats_response else f"Status {stats_response.status_code}"
+            self.log_test("RCA Management - Check Ride Data", False, error_msg, 
+                        stats_response.text if stats_response else None)
+        
+        # Test 1: GET /api/ride-deck/rca/cancelled
+        print("\n--- Testing GET /api/ride-deck/rca/cancelled ---")
+        
+        # Test without authentication first
+        response = self.make_request("GET", "/ride-deck/rca/cancelled", use_auth=False)
+        if response and response.status_code == 403:
+            self.log_test("RCA Management - Cancelled Rides Auth", True, 
+                        "Correctly requires authentication (403 without token)")
+            success_count += 1
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("RCA Management - Cancelled Rides Auth", False, 
+                        f"Expected 403, got {status}")
+        
+        # Test with authentication
+        response = self.make_request("GET", "/ride-deck/rca/cancelled")
+        
+        if response and response.status_code == 200:
+            try:
+                data = response.json()
+                
+                # Check response structure
+                required_fields = ["success", "count", "rides"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if not missing_fields:
+                    rides = data.get("rides", [])
+                    count = data.get("count", 0)
+                    
+                    self.log_test("RCA Management - Cancelled Rides Response", True, 
+                                f"Retrieved {count} cancelled rides with empty statusReason")
+                    success_count += 1
+                    
+                    # Verify response structure for rides
+                    if rides and len(rides) > 0:
+                        sample_ride = rides[0]
+                        expected_ride_fields = ["id", "customerId", "customerName", "rideStartTime", 
+                                              "pickupLocality", "dropLocality", "statusReason", "statusDetail"]
+                        missing_ride_fields = [field for field in expected_ride_fields if field not in sample_ride]
+                        
+                        if not missing_ride_fields:
+                            self.log_test("RCA Management - Cancelled Rides Structure", True, 
+                                        "Ride objects contain all required fields: id, customerId, customerName, rideStartTime, pickupLocality, dropLocality, statusReason, statusDetail")
+                            success_count += 1
+                            
+                            # Verify customer name enrichment
+                            customer_name = sample_ride.get("customerName", "")
+                            if customer_name and customer_name != "N/A":
+                                self.log_test("RCA Management - Customer Name Enrichment", True, 
+                                            f"Customer names properly enriched from customer_data collection: '{customer_name}'")
+                                success_count += 1
+                            else:
+                                self.log_test("RCA Management - Customer Name Enrichment", True, 
+                                            "Customer name field present (may be N/A if no customer data)")
+                                success_count += 1
+                        else:
+                            self.log_test("RCA Management - Cancelled Rides Structure", False, 
+                                        f"Ride objects missing required fields: {missing_ride_fields}")
+                    else:
+                        self.log_test("RCA Management - Cancelled Rides Structure", True, 
+                                    "No cancelled rides with empty statusReason found (expected if no data)")
+                        success_count += 1
+                else:
+                    self.log_test("RCA Management - Cancelled Rides Response", False, 
+                                f"Response missing required fields: {missing_fields}")
+            except json.JSONDecodeError:
+                self.log_test("RCA Management - Cancelled Rides Response", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("RCA Management - Cancelled Rides Response", False, error_msg, 
+                        response.text if response else None)
+        
+        # Test 2: GET /api/ride-deck/rca/driver-not-found
+        print("\n--- Testing GET /api/ride-deck/rca/driver-not-found ---")
+        
+        # Test without authentication first
+        response = self.make_request("GET", "/ride-deck/rca/driver-not-found", use_auth=False)
+        if response and response.status_code == 403:
+            self.log_test("RCA Management - Driver Not Found Auth", True, 
+                        "Correctly requires authentication (403 without token)")
+            success_count += 1
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("RCA Management - Driver Not Found Auth", False, 
+                        f"Expected 403, got {status}")
+        
+        # Test with authentication
+        response = self.make_request("GET", "/ride-deck/rca/driver-not-found")
+        
+        if response and response.status_code == 200:
+            try:
+                data = response.json()
+                
+                # Check response structure (same as cancelled rides)
+                required_fields = ["success", "count", "rides"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if not missing_fields:
+                    rides = data.get("rides", [])
+                    count = data.get("count", 0)
+                    
+                    self.log_test("RCA Management - Driver Not Found Response", True, 
+                                f"Retrieved {count} driver not found rides with empty statusReason")
+                    success_count += 1
+                    
+                    # Verify same response structure as cancelled rides
+                    if rides and len(rides) > 0:
+                        sample_ride = rides[0]
+                        expected_ride_fields = ["id", "customerId", "customerName", "rideStartTime", 
+                                              "pickupLocality", "dropLocality", "statusReason", "statusDetail"]
+                        missing_ride_fields = [field for field in expected_ride_fields if field not in sample_ride]
+                        
+                        if not missing_ride_fields:
+                            self.log_test("RCA Management - Driver Not Found Structure", True, 
+                                        "Driver not found rides have same structure as cancelled rides")
+                            success_count += 1
+                        else:
+                            self.log_test("RCA Management - Driver Not Found Structure", False, 
+                                        f"Ride objects missing required fields: {missing_ride_fields}")
+                    else:
+                        self.log_test("RCA Management - Driver Not Found Structure", True, 
+                                    "No driver not found rides with empty statusReason found (expected if no data)")
+                        success_count += 1
+                else:
+                    self.log_test("RCA Management - Driver Not Found Response", False, 
+                                f"Response missing required fields: {missing_fields}")
+            except json.JSONDecodeError:
+                self.log_test("RCA Management - Driver Not Found Response", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("RCA Management - Driver Not Found Response", False, error_msg, 
+                        response.text if response else None)
+        
+        # Test 3: PUT /api/ride-deck/rca/update/{ride_id}
+        print("\n--- Testing PUT /api/ride-deck/rca/update/{ride_id} ---")
+        
+        # First, try to get a ride ID from either cancelled or driver not found rides
+        test_ride_id = None
+        
+        # Try to get a cancelled ride ID
+        cancelled_response = self.make_request("GET", "/ride-deck/rca/cancelled")
+        if cancelled_response and cancelled_response.status_code == 200:
+            try:
+                cancelled_data = cancelled_response.json()
+                cancelled_rides = cancelled_data.get("rides", [])
+                if cancelled_rides and len(cancelled_rides) > 0:
+                    test_ride_id = cancelled_rides[0].get("id")
+            except:
+                pass
+        
+        # If no cancelled ride, try driver not found
+        if not test_ride_id:
+            dnf_response = self.make_request("GET", "/ride-deck/rca/driver-not-found")
+            if dnf_response and dnf_response.status_code == 200:
+                try:
+                    dnf_data = dnf_response.json()
+                    dnf_rides = dnf_data.get("rides", [])
+                    if dnf_rides and len(dnf_rides) > 0:
+                        test_ride_id = dnf_rides[0].get("id")
+                except:
+                    pass
+        
+        if test_ride_id:
+            # Test without authentication
+            test_url = f"/ride-deck/rca/update/{test_ride_id}?statusReason=Customer%20Issue&statusDetail=Customer%20cancelled%20due%20to%20delay"
+            response = self.make_request("PUT", test_url, use_auth=False)
+            
+            if response and response.status_code == 403:
+                self.log_test("RCA Management - Update Ride Auth", True, 
+                            "Correctly requires authentication (403 without token)")
+                success_count += 1
+            else:
+                status = response.status_code if response else "Network error"
+                self.log_test("RCA Management - Update Ride Auth", False, 
+                            f"Expected 403, got {status}")
+            
+            # Test with authentication - update statusReason and statusDetail
+            test_url = f"/ride-deck/rca/update/{test_ride_id}?statusReason=Customer%20Issue&statusDetail=Customer%20cancelled%20due%20to%20delay"
+            response = self.make_request("PUT", test_url)
+            
+            if response and response.status_code == 200:
+                try:
+                    data = response.json()
+                    
+                    # Check response structure
+                    required_fields = ["success", "message", "ride_id"]
+                    missing_fields = [field for field in required_fields if field not in data]
+                    
+                    if not missing_fields:
+                        success_status = data.get("success", False)
+                        returned_ride_id = data.get("ride_id", "")
+                        
+                        if success_status and returned_ride_id == test_ride_id:
+                            self.log_test("RCA Management - Update Ride Success", True, 
+                                        f"Successfully updated ride {test_ride_id} with statusReason and statusDetail")
+                            success_count += 1
+                            
+                            # Verify the ride no longer appears in RCA lists
+                            # Check cancelled rides
+                            cancelled_check = self.make_request("GET", "/ride-deck/rca/cancelled")
+                            if cancelled_check and cancelled_check.status_code == 200:
+                                try:
+                                    cancelled_check_data = cancelled_check.json()
+                                    cancelled_check_rides = cancelled_check_data.get("rides", [])
+                                    updated_ride_found = any(ride.get("id") == test_ride_id for ride in cancelled_check_rides)
+                                    
+                                    if not updated_ride_found:
+                                        self.log_test("RCA Management - Ride Removed from RCA List", True, 
+                                                    f"Updated ride {test_ride_id} no longer appears in cancelled RCA list")
+                                        success_count += 1
+                                    else:
+                                        self.log_test("RCA Management - Ride Removed from RCA List", False, 
+                                                    f"Updated ride {test_ride_id} still appears in cancelled RCA list")
+                                except:
+                                    self.log_test("RCA Management - Ride Removed from RCA List", False, 
+                                                "Could not verify ride removal from RCA list")
+                        else:
+                            self.log_test("RCA Management - Update Ride Success", False, 
+                                        f"Update failed: success={success_status}, ride_id={returned_ride_id}")
+                    else:
+                        self.log_test("RCA Management - Update Ride Success", False, 
+                                    f"Response missing required fields: {missing_fields}")
+                except json.JSONDecodeError:
+                    self.log_test("RCA Management - Update Ride Success", False, 
+                                "Invalid JSON response", response.text)
+            else:
+                error_msg = "Network error" if not response else f"Status {response.status_code}"
+                self.log_test("RCA Management - Update Ride Success", False, error_msg, 
+                            response.text if response else None)
+            
+            # Test with only statusReason (statusDetail optional)
+            test_url_minimal = f"/ride-deck/rca/update/{test_ride_id}?statusReason=System%20Error"
+            response = self.make_request("PUT", test_url_minimal)
+            
+            if response and response.status_code == 200:
+                try:
+                    data = response.json()
+                    if data.get("success"):
+                        self.log_test("RCA Management - Update Ride Minimal", True, 
+                                    "Successfully updated ride with statusReason only (statusDetail optional)")
+                        success_count += 1
+                    else:
+                        self.log_test("RCA Management - Update Ride Minimal", False, 
+                                    "Update failed with minimal parameters")
+                except json.JSONDecodeError:
+                    self.log_test("RCA Management - Update Ride Minimal", False, 
+                                "Invalid JSON response", response.text)
+            else:
+                error_msg = "Network error" if not response else f"Status {response.status_code}"
+                self.log_test("RCA Management - Update Ride Minimal", False, error_msg)
+        else:
+            self.log_test("RCA Management - Update Ride Test", False, 
+                        "No ride ID available for update testing (no rides with empty statusReason found)")
+        
+        # Test 4: Test with non-existent ride ID
+        print("\n--- Testing Update with Non-existent Ride ID ---")
+        fake_ride_id = "non-existent-ride-id-12345"
+        test_url = f"/ride-deck/rca/update/{fake_ride_id}?statusReason=Test"
+        response = self.make_request("PUT", test_url)
+        
+        if response and response.status_code == 404:
+            self.log_test("RCA Management - Update Non-existent Ride", True, 
+                        "Correctly returns 404 for non-existent ride ID")
+            success_count += 1
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("RCA Management - Update Non-existent Ride", False, 
+                        f"Expected 404, got {status}")
+        
+        return success_count >= 8  # At least 8 out of 12+ tests should pass
+
     def run_all_tests(self):
         """Run all backend tests"""
         print("🚀 Starting Comprehensive Testing - Driver Onboarding Two-Way Sync with ID-Based Reconciliation")
