@@ -4772,6 +4772,405 @@ class NuraPulseBackendTester:
         
         return success_count >= 5  # At least 5 out of 8 tests should pass
 
+    def test_ride_deck_data_management_endpoints(self):
+        """Test Ride Deck Data Management Endpoints - New endpoints for viewing, exporting, and deleting customer and ride data"""
+        print("\n=== Testing Ride Deck Data Management Endpoints ===")
+        
+        success_count = 0
+        
+        # Test 1: GET /api/ride-deck/customers with pagination
+        print("\n--- Testing GET /api/ride-deck/customers ---")
+        
+        # Test with default pagination
+        response = self.make_request("GET", "/ride-deck/customers")
+        
+        if response is not None and response.status_code == 200:
+            try:
+                data = response.json()
+                
+                # Check response structure
+                required_fields = ["success", "data", "total", "limit", "skip"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if not missing_fields:
+                    customers = data.get("data", [])
+                    total = data.get("total", 0)
+                    limit = data.get("limit", 0)
+                    skip = data.get("skip", 0)
+                    
+                    self.log_test("Ride Deck - GET Customers Default", True, 
+                                f"Retrieved {len(customers)} customers (total: {total}, limit: {limit}, skip: {skip})")
+                    success_count += 1
+                    
+                    # Verify no _id field in customer records
+                    if customers:
+                        has_id_field = any('_id' in customer for customer in customers)
+                        if not has_id_field:
+                            self.log_test("Ride Deck - Customers No _id Field", True, 
+                                        "Customer records correctly exclude _id field")
+                            success_count += 1
+                        else:
+                            self.log_test("Ride Deck - Customers No _id Field", False, 
+                                        "Customer records contain _id field (should be excluded)")
+                    else:
+                        self.log_test("Ride Deck - Customers No _id Field", True, 
+                                    "No customer data to validate _id exclusion")
+                        success_count += 1
+                else:
+                    self.log_test("Ride Deck - GET Customers Default", False, 
+                                f"Response missing required fields: {missing_fields}")
+            except json.JSONDecodeError:
+                self.log_test("Ride Deck - GET Customers Default", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Ride Deck - GET Customers Default", False, error_msg, 
+                        response.text if response else None)
+        
+        # Test with different pagination parameters
+        test_cases = [
+            {"limit": 10, "skip": 0},
+            {"limit": 50, "skip": 0},
+            {"limit": 100, "skip": 0}
+        ]
+        
+        for i, params in enumerate(test_cases, 1):
+            response = self.make_request("GET", f"/ride-deck/customers?limit={params['limit']}&skip={params['skip']}")
+            
+            if response is not None and response.status_code == 200:
+                try:
+                    data = response.json()
+                    if "success" in data and data["success"]:
+                        returned_limit = data.get("limit", 0)
+                        returned_skip = data.get("skip", 0)
+                        
+                        if returned_limit == params["limit"] and returned_skip == params["skip"]:
+                            self.log_test(f"Ride Deck - GET Customers Pagination {i}", True, 
+                                        f"Pagination working: limit={returned_limit}, skip={returned_skip}")
+                            success_count += 1
+                        else:
+                            self.log_test(f"Ride Deck - GET Customers Pagination {i}", False, 
+                                        f"Pagination mismatch: expected limit={params['limit']}, skip={params['skip']}, got limit={returned_limit}, skip={returned_skip}")
+                    else:
+                        self.log_test(f"Ride Deck - GET Customers Pagination {i}", False, 
+                                    "Response missing success field or success=false")
+                except json.JSONDecodeError:
+                    self.log_test(f"Ride Deck - GET Customers Pagination {i}", False, 
+                                "Invalid JSON response")
+            else:
+                status = response.status_code if response else "Network error"
+                self.log_test(f"Ride Deck - GET Customers Pagination {i}", False, 
+                            f"Expected 200, got {status}")
+        
+        # Test authentication requirement
+        response = self.make_request("GET", "/ride-deck/customers", use_auth=False)
+        if response is not None and response.status_code == 403:
+            self.log_test("Ride Deck - GET Customers Auth Required", True, 
+                        "Correctly requires authentication (403 without token)")
+            success_count += 1
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("Ride Deck - GET Customers Auth Required", False, 
+                        f"Expected 403, got {status}")
+        
+        # Test 2: GET /api/ride-deck/rides with pagination
+        print("\n--- Testing GET /api/ride-deck/rides ---")
+        
+        # Test with default pagination
+        response = self.make_request("GET", "/ride-deck/rides")
+        
+        if response is not None and response.status_code == 200:
+            try:
+                data = response.json()
+                
+                # Check response structure
+                required_fields = ["success", "data", "total", "limit", "skip"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if not missing_fields:
+                    rides = data.get("data", [])
+                    total = data.get("total", 0)
+                    limit = data.get("limit", 0)
+                    skip = data.get("skip", 0)
+                    
+                    self.log_test("Ride Deck - GET Rides Default", True, 
+                                f"Retrieved {len(rides)} rides (total: {total}, limit: {limit}, skip: {skip})")
+                    success_count += 1
+                    
+                    # Verify no _id field in ride records
+                    if rides:
+                        has_id_field = any('_id' in ride for ride in rides)
+                        if not has_id_field:
+                            self.log_test("Ride Deck - Rides No _id Field", True, 
+                                        "Ride records correctly exclude _id field")
+                            success_count += 1
+                        else:
+                            self.log_test("Ride Deck - Rides No _id Field", False, 
+                                        "Ride records contain _id field (should be excluded)")
+                        
+                        # Check for computed fields in ride data
+                        sample_ride = rides[0]
+                        computed_fields = ["pickupLocality", "dropLocality"]
+                        found_computed = [field for field in computed_fields if field in sample_ride]
+                        
+                        if found_computed:
+                            self.log_test("Ride Deck - Rides Computed Fields", True, 
+                                        f"Ride records contain computed fields: {found_computed}")
+                            success_count += 1
+                        else:
+                            self.log_test("Ride Deck - Rides Computed Fields", False, 
+                                        f"Ride records missing expected computed fields: {computed_fields}")
+                    else:
+                        self.log_test("Ride Deck - Rides No _id Field", True, 
+                                    "No ride data to validate _id exclusion")
+                        self.log_test("Ride Deck - Rides Computed Fields", True, 
+                                    "No ride data to validate computed fields")
+                        success_count += 2
+                else:
+                    self.log_test("Ride Deck - GET Rides Default", False, 
+                                f"Response missing required fields: {missing_fields}")
+            except json.JSONDecodeError:
+                self.log_test("Ride Deck - GET Rides Default", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Ride Deck - GET Rides Default", False, error_msg, 
+                        response.text if response else None)
+        
+        # Test authentication requirement for rides
+        response = self.make_request("GET", "/ride-deck/rides", use_auth=False)
+        if response is not None and response.status_code == 403:
+            self.log_test("Ride Deck - GET Rides Auth Required", True, 
+                        "Correctly requires authentication (403 without token)")
+            success_count += 1
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("Ride Deck - GET Rides Auth Required", False, 
+                        f"Expected 403, got {status}")
+        
+        # Test 3: GET /api/ride-deck/export-customers (Excel export)
+        print("\n--- Testing GET /api/ride-deck/export-customers ---")
+        
+        response = self.make_request("GET", "/ride-deck/export-customers")
+        
+        if response is not None:
+            if response.status_code == 200:
+                # Check content-type header
+                content_type = response.headers.get('content-type', '')
+                expected_content_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                
+                if expected_content_type in content_type:
+                    self.log_test("Ride Deck - Export Customers Content-Type", True, 
+                                f"Correct content-type: {content_type}")
+                    success_count += 1
+                else:
+                    self.log_test("Ride Deck - Export Customers Content-Type", False, 
+                                f"Incorrect content-type: {content_type}, expected: {expected_content_type}")
+                
+                # Check content-disposition header
+                content_disposition = response.headers.get('content-disposition', '')
+                if 'attachment' in content_disposition and 'filename=' in content_disposition:
+                    self.log_test("Ride Deck - Export Customers Headers", True, 
+                                f"Correct content-disposition: {content_disposition}")
+                    success_count += 1
+                else:
+                    self.log_test("Ride Deck - Export Customers Headers", False, 
+                                f"Incorrect content-disposition: {content_disposition}")
+                
+                # Check file size (should be > 0 if data exists)
+                content_length = len(response.content)
+                if content_length > 0:
+                    self.log_test("Ride Deck - Export Customers File Size", True, 
+                                f"Excel file generated successfully ({content_length} bytes)")
+                    success_count += 1
+                else:
+                    self.log_test("Ride Deck - Export Customers File Size", False, 
+                                "Excel file is empty (0 bytes)")
+                    
+            elif response.status_code == 404:
+                self.log_test("Ride Deck - Export Customers No Data", True, 
+                            "Correctly returns 404 when no customer data exists")
+                success_count += 1
+            else:
+                self.log_test("Ride Deck - Export Customers", False, 
+                            f"Unexpected status code: {response.status_code}")
+        else:
+            self.log_test("Ride Deck - Export Customers", False, "Network error")
+        
+        # Test authentication requirement for export customers
+        response = self.make_request("GET", "/ride-deck/export-customers", use_auth=False)
+        if response is not None and response.status_code == 403:
+            self.log_test("Ride Deck - Export Customers Auth Required", True, 
+                        "Correctly requires authentication (403 without token)")
+            success_count += 1
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("Ride Deck - Export Customers Auth Required", False, 
+                        f"Expected 403, got {status}")
+        
+        # Test 4: GET /api/ride-deck/export-rides (Excel export)
+        print("\n--- Testing GET /api/ride-deck/export-rides ---")
+        
+        response = self.make_request("GET", "/ride-deck/export-rides")
+        
+        if response is not None:
+            if response.status_code == 200:
+                # Check content-type header
+                content_type = response.headers.get('content-type', '')
+                expected_content_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                
+                if expected_content_type in content_type:
+                    self.log_test("Ride Deck - Export Rides Content-Type", True, 
+                                f"Correct content-type: {content_type}")
+                    success_count += 1
+                else:
+                    self.log_test("Ride Deck - Export Rides Content-Type", False, 
+                                f"Incorrect content-type: {content_type}, expected: {expected_content_type}")
+                
+                # Check content-disposition header
+                content_disposition = response.headers.get('content-disposition', '')
+                if 'attachment' in content_disposition and 'filename=' in content_disposition:
+                    self.log_test("Ride Deck - Export Rides Headers", True, 
+                                f"Correct content-disposition: {content_disposition}")
+                    success_count += 1
+                else:
+                    self.log_test("Ride Deck - Export Rides Headers", False, 
+                                f"Incorrect content-disposition: {content_disposition}")
+                
+                # Check file size
+                content_length = len(response.content)
+                if content_length > 0:
+                    self.log_test("Ride Deck - Export Rides File Size", True, 
+                                f"Excel file generated successfully ({content_length} bytes)")
+                    success_count += 1
+                else:
+                    self.log_test("Ride Deck - Export Rides File Size", False, 
+                                "Excel file is empty (0 bytes)")
+                    
+            elif response.status_code == 404:
+                self.log_test("Ride Deck - Export Rides No Data", True, 
+                            "Correctly returns 404 when no ride data exists")
+                success_count += 1
+            else:
+                self.log_test("Ride Deck - Export Rides", False, 
+                            f"Unexpected status code: {response.status_code}")
+        else:
+            self.log_test("Ride Deck - Export Rides", False, "Network error")
+        
+        # Test authentication requirement for export rides
+        response = self.make_request("GET", "/ride-deck/export-rides", use_auth=False)
+        if response is not None and response.status_code == 403:
+            self.log_test("Ride Deck - Export Rides Auth Required", True, 
+                        "Correctly requires authentication (403 without token)")
+            success_count += 1
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("Ride Deck - Export Rides Auth Required", False, 
+                        f"Expected 403, got {status}")
+        
+        # Test 5: DELETE /api/ride-deck/delete-customers (Master Admin Only)
+        print("\n--- Testing DELETE /api/ride-deck/delete-customers ---")
+        
+        # First, test with master admin token (should succeed or fail due to role bug)
+        response = self.make_request("DELETE", "/ride-deck/delete-customers")
+        
+        if response is not None:
+            if response.status_code == 200:
+                try:
+                    data = response.json()
+                    required_fields = ["success", "message", "deleted_count"]
+                    missing_fields = [field for field in required_fields if field not in data]
+                    
+                    if not missing_fields:
+                        deleted_count = data.get("deleted_count", 0)
+                        success_status = data.get("success", False)
+                        
+                        if success_status:
+                            self.log_test("Ride Deck - DELETE Customers Master Admin", True, 
+                                        f"Master admin successfully deleted {deleted_count} customer records")
+                            success_count += 1
+                        else:
+                            self.log_test("Ride Deck - DELETE Customers Master Admin", False, 
+                                        f"Delete operation failed: success={success_status}")
+                    else:
+                        self.log_test("Ride Deck - DELETE Customers Master Admin", False, 
+                                    f"Response missing required fields: {missing_fields}")
+                except json.JSONDecodeError:
+                    self.log_test("Ride Deck - DELETE Customers Master Admin", False, 
+                                "Invalid JSON response", response.text)
+            elif response.status_code == 403:
+                # This might happen due to the role checking bug (current_user.role vs current_user.account_type)
+                self.log_test("Ride Deck - DELETE Customers Role Bug", False, 
+                            "Master admin access denied (403) - BUG: endpoint uses current_user.role instead of current_user.account_type")
+            else:
+                self.log_test("Ride Deck - DELETE Customers Master Admin", False, 
+                            f"Unexpected status code: {response.status_code}")
+        else:
+            self.log_test("Ride Deck - DELETE Customers Master Admin", False, "Network error")
+        
+        # Test authentication requirement
+        response = self.make_request("DELETE", "/ride-deck/delete-customers", use_auth=False)
+        if response is not None and response.status_code == 403:
+            self.log_test("Ride Deck - DELETE Customers Auth Required", True, 
+                        "Correctly requires authentication (403 without token)")
+            success_count += 1
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("Ride Deck - DELETE Customers Auth Required", False, 
+                        f"Expected 403, got {status}")
+        
+        # Test 6: DELETE /api/ride-deck/delete-rides (Master Admin Only)
+        print("\n--- Testing DELETE /api/ride-deck/delete-rides ---")
+        
+        # Test with master admin token (should succeed or fail due to role bug)
+        response = self.make_request("DELETE", "/ride-deck/delete-rides")
+        
+        if response is not None:
+            if response.status_code == 200:
+                try:
+                    data = response.json()
+                    required_fields = ["success", "message", "deleted_count"]
+                    missing_fields = [field for field in required_fields if field not in data]
+                    
+                    if not missing_fields:
+                        deleted_count = data.get("deleted_count", 0)
+                        success_status = data.get("success", False)
+                        
+                        if success_status:
+                            self.log_test("Ride Deck - DELETE Rides Master Admin", True, 
+                                        f"Master admin successfully deleted {deleted_count} ride records")
+                            success_count += 1
+                        else:
+                            self.log_test("Ride Deck - DELETE Rides Master Admin", False, 
+                                        f"Delete operation failed: success={success_status}")
+                    else:
+                        self.log_test("Ride Deck - DELETE Rides Master Admin", False, 
+                                    f"Response missing required fields: {missing_fields}")
+                except json.JSONDecodeError:
+                    self.log_test("Ride Deck - DELETE Rides Master Admin", False, 
+                                "Invalid JSON response", response.text)
+            elif response.status_code == 403:
+                # This might happen due to the role checking bug (current_user.role vs current_user.account_type)
+                self.log_test("Ride Deck - DELETE Rides Role Bug", False, 
+                            "Master admin access denied (403) - BUG: endpoint uses current_user.role instead of current_user.account_type")
+            else:
+                self.log_test("Ride Deck - DELETE Rides Master Admin", False, 
+                            f"Unexpected status code: {response.status_code}")
+        else:
+            self.log_test("Ride Deck - DELETE Rides Master Admin", False, "Network error")
+        
+        # Test authentication requirement
+        response = self.make_request("DELETE", "/ride-deck/delete-rides", use_auth=False)
+        if response is not None and response.status_code == 403:
+            self.log_test("Ride Deck - DELETE Rides Auth Required", True, 
+                        "Correctly requires authentication (403 without token)")
+            success_count += 1
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("Ride Deck - DELETE Rides Auth Required", False, 
+                        f"Expected 403, got {status}")
+        
+        return success_count >= 10  # At least 10 out of ~20 tests should pass
     def run_all_tests(self):
         """Run all backend tests"""
         print("🚀 Starting Comprehensive Testing - Driver Onboarding Two-Way Sync with ID-Based Reconciliation")
