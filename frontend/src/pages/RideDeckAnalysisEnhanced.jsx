@@ -780,6 +780,99 @@ const RideDeckAnalysisEnhanced = () => {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* View Data Dialog */}
+      <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+        <DialogContent className="dark:bg-gray-800 max-w-6xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="dark:text-white">
+              {viewDataType === 'customers' ? 'Customer Data' : 'Ride Data'}
+            </DialogTitle>
+            <DialogDescription className="dark:text-gray-400">
+              Viewing first 100 records
+            </DialogDescription>
+          </DialogHeader>
+          
+          {loadingViewData ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+            </div>
+          ) : viewData.length === 0 ? (
+            <p className="text-center text-gray-500 py-8">No data available</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm border-collapse">
+                <thead>
+                  <tr className="border-b border-gray-200 dark:border-gray-700">
+                    {Object.keys(viewData[0] || {}).map((key) => (
+                      <th key={key} className="px-3 py-2 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/50">
+                        {key}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {viewData.map((row, idx) => (
+                    <tr key={idx} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                      {Object.values(row).map((value, vidx) => (
+                        <td key={vidx} className="px-3 py-2 text-xs text-gray-600 dark:text-gray-400">
+                          {value !== null && value !== undefined ? String(value) : '-'}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="dark:bg-gray-800">
+          <DialogHeader>
+            <DialogTitle className="dark:text-white">Confirm Delete</DialogTitle>
+            <DialogDescription className="dark:text-gray-400">
+              Are you sure you want to delete all {deleteDataType} data? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <Alert variant="destructive" className="my-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              <strong>Warning:</strong> This will permanently delete all {deleteDataType} records from the database.
+            </AlertDescription>
+          </Alert>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+              disabled={deleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteData}
+              disabled={deleting}
+            >
+              {deleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete All {deleteDataType}
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
