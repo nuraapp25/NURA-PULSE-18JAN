@@ -5874,7 +5874,7 @@ async def import_rides(
         
         # Build historical pickup data for each customer (for most common pickup point calculation)
         customer_pickup_history = {}
-        all_rides = rides_collection.find({}, {'customerId': 1, 'pickupLat': 1, 'pickupLong': 1})
+        all_rides = await rides_collection.find({}, {'customerId': 1, 'pickupLat': 1, 'pickupLong': 1}).to_list(None)
         for ride in all_rides:
             customer_id = ride.get('customerId')
             pickup_lat = ride.get('pickupLat')
