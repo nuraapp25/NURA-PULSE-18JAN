@@ -141,6 +141,8 @@ function App() {
                 <Route path="ride-deck-analysis" element={<RideDeckAnalysis />} />
                 <Route path="rca-management" element={<RCAManagement />} />
                 <Route path="analytics-dashboards" element={<AnalyticsDashboards />} />
+                <Route path="app-settings" element={<AppSettings />} />
+                <Route path="user-activity" element={<UserActivityAnalytics />} />
                 <Route path="admin/analytics" element={<Analytics />} />
                 <Route path="admin/files" element={<Files />} />
                 <Route path="admin/payment-screenshots" element={<PaymentScreenshots />} />
