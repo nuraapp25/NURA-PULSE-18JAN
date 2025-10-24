@@ -65,6 +65,7 @@ const Dashboard = () => {
     { name: "Hotspot Planning", icon: MapPin, path: "/dashboard/hotspot-planning", roles: ["master_admin", "admin", "standard"] },
     { name: "QR Code Manager", icon: QrCode, path: "/dashboard/qr-codes", roles: ["master_admin"] },
     { name: "Ride Deck Data Analysis", icon: Navigation, path: "/dashboard/ride-deck-analysis", roles: ["master_admin", "admin", "standard"] },
+    { name: "RCA Management", icon: ClipboardList, path: "/dashboard/rca-management", roles: ["master_admin", "admin"] },
   ];
 
   const apps = allApps.filter(app => 
