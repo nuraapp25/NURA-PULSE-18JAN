@@ -6029,7 +6029,7 @@ async def import_rides(
                 }
                 
                 # Insert into database
-                rides_collection.insert_one(ride_data)
+                await rides_collection.insert_one(ride_data)
                 new_records += 1
                 existing_ids.add(ride_id)
                 
