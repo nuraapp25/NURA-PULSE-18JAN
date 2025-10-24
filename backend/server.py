@@ -5727,7 +5727,7 @@ async def import_customers(
         
         # Get existing customer IDs
         existing_ids = set()
-        existing_customers = customers_collection.find({}, {'id': 1})
+        existing_customers = await customers_collection.find({}, {'id': 1}).to_list(None)
         for customer in existing_customers:
             existing_ids.add(str(customer['id']))
         
