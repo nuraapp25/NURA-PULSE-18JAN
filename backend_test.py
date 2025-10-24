@@ -3995,6 +3995,7 @@ class NuraPulseBackendTester:
                         "Google Maps API may not be configured (ride import failed)")
         
         return success_count >= 6  # At least 6 out of 9 tests should pass
+
     def run_all_tests(self):
         """Run all backend tests"""
         print("🚀 Starting Comprehensive Testing - Driver Onboarding Two-Way Sync with ID-Based Reconciliation")
