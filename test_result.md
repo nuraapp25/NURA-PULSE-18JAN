@@ -716,6 +716,18 @@ frontend:
           agent: "testing"
           comment: "❌ RIDE DECK DATA MANAGEMENT ENDPOINTS TESTING COMPLETE: Tested all 6 new data management endpoints with mixed results. SUCCESS: 1) GET /api/ride-deck/customers - Working correctly with pagination (limit=100, skip=0), retrieved 389 customers, proper response structure (success, data, total, limit, skip), correctly excludes _id field, authentication required (403 without token). 2) GET /api/ride-deck/rides - Working correctly with pagination, retrieved 790 rides, proper response structure, excludes _id field, contains computed fields (pickupLocality, dropLocality), authentication required. CRITICAL ISSUES: 3) GET /api/ride-deck/export-customers - Returns 500 error due to missing imports (StreamingResponse, pandas, io not imported at top level). 4) GET /api/ride-deck/export-rides - Same 500 error, missing imports. 5) DELETE /api/ride-deck/delete-customers - Returns 500 error due to BUG: endpoint uses 'current_user.role' but User model has 'account_type' field (AttributeError: 'User' object has no attribute 'role'). 6) DELETE /api/ride-deck/delete-rides - Same role checking bug. Authentication working for all endpoints (403 without token). SUCCESS RATE: 50% (10/20 tests passed). FIXES NEEDED: Add missing imports at top level, change current_user.role to current_user.account_type in delete endpoints."
 
+  - task: "RCA Locality Fix and Stats Testing"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ RCA LOCALITY FIX AND STATS TESTING COMPLETE: Successfully tested all critical fixes as requested in review. SUCCESS RATE: 100% (12/12 tests passed). KEY FINDINGS: 1) STATS ENDPOINT FIX VERIFIED - GET /api/ride-deck/stats now returns correct rides_count: 790 (not 0), proper response structure with customers_count: 389, ride_status_distribution working correctly. Duplicate endpoint issue resolved. 2) LOCALITY FORMATS DOCUMENTED - Before fix: rides showed duplicate localities like 'Old Tirumangalam, Anna Nagar' and 'Pallavan Nagar, Koyambedu'. 3) FIX-LOCALITIES ENDPOINT WORKING - POST /api/ride-deck/fix-localities successfully processed 777/790 rides, Master Admin role restriction enforced (403 for non-master-admin), proper response format with success, message, total_rides, updated_count. 4) LOCALITY FIX VERIFICATION - After fix: localities now show single names - Pickup: 'Anna Nagar', Drop: 'Koyambedu'. Before/after comparison confirmed: 'Old Tirumangalam, Anna Nagar' → 'Anna Nagar'. 5) DRIVER NOT FOUND RIDES ALSO FIXED - GET /api/ride-deck/rca/driver-not-found shows 106 rides with fixed localities (single names without duplication). 6) AUTHENTICATION VERIFIED - All endpoints properly require Bearer token. The locality extraction fix successfully removes duplicate locality patterns and shows clean single locality names as requested. All RCA endpoints operational and ready for production use."
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
