@@ -6103,6 +6103,168 @@ async def get_ride_deck_progress(
     }
 
 
+# ==================== RCA (Root Cause Analysis) Management ====================
+
+@api_router.get("/ride-deck/rca/cancelled")
+async def get_cancelled_rides_for_rca(
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get cancelled rides where statusReason is empty for RCA analysis
+    """
+    try:
+        rides_collection = db['rides']
+        customers_collection = db['customers']
+        
+        # Find cancelled rides with empty statusReason
+        query = {
+            "rideStatus": "CANCELLED",
+            "$or": [
+                {"statusReason": {"$exists": False}},
+                {"statusReason": None},
+                {"statusReason": ""}
+            ]
+        }
+        
+        cancelled_rides = await rides_collection.find(query).to_list(None)
+        
+        # Enrich with customer names
+        result = []
+        for ride in cancelled_rides:
+            customer_id = ride.get('customerId')
+            customer_name = None
+            
+            if customer_id:
+                customer = await customers_collection.find_one({'id': str(customer_id)})
+                if customer:
+                    customer_name = customer.get('name')
+            
+            result.append({
+                'id': ride.get('id'),
+                'customerId': ride.get('customerId'),
+                'customerName': customer_name or 'N/A',
+                'rideStartTime': ride.get('rideStartTime'),
+                'pickupLocality': ride.get('pickupLocality', 'N/A'),
+                'dropLocality': ride.get('dropLocality', 'N/A'),
+                'statusReason': ride.get('statusReason', ''),
+                'statusDetail': ride.get('statusDetail', '')
+            })
+        
+        return {
+            "success": True,
+            "count": len(result),
+            "rides": result
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to fetch cancelled rides: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch cancelled rides: {str(e)}")
+
+
+@api_router.get("/ride-deck/rca/driver-not-found")
+async def get_driver_not_found_rides_for_rca(
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get driver not found rides where statusReason is empty for RCA analysis
+    """
+    try:
+        rides_collection = db['rides']
+        customers_collection = db['customers']
+        
+        # Find driver_not_found rides with empty statusReason
+        query = {
+            "rideStatus": "DRIVER_NOT_FOUND",
+            "$or": [
+                {"statusReason": {"$exists": False}},
+                {"statusReason": None},
+                {"statusReason": ""}
+            ]
+        }
+        
+        dnf_rides = await rides_collection.find(query).to_list(None)
+        
+        # Enrich with customer names
+        result = []
+        for ride in dnf_rides:
+            customer_id = ride.get('customerId')
+            customer_name = None
+            
+            if customer_id:
+                customer = await customers_collection.find_one({'id': str(customer_id)})
+                if customer:
+                    customer_name = customer.get('name')
+            
+            result.append({
+                'id': ride.get('id'),
+                'customerId': ride.get('customerId'),
+                'customerName': customer_name or 'N/A',
+                'rideStartTime': ride.get('rideStartTime'),
+                'pickupLocality': ride.get('pickupLocality', 'N/A'),
+                'dropLocality': ride.get('dropLocality', 'N/A'),
+                'statusReason': ride.get('statusReason', ''),
+                'statusDetail': ride.get('statusDetail', '')
+            })
+        
+        return {
+            "success": True,
+            "count": len(result),
+            "rides": result
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to fetch driver not found rides: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch driver not found rides: {str(e)}")
+
+
+@api_router.put("/ride-deck/rca/update/{ride_id}")
+async def update_ride_rca(
+    ride_id: str,
+    statusReason: str,
+    statusDetail: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Update statusReason and statusDetail for a ride
+    """
+    try:
+        rides_collection = db['rides']
+        
+        # Find the ride
+        ride = await rides_collection.find_one({'id': ride_id})
+        if not ride:
+            raise HTTPException(status_code=404, detail="Ride not found")
+        
+        # Prepare update data
+        update_data = {
+            "statusReason": statusReason,
+            "statusDetail": statusDetail or "",
+            "updatedBy": current_user.email,
+            "updatedAt": datetime.now(timezone.utc).isoformat()
+        }
+        
+        # Update the ride
+        result = await rides_collection.update_one(
+            {'id': ride_id},
+            {'$set': update_data}
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=400, detail="Failed to update ride")
+        
+        return {
+            "success": True,
+            "message": "Ride RCA updated successfully",
+            "ride_id": ride_id
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to update ride RCA: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to update ride RCA: {str(e)}")
+
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
