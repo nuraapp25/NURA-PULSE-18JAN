@@ -837,13 +837,13 @@ const RideDeckAnalysisEnhanced = () => {
 
       {/* View Data Dialog */}
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
-        <DialogContent className="dark:bg-gray-800 max-w-6xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="dark:bg-gray-800 max-w-6xl max-h-[80vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle className="dark:text-white">
               {viewDataType === 'customers' ? 'Customer Data' : 'Ride Data'}
             </DialogTitle>
             <DialogDescription className="dark:text-gray-400">
-              Viewing first 100 records
+              Showing {((currentPage - 1) * pageSize) + 1} - {Math.min(currentPage * pageSize, totalRecords)} of {totalRecords} records
             </DialogDescription>
           </DialogHeader>
           
@@ -854,30 +854,104 @@ const RideDeckAnalysisEnhanced = () => {
           ) : viewData.length === 0 ? (
             <p className="text-center text-gray-500 py-8">No data available</p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm border-collapse">
-                <thead>
-                  <tr className="border-b border-gray-200 dark:border-gray-700">
-                    {Object.keys(viewData[0] || {}).map((key) => (
-                      <th key={key} className="px-3 py-2 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/50">
-                        {key}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {viewData.map((row, idx) => (
-                    <tr key={idx} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/30">
-                      {Object.values(row).map((value, vidx) => (
-                        <td key={vidx} className="px-3 py-2 text-xs text-gray-600 dark:text-gray-400">
-                          {value !== null && value !== undefined ? String(value) : '-'}
-                        </td>
+            <>
+              <div className="overflow-x-auto flex-1">
+                <table className="w-full text-sm border-collapse">
+                  <thead className="sticky top-0 bg-gray-50 dark:bg-gray-700">
+                    <tr className="border-b border-gray-200 dark:border-gray-700">
+                      {Object.keys(viewData[0] || {}).map((key) => (
+                        <th key={key} className="px-3 py-2 text-left text-xs font-semibold text-gray-700 dark:text-gray-300">
+                          {key}
+                        </th>
                       ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {viewData.map((row, idx) => (
+                      <tr key={idx} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                        {Object.values(row).map((value, vidx) => (
+                          <td key={vidx} className="px-3 py-2 text-xs text-gray-600 dark:text-gray-400">
+                            {value !== null && value !== undefined ? String(value) : '-'}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center gap-2">
+                    {/* First Page */}
+                    <Button
+                      onClick={() => handlePageChange(1)}
+                      disabled={currentPage === 1}
+                      variant="outline"
+                      size="sm"
+                      className="dark:border-gray-600"
+                    >
+                      First
+                    </Button>
+                    
+                    {/* Previous Page */}
+                    <Button
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      variant="outline"
+                      size="sm"
+                      className="dark:border-gray-600"
+                    >
+                      Previous
+                    </Button>
+                  </div>
+
+                  {/* Page Numbers */}
+                  <div className="flex items-center gap-1">
+                    {getPageNumbers().map((page, idx) => (
+                      page === '...' ? (
+                        <span key={`ellipsis-${idx}`} className="px-2 text-gray-500">...</span>
+                      ) : (
+                        <Button
+                          key={page}
+                          onClick={() => handlePageChange(page)}
+                          variant={currentPage === page ? "default" : "outline"}
+                          size="sm"
+                          className={`w-10 ${currentPage === page ? 'bg-blue-600 text-white' : 'dark:border-gray-600'}`}
+                        >
+                          {page}
+                        </Button>
+                      )
+                    ))}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {/* Next Page */}
+                    <Button
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      variant="outline"
+                      size="sm"
+                      className="dark:border-gray-600"
+                    >
+                      Next
+                    </Button>
+                    
+                    {/* Last Page */}
+                    <Button
+                      onClick={() => handlePageChange(totalPages)}
+                      disabled={currentPage === totalPages}
+                      variant="outline"
+                      size="sm"
+                      className="dark:border-gray-600"
+                    >
+                      Last
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </DialogContent>
       </Dialog>
