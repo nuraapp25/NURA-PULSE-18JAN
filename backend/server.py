@@ -6316,6 +6316,85 @@ async def delete_all_rides(
         raise HTTPException(status_code=500, detail=f"Failed to delete rides: {str(e)}")
 
 
+@api_router.post("/ride-deck/fix-localities")
+async def fix_ride_localities(
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Fix locality extraction for existing rides (Master Admin only)
+    Re-processes pickupLocality and dropLocality for all rides with the updated extraction logic
+    """
+    if current_user.account_type != "master_admin":
+        raise HTTPException(status_code=403, detail="Only Master Admins can fix localities")
+    
+    try:
+        rides_collection = db['rides']
+        
+        # Helper function to extract locality (same as in import)
+        def extract_locality(address):
+            """
+            Extract locality name from full address.
+            Example: "Pattalam, Choolai for 5/3, Jai Nagar, Pattalam, Choolai, Chennai, Tamil Nadu 600012, India"
+            Should return: "Choolai" (the last part before ", Chennai")
+            """
+            if not address:
+                return None
+            
+            address_str = str(address)
+            parts = [p.strip() for p in address_str.split(',')]
+            
+            # Find the locality (the part immediately before Chennai)
+            for i, part in enumerate(parts):
+                if 'Chennai' in part or 'chennai' in part:
+                    # Get the previous part (locality) - just the immediate previous one
+                    if i > 0:
+                        return parts[i-1]
+                    return None
+            
+            # If Chennai not found, return the last part that's not a state/country/postal code
+            for part in reversed(parts):
+                if part and not any(word in part.lower() for word in ['india', 'tamil nadu', 'tamilnadu']) and not part.strip().isdigit():
+                    return part
+            
+            return None
+        
+        # Fetch all rides
+        rides = await rides_collection.find({}).to_list(None)
+        
+        updated_count = 0
+        for ride in rides:
+            pickup_point = ride.get('pickupPoint')
+            drop_point = ride.get('dropPoint')
+            
+            if pickup_point or drop_point:
+                new_pickup_locality = extract_locality(pickup_point)
+                new_drop_locality = extract_locality(drop_point)
+                
+                # Update if different
+                if (new_pickup_locality != ride.get('pickupLocality') or 
+                    new_drop_locality != ride.get('dropLocality')):
+                    
+                    await rides_collection.update_one(
+                        {'id': ride['id']},
+                        {'$set': {
+                            'pickupLocality': new_pickup_locality,
+                            'dropLocality': new_drop_locality
+                        }}
+                    )
+                    updated_count += 1
+        
+        return {
+            "success": True,
+            "message": f"Successfully re-processed localities for {updated_count} rides",
+            "total_rides": len(rides),
+            "updated_count": updated_count
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to fix localities: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fix localities: {str(e)}")
+
+
 # ==================== ANALYTICS DASHBOARDS - PIVOT TABLES ====================
 
 from datetime import datetime, timedelta, timezone as dt_timezone
