@@ -756,7 +756,15 @@ const PaymentReconciliation = () => {
     return (
       <div className="space-y-6" data-testid="payment-reconciliation-page">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Payment Data Extractor</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            Payment Data Extractor
+            <span className="ml-3 px-3 py-1 text-xs font-semibold bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded-full">
+              ⚡ TURBO MODE
+            </span>
+          </h1>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Now with GPT-4o-mini • 3x faster processing • All 10 files processed simultaneously
+          </p>
         </div>
 
         {/* Existing Folders - Grid View */}
