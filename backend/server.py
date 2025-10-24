@@ -2090,7 +2090,7 @@ async def get_share_link(file_id: str, current_user: User = Depends(get_current_
             raise HTTPException(status_code=404, detail="File not found")
         
         # Get backend URL from environment
-        backend_url = os.environ.get('BACKEND_URL', 'https://nura-pulse-dash.preview.emergentagent.com')
+        backend_url = os.environ.get('BACKEND_URL', 'https://driverhub-9.preview.emergentagent.com')
         
         share_link = f"{backend_url}/api/admin/files/{file_id}/download"
         
@@ -4868,7 +4868,7 @@ async def create_qr_code(
         unique_code = str(uuid.uuid4())[:8]
         
         # Get backend URL from environment
-        backend_url = os.environ.get('BACKEND_URL', 'https://nura-pulse-dash.preview.emergentagent.com/api')
+        backend_url = os.environ.get('BACKEND_URL', 'https://driverhub-9.preview.emergentagent.com/api')
         
         # Get destination URL for display purposes
         if qr_data.landing_page_type == 'single':
