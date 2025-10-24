@@ -833,12 +833,15 @@ const PaymentReconciliation = () => {
         </CardHeader>
         <CardContent>
           {!appEnabled ? (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                Upload functionality is currently disabled. Please contact your Master Admin for the new app link.
-              </AlertDescription>
-            </Alert>
+            <div className="bg-red-50 border-2 border-red-200 dark:bg-red-900/20 dark:border-red-800 rounded-lg p-6 text-center">
+              <AlertCircle className="h-12 w-12 text-red-600 dark:text-red-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-red-800 dark:text-red-300 mb-2">
+                Upload Functionality Disabled
+              </h3>
+              <p className="text-red-700 dark:text-red-400">
+                Please contact your Master Admin for the new app link.
+              </p>
+            </div>
           ) : (
             <>
               <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center">
