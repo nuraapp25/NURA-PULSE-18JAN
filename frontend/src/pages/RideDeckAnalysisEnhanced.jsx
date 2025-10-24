@@ -38,11 +38,17 @@ const RideDeckAnalysisEnhanced = () => {
   const [viewDataType, setViewDataType] = useState(null); // 'customers' or 'rides'
   const [viewData, setViewData] = useState([]);
   const [loadingViewData, setLoadingViewData] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [pageSize] = useState(100); // Records per page
   
   // Delete confirmation state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteDataType, setDeleteDataType] = useState(null);
   const [deleting, setDeleting] = useState(false);
+
+  // Calculate total pages
+  const totalPages = Math.ceil(totalRecords / pageSize);
 
   // Fetch stats on component mount
   useEffect(() => {
