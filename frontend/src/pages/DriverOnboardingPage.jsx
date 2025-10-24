@@ -1775,100 +1775,301 @@ const DriverOnboardingPage = () => {
 
               {/* Document Details Section */}
               <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Document Details</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-sm text-gray-600 dark:text-gray-400">DL No.</Label>
-                    {isEditMode ? (
-                      <Input
-                        value={editedLead.dl_no || ''}
-                        onChange={(e) => handleFieldChange('dl_no', e.target.value)}
-                        className="mt-1 dark:bg-gray-700 dark:border-gray-600"
-                        placeholder="Enter DL number"
-                      />
-                    ) : (
-                      <p className="text-base text-gray-900 dark:text-white mt-1">
-                        {selectedLead.dl_no || '-'}
-                      </p>
-                    )}
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Document Details with Upload & OCR</h3>
+                <div className="grid grid-cols-1 gap-6">
+                  {/* Driver License */}
+                  <div className="border-b border-blue-200 dark:border-blue-800 pb-4">
+                    <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">Driver License</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div className="md:col-span-2">
+                        {isEditMode ? (
+                          <Input
+                            value={editedLead.dl_no || ''}
+                            onChange={(e) => handleFieldChange('dl_no', e.target.value)}
+                            className="dark:bg-gray-700 dark:border-gray-600"
+                            placeholder="DL Number"
+                          />
+                        ) : (
+                          <p className="text-base text-gray-900 dark:text-white">
+                            {selectedLead.dl_no || 'Not provided'}
+                          </p>
+                        )}
+                      </div>
+                      {isEditMode && (
+                        <div className="flex gap-2">
+                          <label className="flex-1">
+                            <Input
+                              type="file"
+                              accept="image/*,.pdf"
+                              onChange={(e) => handleDocumentUpload('dl', e.target.files[0])}
+                              className="hidden"
+                              id="dl-upload"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="w-full"
+                              disabled={uploadingDoc === 'dl'}
+                              onClick={() => document.getElementById('dl-upload').click()}
+                            >
+                              {uploadingDoc === 'dl' ? 'Uploading...' : uploadedDocs.dl ? '✓ Uploaded' : 'Upload'}
+                            </Button>
+                          </label>
+                          {uploadedDocs.dl && (
+                            <Button
+                              type="button"
+                              variant="default"
+                              size="sm"
+                              onClick={() => handleDocumentScan('dl')}
+                              disabled={scanningDoc === 'dl'}
+                              className="bg-blue-600 hover:bg-blue-700"
+                            >
+                              {scanningDoc === 'dl' ? 'Scanning...' : 'Scan'}
+                            </Button>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
+                  {/* Aadhar Card */}
+                  <div className="border-b border-blue-200 dark:border-blue-800 pb-4">
+                    <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">Aadhar Card</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div className="md:col-span-2">
+                        {isEditMode ? (
+                          <Input
+                            value={editedLead.aadhar_card || ''}
+                            onChange={(e) => handleFieldChange('aadhar_card', e.target.value)}
+                            className="dark:bg-gray-700 dark:border-gray-600"
+                            placeholder="Aadhar Number"
+                          />
+                        ) : (
+                          <p className="text-base text-gray-900 dark:text-white">
+                            {selectedLead.aadhar_card || 'Not provided'}
+                          </p>
+                        )}
+                      </div>
+                      {isEditMode && (
+                        <div className="flex gap-2">
+                          <label className="flex-1">
+                            <Input
+                              type="file"
+                              accept="image/*,.pdf"
+                              onChange={(e) => handleDocumentUpload('aadhar', e.target.files[0])}
+                              className="hidden"
+                              id="aadhar-upload"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="w-full"
+                              disabled={uploadingDoc === 'aadhar'}
+                              onClick={() => document.getElementById('aadhar-upload').click()}
+                            >
+                              {uploadingDoc === 'aadhar' ? 'Uploading...' : uploadedDocs.aadhar ? '✓ Uploaded' : 'Upload'}
+                            </Button>
+                          </label>
+                          {uploadedDocs.aadhar && (
+                            <Button
+                              type="button"
+                              variant="default"
+                              size="sm"
+                              onClick={() => handleDocumentScan('aadhar')}
+                              disabled={scanningDoc === 'aadhar'}
+                              className="bg-blue-600 hover:bg-blue-700"
+                            >
+                              {scanningDoc === 'aadhar' ? 'Scanning...' : 'Scan'}
+                            </Button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* PAN Card */}
+                  <div className="border-b border-blue-200 dark:border-blue-800 pb-4">
+                    <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">PAN Card</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div className="md:col-span-2">
+                        {isEditMode ? (
+                          <Input
+                            value={editedLead.pan_card || ''}
+                            onChange={(e) => handleFieldChange('pan_card', e.target.value)}
+                            className="dark:bg-gray-700 dark:border-gray-600"
+                            placeholder="PAN Number"
+                          />
+                        ) : (
+                          <p className="text-base text-gray-900 dark:text-white">
+                            {selectedLead.pan_card || 'Not provided'}
+                          </p>
+                        )}
+                      </div>
+                      {isEditMode && (
+                        <div className="flex gap-2">
+                          <label className="flex-1">
+                            <Input
+                              type="file"
+                              accept="image/*,.pdf"
+                              onChange={(e) => handleDocumentUpload('pan', e.target.files[0])}
+                              className="hidden"
+                              id="pan-upload"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="w-full"
+                              disabled={uploadingDoc === 'pan'}
+                              onClick={() => document.getElementById('pan-upload').click()}
+                            >
+                              {uploadingDoc === 'pan' ? 'Uploading...' : uploadedDocs.pan ? '✓ Uploaded' : 'Upload'}
+                            </Button>
+                          </label>
+                          {uploadedDocs.pan && (
+                            <Button
+                              type="button"
+                              variant="default"
+                              size="sm"
+                              onClick={() => handleDocumentScan('pan')}
+                              disabled={scanningDoc === 'pan'}
+                              className="bg-blue-600 hover:bg-blue-700"
+                            >
+                              {scanningDoc === 'pan' ? 'Scanning...' : 'Scan'}
+                            </Button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Gas Bill */}
+                  <div className="border-b border-blue-200 dark:border-blue-800 pb-4">
+                    <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">Gas Bill</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div className="md:col-span-2">
+                        {isEditMode ? (
+                          <Input
+                            value={editedLead.gas_bill || ''}
+                            onChange={(e) => handleFieldChange('gas_bill', e.target.value)}
+                            className="dark:bg-gray-700 dark:border-gray-600"
+                            placeholder="Address from gas bill"
+                          />
+                        ) : (
+                          <p className="text-base text-gray-900 dark:text-white">
+                            {selectedLead.gas_bill || 'Not provided'}
+                          </p>
+                        )}
+                      </div>
+                      {isEditMode && (
+                        <div className="flex gap-2">
+                          <label className="flex-1">
+                            <Input
+                              type="file"
+                              accept="image/*,.pdf"
+                              onChange={(e) => handleDocumentUpload('gas_bill', e.target.files[0])}
+                              className="hidden"
+                              id="gas-bill-upload"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="w-full"
+                              disabled={uploadingDoc === 'gas_bill'}
+                              onClick={() => document.getElementById('gas-bill-upload').click()}
+                            >
+                              {uploadingDoc === 'gas_bill' ? 'Uploading...' : uploadedDocs.gas_bill ? '✓ Uploaded' : 'Upload'}
+                            </Button>
+                          </label>
+                          {uploadedDocs.gas_bill && (
+                            <Button
+                              type="button"
+                              variant="default"
+                              size="sm"
+                              onClick={() => handleDocumentScan('gas_bill')}
+                              disabled={scanningDoc === 'gas_bill'}
+                              className="bg-blue-600 hover:bg-blue-700"
+                            >
+                              {scanningDoc === 'gas_bill' ? 'Scanning...' : 'Scan'}
+                            </Button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Bank Passbook */}
                   <div>
-                    <Label className="text-sm text-gray-600 dark:text-gray-400">Badge No.</Label>
+                    <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">Bank Passbook</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div className="md:col-span-2">
+                        {isEditMode ? (
+                          <Input
+                            value={editedLead.bank_passbook || ''}
+                            onChange={(e) => handleFieldChange('bank_passbook', e.target.value)}
+                            className="dark:bg-gray-700 dark:border-gray-600"
+                            placeholder="Bank Account Number"
+                          />
+                        ) : (
+                          <p className="text-base text-gray-900 dark:text-white">
+                            {selectedLead.bank_passbook || 'Not provided'}
+                          </p>
+                        )}
+                      </div>
+                      {isEditMode && (
+                        <div className="flex gap-2">
+                          <label className="flex-1">
+                            <Input
+                              type="file"
+                              accept="image/*,.pdf"
+                              onChange={(e) => handleDocumentUpload('bank_passbook', e.target.files[0])}
+                              className="hidden"
+                              id="bank-passbook-upload"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="w-full"
+                              disabled={uploadingDoc === 'bank_passbook'}
+                              onClick={() => document.getElementById('bank-passbook-upload').click()}
+                            >
+                              {uploadingDoc === 'bank_passbook' ? 'Uploading...' : uploadedDocs.bank_passbook ? '✓ Uploaded' : 'Upload'}
+                            </Button>
+                          </label>
+                          {uploadedDocs.bank_passbook && (
+                            <Button
+                              type="button"
+                              variant="default"
+                              size="sm"
+                              onClick={() => handleDocumentScan('bank_passbook')}
+                              disabled={scanningDoc === 'bank_passbook'}
+                              className="bg-blue-600 hover:bg-blue-700"
+                            >
+                              {scanningDoc === 'bank_passbook' ? 'Scanning...' : 'Scan'}
+                            </Button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Badge Number (No upload needed) */}
+                  <div className="border-t border-blue-200 dark:border-blue-800 pt-4 mt-2">
+                    <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">Badge Number</Label>
                     {isEditMode ? (
                       <Input
                         value={editedLead.badge_no || ''}
                         onChange={(e) => handleFieldChange('badge_no', e.target.value)}
-                        className="mt-1 dark:bg-gray-700 dark:border-gray-600"
+                        className="dark:bg-gray-700 dark:border-gray-600"
                         placeholder="Enter badge number"
                       />
                     ) : (
-                      <p className="text-base text-gray-900 dark:text-white mt-1">
-                        {selectedLead.badge_no || '-'}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <Label className="text-sm text-gray-600 dark:text-gray-400">Aadhar Card</Label>
-                    {isEditMode ? (
-                      <Input
-                        value={editedLead.aadhar_card || ''}
-                        onChange={(e) => handleFieldChange('aadhar_card', e.target.value)}
-                        className="mt-1 dark:bg-gray-700 dark:border-gray-600"
-                        placeholder="Enter Aadhar card number"
-                      />
-                    ) : (
-                      <p className="text-base text-gray-900 dark:text-white mt-1">
-                        {selectedLead.aadhar_card || '-'}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <Label className="text-sm text-gray-600 dark:text-gray-400">Pan Card</Label>
-                    {isEditMode ? (
-                      <Input
-                        value={editedLead.pan_card || ''}
-                        onChange={(e) => handleFieldChange('pan_card', e.target.value)}
-                        className="mt-1 dark:bg-gray-700 dark:border-gray-600"
-                        placeholder="Enter PAN card number"
-                      />
-                    ) : (
-                      <p className="text-base text-gray-900 dark:text-white mt-1">
-                        {selectedLead.pan_card || '-'}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <Label className="text-sm text-gray-600 dark:text-gray-400">Gas Bill</Label>
-                    {isEditMode ? (
-                      <Input
-                        value={editedLead.gas_bill || ''}
-                        onChange={(e) => handleFieldChange('gas_bill', e.target.value)}
-                        className="mt-1 dark:bg-gray-700 dark:border-gray-600"
-                        placeholder="Gas bill number/status"
-                      />
-                    ) : (
-                      <p className="text-base text-gray-900 dark:text-white mt-1">
-                        {selectedLead.gas_bill || '-'}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <Label className="text-sm text-gray-600 dark:text-gray-400">Bank Passbook</Label>
-                    {isEditMode ? (
-                      <Input
-                        value={editedLead.bank_passbook || ''}
-                        onChange={(e) => handleFieldChange('bank_passbook', e.target.value)}
-                        className="mt-1 dark:bg-gray-700 dark:border-gray-600"
-                        placeholder="Bank passbook details"
-                      />
-                    ) : (
-                      <p className="text-base text-gray-900 dark:text-white mt-1">
-                        {selectedLead.bank_passbook || '-'}
+                      <p className="text-base text-gray-900 dark:text-white">
+                        {selectedLead.badge_no || 'Not provided'}
                       </p>
                     )}
                   </div>
