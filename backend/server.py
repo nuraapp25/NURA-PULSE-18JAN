@@ -3285,17 +3285,50 @@ async def process_payment_screenshots(
 Be precise and extract ALL rides shown in the screenshot. If a screenshot shows multiple rides (like a ride history list), extract each as a separate record.
 """
         
-        # Function to process a single file
+        # Function to process a single file with timeout and optimization
         async def process_single_file(file, index):
             """Process one file and return results"""
+            temp_path = None
             try:
-                logger.info(f"  📄 Processing file {index + 1}/{len(files)}: {file.filename}")
+                logger.info(f"  📄 Processing file {index + 1}/{len(files)}: {file.filename} (size: {file.size if hasattr(file, 'size') else 'unknown'})")
                 
                 # Read file content
                 file_content = await file.read()
                 
+                # Optimize image size before processing (compress large images)
+                from PIL import Image
+                import io
+                
+                try:
+                    # Open image
+                    image = Image.open(io.BytesIO(file_content))
+                    original_size = len(file_content)
+                    
+                    # Resize if too large (max width/height 2048px)
+                    max_dimension = 2048
+                    if max(image.size) > max_dimension:
+                        ratio = max_dimension / max(image.size)
+                        new_size = tuple(int(dim * ratio) for dim in image.size)
+                        image = image.resize(new_size, Image.Resampling.LANCZOS)
+                        logger.info(f"    🔄 Resized image from {image.size} to {new_size}")
+                    
+                    # Convert to RGB if necessary
+                    if image.mode not in ('RGB', 'RGBA'):
+                        image = image.convert('RGB')
+                    
+                    # Save optimized image to bytes
+                    img_byte_arr = io.BytesIO()
+                    image.save(img_byte_arr, format='JPEG', quality=85, optimize=True)
+                    file_content = img_byte_arr.getvalue()
+                    
+                    optimized_size = len(file_content)
+                    if optimized_size < original_size:
+                        logger.info(f"    💾 Optimized image: {original_size} → {optimized_size} bytes ({100 - (optimized_size * 100 // original_size)}% reduction)")
+                except Exception as e:
+                    logger.warning(f"    ⚠️ Image optimization failed, using original: {str(e)}")
+                
                 # Create temporary file
-                temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=f".{file.filename.split('.')[-1]}")
+                temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
                 temp_file.write(file_content)
                 temp_file.close()
                 temp_path = temp_file.name
@@ -3315,13 +3348,17 @@ Be precise and extract ALL rides shown in the screenshot. If a screenshot shows 
                     system_message="You are an expert at extracting ride payment details from screenshots. Extract ONLY visible data accurately."
                 ).with_model("openai", "gpt-4o")
                 
-                # Send to OpenAI GPT-4o Vision
+                # Send to OpenAI GPT-4o Vision with timeout
                 user_message = UserMessage(
                     text=extraction_prompt,
                     file_contents=[image_content]
                 )
                 
-                response = await chat.send_message(user_message)
+                # Wrap API call with timeout (90 seconds per image)
+                response = await asyncio.wait_for(
+                    chat.send_message(user_message),
+                    timeout=90.0
+                )
                 
                 # Parse JSON response
                 import json
@@ -3348,22 +3385,28 @@ Be precise and extract ALL rides shown in the screenshot. If a screenshot shows 
                     parsed_data["processed_at"] = datetime.now().isoformat()
                     results.append(parsed_data)
                 
-                # Cleanup temp file
-                try:
-                    if os.path.exists(temp_path):
-                        os.unlink(temp_path)
-                except:
-                    pass
-                
                 logger.info(f"  ✅ File {index + 1} processed: {len(results)} ride(s) extracted")
                 return {"success": True, "results": results, "filename": file.filename}
                 
+            except asyncio.TimeoutError:
+                logger.error(f"  ⏱️ TIMEOUT: File {index + 1} ({file.filename}) took >90 seconds to process")
+                return {"success": False, "error": "Processing timeout (>90 seconds)", "filename": file.filename}
             except Exception as e:
                 logger.error(f"  ❌ Error processing file {index + 1} ({file.filename}): {str(e)}")
+                import traceback
+                logger.error(traceback.format_exc())
                 return {"success": False, "error": str(e), "filename": file.filename}
+            finally:
+                # Cleanup temp file
+                if temp_path:
+                    try:
+                        if os.path.exists(temp_path):
+                            os.unlink(temp_path)
+                    except Exception as e:
+                        logger.warning(f"    ⚠️ Failed to cleanup temp file: {str(e)}")
         
-        # Process files in parallel (3 files at a time to avoid rate limits)
-        batch_size = 3
+        # Process files in parallel (5 files at a time for better speed)
+        batch_size = 5
         all_results = []
         errors = []
         
@@ -3380,7 +3423,9 @@ Be precise and extract ALL rides shown in the screenshot. If a screenshot shows 
             # Collect results
             for result in batch_results:
                 if isinstance(result, Exception):
-                    errors.append(str(result))
+                    error_msg = f"Unexpected error: {str(result)}"
+                    logger.error(f"  ❌ {error_msg}")
+                    errors.append(error_msg)
                 elif result["success"]:
                     all_results.extend(result["results"])
                 else:
@@ -3388,7 +3433,7 @@ Be precise and extract ALL rides shown in the screenshot. If a screenshot shows 
             
             # Small delay between batches to respect rate limits
             if i + batch_size < len(files):
-                await asyncio.sleep(0.5)
+                await asyncio.sleep(0.3)
         
         # Check if we got results
         if errors and not all_results:
