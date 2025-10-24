@@ -5839,7 +5839,7 @@ async def import_rides(
         
         # Get existing ride IDs
         existing_ids = set()
-        existing_rides = rides_collection.find({}, {'id': 1})
+        existing_rides = await rides_collection.find({}, {'id': 1}).to_list(None)
         for ride in existing_rides:
             existing_ids.add(str(ride['id']))
         
