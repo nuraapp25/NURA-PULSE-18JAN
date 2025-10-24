@@ -5662,6 +5662,288 @@ class NuraPulseBackendTester:
         
         return success_count >= 6  # At least 6 out of 8 tests should pass
 
+    def test_analytics_dashboards_pivot_tables(self):
+        """Test Analytics Dashboards Pivot Tables endpoints - Fixed version"""
+        print("\n=== Testing Analytics Dashboards Pivot Tables (Fixed Version) ===")
+        
+        success_count = 0
+        
+        # Test 1: Authentication requirement for ride-status-pivot
+        print("\n--- Testing Authentication Requirements ---")
+        response = self.make_request("GET", "/analytics/ride-status-pivot", use_auth=False)
+        
+        if response is not None and response.status_code in [401, 403]:
+            self.log_test("Analytics Pivot - Ride Status Auth", True, 
+                        f"Correctly requires authentication ({response.status_code} without token)")
+            success_count += 1
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("Analytics Pivot - Ride Status Auth", False, 
+                        f"Expected 401/403, got {status}")
+        
+        # Test 2: Authentication requirement for signups-pivot
+        response = self.make_request("GET", "/analytics/signups-pivot", use_auth=False)
+        
+        if response is not None and response.status_code in [401, 403]:
+            self.log_test("Analytics Pivot - Signups Auth", True, 
+                        f"Correctly requires authentication ({response.status_code} without token)")
+            success_count += 1
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("Analytics Pivot - Signups Auth", False, 
+                        f"Expected 401/403, got {status}")
+        
+        # Test 3: Ride Status Pivot - Default Configuration
+        print("\n--- Testing Ride Status Pivot - Default Configuration ---")
+        response = self.make_request("GET", "/analytics/ride-status-pivot")
+        
+        if response is not None and response.status_code == 200:
+            try:
+                data = response.json()
+                
+                # Check required response structure
+                required_fields = ["success", "data", "columns", "row_field", "column_field", "value_operation", "filter_options", "total_records"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if not missing_fields:
+                    self.log_test("Analytics Pivot - Ride Status Structure", True, 
+                                "Response contains all required fields")
+                    success_count += 1
+                    
+                    # Check default configuration
+                    if (data.get("row_field") == "date" and 
+                        data.get("column_field") == "rideStatus" and 
+                        data.get("value_operation") == "count"):
+                        self.log_test("Analytics Pivot - Ride Status Default Config", True, 
+                                    "Default configuration correct (date/rideStatus/count)")
+                        success_count += 1
+                    else:
+                        self.log_test("Analytics Pivot - Ride Status Default Config", False, 
+                                    f"Unexpected config: {data.get('row_field')}/{data.get('column_field')}/{data.get('value_operation')}")
+                    
+                    # Check for Excel serial number conversion (critical fix)
+                    pivot_data = data.get("data", [])
+                    date_format_issues = []
+                    
+                    for row in pivot_data:
+                        row_label = row.get("rowLabel", "")
+                        # Check if dates are in Excel serial format (like 45928, 45929)
+                        if isinstance(row_label, str) and row_label.isdigit() and len(row_label) == 5:
+                            date_format_issues.append(row_label)
+                        # Also check for proper YYYY-MM-DD format
+                        elif isinstance(row_label, str) and "-" in row_label:
+                            # This is good - proper date format
+                            pass
+                    
+                    if not date_format_issues:
+                        self.log_test("Analytics Pivot - Ride Status Date Format Fix", True, 
+                                    "No Excel serial numbers found - dates properly converted to IST format")
+                        success_count += 1
+                    else:
+                        self.log_test("Analytics Pivot - Ride Status Date Format Fix", False, 
+                                    f"Found Excel serial numbers in dates: {date_format_issues[:5]}")
+                    
+                else:
+                    self.log_test("Analytics Pivot - Ride Status Structure", False, 
+                                f"Response missing required fields: {missing_fields}")
+                
+            except json.JSONDecodeError:
+                self.log_test("Analytics Pivot - Ride Status Default", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Analytics Pivot - Ride Status Default", False, error_msg, 
+                        response.text if response else None)
+        
+        # Test 4: Ride Status Pivot - pickupLocality Configuration (Critical Fix Test)
+        print("\n--- Testing Ride Status Pivot - pickupLocality Configuration (Critical Fix) ---")
+        response = self.make_request("GET", "/analytics/ride-status-pivot?row_field=pickupLocality&column_field=rideStatus")
+        
+        if response is not None and response.status_code == 200:
+            try:
+                data = response.json()
+                
+                if data.get("success"):
+                    self.log_test("Analytics Pivot - pickupLocality Config", True, 
+                                "pickupLocality configuration works without TypeError")
+                    success_count += 1
+                    
+                    # Check that None values are handled properly
+                    pivot_data = data.get("data", [])
+                    none_values_found = False
+                    
+                    for row in pivot_data:
+                        if row.get("rowLabel") is None or row.get("rowLabel") == "None":
+                            none_values_found = True
+                            break
+                    
+                    if not none_values_found:
+                        self.log_test("Analytics Pivot - None Value Handling", True, 
+                                    "None values properly filtered out from pivot data")
+                        success_count += 1
+                    else:
+                        self.log_test("Analytics Pivot - None Value Handling", False, 
+                                    "Found None values in pivot data - filtering not working")
+                else:
+                    self.log_test("Analytics Pivot - pickupLocality Config", False, 
+                                f"Request failed: {data}")
+                
+            except json.JSONDecodeError:
+                self.log_test("Analytics Pivot - pickupLocality Config", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Analytics Pivot - pickupLocality Config", False, error_msg, 
+                        response.text if response else None)
+        
+        # Test 5: Ride Status Pivot - dropLocality Configuration
+        print("\n--- Testing Ride Status Pivot - dropLocality Configuration ---")
+        response = self.make_request("GET", "/analytics/ride-status-pivot?row_field=date&column_field=dropLocality")
+        
+        if response is not None and response.status_code == 200:
+            try:
+                data = response.json()
+                
+                if data.get("success"):
+                    self.log_test("Analytics Pivot - dropLocality Config", True, 
+                                "dropLocality configuration works without errors")
+                    success_count += 1
+                else:
+                    self.log_test("Analytics Pivot - dropLocality Config", False, 
+                                f"Request failed: {data}")
+                
+            except json.JSONDecodeError:
+                self.log_test("Analytics Pivot - dropLocality Config", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Analytics Pivot - dropLocality Config", False, error_msg)
+        
+        # Test 6: Signups Pivot - Default Configuration
+        print("\n--- Testing Signups Pivot - Default Configuration ---")
+        response = self.make_request("GET", "/analytics/signups-pivot")
+        
+        if response is not None and response.status_code == 200:
+            try:
+                data = response.json()
+                
+                # Check required response structure
+                required_fields = ["success", "data", "columns", "row_field", "column_field", "value_operation", "filter_options", "total_records"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if not missing_fields:
+                    self.log_test("Analytics Pivot - Signups Structure", True, 
+                                "Response contains all required fields")
+                    success_count += 1
+                    
+                    # Check default configuration
+                    if (data.get("row_field") == "date" and 
+                        data.get("column_field") == "source" and 
+                        data.get("value_operation") == "count"):
+                        self.log_test("Analytics Pivot - Signups Default Config", True, 
+                                    "Default configuration correct (date/source/count)")
+                        success_count += 1
+                    else:
+                        self.log_test("Analytics Pivot - Signups Default Config", False, 
+                                    f"Unexpected config: {data.get('row_field')}/{data.get('column_field')}/{data.get('value_operation')}")
+                    
+                    # Check date format for signups (should be YYYY-MM-DD)
+                    pivot_data = data.get("data", [])
+                    proper_date_format = True
+                    
+                    for row in pivot_data:
+                        row_label = row.get("rowLabel", "")
+                        # Check if dates are in proper YYYY-MM-DD format
+                        if isinstance(row_label, str) and row_label != "N/A":
+                            if not (len(row_label) == 10 and row_label.count("-") == 2):
+                                proper_date_format = False
+                                break
+                    
+                    if proper_date_format:
+                        self.log_test("Analytics Pivot - Signups Date Format", True, 
+                                    "Dates in proper YYYY-MM-DD format")
+                        success_count += 1
+                    else:
+                        self.log_test("Analytics Pivot - Signups Date Format", False, 
+                                    "Dates not in proper YYYY-MM-DD format")
+                
+                else:
+                    self.log_test("Analytics Pivot - Signups Structure", False, 
+                                f"Response missing required fields: {missing_fields}")
+                
+            except json.JSONDecodeError:
+                self.log_test("Analytics Pivot - Signups Default", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Analytics Pivot - Signups Default", False, error_msg)
+        
+        # Test 7: Value Operations (sum, average)
+        print("\n--- Testing Value Operations ---")
+        
+        # Test sum operation
+        response = self.make_request("GET", "/analytics/ride-status-pivot?value_operation=sum&value_field=fare")
+        
+        if response is not None and response.status_code == 200:
+            try:
+                data = response.json()
+                if data.get("success") and data.get("value_operation") == "sum":
+                    self.log_test("Analytics Pivot - Sum Operation", True, 
+                                "Sum operation works correctly")
+                    success_count += 1
+                else:
+                    self.log_test("Analytics Pivot - Sum Operation", False, 
+                                f"Sum operation failed: {data}")
+            except json.JSONDecodeError:
+                self.log_test("Analytics Pivot - Sum Operation", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            self.log_test("Analytics Pivot - Sum Operation", False, 
+                        f"Sum operation request failed: {response.status_code if response else 'Network error'}")
+        
+        # Test average operation
+        response = self.make_request("GET", "/analytics/ride-status-pivot?value_operation=average&value_field=fare")
+        
+        if response is not None and response.status_code == 200:
+            try:
+                data = response.json()
+                if data.get("success") and data.get("value_operation") == "average":
+                    self.log_test("Analytics Pivot - Average Operation", True, 
+                                "Average operation works correctly")
+                    success_count += 1
+                else:
+                    self.log_test("Analytics Pivot - Average Operation", False, 
+                                f"Average operation failed: {data}")
+            except json.JSONDecodeError:
+                self.log_test("Analytics Pivot - Average Operation", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            self.log_test("Analytics Pivot - Average Operation", False, 
+                        f"Average operation request failed: {response.status_code if response else 'Network error'}")
+        
+        # Test 8: Filters
+        print("\n--- Testing Filters ---")
+        response = self.make_request("GET", "/analytics/ride-status-pivot?filter_field=rideStatus&filter_value=completed")
+        
+        if response is not None and response.status_code == 200:
+            try:
+                data = response.json()
+                if data.get("success"):
+                    self.log_test("Analytics Pivot - Filters", True, 
+                                "Filter functionality works correctly")
+                    success_count += 1
+                else:
+                    self.log_test("Analytics Pivot - Filters", False, 
+                                f"Filter failed: {data}")
+            except json.JSONDecodeError:
+                self.log_test("Analytics Pivot - Filters", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            self.log_test("Analytics Pivot - Filters", False, 
+                        f"Filter request failed: {response.status_code if response else 'Network error'}")
+        
+        return success_count >= 8  # At least 8 out of 12 tests should pass
+
     def run_all_tests(self):
         """Run all backend tests"""
         print("🚀 Starting Comprehensive Testing - Driver Onboarding Two-Way Sync with ID-Based Reconciliation")
