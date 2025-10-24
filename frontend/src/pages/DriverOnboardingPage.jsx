@@ -124,6 +124,17 @@ const DriverOnboardingPage = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [editedLead, setEditedLead] = useState(null);
   
+  // Document upload states
+  const [uploadingDoc, setUploadingDoc] = useState(null); // Which doc is being uploaded
+  const [scanningDoc, setScanningDoc] = useState(null); // Which doc is being scanned
+  const [uploadedDocs, setUploadedDocs] = useState({
+    dl: false,
+    aadhar: false,
+    pan: false,
+    gas_bill: false,
+    bank_passbook: false
+  });
+  
   // Last sync time
   const [lastSyncTime, setLastSyncTime] = useState(null);
   
