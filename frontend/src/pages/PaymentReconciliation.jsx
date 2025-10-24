@@ -984,8 +984,6 @@ const PaymentReconciliation = () => {
               </div>
             </div>
           )}
-            </>
-          )}
         </CardContent>
       </Card>
 
