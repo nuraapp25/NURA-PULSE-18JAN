@@ -437,6 +437,81 @@ const DriverOnboardingPage = () => {
       setUpdatingStatus(false);
     }
   };
+
+  // Handle document upload
+  const handleDocumentUpload = async (documentType, file) => {
+    if (!file) return;
+    
+    setUploadingDoc(documentType);
+    try {
+      const token = localStorage.getItem("token");
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await axios.post(
+        `${API}/driver-onboarding/upload-document/${selectedLead.id}?document_type=${documentType}`,
+        formData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+      
+      if (response.data.success) {
+        toast.success(`${documentType.toUpperCase()} uploaded successfully!`);
+        setUploadedDocs(prev => ({ ...prev, [documentType]: true }));
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.detail || `Failed to upload ${documentType}`);
+    } finally {
+      setUploadingDoc(null);
+    }
+  };
+
+  // Handle document scan (OCR)
+  const handleDocumentScan = async (documentType) => {
+    setScanningDoc(documentType);
+    try {
+      const token = localStorage.getItem("token");
+      
+      const response = await axios.post(
+        `${API}/driver-onboarding/scan-document/${selectedLead.id}?document_type=${documentType}`,
+        {},
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      
+      if (response.data.success) {
+        toast.success(`${documentType.toUpperCase()} scanned successfully!`);
+        
+        // Update the form field with extracted data
+        const fieldName = response.data.field_updated;
+        const extractedData = response.data.extracted_data;
+        
+        if (fieldName && extractedData) {
+          handleFieldChange(fieldName, extractedData);
+          toast.info(`Extracted: ${extractedData}. You can edit if needed.`);
+        }
+        
+        // Refresh the lead data
+        const updatedLead = await axios.get(`${API}/driver-onboarding/leads/${selectedLead.id}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        setSelectedLead(updatedLead.data.lead);
+        setEditedLead(updatedLead.data.lead);
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.detail || `Failed to scan ${documentType}`);
+    } finally {
+      setScanningDoc(null);
+    }
+  };
   
   // Handle inline status change (directly in table)
   const handleInlineStatusChange = async (leadId, newStatus) => {
