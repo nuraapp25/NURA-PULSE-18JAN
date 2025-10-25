@@ -841,12 +841,12 @@ async def import_leads(
                 if file_status.lower() == app_status.lower():
                     return app_status
             
-            # Partial match (contains)
+            # Partial match (contains) - CHECK SPECIFIC ONES FIRST
             file_status_lower = file_status.lower()
             
-            # Match common variations and specific status keywords
+            # Match specific status keywords (order matters - most specific first!)
             if "highly interested" in file_status_lower or "very interested" in file_status_lower:
-                return "Interested"
+                return "Highly Interested"  # Keep as separate status!
             elif "interest" in file_status_lower or "follow" in file_status_lower or "call back" in file_status_lower or "callback" in file_status_lower:
                 return "Interested"
             elif "doc" in file_status_lower and ("pending" in file_status_lower or "upload" in file_status_lower or "collection" in file_status_lower):
@@ -876,7 +876,7 @@ async def import_leads(
             elif "health" in file_status_lower or "medical" in file_status_lower:
                 return "Interested"  # Health issue but potentially interested
             elif "no badge" in file_status_lower:
-                return "Interested"  # No badge but interested
+                return "Highly Interested"  # "no badge Highly Interested" should be "Highly Interested"
             
             # If no match found, try to infer from keywords
             if "s1-" in file_status_lower or "s2-" in file_status_lower or "s3-" in file_status_lower or "s4-" in file_status_lower:
