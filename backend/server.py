@@ -843,10 +843,12 @@ async def import_leads(
             # Partial match (contains)
             file_status_lower = file_status.lower()
             
-            # Match common variations
-            if "interest" in file_status_lower or "follow" in file_status_lower:
+            # Match common variations and specific status keywords
+            if "highly interested" in file_status_lower or "very interested" in file_status_lower:
                 return "Interested"
-            elif "doc" in file_status_lower and ("pending" in file_status_lower or "upload" in file_status_lower):
+            elif "interest" in file_status_lower or "follow" in file_status_lower or "call back" in file_status_lower or "callback" in file_status_lower:
+                return "Interested"
+            elif "doc" in file_status_lower and ("pending" in file_status_lower or "upload" in file_status_lower or "collection" in file_status_lower):
                 return "Docs Upload Pending"
             elif "onboard" in file_status_lower and "incomplete" in file_status_lower:
                 return "Onboarding Incomplete"
@@ -854,21 +856,32 @@ async def import_leads(
                 return "Training WIP"
             elif "onboard" in file_status_lower and "complete" in file_status_lower:
                 return "Onboarding Complete"
-            elif "ready" in file_status_lower or "deploy" in file_status_lower:
-                if "not" not in file_status_lower:
-                    return "Ready to Deploy"
+            elif "ready" in file_status_lower or ("deploy" in file_status_lower and "not" not in file_status_lower):
+                return "Ready to Deploy"
             elif "deployed" in file_status_lower or "active" in file_status_lower:
                 return "Deployed"
-            elif "not interest" in file_status_lower or "reject" in file_status_lower:
+            elif "not interest" in file_status_lower or "reject" in file_status_lower or "no interest" in file_status_lower:
                 return "Not Interested"
-            elif "not reach" in file_status_lower or "unreachable" in file_status_lower:
+            elif "not reach" in file_status_lower or "unreachable" in file_status_lower or "no response" in file_status_lower or "not responding" in file_status_lower:
                 return "Not Reachable"
-            elif "wrong" in file_status_lower:
+            elif "wrong" in file_status_lower or "incorrect" in file_status_lower:
                 return "Wrong Number"
             elif "duplicate" in file_status_lower or "dup" in file_status_lower:
                 return "Duplicate"
-            elif "junk" in file_status_lower or "invalid" in file_status_lower:
+            elif "junk" in file_status_lower or "invalid" in file_status_lower or "spam" in file_status_lower:
                 return "Junk"
+            elif "long distance" in file_status_lower or "out of town" in file_status_lower or "outside" in file_status_lower:
+                return "Interested"  # They're interested but have distance constraints
+            elif "health" in file_status_lower or "medical" in file_status_lower:
+                return "Interested"  # Health issue but potentially interested
+            elif "no badge" in file_status_lower:
+                return "Interested"  # No badge but interested
+            
+            # If no match found, try to infer from keywords
+            if "s1-" in file_status_lower or "s2-" in file_status_lower or "s3-" in file_status_lower or "s4-" in file_status_lower:
+                # These are stage codes, not actual statuses - look for actual status in Current Status column
+                logger.warning(f"Status '{file_status}' appears to be a stage code, not a status. Defaulting to 'New'")
+                return "New"
             
             # If no match, return original but log warning
             logger.warning(f"Status '{file_status}' not matched, defaulting to 'New'")
