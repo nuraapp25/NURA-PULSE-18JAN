@@ -841,12 +841,24 @@ async def import_leads(
                 if file_status.lower() == app_status.lower():
                     return app_status
             
-            # Partial match (contains) - CHECK SPECIFIC ONES FIRST
+            # Partial match (contains) - ORDER IS CRITICAL!
+            # ALWAYS check negative/rejection statuses FIRST before positive ones
             file_status_lower = file_status.lower()
             
-            # Match specific status keywords (order matters - most specific first!)
-            if "highly interested" in file_status_lower or "very interested" in file_status_lower:
-                return "Highly Interested"  # Keep as separate status!
+            # Check NEGATIVE statuses FIRST (to avoid false positives)
+            if "not interest" in file_status_lower or "reject" in file_status_lower or "no interest" in file_status_lower or "uninterested" in file_status_lower:
+                return "Not Interested"
+            elif "not reach" in file_status_lower or "unreachable" in file_status_lower or "no response" in file_status_lower or "not responding" in file_status_lower:
+                return "Not Reachable"
+            elif "wrong" in file_status_lower or "incorrect" in file_status_lower:
+                return "Wrong Number"
+            elif "duplicate" in file_status_lower or "dup" in file_status_lower:
+                return "Duplicate"
+            elif "junk" in file_status_lower or "invalid" in file_status_lower or "spam" in file_status_lower:
+                return "Junk"
+            # Now check POSITIVE statuses (after ruling out negatives)
+            elif "highly interested" in file_status_lower or "very interested" in file_status_lower:
+                return "Highly Interested"
             elif "interest" in file_status_lower or "follow" in file_status_lower or "call back" in file_status_lower or "callback" in file_status_lower:
                 return "Interested"
             elif "doc" in file_status_lower and ("pending" in file_status_lower or "upload" in file_status_lower or "collection" in file_status_lower):
@@ -861,16 +873,6 @@ async def import_leads(
                 return "Ready to Deploy"
             elif "deployed" in file_status_lower or "active" in file_status_lower:
                 return "Deployed"
-            elif "not interest" in file_status_lower or "reject" in file_status_lower or "no interest" in file_status_lower:
-                return "Not Interested"
-            elif "not reach" in file_status_lower or "unreachable" in file_status_lower or "no response" in file_status_lower or "not responding" in file_status_lower:
-                return "Not Reachable"
-            elif "wrong" in file_status_lower or "incorrect" in file_status_lower:
-                return "Wrong Number"
-            elif "duplicate" in file_status_lower or "dup" in file_status_lower:
-                return "Duplicate"
-            elif "junk" in file_status_lower or "invalid" in file_status_lower or "spam" in file_status_lower:
-                return "Junk"
             elif "long distance" in file_status_lower or "out of town" in file_status_lower or "outside" in file_status_lower:
                 return "Interested"  # They're interested but have distance constraints
             elif "health" in file_status_lower or "medical" in file_status_lower:
