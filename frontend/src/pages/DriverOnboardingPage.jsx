@@ -2358,14 +2358,14 @@ const DriverOnboardingPage = () => {
 
       {/* Duplicate Detection Dialog */}
       <Dialog open={duplicateDialogOpen} onOpenChange={setDuplicateDialogOpen}>
-        <DialogContent className="dark:bg-gray-800 max-w-2xl">
+        <DialogContent className="dark:bg-gray-800 max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="dark:text-white flex items-center space-x-2">
               <XCircle className="text-orange-600" size={24} />
-              <span>Duplicates Found</span>
+              <span>Duplicates Found - Smart Phone Matching</span>
             </DialogTitle>
             <DialogDescription className="dark:text-gray-400">
-              We found leads with duplicate phone numbers in the system
+              Found {duplicateData?.duplicate_count || 0} leads with duplicate phone numbers (matched by last 10 digits)
             </DialogDescription>
           </DialogHeader>
           
@@ -2381,73 +2381,142 @@ const DriverOnboardingPage = () => {
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Duplicates</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Duplicates (Skipped)</p>
                     <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
                       {duplicateData.duplicate_count}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">New Leads</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Imported</p>
                     <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                      {duplicateData.new_leads_count}
+                      {duplicateData.imported_count}
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* Duplicate List */}
-              <div className="max-h-60 overflow-y-auto">
-                <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  Duplicate Leads (showing up to 10):
-                </p>
-                <div className="space-y-2">
-                  {duplicateData.duplicates.map((dup, index) => (
-                    <div 
-                      key={index} 
-                      className="p-3 bg-gray-50 dark:bg-gray-900/30 rounded border border-gray-200 dark:border-gray-700"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium text-gray-900 dark:text-white">
-                            {dup.name}
-                          </p>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {dup.phone_number}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-xs text-gray-500 dark:text-gray-500">Already exists as:</p>
-                          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            {dup.existing_name}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+              {/* Duplicate List - Show ALL */}
+              {duplicateData.duplicates && duplicateData.duplicates.length > 0 && (
+                <div className="max-h-96 overflow-y-auto">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      Duplicate Leads (all {duplicateData.duplicates.length}):
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-500">
+                      Matched by last 10 digits
+                    </p>
+                  </div>
+                  
+                  {/* Table view for better readability */}
+                  <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-100 dark:bg-gray-900/50">
+                        <tr>
+                          <th className="px-3 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-300">
+                            #
+                          </th>
+                          <th className="px-3 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-300">
+                            New Lead Name
+                          </th>
+                          <th className="px-3 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-300">
+                            Phone Number
+                          </th>
+                          <th className="px-3 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-300">
+                            Existing Lead
+                          </th>
+                          <th className="px-3 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-300">
+                            Status
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                        {duplicateData.duplicates.map((dup, index) => (
+                          <tr 
+                            key={index}
+                            className="hover:bg-gray-50 dark:hover:bg-gray-900/30"
+                          >
+                            <td className="px-3 py-2 text-gray-600 dark:text-gray-400">
+                              {index + 1}
+                            </td>
+                            <td className="px-3 py-2 font-medium text-gray-900 dark:text-white">
+                              {dup.name}
+                            </td>
+                            <td className="px-3 py-2">
+                              <div className="space-y-1">
+                                <p className="text-gray-900 dark:text-white font-mono text-xs">
+                                  {dup.phone_number}
+                                </p>
+                                {dup.normalized_phone && (
+                                  <p className="text-xs text-gray-500 dark:text-gray-500">
+                                    Normalized: {dup.normalized_phone}
+                                  </p>
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-3 py-2">
+                              <div className="space-y-1">
+                                <p className="text-gray-900 dark:text-white">
+                                  {dup.existing_name}
+                                </p>
+                                <p className="text-xs text-gray-500 dark:text-gray-500 font-mono">
+                                  {dup.existing_phone}
+                                </p>
+                              </div>
+                            </td>
+                            <td className="px-3 py-2">
+                              <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(dup.existing_status)}`}>
+                                {dup.existing_status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
+              )}
+
+              {/* Quick Phone List for Copy/Paste */}
+              {duplicateData.duplicate_phones && duplicateData.duplicate_phones.length > 0 && (
+                <div className="p-3 bg-gray-100 dark:bg-gray-900/30 rounded-lg">
+                  <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    Duplicate Phone Numbers (for reference):
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {duplicateData.duplicate_phones.map((phone, index) => (
+                      <span
+                        key={index}
+                        className="px-2 py-1 bg-white dark:bg-gray-800 rounded text-xs font-mono border border-gray-300 dark:border-gray-600"
+                      >
+                        {phone}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Info Message */}
+              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <p className="text-sm text-blue-900 dark:text-blue-200">
+                  ℹ️ <strong>Smart Matching:</strong> Phone numbers are matched by their last 10 digits, so "+91 98765 43210", "9876543210", and "91-9876543210" are all considered the same.
+                </p>
               </div>
 
-              {/* Action Buttons */}
-              <div className="space-y-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <p className="text-sm text-gray-700 dark:text-gray-300 font-medium">
-                  Choose an action:
-                </p>
-                <div className="grid grid-cols-2 gap-3">
-                  <Button
-                    onClick={() => handleDuplicateAction('skip')}
-                    disabled={importing}
-                    variant="outline"
-                    className="border-blue-600 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                  >
-                    {importing ? (
-                      <>
-                        <RefreshCw size={18} className="mr-2 animate-spin" />
-                        Processing...
-                      </>
-                    ) : (
-                      <>
-                        <XCircle size={18} className="mr-2" />
-                        Skip Duplicates
+              {/* Close Button */}
+              <div className="flex justify-end pt-4 border-t border-gray-200 dark:border-gray-700">
+                <Button
+                  onClick={() => {
+                    setDuplicateDialogOpen(false);
+                    setDuplicateData(null);
+                    fetchLeads(); // Refresh to show imported leads
+                  }}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  ✓ OK, Got it
+                </Button>
+              </div>
+            </div>
+          )}
                       </>
                     )}
                   </Button>
