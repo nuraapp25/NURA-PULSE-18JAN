@@ -4901,7 +4901,7 @@ async def create_qr_code(
     qr_data: QRCodeCreate,
     current_user: User = Depends(get_current_user)
 ):
-    """Create a new dynamic QR code - Master Admin only"""
+    """Create QR code(s) - Supports bulk generation and UTM tracking - Master Admin only"""
     try:
         # Check master admin permission
         if current_user.account_type != "master_admin":
@@ -4909,77 +4909,122 @@ async def create_qr_code(
         
         import qrcode
         from io import BytesIO
-        
-        # Generate unique short code
-        unique_code = str(uuid.uuid4())[:8]
+        from urllib.parse import urlencode
         
         # Get backend URL from environment
         backend_url = os.environ.get('BACKEND_URL', 'https://driverhub-9.preview.emergentagent.com/api')
         
-        # Get destination URL for display purposes
-        if qr_data.landing_page_type == 'single':
-            dest_url = qr_data.landing_page_single
-        else:
-            # Use mobile as default for multi-URL QR codes
-            dest_url = (qr_data.landing_page_mobile or qr_data.landing_page_desktop or 
-                       qr_data.landing_page_ios or qr_data.landing_page_android)
+        # Determine bulk count (1 to 100)
+        bulk_count = min(max(qr_data.bulk_count or 1, 1), 100)
         
-        # Extract clean domain for scanner preview
-        from urllib.parse import urlparse
-        parsed = urlparse(dest_url)
-        dest_display = f"{parsed.netloc}{parsed.path}" if parsed.netloc else dest_url
+        created_qr_codes = []
         
-        # Create QR redirect URL with destination hint for scanner apps
-        qr_redirect_url = f"{backend_url}/qr/{unique_code}?to={dest_display}"
-        
-        # Generate QR code image
-        qr = qrcode.QRCode(
-            version=1,
-            error_correction=qrcode.constants.ERROR_CORRECT_L,
-            box_size=10,
-            border=4,
-        )
-        qr.add_data(qr_redirect_url)
-        qr.make(fit=True)
-        
-        img = qr.make_image(fill_color="black", back_color="white")
-        
-        # Save QR code image
-        qr_filename = f"qr_{unique_code}.png"
-        qr_path = f"/app/backend/qr_codes/{qr_filename}"
-        img.save(qr_path)
-        
-        logger.info(f"QR code image saved: {qr_path}")
-        
-        # Create QR code document
-        qr_code = QRCode(
-            name=qr_data.name,
-            landing_page_type=qr_data.landing_page_type,
-            landing_page_single=qr_data.landing_page_single,
-            landing_page_ios=qr_data.landing_page_ios,
-            landing_page_android=qr_data.landing_page_android,
-            landing_page_mobile=qr_data.landing_page_mobile,
-            landing_page_desktop=qr_data.landing_page_desktop,
-            qr_image_filename=qr_filename,
-            unique_short_code=unique_code,
-            created_by=current_user.id,
-        )
-        
-        # Save to database
-        await db.qr_codes.insert_one(qr_code.model_dump())
-        
-        logger.info(f"QR code created: {qr_code.id} by {current_user.email}")
-        
-        return {
-            "success": True,
-            "message": "QR code created successfully",
-            "qr_code": {
+        # Generate multiple QR codes if bulk_count > 1
+        for i in range(bulk_count):
+            # Generate unique short code
+            unique_code = str(uuid.uuid4())[:8]
+            
+            # Get destination URL for display purposes
+            if qr_data.landing_page_type == 'single':
+                dest_url = qr_data.landing_page_single
+            else:
+                # Use mobile as default for multi-URL QR codes
+                dest_url = (qr_data.landing_page_mobile or qr_data.landing_page_desktop or 
+                           qr_data.landing_page_ios or qr_data.landing_page_android)
+            
+            # Add UTM parameters to destination URL if provided
+            utm_params = {}
+            if qr_data.utm_source:
+                utm_params['utm_source'] = qr_data.utm_source
+            if qr_data.utm_medium:
+                utm_params['utm_medium'] = qr_data.utm_medium
+            if qr_data.utm_campaign:
+                utm_params['utm_campaign'] = qr_data.utm_campaign
+            if qr_data.utm_term:
+                utm_params['utm_term'] = qr_data.utm_term
+            if qr_data.utm_content:
+                # For bulk generation, add unique identifier to utm_content
+                utm_content = qr_data.utm_content
+                if bulk_count > 1:
+                    utm_content = f"{utm_content}_{i+1}"
+                utm_params['utm_content'] = utm_content
+            
+            # Append UTM parameters to destination URL
+            if utm_params:
+                separator = '&' if '?' in dest_url else '?'
+                dest_url_with_utm = f"{dest_url}{separator}{urlencode(utm_params)}"
+            else:
+                dest_url_with_utm = dest_url
+            
+            # Extract clean domain for scanner preview
+            from urllib.parse import urlparse
+            parsed = urlparse(dest_url)
+            dest_display = f"{parsed.netloc}{parsed.path}" if parsed.netloc else dest_url
+            
+            # Create QR redirect URL
+            qr_redirect_url = f"{backend_url}/qr/{unique_code}?to={dest_display}"
+            
+            # Generate QR code image
+            qr = qrcode.QRCode(
+                version=1,
+                error_correction=qrcode.constants.ERROR_CORRECT_L,
+                box_size=10,
+                border=4,
+            )
+            qr.add_data(qr_redirect_url)
+            qr.make(fit=True)
+            
+            img = qr.make_image(fill_color="black", back_color="white")
+            
+            # Save QR code image
+            qr_filename = f"qr_{unique_code}.png"
+            qr_path = f"/app/backend/qr_codes/{qr_filename}"
+            img.save(qr_path)
+            
+            # Create QR name with bulk index if generating multiple
+            qr_name = qr_data.name
+            if bulk_count > 1:
+                qr_name = f"{qr_data.name} #{i+1}"
+            
+            # Create QR code document with UTM parameters
+            qr_code = QRCode(
+                name=qr_name,
+                campaign_name=qr_data.campaign_name,
+                landing_page_type=qr_data.landing_page_type,
+                landing_page_single=dest_url_with_utm if qr_data.landing_page_type == 'single' else qr_data.landing_page_single,
+                landing_page_ios=qr_data.landing_page_ios,
+                landing_page_android=qr_data.landing_page_android,
+                landing_page_mobile=qr_data.landing_page_mobile,
+                landing_page_desktop=qr_data.landing_page_desktop,
+                utm_source=qr_data.utm_source,
+                utm_medium=qr_data.utm_medium,
+                utm_campaign=qr_data.utm_campaign,
+                utm_term=qr_data.utm_term,
+                utm_content=utm_params.get('utm_content'),  # Save the actual content used (with bulk suffix)
+                qr_image_filename=qr_filename,
+                unique_short_code=unique_code,
+                created_by=current_user.id,
+            )
+            
+            # Save to database
+            await db.qr_codes.insert_one(qr_code.model_dump())
+            
+            created_qr_codes.append({
                 "id": qr_code.id,
                 "name": qr_code.name,
                 "unique_code": unique_code,
                 "qr_url": qr_redirect_url,
-                "qr_image": qr_filename
-            }
+                "qr_image": qr_filename,
+                "utm_tracking": bool(utm_params)
+            })
+            
+            logger.info(f"QR code created: {qr_code.id} by {current_user.email}")
+        
+        return {
+            "success": True,
+            "message": f"Successfully created {bulk_count} QR code(s)",
+            "qr_codes": created_qr_codes,
+            "bulk_count": bulk_count
         }
         
     except HTTPException:
