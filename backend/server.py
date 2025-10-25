@@ -815,6 +815,7 @@ async def import_leads(
         STATUS_HIERARCHY = [
             "New",
             "Interested",
+            "Highly Interested",  # NEW: Keep as separate status
             "Docs Upload Pending",
             "Onboarding Incomplete",
             "Training WIP",
