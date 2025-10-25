@@ -890,19 +890,20 @@ async def import_leads(
             df = df.iloc[1:].reset_index(drop=True)
         
         # Find columns dynamically
-        name_col = find_column(df, ['name', 'driver name', 'full name', 'candidate name', 'Name ', 'name '])
+        name_col = find_column(df, ['name', 'driver name', 'full name', 'candidate name', 'Name ', 'name ', 'poc name', 'POC Name'])
         phone_col = find_column(df, ['phone', 'phone no', 'phone number', 'mobile', 'mobile no', 'contact', 'Phone No', 'phone_number'])
         address_col = find_column(df, ['address', 'location', 'current location', 'city', 'Address ', 'address '])
-        status_col = find_column(df, ['status', 'final status', 'lead status', 'current status', 'Status', 'status '])
+        # PRIORITY: Look for "Status" column FIRST, then "Final Status", then "Lead Status", then "Current Status" last
+        status_col = find_column(df, ['status', 'Status', 'final status', 'Final Status', 'lead status', 'Lead Status', 'current status', 'Current Status'])
         stage_col = find_column(df, ['stage', 'lead stage', 'current stage', 'Stage', 'stage '])
         source_col = find_column(df, ['lead source', 'source', 'lead generator', 'Lead Generator', 'lead_source', 'LeadSource'])
         date_col = find_column(df, ['date', 'lead date', 'lead creation date', 'created date', 'Lead Creation Date'])
         vehicle_col = find_column(df, ['vehicle', 'vehicle type', 'Vehicle', 'vehicle '])
-        poc_col = find_column(df, ['poc', 'assigned to', 'telecaller', 'POC', 'poc '])
+        poc_col = find_column(df, ['poc', 'assigned to', 'telecaller', 'POC', 'poc ', 'POC Name', 'poc name'])
         remarks_col = find_column(df, ['remarks', 'notes', 'comments', 'Remarks', 'remarks '])
         next_action_col = find_column(df, ['next action', 'action', 'follow up', 'Next Action'])
         
-        logger.info(f"Mapped columns - Name: {name_col}, Phone: {phone_col}, Status: {status_col}, Source: {source_col}")
+        logger.info(f"Mapped columns - Name: {name_col}, Phone: {phone_col}, Status: {status_col}, Stage: {stage_col}, Source: {source_col}")
         
         # Process rows
         leads = []
