@@ -773,7 +773,7 @@ async def import_leads(
     duplicate_action: Optional[str] = Query(None),
     current_user: User = Depends(get_current_user)
 ):
-    """Import driver leads from CSV or XLSX with duplicate detection"""
+    """Import driver leads from CSV or XLSX with SMART column mapping and status matching"""
     logger.info(f"Import request received. Duplicate action: {duplicate_action}")
     try:
         # Parse form data
@@ -797,157 +797,177 @@ async def import_leads(
         else:
             raise HTTPException(status_code=400, detail="Invalid file type. Only CSV and XLSX are supported.")
         
-        # Detect format and map columns
+        # SMART COLUMN MAPPING: Define flexible column name matches
+        def find_column(df, possible_names, case_sensitive=False):
+            """Find column by matching possible names flexibly"""
+            if not case_sensitive:
+                possible_names = [name.lower() for name in possible_names]
+                columns = {col.lower(): col for col in df.columns}
+            else:
+                columns = {col: col for col in df.columns}
+            
+            for name in possible_names:
+                if name in columns:
+                    return columns[name]
+            return None
+        
+        # Define our app's status hierarchy
+        STATUS_HIERARCHY = [
+            "New",
+            "Interested",
+            "Docs Upload Pending",
+            "Onboarding Incomplete",
+            "Training WIP",
+            "Onboarding Complete",
+            "Ready to Deploy",
+            "Deployed",
+            "Not Interested",
+            "Not Reachable",
+            "Wrong Number",
+            "Duplicate",
+            "Junk"
+        ]
+        
+        def match_status(file_status):
+            """Match file status with app's status hierarchy"""
+            if not file_status or pd.isna(file_status):
+                return "New"
+            
+            file_status = str(file_status).strip()
+            
+            # Exact match (case-insensitive)
+            for app_status in STATUS_HIERARCHY:
+                if file_status.lower() == app_status.lower():
+                    return app_status
+            
+            # Partial match (contains)
+            file_status_lower = file_status.lower()
+            
+            # Match common variations
+            if "interest" in file_status_lower or "follow" in file_status_lower:
+                return "Interested"
+            elif "doc" in file_status_lower and ("pending" in file_status_lower or "upload" in file_status_lower):
+                return "Docs Upload Pending"
+            elif "onboard" in file_status_lower and "incomplete" in file_status_lower:
+                return "Onboarding Incomplete"
+            elif "train" in file_status_lower or "wip" in file_status_lower:
+                return "Training WIP"
+            elif "onboard" in file_status_lower and "complete" in file_status_lower:
+                return "Onboarding Complete"
+            elif "ready" in file_status_lower or "deploy" in file_status_lower:
+                if "not" not in file_status_lower:
+                    return "Ready to Deploy"
+            elif "deployed" in file_status_lower or "active" in file_status_lower:
+                return "Deployed"
+            elif "not interest" in file_status_lower or "reject" in file_status_lower:
+                return "Not Interested"
+            elif "not reach" in file_status_lower or "unreachable" in file_status_lower:
+                return "Not Reachable"
+            elif "wrong" in file_status_lower:
+                return "Wrong Number"
+            elif "duplicate" in file_status_lower or "dup" in file_status_lower:
+                return "Duplicate"
+            elif "junk" in file_status_lower or "invalid" in file_status_lower:
+                return "Junk"
+            
+            # If no match, return original but log warning
+            logger.warning(f"Status '{file_status}' not matched, defaulting to 'New'")
+            return "New"
+        
+        # SMART COLUMN DETECTION
+        logger.info(f"Columns in file: {list(df.columns)}")
+        
+        # Check if first row contains headers (sometimes Excel has headers in row 1 data)
+        first_row_values = df.iloc[0].values if len(df) > 0 else []
+        is_first_row_header = any(
+            str(val).lower() in ['sl.no', 'sno', 's.no', 'name', 'phone', 'phone no', 'mobile', 'address', 'status', 'stage'] 
+            for val in first_row_values if pd.notna(val)
+        )
+        
+        if is_first_row_header:
+            logger.info("First data row detected as headers, using it for column names")
+            df.columns = df.iloc[0]
+            df = df.iloc[1:].reset_index(drop=True)
+        
+        # Find columns dynamically
+        name_col = find_column(df, ['name', 'driver name', 'full name', 'candidate name', 'Name ', 'name '])
+        phone_col = find_column(df, ['phone', 'phone no', 'phone number', 'mobile', 'mobile no', 'contact', 'Phone No', 'phone_number'])
+        address_col = find_column(df, ['address', 'location', 'current location', 'city', 'Address ', 'address '])
+        status_col = find_column(df, ['status', 'final status', 'lead status', 'current status', 'Status', 'status '])
+        stage_col = find_column(df, ['stage', 'lead stage', 'current stage', 'Stage', 'stage '])
+        source_col = find_column(df, ['lead source', 'source', 'lead generator', 'Lead Generator', 'lead_source', 'LeadSource'])
+        date_col = find_column(df, ['date', 'lead date', 'lead creation date', 'created date', 'Lead Creation Date'])
+        vehicle_col = find_column(df, ['vehicle', 'vehicle type', 'Vehicle', 'vehicle '])
+        poc_col = find_column(df, ['poc', 'assigned to', 'telecaller', 'POC', 'poc '])
+        remarks_col = find_column(df, ['remarks', 'notes', 'comments', 'Remarks', 'remarks '])
+        next_action_col = find_column(df, ['next action', 'action', 'follow up', 'Next Action'])
+        
+        logger.info(f"Mapped columns - Name: {name_col}, Phone: {phone_col}, Status: {status_col}, Source: {source_col}")
+        
+        # Process rows
         leads = []
         import_date = datetime.now(timezone.utc).isoformat()
         
-        # Detect format by checking column names or structure
-        # Format 3: Check if it has the new format with headers like "Name ", "Phone No", "Address ", etc.
-        has_name_col = any('Name' in str(col) for col in df.columns)
-        has_phone_col = any('Phone' in str(col) for col in df.columns)
-        has_address_col = any('Address' in str(col) for col in df.columns)
-        has_stage_col = any('Stage' in str(col) for col in df.columns)
-        
-        # Check if first row might be headers (for Excel files with headers in row 2)
-        first_row_values = df.iloc[0].values if len(df) > 0 else []
-        is_first_row_header = any(str(val).lower() in ['sl.no', 'name', 'phone no', 'address'] for val in first_row_values if pd.notna(val))
-        
-        if is_first_row_header:
-            # Format 3: New comprehensive format with headers in first data row
-            logger.info("Detected Format 3 (Comprehensive format with multiple fields)")
+        for _, row in df.iterrows():
+            # Skip completely empty rows
+            if all(pd.isna(val) for val in row.values):
+                continue
             
-            # Use first row as headers
-            df.columns = df.iloc[0]
-            df = df.iloc[1:].reset_index(drop=True)
+            # Get name and phone (required fields)
+            name_val = str(row[name_col]) if name_col and pd.notna(row.get(name_col)) else ""
+            phone_val = str(row[phone_col]) if phone_col and pd.notna(row.get(phone_col)) else ""
             
-            # For Format 3, automatically detect lead source column
-            # This format typically has "Lead Generator" column
-            lead_source_column = None
+            # Skip if both name and phone are empty
+            if not name_val and not phone_val:
+                continue
             
-            # Check for lead source column in the processed headers
-            possible_names = ['Lead Generator', 'Lead Source', 'lead_source', 'lead_generator', 'Source', 'source', 'LeadSource', 'lead source']
-            for col_name in possible_names:
-                if col_name in df.columns:
-                    lead_source_column = col_name
-                    logger.info(f"Found lead source column in Format 3: {col_name}")
-                    break
+            # Clean phone number
+            phone_val = phone_val.strip().replace(' ', '').replace('-', '')
             
-            # If checkbox is checked but column not found, raise error
-            if read_source_from_file and not lead_source_column:
-                raise HTTPException(
-                    status_code=400, 
-                    detail="Lead Source column not found in file. Please ensure your file has a 'Lead Source' or 'Lead Generator' column."
-                )
+            # Get status from file and match with app's status hierarchy
+            file_status = str(row[status_col]) if status_col and pd.notna(row.get(status_col)) else None
+            if not file_status and stage_col:
+                file_status = str(row[stage_col]) if pd.notna(row.get(stage_col)) else None
             
-            # If column exists but checkbox not checked, still use it (Format 3 special behavior)
-            if lead_source_column and not read_source_from_file:
-                logger.info(f"Format 3: Auto-using '{lead_source_column}' column for lead sources")
+            matched_status = match_status(file_status)
+            logger.info(f"File status '{file_status}' matched to app status '{matched_status}'")
             
-            for _, row in df.iterrows():
-                # Skip empty rows
-                if pd.isna(row.get('Name ')) and pd.isna(row.get('Phone No')):
-                    continue
-                
-                # Get lead source from file or use manual input
-                row_lead_source = lead_source
-                
-                # For Format 3, prioritize Lead Generator column if it exists
-                if lead_source_column and lead_source_column in row:
-                    row_lead_source = str(row[lead_source_column]) if pd.notna(row[lead_source_column]) else lead_source
-                    logger.info(f"Using source from column '{lead_source_column}': {row_lead_source}")
-                # If no column but manual input provided, use that
-                elif not lead_source_column and lead_source:
-                    row_lead_source = lead_source
-                
-                # Parse phone number
-                raw_phone = str(row.get('Phone No', '')) if pd.notna(row.get('Phone No')) else ""
-                phone_number = raw_phone.strip()
-                
-                # Map Stage to our status system
-                stage_val = str(row.get('Stage', 'New')) if pd.notna(row.get('Stage')) else 'New'
-                status_val = str(row.get('Status', 'New')) if pd.notna(row.get('Status')) else 'New'
-                
-                # Determine our app's status based on their Stage and Status
-                app_status = "New"
-                if "DOCS_COLLECTION" in stage_val:
-                    app_status = "Docs Upload Pending"  # S2-a
-                elif "ROAD_TEST" in stage_val:
-                    app_status = "Training WIP"  # S3-b
-                
-                # Get lead date from file or use manual input
-                row_lead_date = lead_date
-                if 'Lead Creation Date' in row and pd.notna(row['Lead Creation Date']):
-                    row_lead_date = str(row['Lead Creation Date'])
-                
-                lead = {
-                    "id": str(uuid.uuid4()),
-                    "name": str(row.get('Name ', '')) if pd.notna(row.get('Name ')) else "",
-                    "phone_number": phone_number,
-                    "vehicle": None,
-                    "driving_license": None,
-                    "experience": None,
-                    "interested_ev": None,
-                    "monthly_salary": None,
-                    "residing_chennai": None,
-                    "current_location": str(row.get('Address ', '')) if pd.notna(row.get('Address ')) else "",
-                    "import_date": import_date,
-                    "lead_source": row_lead_source,
-                    "lead_date": row_lead_date,
-                    "status": app_status,
-                    "lead_stage": stage_val,
-                    "driver_readiness": str(row.get('Classroom Training ', 'Not Started')) if pd.notna(row.get('Classroom Training ')) else "Not Started",
-                    "docs_collection": str(row.get('Ground Trainig', 'Pending')) if pd.notna(row.get('Ground Trainig')) else "Pending",
-                    "customer_readiness": "Not Ready",
-                    "assigned_telecaller": str(row.get('POC', '')) if pd.notna(row.get('POC')) else None,
-                    "telecaller_notes": str(row.get('Next Action', '')) if pd.notna(row.get('Next Action')) else None,
-                    "notes": str(row.get('Remarks', '')) if pd.notna(row.get('Remarks')) else None,
-                    "created_at": import_date
-                }
-                leads.append(lead)
-        
-        elif len(df.columns) == 4:
-            # Format 1: S. No., Name, Vehicle, Phone Number
-            logger.info("Detected Format 1 (4 columns)")
+            # Get lead source from file or form
+            row_lead_source = lead_source
+            if source_col and pd.notna(row.get(source_col)):
+                row_lead_source = str(row[source_col])
             
-            # Check for lead source column if read_source_from_file is True
-            lead_source_column = None
-            if read_source_from_file:
-                possible_names = ['Lead Source', 'lead_source', 'Source', 'source', 'LeadSource', 'lead source', 'Lead Generator', 'lead_generator']
-                for col_name in possible_names:
-                    if col_name in df.columns:
-                        lead_source_column = col_name
-                        logger.info(f"Found lead source column in Format 1: {col_name}")
-                        break
-                
-                if not lead_source_column:
-                    raise HTTPException(
-                        status_code=400, 
-                        detail="Lead Source column not found in file. Please ensure your file has a 'Lead Source' or 'Lead Generator' column."
-                    )
+            # Get lead date from file or form
+            row_lead_date = lead_date
+            if date_col and pd.notna(row.get(date_col)):
+                row_lead_date = str(row[date_col])
             
-            for _, row in df.iterrows():
-                # Get lead source from file or use manual input
-                row_lead_source = lead_source
-                if read_source_from_file and lead_source_column:
-                    row_lead_source = str(row[lead_source_column]) if pd.notna(row[lead_source_column]) else ""
-                
-                lead = {
-                    "id": str(uuid.uuid4()),
-                    "name": str(row.iloc[1]) if pd.notna(row.iloc[1]) else "",
-                    "phone_number": str(row.iloc[3]) if pd.notna(row.iloc[3]) else "",
-                    "vehicle": str(row.iloc[2]) if pd.notna(row.iloc[2]) else "",
-                    "driving_license": None,
-                    "experience": None,
-                    "interested_ev": None,
-                    "monthly_salary": None,
-                    "residing_chennai": None,
-                    "current_location": None,
-                    "import_date": import_date,
-                    "lead_source": row_lead_source,
-                    "lead_date": lead_date,
-                    "status": "New",
-                    "lead_stage": "New",
-                    "driver_readiness": "Not Started",
+            # Create lead object
+            lead = {
+                "id": str(uuid.uuid4()),
+                "name": name_val,
+                "phone_number": phone_val,
+                "vehicle": str(row[vehicle_col]) if vehicle_col and pd.notna(row.get(vehicle_col)) else None,
+                "driving_license": None,
+                "experience": None,
+                "interested_ev": None,
+                "monthly_salary": None,
+                "residing_chennai": None,
+                "current_location": str(row[address_col]) if address_col and pd.notna(row.get(address_col)) else None,
+                "import_date": import_date,
+                "lead_source": row_lead_source,
+                "lead_date": row_lead_date,
+                "status": matched_status,  # USE MATCHED STATUS from file!
+                "lead_stage": file_status if file_status else "New",
+                "driver_readiness": "Not Started",
+                "docs_collection": "Pending",
+                "customer_readiness": "Not Ready",
+                "assigned_telecaller": str(row[poc_col]) if poc_col and pd.notna(row.get(poc_col)) else None,
+                "telecaller_notes": str(row[next_action_col]) if next_action_col and pd.notna(row.get(next_action_col)) else None,
+                "notes": str(row[remarks_col]) if remarks_col and pd.notna(row.get(remarks_col)) else None,
+                "created_at": import_date
+            }
+            leads.append(lead)
                     "docs_collection": "Pending",
                     "customer_readiness": "Not Ready",
                     "assigned_telecaller": None,
