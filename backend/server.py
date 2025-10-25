@@ -5413,6 +5413,63 @@ async def delete_qr_code(
         raise HTTPException(status_code=500, detail=f"Failed to delete QR code: {str(e)}")
 
 
+@api_router.post("/qr-codes/bulk-delete")
+async def bulk_delete_qr_codes(
+    request: Request,
+    current_user: User = Depends(get_current_user)
+):
+    """Bulk delete QR codes - Master Admin only"""
+    try:
+        if current_user.account_type != "master_admin":
+            raise HTTPException(status_code=403, detail="Only master admin can delete QR codes")
+        
+        # Parse request body
+        body = await request.json()
+        qr_ids = body.get('qr_ids', [])
+        
+        if not qr_ids:
+            raise HTTPException(status_code=400, detail="No QR codes selected for deletion")
+        
+        deleted_count = 0
+        failed_count = 0
+        
+        for qr_id in qr_ids:
+            try:
+                qr_code = await db.qr_codes.find_one({"id": qr_id}, {"_id": 0})
+                if qr_code:
+                    # Delete QR code image
+                    qr_image_path = f"/app/backend/qr_codes/{qr_code['qr_image_filename']}"
+                    if os.path.exists(qr_image_path):
+                        os.remove(qr_image_path)
+                    
+                    # Delete from database
+                    await db.qr_codes.delete_one({"id": qr_id})
+                    
+                    # Delete all associated scans
+                    await db.qr_scans.delete_many({"qr_code_id": qr_id})
+                    
+                    deleted_count += 1
+                    logger.info(f"QR code deleted: {qr_id}")
+                else:
+                    failed_count += 1
+            except Exception as e:
+                logger.error(f"Failed to delete QR code {qr_id}: {str(e)}")
+                failed_count += 1
+        
+        return {
+            "success": True,
+            "message": f"Deleted {deleted_count} QR code(s), {failed_count} failed",
+            "deleted_count": deleted_count,
+            "failed_count": failed_count
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to bulk delete QR codes: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to bulk delete: {str(e)}")
+
+
 # PUBLIC ENDPOINT - No authentication required
 @api_router.get("/qr/{short_code}")
 async def qr_redirect(
