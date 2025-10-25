@@ -968,86 +968,11 @@ async def import_leads(
                 "created_at": import_date
             }
             leads.append(lead)
-                    "docs_collection": "Pending",
-                    "customer_readiness": "Not Ready",
-                    "assigned_telecaller": None,
-                    "telecaller_notes": None,
-                    "notes": None,
-                    "created_at": import_date
-                }
-                leads.append(lead)
         
-        elif len(df.columns) >= 8:
-            # Format 2: 8 columns with Tamil
-            logger.info("Detected Format 2 (8+ columns)")
-            
-            # Check for lead source column if read_source_from_file is True
-            lead_source_column = None
-            if read_source_from_file:
-                possible_names = ['Lead Source', 'lead_source', 'Source', 'source', 'LeadSource', 'lead source', 'Lead Generator', 'lead_generator']
-                for col_name in possible_names:
-                    if col_name in df.columns:
-                        lead_source_column = col_name
-                        logger.info(f"Found lead source column in Format 2: {col_name}")
-                        break
-                
-                if not lead_source_column:
-                    raise HTTPException(
-                        status_code=400, 
-                        detail="Lead Source column not found in file. Please ensure your file has a 'Lead Source' or 'Lead Generator' column."
-                    )
-            
-            for _, row in df.iterrows():
-                # Map Tamil questions to English fields
-                driving_license = str(row.iloc[3]) if pd.notna(row.iloc[3]) else ""
-                experience = str(row.iloc[4]) if pd.notna(row.iloc[4]) else ""
-                interested_ev = str(row.iloc[5]) if pd.notna(row.iloc[5]) else ""
-                location = str(row.iloc[7]) if pd.notna(row.iloc[7]) else ""
-                
-                # Parse phone number - remove p:+91 prefix and get last 10 digits
-                raw_phone = str(row.iloc[2]) if pd.notna(row.iloc[2]) else ""
-                phone_number = raw_phone
-                if raw_phone.startswith("p:"):
-                    # Remove p: prefix and any country code, keep last 10 digits
-                    phone_number = raw_phone.replace("p:", "").replace("+", "").replace(" ", "")
-                    if len(phone_number) > 10:
-                        phone_number = phone_number[-10:]  # Get last 10 digits
-                
-                # Get lead source from file or use manual input
-                row_lead_source = lead_source
-                if read_source_from_file and lead_source_column:
-                    row_lead_source = str(row[lead_source_column]) if pd.notna(row[lead_source_column]) else ""
-                
-                lead = {
-                    "id": str(uuid.uuid4()),
-                    "name": str(row.iloc[0]) if pd.notna(row.iloc[0]) else "",
-                    "phone_number": phone_number,
-                    "vehicle": None,
-                    "driving_license": driving_license,
-                    "experience": experience,
-                    "interested_ev": interested_ev,
-                    "monthly_salary": str(row.iloc[6]) if pd.notna(row.iloc[6]) else "",
-                    "residing_chennai": None,
-                    "current_location": location,
-                    "import_date": import_date,
-                    "lead_source": row_lead_source,
-                    "lead_date": lead_date,
-                    "status": "New",
-                    "lead_stage": "New",
-                    "driver_readiness": "Not Started",
-                    "docs_collection": "Pending",
-                    "customer_readiness": "Not Ready",
-                    "assigned_telecaller": None,
-                    "telecaller_notes": None,
-                    "notes": None,
-                    "created_at": import_date
-                }
-                leads.append(lead)
-        else:
-            raise HTTPException(
-                status_code=400, 
-                detail=f"Unsupported format. Expected Format 1 (4 columns), Format 2 (8 columns), or Format 3 (comprehensive with headers). Got {len(df.columns)} columns."
-            )
+        if not leads:
+            raise HTTPException(status_code=400, detail="No valid leads found in file")
+        
+        logger.info(f"Parsed {len(leads)} leads from file")
         
         # Check for duplicates by phone number
         if leads:
