@@ -235,12 +235,21 @@ class BulkLeadDelete(BaseModel):
 class QRCodeCreate(BaseModel):
     """Model for creating a new QR code"""
     name: str
+    campaign_name: Optional[str] = None  # NEW: Group QR codes under campaigns
     landing_page_type: str  # "single" or "multiple"
     landing_page_single: Optional[str] = None
     landing_page_ios: Optional[str] = None
     landing_page_android: Optional[str] = None
     landing_page_mobile: Optional[str] = None
     landing_page_desktop: Optional[str] = None
+    # UTM Parameters for analytics tracking
+    utm_source: Optional[str] = None
+    utm_medium: Optional[str] = None
+    utm_campaign: Optional[str] = None
+    utm_term: Optional[str] = None
+    utm_content: Optional[str] = None
+    # Bulk generation
+    bulk_count: Optional[int] = 1  # Number of QR codes to generate (default 1)
 
 
 class QRCode(BaseModel):
@@ -249,12 +258,19 @@ class QRCode(BaseModel):
     
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     name: str
+    campaign_name: Optional[str] = None
     landing_page_type: str
     landing_page_single: Optional[str] = None
     landing_page_ios: Optional[str] = None
     landing_page_android: Optional[str] = None
     landing_page_mobile: Optional[str] = None
     landing_page_desktop: Optional[str] = None
+    # UTM Parameters
+    utm_source: Optional[str] = None
+    utm_medium: Optional[str] = None
+    utm_campaign: Optional[str] = None
+    utm_term: Optional[str] = None
+    utm_content: Optional[str] = None
     qr_image_filename: str
     unique_short_code: str
     created_by: str  # user_id
@@ -266,12 +282,18 @@ class QRCode(BaseModel):
 class QRCodeUpdate(BaseModel):
     """Model for updating QR code settings"""
     name: Optional[str] = None
+    campaign_name: Optional[str] = None
     landing_page_type: Optional[str] = None
     landing_page_single: Optional[str] = None
     landing_page_ios: Optional[str] = None
     landing_page_android: Optional[str] = None
     landing_page_mobile: Optional[str] = None
     landing_page_desktop: Optional[str] = None
+    utm_source: Optional[str] = None
+    utm_medium: Optional[str] = None
+    utm_campaign: Optional[str] = None
+    utm_term: Optional[str] = None
+    utm_content: Optional[str] = None
     is_active: Optional[bool] = None
 
 
