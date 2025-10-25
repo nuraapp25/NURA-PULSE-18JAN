@@ -974,93 +974,107 @@ async def import_leads(
         
         logger.info(f"Parsed {len(leads)} leads from file")
         
-        # Check for duplicates by phone number
+        # SMART DUPLICATE DETECTION: Normalize phone numbers (last 10 digits)
+        def normalize_phone(phone):
+            """Extract last 10 digits from phone number (handles +91, 91, etc.)"""
+            if not phone:
+                return None
+            # Remove all non-numeric characters
+            phone_digits = ''.join(filter(str.isdigit, str(phone)))
+            # Return last 10 digits
+            if len(phone_digits) >= 10:
+                return phone_digits[-10:]
+            return phone_digits if phone_digits else None
+        
+        # Check for duplicates by normalized phone number
         if leads:
-            phone_numbers = [lead['phone_number'] for lead in leads if lead['phone_number']]
-            
-            # Find existing leads with matching phone numbers
-            existing_leads = await db.driver_leads.find(
-                {"phone_number": {"$in": phone_numbers}},
-                {"_id": 0, "phone_number": 1, "name": 1, "id": 1}
+            # Get all existing phone numbers from database
+            all_existing_leads = await db.driver_leads.find(
+                {},
+                {"_id": 0, "phone_number": 1, "name": 1, "id": 1, "status": 1}
             ).to_list(10000)
             
-            existing_phones = {lead['phone_number']: lead for lead in existing_leads}
+            # Create a map of normalized phone -> existing lead
+            existing_phone_map = {}
+            for existing_lead in all_existing_leads:
+                normalized = normalize_phone(existing_lead.get('phone_number'))
+                if normalized:
+                    existing_phone_map[normalized] = existing_lead
             
-            # Identify duplicates
+            logger.info(f"Found {len(existing_phone_map)} existing leads with valid phone numbers")
+            
+            # Identify duplicates and non-duplicates
             duplicates = []
             non_duplicates = []
             
             for lead in leads:
-                if lead['phone_number'] in existing_phones:
+                normalized_phone = normalize_phone(lead['phone_number'])
+                
+                if normalized_phone and normalized_phone in existing_phone_map:
+                    # Duplicate found!
+                    existing = existing_phone_map[normalized_phone]
                     duplicates.append({
                         "name": lead['name'],
                         "phone_number": lead['phone_number'],
-                        "existing_name": existing_phones[lead['phone_number']]['name']
+                        "normalized_phone": normalized_phone,
+                        "existing_name": existing.get('name', 'Unknown'),
+                        "existing_status": existing.get('status', 'Unknown'),
+                        "existing_phone": existing.get('phone_number', '')
                     })
+                    logger.info(f"Duplicate found: {lead['phone_number']} (normalized: {normalized_phone}) matches existing {existing.get('phone_number')}")
                 else:
                     non_duplicates.append(lead)
             
-            # If duplicates found and no valid action specified, ask user
-            # Check if duplicate_action is None, empty, or invalid
-            valid_action = duplicate_action in ['skip', 'add_copy'] if duplicate_action else False
-            
-            if duplicates and not valid_action:
-                logger.info(f"Found {len(duplicates)} duplicates, asking user for action")
+            # If duplicates found, automatically skip them and show the list
+            if duplicates:
+                logger.info(f"Found {len(duplicates)} duplicates, automatically skipping")
+                
+                # Insert only non-duplicates
+                if non_duplicates:
+                    await db.driver_leads.insert_many(non_duplicates)
+                    logger.info(f"Imported {len(non_duplicates)} new leads to database")
+                    
+                    # Sync to Google Sheets
+                    try:
+                        sync_all_records('leads', non_duplicates)
+                    except Exception as sync_error:
+                        logger.warning(f"Google Sheets sync failed: {str(sync_error)}")
+                
                 return {
-                    "duplicates_found": True,
+                    "success": True,
+                    "message": f"Imported {len(non_duplicates)} new lead(s), skipped {len(duplicates)} duplicate(s)",
+                    "imported_count": len(non_duplicates),
                     "duplicate_count": len(duplicates),
-                    "new_leads_count": len(non_duplicates),
                     "total_in_file": len(leads),
-                    "duplicates": duplicates[:10],  # Show first 10 duplicates
-                    "message": f"Found {len(duplicates)} duplicate(s) based on phone number. Please choose an action."
+                    "duplicates_found": True,
+                    "duplicates": duplicates,  # Show ALL duplicates
+                    "duplicate_phones": [dup['phone_number'] for dup in duplicates]  # Just phone numbers for quick view
                 }
-            
-            # Process based on user action
-            leads_to_insert = []
-            
-            if duplicate_action == "skip":
-                # Only insert non-duplicates
-                leads_to_insert = non_duplicates
-                skipped_count = len(duplicates)
-            elif duplicate_action == "add_copy":
-                # Add non-duplicates as is, and duplicates with "-copy" suffix
-                leads_to_insert = non_duplicates
-                for lead in leads:
-                    if lead['phone_number'] in existing_phones:
-                        lead['name'] = f"{lead['name']}-copy"
-                        leads_to_insert.append(lead)
-                skipped_count = 0
             else:
-                # No duplicates or no action needed
-                leads_to_insert = leads
-                skipped_count = 0
-            
-            # Insert leads
-            if leads_to_insert:
-                await db.driver_leads.insert_many(leads_to_insert)
-                logger.info(f"Imported {len(leads_to_insert)} leads to database")
+                # No duplicates, insert all leads
+                await db.driver_leads.insert_many(leads)
+                logger.info(f"Imported {len(leads)} leads to database (no duplicates)")
                 
                 # Sync to Google Sheets
-                sync_all_records('leads', leads_to_insert)
-            
-            message = f"Successfully imported {len(leads_to_insert)} lead(s)"
-            if duplicate_action == "skip" and skipped_count > 0:
-                message += f", skipped {skipped_count} duplicate(s)"
-            elif duplicate_action == "add_copy" and len(duplicates) > 0:
-                message += f", added {len(duplicates)} duplicate(s) as copies"
-            
-            return {
-                "message": message,
-                "count": len(leads_to_insert),
-                "skipped": skipped_count if duplicate_action == "skip" else 0,
-                "format_detected": "Format 1 (4 columns)" if len(df.columns) == 4 else "Format 2 (8 columns)",
-                "duplicates_found": False
-            }
+                try:
+                    sync_all_records('leads', leads)
+                except Exception as sync_error:
+                    logger.warning(f"Google Sheets sync failed: {str(sync_error)}")
+                
+                return {
+                    "success": True,
+                    "message": f"Successfully imported {len(leads)} lead(s)",
+                    "imported_count": len(leads),
+                    "duplicate_count": 0,
+                    "total_in_file": len(leads),
+                    "duplicates_found": False
+                }
         
         return {
+            "success": False,
             "message": "No leads found in file",
-            "count": 0,
-            "format_detected": "Format 1 (4 columns)" if len(df.columns) == 4 else "Format 2 (8 columns)"
+            "imported_count": 0,
+            "duplicate_count": 0
         }
         
     except Exception as e:
