@@ -2517,34 +2517,6 @@ const DriverOnboardingPage = () => {
               </div>
             </div>
           )}
-                      </>
-                    )}
-                  </Button>
-                  <Button
-                    onClick={() => handleDuplicateAction('add_copy')}
-                    disabled={importing}
-                    className="bg-orange-600 hover:bg-orange-700"
-                  >
-                    {importing ? (
-                      <>
-                        <RefreshCw size={18} className="mr-2 animate-spin" />
-                        Processing...
-                      </>
-                    ) : (
-                      <>
-                        <Plus size={18} className="mr-2" />
-                        Add Copy
-                      </>
-                    )}
-                  </Button>
-                </div>
-                <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
-                  <strong>Skip:</strong> Import only {duplicateData.new_leads_count} new lead(s)<br />
-                  <strong>Add Copy:</strong> Import all {duplicateData.total_in_file} lead(s), duplicates will be renamed with "-copy" suffix
-                </p>
-              </div>
-            </div>
-          )}
         </DialogContent>
       </Dialog>
     </div>
