@@ -2729,6 +2729,7 @@ async def get_battery_charge_audit(current_user: User = Depends(get_current_user
             # Find battery charge at or before 7 AM
             for record in day_records:
                 battery_pct_7am = (record.get("Battery Soc(%)") or 
+                                  record.get("Battery SOC(%)") or  # NEW: Handle uppercase SOC
                                   record.get("Battery %") or 
                                   record.get("battery_soc_percentage") or 
                                   record.get("Battery") or
