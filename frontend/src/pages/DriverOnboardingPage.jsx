@@ -244,6 +244,13 @@ const DriverOnboardingPage = () => {
   useEffect(() => {
     fetchLeads();
   }, []);
+  
+  // Refetch summary when date filter changes
+  useEffect(() => {
+    if (leads.length > 0) {
+      fetchStatusSummary();
+    }
+  }, [summaryStartDate, summaryEndDate]);
 
   // Filter leads by date range and stages
   useEffect(() => {
