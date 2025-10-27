@@ -163,9 +163,9 @@ class DriverLead(BaseModel):
     # Lead source tracking
     lead_source: Optional[str] = None
     
-    # Stage and Status
-    stage: str = "New"  # Stage field (renamed from lead_stage)
-    status: str = "New"  # Status field
+    # Stage and Status (Stage-based onboarding system)
+    stage: str = "S1"  # S1, S2, S3, S4
+    status: str = "New"  # Stage-specific status
     
     # Telecaller assignment
     assigned_telecaller: Optional[str] = None
