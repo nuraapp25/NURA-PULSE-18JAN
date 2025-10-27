@@ -68,6 +68,102 @@ const HotspotPlanning = () => {
     'Late Night (10PM-1AM)'
   ];
 
+  // Load library when switching to library view
+  useEffect(() => {
+    if (view === 'library') {
+      fetchLibrary();
+    }
+  }, [view]);
+
+  const fetchLibrary = async () => {
+    try {
+      setLoadingLibrary(true);
+      const token = localStorage.getItem("token");
+      const response = await axios.get(`${API}/hotspot-planning/library`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.success) {
+        setSavedAnalyses(response.data.analyses);
+      }
+    } catch (error) {
+      console.error("Failed to fetch library:", error);
+      toast.error("Failed to load saved analyses");
+    } finally {
+      setLoadingLibrary(false);
+    }
+  };
+
+  const handleViewSavedAnalysis = async (analysisId) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        `${API}/hotspot-planning/library/${analysisId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      if (response.data.success) {
+        const analysis = response.data.analysis;
+        setResults(analysis.analysis_result);
+        setCurrentAnalysisId(analysisId);
+        setView('view-saved');
+        
+        // Auto-select first slot with data
+        const firstSlotWithData = timeSlots.find(
+          slot => analysis.analysis_result.time_slots[slot]?.status === 'success'
+        );
+        
+        if (firstSlotWithData) {
+          setSelectedSlot(firstSlotWithData);
+          const slotData = analysis.analysis_result.time_slots[firstSlotWithData];
+          if (slotData.hotspot_locations && slotData.hotspot_locations.length > 0) {
+            setMapCenter([slotData.hotspot_locations[0].lat, slotData.hotspot_locations[0].long]);
+          }
+        }
+        
+        toast.success("Analysis loaded successfully");
+      }
+    } catch (error) {
+      console.error("Failed to load analysis:", error);
+      toast.error("Failed to load analysis");
+    }
+  };
+
+  const handleDeleteAnalysis = async (analysisId) => {
+    if (!window.confirm("Are you sure you want to delete this analysis?")) {
+      return;
+    }
+    
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(
+        `${API}/hotspot-planning/library/${analysisId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      toast.success("Analysis deleted successfully");
+      fetchLibrary(); // Refresh library
+    } catch (error) {
+      console.error("Failed to delete analysis:", error);
+      toast.error(error.response?.data?.detail || "Failed to delete analysis");
+    }
+  };
+
+  const handleSaveAnalysis = async () => {
+    if (!results) return;
+    
+    try {
+      toast.info("Saving analysis...");
+      // Analysis is already saved when we use analyze-and-save endpoint
+      // This is just for UX feedback
+      toast.success("Analysis saved to library!");
+      setView('library');
+    } catch (error) {
+      console.error("Save error:", error);
+      toast.error("Failed to save analysis");
+    }
+  };
+
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
