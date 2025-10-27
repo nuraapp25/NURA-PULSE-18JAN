@@ -189,8 +189,69 @@ export default function QRCodeManager() {
       landing_page_ios: '',
       landing_page_android: '',
       landing_page_mobile: '',
-      landing_page_desktop: ''
+      landing_page_desktop: '',
+      campaign_name: '',
+      utm_source: '',
+      utm_medium: '',
+      utm_campaign: '',
+      utm_term: '',
+      utm_content: ''
     });
+  };
+
+  const handleBatchDownload = async () => {
+    if (selectedQRs.length === 0) {
+      toast.error('Please select at least one QR code to download');
+      return;
+    }
+
+    try {
+      toast.info('Preparing download...');
+      const token = localStorage.getItem('token');
+      
+      // Download all selected QRs
+      for (const qrId of selectedQRs) {
+        const qr = qrCodes.find(q => q.id === qrId);
+        if (qr) {
+          await handleDownloadQR(qrId, qr.name);
+          await new Promise(resolve => setTimeout(resolve, 500)); // Small delay between downloads
+        }
+      }
+      
+      toast.success(`Downloaded ${selectedQRs.length} QR codes!`);
+      setSelectedQRs([]);
+    } catch (error) {
+      console.error('Failed to batch download:', error);
+      toast.error('Failed to download some QR codes');
+    }
+  };
+
+  const toggleQRSelection = (qrId) => {
+    setSelectedQRs(prev => 
+      prev.includes(qrId) 
+        ? prev.filter(id => id !== qrId)
+        : [...prev, qrId]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedQRs.length === qrCodes.length) {
+      setSelectedQRs([]);
+    } else {
+      setSelectedQRs(qrCodes.map(qr => qr.id));
+    }
+  };
+
+  const autoFillUTM = () => {
+    const campaignSlug = formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+    setFormData(prev => ({
+      ...prev,
+      utm_source: prev.utm_source || 'qr_code',
+      utm_medium: prev.utm_medium || 'qr_scan',
+      utm_campaign: prev.utm_campaign || campaignSlug,
+      utm_content: prev.utm_content || campaignSlug
+    }));
+    toast.success('UTM parameters auto-filled!');
   };
 
   const formatDate = (dateString) => {
