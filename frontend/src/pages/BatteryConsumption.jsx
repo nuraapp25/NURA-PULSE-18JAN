@@ -113,27 +113,50 @@ const BatteryConsumption = () => {
     }
   };
 
-  const calculateSummary = (data) => {
-    let chargeDrop = 0;
-    let charge = 0;
-    let totalDistance = 0;
-
-    data.forEach((point) => {
-      if (point.batteryChange < 0) {
-        chargeDrop += Math.abs(point.batteryChange);
-      } else if (point.batteryChange > 0) {
-        charge += point.batteryChange;
+  const calculateSummary = (data, rawData) => {
+    // NEW LOGIC: Find min/max battery and calculate properly
+    const batteryValues = [];
+    let minBattery = 100;
+    let maxBattery = 0;
+    let startBattery = 0;
+    let endBattery = 0;
+    
+    // Extract all battery values from raw data
+    rawData.forEach((row) => {
+      const battery = parseFloat(row['Battery Soc(%)'] || row['Battery SOC(%)'] || 0);
+      const status = (row['Vehicle Status'] || '').toLowerCase();
+      
+      if (battery > 0) {
+        batteryValues.push({ battery, status });
+        minBattery = Math.min(minBattery, battery);
+        maxBattery = Math.max(maxBattery, battery);
       }
     });
-
+    
+    if (batteryValues.length > 0) {
+      startBattery = batteryValues[0].battery;
+      endBattery = batteryValues[batteryValues.length - 1].battery;
+    }
+    
+    // Calculate Charge Drop % (Start to Minimum)
+    const chargeDrop = startBattery - minBattery;
+    
+    // Calculate Charge % (Min to End)
+    const charge = endBattery - minBattery;
+    
+    // Total distance
+    let totalDistance = 0;
     if (data.length > 0) {
       totalDistance = data[data.length - 1].distance;
     }
 
     return {
-      chargeDrop: chargeDrop.toFixed(2),
-      charge: charge.toFixed(2),
-      kmTravelled: totalDistance.toFixed(2)
+      chargeDrop: Math.max(0, chargeDrop).toFixed(2),
+      charge: Math.max(0, charge).toFixed(2),
+      kmTravelled: totalDistance.toFixed(2),
+      startBattery: startBattery.toFixed(1),
+      minBattery: minBattery.toFixed(1),
+      endBattery: endBattery.toFixed(1)
     };
   };
 
