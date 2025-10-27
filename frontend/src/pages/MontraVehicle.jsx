@@ -23,6 +23,11 @@ const MontraVehicle = () => {
   const [loadingDatabase, setLoadingDatabase] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [expandedFolders, setExpandedFolders] = useState({});
+  
+  // NEW: Filter state variables
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedVehicleFilter, setSelectedVehicleFilter] = useState("");
+  const [selectedDateFilter, setSelectedDateFilter] = useState("");
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [viewingFileData, setViewingFileData] = useState(null);
   const [loadingFileData, setLoadingFileData] = useState(false);
