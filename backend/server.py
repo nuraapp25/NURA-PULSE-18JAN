@@ -2770,11 +2770,17 @@ async def get_battery_charge_audit(current_user: User = Depends(get_current_user
                             break
                     except:
                         continue
+            # NEW LOGIC: Find minimum battery and calculate charge drop/charge %
+            battery_values = []
+            charging_started_battery = None
+            charging_ended_battery = None
+            start_battery = None
+            end_battery = None
             
             for record in day_records:
-                # Get battery percentage (check all possible field names)
+                # Get battery percentage
                 battery_pct = (record.get("Battery Soc(%)") or 
-                              record.get("Battery SOC(%)") or  # NEW: Handle uppercase SOC
+                              record.get("Battery SOC(%)") or 
                               record.get("Battery %") or 
                               record.get("battery_soc_percentage") or 
                               record.get("Battery") or
@@ -2782,72 +2788,60 @@ async def get_battery_charge_audit(current_user: User = Depends(get_current_user
                               record.get("SOC") or
                               record.get("soc"))
                 
-                time_str = (record.get("Portal Received Time") or
-                           record.get("time") or 
-                           record.get("Time") or 
-                           record.get("Hour") or
-                           record.get("hour"))
+                vehicle_status = (record.get("Vehicle Status") or 
+                                 record.get("status") or
+                                 record.get("Status") or "")
                 
-                km_value = (record.get("Odometer (km)") or
-                           record.get("KM") or 
-                           record.get("km") or 
-                           record.get("Kilometer") or
-                           record.get("kilometer"))
-                
-                if battery_pct is None or time_str is None:
+                if battery_pct is None or battery_pct == '-':
                     continue
                 
                 try:
-                    # Parse time - handle different time formats including datetime strings
-                    if isinstance(time_str, str):
-                        # Try to parse as datetime first (e.g., "2025-09-30 18:09:56")
-                        try:
-                            dt = datetime.fromisoformat(time_str.replace(' ', 'T'))
-                            record_time = dt.time()
-                        except:
-                            # Try as time only
-                            time_part = time_str.split()[0] if ' ' in time_str else time_str
-                            try:
-                                record_time = datetime.strptime(time_part, "%H:%M:%S").time()
-                            except:
-                                try:
-                                    record_time = datetime.strptime(time_part, "%H:%M").time()
-                                except:
-                                    continue
-                    else:
-                        continue
-                    
-                    # Check if between 7 AM and 7 PM (inclusive)
-                    if dt_time(7, 0) <= record_time <= dt_time(19, 0):
-                        # Check if charge is at or below 20%
-                        try:
-                            # Handle string values like "20", "0", "-"
-                            if battery_pct == '-' or battery_pct is None:
-                                continue
-                            battery_value = float(str(battery_pct))
-                        except (ValueError, TypeError):
-                            continue
-                        
-                        # Changed from < to <= to include 20%
-                        if battery_value <= 20:
-                            # Calculate KM driven from start of day
-                            km_driven = None
-                            if km_value is not None and start_of_day_km is not None:
-                                try:
-                                    km_driven = float(km_value) - float(start_of_day_km)
-                                    if km_driven < 0:
-                                        km_driven = 0  # Set to 0 instead of None for negative values
-                                except:
-                                    km_driven = None
-                            
-                            first_low_charge = {
-                                "date": date,
-                                "vehicle_name": display_name,
-                                "timestamp": time_str,
-                                "km_driven_upto_point": round(km_driven, 2) if km_driven is not None else "N/A",
-                                "battery_percentage": round(battery_value, 1),
-                                "charge_at_7am": round(charge_at_7am, 1) if charge_at_7am is not None else "N/A"
-                            }
+                    battery_value = float(str(battery_pct))
+                    battery_values.append({
+                        'battery': battery_value,
+                        'status': str(vehicle_status).strip()
+                    })
+                except (ValueError, TypeError):
+                    continue
+            
+            # Calculate charge drop and charge %
+            if battery_values:
+                # Start battery is first reading
+                start_battery = battery_values[0]['battery']
+                
+                # End battery is last reading
+                end_battery = battery_values[-1]['battery']
+                
+                # Find when charging first appears (that's when battery was at minimum)
+                for item in battery_values:
+                    if 'Charging' in item['status'] or 'charging' in item['status']:
+                        if charging_started_battery is None:
+                            charging_started_battery = item['battery']
+                        charging_ended_battery = item['battery']  # Keep updating to get last charging value
+                
+                # Calculate charge drop
+                if charging_started_battery is not None:
+                    # Charge drop = Start - Minimum (when charging started)
+                    charge_drop_pct = start_battery - charging_started_battery
+                else:
+                    # If no charging, check if battery dropped
+                    min_battery = min([item['battery'] for item in battery_values])
+                    charge_drop_pct = start_battery - min_battery if start_battery > min_battery else 0
+                
+                # Calculate charge %
+                if charging_started_battery is not None and charging_ended_battery is not None:
+                    # Charge % = End - Start of charging
+                    charge_pct = charging_ended_battery - charging_started_battery
+                else:
+                    # If no charging detected, check if battery increased
+                    charge_pct = end_battery - start_battery if end_battery > start_battery else 0
+                
+                # Make sure percentages are not negative
+                charge_drop_pct = max(0, charge_drop_pct)
+                charge_pct = max(0, charge_pct)
+            else:
+                charge_drop_pct = 0
+                charge_pct = 0
                             logger.info(f"Found low charge: {vehicle_id} on {date} at {time_str} - {battery_value}%")
                             break  # Found first instance, stop checking this day
                     
