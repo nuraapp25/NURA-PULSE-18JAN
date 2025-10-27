@@ -885,6 +885,8 @@ const HotspotPlanning = () => {
           )}
         </>
       )}
+        </>
+      )}
     </div>
   );
 };
