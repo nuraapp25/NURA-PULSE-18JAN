@@ -229,6 +229,11 @@ class BulkLeadDelete(BaseModel):
     lead_ids: List[str]
 
 
+class DriverStageSync(BaseModel):
+    """Model for syncing driver to next stage"""
+    lead_id: str
+
+
 
 # ==================== QR Code Management ====================
 
