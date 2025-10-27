@@ -723,37 +723,81 @@ const MontraVehicle = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Feed Database Dialog */}
+      {/* Enhanced Feed Database Dialog */}
       <Dialog open={databaseDialogOpen} onOpenChange={setDatabaseDialogOpen}>
-        <DialogContent className="max-w-4xl dark:bg-gray-800">
+        <DialogContent className="max-w-6xl max-h-[90vh] dark:bg-gray-800">
           <DialogHeader>
             <DialogTitle className="dark:text-white flex items-center">
               <Database size={20} className="mr-2" />
-              Montra Feed Database
+              Montra Feed Database Library
             </DialogTitle>
             <DialogDescription className="dark:text-gray-400">
-              Manage uploaded CSV files and their data records. Select files to delete them from the database.
+              Advanced search, filter, view, delete and download feed data records
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4 mt-4">
-            {/* Control Bar */}
-            <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+            {/* Enhanced Filter Bar */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              {/* Search Bar */}
+              <div className="md:col-span-2">
+                <Label className="text-xs dark:text-gray-300">Search</Label>
+                <Input
+                  placeholder="Search by vehicle ID, filename..."
+                  value={searchQuery || ''}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="dark:bg-gray-800 dark:text-white"
+                />
+              </div>
+              
+              {/* Vehicle Filter */}
+              <div>
+                <Label className="text-xs dark:text-gray-300">Vehicle</Label>
+                <select
+                  value={selectedVehicleFilter || ''}
+                  onChange={(e) => setSelectedVehicleFilter(e.target.value)}
+                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 dark:text-white text-sm"
+                >
+                  <option value="">All Vehicles</option>
+                  {getUniqueVehicles().map(vehicle => (
+                    <option key={vehicle} value={vehicle}>{vehicle}</option>
+                  ))}
+                </select>
+              </div>
+              
+              {/* Date Filter */}
+              <div>
+                <Label className="text-xs dark:text-gray-300">Date Range</Label>
+                <select
+                  value={selectedDateFilter || ''}
+                  onChange={(e) => setSelectedDateFilter(e.target.value)}
+                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 dark:text-white text-sm"
+                >
+                  <option value="">All Dates</option>
+                  {getUniqueDates().map(date => (
+                    <option key={date} value={date}>{date}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Action Bar */}
+            <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
               <div className="flex items-center space-x-4">
                 <label className="flex items-center space-x-2">
                   <input
                     type="checkbox"
-                    checked={selectedFileIds.length === getAllFiles().length && getAllFiles().length > 0}
+                    checked={selectedFileIds.length === getFilteredFiles().length && getFilteredFiles().length > 0}
                     onChange={(e) => handleSelectAll(e.target.checked)}
                     className="rounded"
                   />
-                  <span className="text-sm text-gray-700 dark:text-gray-300">
-                    Select All ({getAllFiles().length} files)
+                  <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">
+                    Select All ({getFilteredFiles().length} records)
                   </span>
                 </label>
                 {selectedFileIds.length > 0 && (
-                  <span className="text-sm text-blue-600 dark:text-blue-400">
-                    {selectedFileIds.length} selected
+                  <span className="text-sm text-blue-600 dark:text-blue-400 font-semibold">
+                    ✓ {selectedFileIds.length} selected
                   </span>
                 )}
               </div>
@@ -764,7 +808,18 @@ const MontraVehicle = () => {
                   size="sm"
                   disabled={loadingDatabase}
                 >
-                  {loadingDatabase ? "Loading..." : "Refresh"}
+                  <RefreshCw size={16} className={`mr-1 ${loadingDatabase ? 'animate-spin' : ''}`} />
+                  Refresh
+                </Button>
+                <Button
+                  onClick={handleDownloadSelected}
+                  disabled={selectedFileIds.length === 0}
+                  variant="outline"
+                  size="sm"
+                  className="bg-green-50 hover:bg-green-100 dark:bg-green-900/20"
+                >
+                  <Download size={16} className="mr-1" />
+                  Download ({selectedFileIds.length})
                 </Button>
                 {isMasterAdmin && (
                   <Button
@@ -774,7 +829,7 @@ const MontraVehicle = () => {
                     size="sm"
                   >
                     <Trash2 size={16} className="mr-1" />
-                    {deleting ? "Deleting..." : `Delete Selected (${selectedFileIds.length})`}
+                    {deleting ? "Deleting..." : `Delete (${selectedFileIds.length})`}
                   </Button>
                 )}
               </div>
