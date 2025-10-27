@@ -31,8 +31,15 @@ export default function QRCodeManager() {
     landing_page_ios: '',
     landing_page_android: '',
     landing_page_mobile: '',
-    landing_page_desktop: ''
+    landing_page_desktop: '',
+    campaign_name: '',
+    utm_source: '',
+    utm_medium: '',
+    utm_campaign: '',
+    utm_term: '',
+    utm_content: ''
   });
+  const [selectedQRs, setSelectedQRs] = useState([]);
 
   useEffect(() => {
     fetchQRCodes();
