@@ -1105,6 +1105,101 @@ async def get_leads(current_user: User = Depends(get_current_user)):
     return leads
 
 
+@api_router.get("/driver-onboarding/status-summary")
+async def get_status_summary(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get status summary dashboard with counts grouped by stage and status.
+    Optionally filter by date range (import_date field).
+    """
+    from datetime import datetime, timezone
+    
+    # Build query filter
+    query = {}
+    
+    if start_date or end_date:
+        date_filter = {}
+        if start_date:
+            # Parse start date (format: YYYY-MM-DD or DD-MM-YYYY)
+            try:
+                if '-' in start_date and len(start_date.split('-')[0]) == 4:
+                    # YYYY-MM-DD format
+                    start_dt = datetime.strptime(start_date, '%Y-%m-%d')
+                else:
+                    # DD-MM-YYYY format
+                    start_dt = datetime.strptime(start_date, '%d-%m-%Y')
+                date_filter['$gte'] = start_dt.strftime('%Y-%m-%d')
+            except:
+                # If parsing fails, try as-is
+                date_filter['$gte'] = start_date
+        
+        if end_date:
+            # Parse end date
+            try:
+                if '-' in end_date and len(end_date.split('-')[0]) == 4:
+                    # YYYY-MM-DD format
+                    end_dt = datetime.strptime(end_date, '%Y-%m-%d')
+                else:
+                    # DD-MM-YYYY format
+                    end_dt = datetime.strptime(end_date, '%d-%m-%Y')
+                date_filter['$lte'] = end_dt.strftime('%Y-%m-%d')
+            except:
+                # If parsing fails, try as-is
+                date_filter['$lte'] = end_date
+        
+        if date_filter:
+            query['import_date'] = date_filter
+    
+    # Get all leads matching the date filter
+    leads = await db.driver_leads.find(query, {"_id": 0, "stage": 1, "status": 1}).to_list(10000)
+    
+    # Define stage and status structure
+    stages = {
+        'S1': ['New', 'Not interested', 'Interested, No DL', 'Highly Interested', 
+               'Call back 1D', 'Call back 1W', 'Call back 2W', 'Call back 1M'],
+        'S2': ['Docs Upload Pending', 'Verification Pending', 'Duplicate License', 
+               'DL - Amount', 'Verified', 'Verification Rejected'],
+        'S3': ['Schedule Pending', 'Training WIP', 'Training Completed', 'Training Rejected',
+               'Re-Training', 'Absent for training', 'Approved'],
+        'S4': ['CT Pending', 'CT WIP', 'Shift Details Pending', 'DONE!', 
+               'Training Rejected', 'Re-Training', 'Absent for training', 'Terminated']
+    }
+    
+    # Initialize counts
+    summary = {}
+    for stage_key, statuses in stages.items():
+        summary[stage_key] = {}
+        for status in statuses:
+            summary[stage_key][status] = 0
+    
+    # Count leads by stage and status
+    for lead in leads:
+        stage = lead.get('stage', 'S1')
+        status = lead.get('status', 'New')
+        
+        if stage in summary and status in summary[stage]:
+            summary[stage][status] += 1
+    
+    # Calculate totals
+    stage_totals = {}
+    for stage_key in stages.keys():
+        stage_totals[stage_key] = sum(summary[stage_key].values())
+    
+    return {
+        "success": True,
+        "summary": summary,
+        "stage_totals": stage_totals,
+        "total_leads": len(leads),
+        "date_filter": {
+            "start_date": start_date,
+            "end_date": end_date
+        }
+    }
+
+
 @api_router.post("/driver-onboarding/sync-leads")
 async def sync_leads_to_sheets(current_user: User = Depends(get_current_user)):
     """Sync all leads to Google Sheets"""
