@@ -727,8 +727,8 @@ const HotspotPlanning = () => {
                           key={selectedSlot}
                         >
                           <TileLayer
-                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
-                            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                           />
                           
                           {/* Hotspot Locations with Coverage Circles */}
@@ -740,12 +740,21 @@ const HotspotPlanning = () => {
                                 pathOptions={{
                                   color: location.coverage_percentage > 80 ? '#22c55e' : location.coverage_percentage > 60 ? '#f97316' : '#ef4444',
                                   fillColor: location.coverage_percentage > 80 ? '#22c55e' : location.coverage_percentage > 60 ? '#f97316' : '#ef4444',
-                                  fillOpacity: 0.2,
-                                  weight: 1.5,
-                                  opacity: 0.8
+                                  fillOpacity: 0.15,
+                                  weight: 2
                                 }}
                               />
-                              <Marker position={[location.lat, location.long]} icon={hotspotIcon}>
+                              {/* Minimal dot for hotspot */}
+                              <Circle
+                                center={[location.lat, location.long]}
+                                radius={50}
+                                pathOptions={{
+                                  color: '#FFD700',
+                                  fillColor: '#FFD700',
+                                  fillOpacity: 1,
+                                  weight: 2
+                                }}
+                              >
                                 <Popup>
                                   <div className="text-sm p-2">
                                     <p className="font-bold text-lg mb-2">📍 Location #{idx + 1}</p>
@@ -760,17 +769,22 @@ const HotspotPlanning = () => {
                                     <p className="text-xs"><strong>Coverage:</strong> <span className={location.coverage_percentage > 80 ? 'text-green-600' : location.coverage_percentage > 60 ? 'text-orange-600' : 'text-red-600'}>{location.coverage_percentage.toFixed(1)}%</span></p>
                                   </div>
                                 </Popup>
-                              </Marker>
+                              </Circle>
                             </React.Fragment>
                           ))}
 
-                          {/* Pickup Points - Reduced opacity and smaller */}
+                          {/* Pickup Points - Smaller dots */}
                           {currentSlotData.pickup_points && currentSlotData.pickup_points.slice(0, 100).map((point, idx) => (
-                            <Marker
+                            <Circle
                               key={`pickup-${idx}`}
-                              position={[point[0], point[1]]}
-                              icon={point[2] ? pickupIconCovered : pickupIconUncovered}
-                              opacity={0.6}
+                              center={[point[0], point[1]]}
+                              radius={30}
+                              pathOptions={{
+                                color: point[2] ? '#3b82f6' : '#ef4444',
+                                fillColor: point[2] ? '#3b82f6' : '#ef4444',
+                                fillOpacity: 0.6,
+                                weight: 1
+                              }}
                             >
                               <Popup>
                                 <div className="text-sm">
@@ -780,7 +794,7 @@ const HotspotPlanning = () => {
                                   </p>
                                 </div>
                               </Popup>
-                            </Marker>
+                            </Circle>
                           ))}
                         </MapContainer>
                       </div>
