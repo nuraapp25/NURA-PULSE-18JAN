@@ -332,21 +332,159 @@ const HotspotPlanning = () => {
 
   const currentSlotData = selectedSlot ? results?.time_slots[selectedSlot] : null;
 
+  const filteredAnalyses = savedAnalyses.filter(analysis => 
+    analysis.filename.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">🎯 Hotspot Planning</h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-1">
-          Time slot-based optimal location placement for 5-minute pickup coverage (IST)
-        </p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">🎯 Hotspot Planning</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">
+            Time slot-based optimal location placement for 5-minute pickup coverage (IST)
+          </p>
+        </div>
+        
+        {/* View Toggle Buttons */}
+        <div className="flex gap-2">
+          {view === 'view-saved' && (
+            <Button
+              onClick={() => setView('library')}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft size={18} />
+              Back to Library
+            </Button>
+          )}
+          {view !== 'library' && (
+            <Button
+              onClick={() => setView('library')}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <Library size={18} />
+              View Library
+            </Button>
+          )}
+          {view === 'library' && (
+            <Button
+              onClick={() => setView('upload')}
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+            >
+              <Upload size={18} />
+              New Analysis
+            </Button>
+          )}
+        </div>
       </div>
 
-      {/* Upload Section */}
-      <Card className="dark:bg-gray-800 dark:border-gray-700">
-        <CardHeader>
-          <CardTitle className="text-gray-900 dark:text-white">📤 Upload Ride Data</CardTitle>
-        </CardHeader>
-        <CardContent>
+      {/* Library View */}
+      {view === 'library' && (
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <CardTitle className="text-gray-900 dark:text-white flex items-center gap-2">
+                <Library size={20} />
+                Saved Analyses Library
+              </CardTitle>
+              <div className="flex items-center gap-2">
+                <Input
+                  placeholder="Search analyses..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-64"
+                />
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {loadingLibrary ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-gray-600 dark:text-gray-400">Loading library...</p>
+              </div>
+            ) : filteredAnalyses.length === 0 ? (
+              <div className="text-center py-12">
+                <Library size={48} className="mx-auto text-gray-400 mb-4" />
+                <p className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+                  {searchQuery ? 'No analyses found' : 'No saved analyses yet'}
+                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                  {searchQuery ? 'Try a different search term' : 'Upload and analyze data to save to library'}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {filteredAnalyses.map((analysis) => (
+                  <Card key={analysis.id} className="border border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-500 transition-colors">
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                            {analysis.filename}
+                          </h3>
+                          <div className="grid grid-cols-3 gap-4 text-sm">
+                            <div>
+                              <p className="text-gray-500 dark:text-gray-400">Uploaded</p>
+                              <p className="font-medium text-gray-900 dark:text-white">
+                                {new Date(analysis.uploaded_at).toLocaleDateString()}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-gray-500 dark:text-gray-400">Total Rides</p>
+                              <p className="font-medium text-gray-900 dark:text-white">
+                                {analysis.total_rides || analysis.summary?.total_rides || 0}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-gray-500 dark:text-gray-400">Time Slots</p>
+                              <p className="font-medium text-gray-900 dark:text-white">
+                                {analysis.time_slots_count || analysis.summary?.time_slots || 0} active
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex gap-2 ml-4">
+                          <Button
+                            onClick={() => handleViewSavedAnalysis(analysis.id)}
+                            size="sm"
+                            className="bg-blue-600 hover:bg-blue-700"
+                          >
+                            <Eye size={16} className="mr-1" />
+                            View
+                          </Button>
+                          {user?.account_type === 'master_admin' && (
+                            <Button
+                              onClick={() => handleDeleteAnalysis(analysis.id)}
+                              size="sm"
+                              variant="destructive"
+                            >
+                              <Trash2 size={16} />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Upload & Results View */}
+      {(view === 'upload' || view === 'view-saved') && (
+        <>
+          {/* Upload Section - Only show in upload mode */}
+          {view === 'upload' && (
+            <Card className="dark:bg-gray-800 dark:border-gray-700">
+              <CardHeader>
+                <CardTitle className="text-gray-900 dark:text-white">📤 Upload Ride Data</CardTitle>
+              </CardHeader>
+              <CardContent>
           <div className="space-y-4">
             <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center">
               <input
