@@ -204,10 +204,40 @@ const DriverOnboardingPage = () => {
       
       // Fetch last sync time after fetching leads
       await fetchLastSyncTime();
+      
+      // Fetch status summary
+      await fetchStatusSummary();
     } catch (error) {
       toast.error("Failed to fetch leads");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchStatusSummary = async () => {
+    setSummaryLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const params = {};
+      
+      if (summaryStartDate) {
+        params.start_date = format(summaryStartDate, 'yyyy-MM-dd');
+      }
+      if (summaryEndDate) {
+        params.end_date = format(summaryEndDate, 'yyyy-MM-dd');
+      }
+      
+      const response = await axios.get(`${API}/driver-onboarding/status-summary`, {
+        headers: { Authorization: `Bearer ${token}` },
+        params
+      });
+      
+      setStatusSummary(response.data);
+    } catch (error) {
+      console.error("Failed to fetch status summary:", error);
+      toast.error("Failed to fetch status summary");
+    } finally {
+      setSummaryLoading(false);
     }
   };
 
