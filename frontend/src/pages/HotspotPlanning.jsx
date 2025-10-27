@@ -31,19 +31,19 @@ const hotspotIcon = new L.Icon({
 const pickupIconCovered = new L.Icon({
   iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png",
   shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
-  iconSize: [15, 25],
-  iconAnchor: [7, 25],
-  popupAnchor: [1, -20],
-  shadowSize: [25, 25]
+  iconSize: [10, 16],
+  iconAnchor: [5, 16],
+  popupAnchor: [1, -12],
+  shadowSize: [16, 16]
 });
 
 const pickupIconUncovered = new L.Icon({
   iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
   shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
-  iconSize: [15, 25],
-  iconAnchor: [7, 25],
-  popupAnchor: [1, -20],
-  shadowSize: [25, 25]
+  iconSize: [10, 16],
+  iconAnchor: [5, 16],
+  popupAnchor: [1, -12],
+  shadowSize: [16, 16]
 });
 
 const HotspotPlanning = () => {
