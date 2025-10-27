@@ -4612,6 +4612,156 @@ class NuraPulseBackendTester:
         
         return success_count >= 10  # At least 10 out of 16 tests should pass
 
+    def test_hotspot_planning_locality_verification(self):
+        """Test Hotspot Planning Locality Verification - Specific test for locality names in response"""
+        print("\n=== Testing Hotspot Planning Locality Verification ===")
+        
+        success_count = 0
+        
+        # Test 1: Upload CSV and analyze with locality verification
+        print("\n--- Testing CSV Upload and Locality Field Verification ---")
+        
+        try:
+            # Read the downloaded CSV file
+            with open('/app/hotspot_test.csv', 'rb') as f:
+                csv_content = f.read()
+            
+            # Upload to analyze-and-save endpoint
+            files = {'file': ('hotspot_test.csv', csv_content, 'text/csv')}
+            response = self.make_request("POST", "/hotspot-planning/analyze-and-save", files=files)
+            
+            if response is not None and response.status_code == 200:
+                try:
+                    data = response.json()
+                    
+                    # Check basic response structure
+                    if data.get("success") and "time_slots" in data:
+                        self.log_test("Hotspot Locality - CSV Upload Success", True, 
+                                    f"Successfully uploaded and analyzed CSV with {data.get('total_rides_analyzed', 0)} rides")
+                        success_count += 1
+                        
+                        # Check each time slot for locality fields
+                        time_slots = data.get("time_slots", {})
+                        locality_issues = []
+                        total_locations = 0
+                        locations_with_locality = 0
+                        locations_with_unknown_locality = 0
+                        
+                        for slot_name, slot_data in time_slots.items():
+                            hotspot_locations = slot_data.get("hotspot_locations", [])
+                            total_locations += len(hotspot_locations)
+                            
+                            for i, location in enumerate(hotspot_locations):
+                                # Check if locality field exists
+                                if "locality" not in location:
+                                    locality_issues.append(f"Time slot '{slot_name}', location {i+1}: Missing 'locality' field")
+                                else:
+                                    locality_value = location.get("locality")
+                                    if locality_value == "Unknown" or locality_value is None or locality_value == "":
+                                        locations_with_unknown_locality += 1
+                                        locality_issues.append(f"Time slot '{slot_name}', location {i+1}: locality = '{locality_value}' (lat: {location.get('lat')}, long: {location.get('long')})")
+                                    else:
+                                        locations_with_locality += 1
+                        
+                        # Report locality verification results
+                        if total_locations > 0:
+                            locality_success_rate = (locations_with_locality / total_locations) * 100
+                            
+                            if len(locality_issues) == 0:
+                                self.log_test("Hotspot Locality - All Locations Have Locality", True, 
+                                            f"All {total_locations} locations have valid locality names (100% success)")
+                                success_count += 1
+                            elif locations_with_locality > 0:
+                                self.log_test("Hotspot Locality - Partial Locality Success", True, 
+                                            f"{locations_with_locality}/{total_locations} locations have locality names ({locality_success_rate:.1f}% success)")
+                                success_count += 1
+                                
+                                # Log the issues for debugging
+                                self.log_test("Hotspot Locality - Issues Found", False, 
+                                            f"Found {len(locality_issues)} locality issues: {locality_issues[:3]}{'...' if len(locality_issues) > 3 else ''}")
+                            else:
+                                self.log_test("Hotspot Locality - No Valid Localities", False, 
+                                            f"No locations have valid locality names. Issues: {locality_issues[:3]}{'...' if len(locality_issues) > 3 else ''}")
+                            
+                            # Check required fields are present
+                            sample_location = None
+                            for slot_data in time_slots.values():
+                                if slot_data.get("hotspot_locations"):
+                                    sample_location = slot_data["hotspot_locations"][0]
+                                    break
+                            
+                            if sample_location:
+                                required_fields = ["lat", "long", "rides_assigned", "rides_within_5min", "coverage_percentage", "locality"]
+                                missing_fields = [field for field in required_fields if field not in sample_location]
+                                
+                                if not missing_fields:
+                                    self.log_test("Hotspot Locality - Required Fields Present", True, 
+                                                "All required fields present: lat, long, rides_assigned, rides_within_5min, coverage_percentage, locality")
+                                    success_count += 1
+                                else:
+                                    self.log_test("Hotspot Locality - Required Fields Present", False, 
+                                                f"Missing required fields: {missing_fields}")
+                                
+                                # Show sample locality values for verification
+                                sample_localities = []
+                                for slot_data in time_slots.values():
+                                    for location in slot_data.get("hotspot_locations", [])[:2]:  # First 2 per slot
+                                        locality = location.get("locality", "Missing")
+                                        if locality and locality != "Unknown":
+                                            sample_localities.append(locality)
+                                
+                                if sample_localities:
+                                    self.log_test("Hotspot Locality - Sample Locality Names", True, 
+                                                f"Sample locality names found: {sample_localities[:5]}")
+                                    success_count += 1
+                                else:
+                                    self.log_test("Hotspot Locality - Sample Locality Names", False, 
+                                                "No valid locality names found in sample")
+                        else:
+                            self.log_test("Hotspot Locality - No Locations Found", False, 
+                                        "No hotspot locations found in response")
+                    else:
+                        self.log_test("Hotspot Locality - CSV Upload Success", False, 
+                                    "Response missing success field or time_slots", data)
+                        
+                except json.JSONDecodeError:
+                    self.log_test("Hotspot Locality - CSV Upload Success", False, 
+                                "Invalid JSON response", response.text)
+            else:
+                error_msg = "Network error" if not response else f"Status {response.status_code}"
+                self.log_test("Hotspot Locality - CSV Upload Success", False, error_msg, 
+                            response.text if response else None)
+                
+        except FileNotFoundError:
+            self.log_test("Hotspot Locality - CSV File", False, 
+                        "Could not find hotspot_test.csv file")
+        except Exception as e:
+            self.log_test("Hotspot Locality - CSV Upload", False, 
+                        f"Exception during CSV upload: {e}")
+        
+        # Test 2: Authentication requirement
+        print("\n--- Testing Authentication Requirement ---")
+        try:
+            with open('/app/hotspot_test.csv', 'rb') as f:
+                csv_content = f.read()
+            
+            files = {'file': ('hotspot_test.csv', csv_content, 'text/csv')}
+            response = self.make_request("POST", "/hotspot-planning/analyze-and-save", files=files, use_auth=False)
+            
+            if response is not None and response.status_code in [401, 403]:
+                self.log_test("Hotspot Locality - Authentication Required", True, 
+                            f"Correctly requires authentication ({response.status_code} without token)")
+                success_count += 1
+            else:
+                status = response.status_code if response else "Network error"
+                self.log_test("Hotspot Locality - Authentication Required", False, 
+                            f"Expected 401/403, got {status}")
+        except Exception as e:
+            self.log_test("Hotspot Locality - Authentication Test", False, 
+                        f"Exception during authentication test: {e}")
+        
+        return success_count >= 3  # At least 3 out of 5 tests should pass
+
     def test_locality_extraction_fix(self):
         """Test the locality extraction fix in ride-deck/analyze endpoint"""
         print("\n=== Testing Locality Extraction Fix ===")
