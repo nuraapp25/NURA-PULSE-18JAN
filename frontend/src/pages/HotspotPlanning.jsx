@@ -727,8 +727,8 @@ const HotspotPlanning = () => {
                           key={selectedSlot}
                         >
                           <TileLayer
-                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
                           />
                           
                           {/* Hotspot Locations with Coverage Circles */}
@@ -738,16 +738,20 @@ const HotspotPlanning = () => {
                                 center={[location.lat, location.long]}
                                 radius={417}
                                 pathOptions={{
-                                  color: location.coverage_percentage > 80 ? 'green' : location.coverage_percentage > 60 ? 'orange' : 'red',
-                                  fillColor: location.coverage_percentage > 80 ? 'green' : location.coverage_percentage > 60 ? 'orange' : 'red',
-                                  fillOpacity: 0.15,
-                                  weight: 2
+                                  color: location.coverage_percentage > 80 ? '#22c55e' : location.coverage_percentage > 60 ? '#f97316' : '#ef4444',
+                                  fillColor: location.coverage_percentage > 80 ? '#22c55e' : location.coverage_percentage > 60 ? '#f97316' : '#ef4444',
+                                  fillOpacity: 0.2,
+                                  weight: 1.5,
+                                  opacity: 0.8
                                 }}
                               />
                               <Marker position={[location.lat, location.long]} icon={hotspotIcon}>
                                 <Popup>
                                   <div className="text-sm p-2">
                                     <p className="font-bold text-lg mb-2">📍 Location #{idx + 1}</p>
+                                    <p className="text-xs text-purple-600 font-semibold mb-2">
+                                      {location.locality || 'Unknown Locality'}
+                                    </p>
                                     <p className="text-xs text-gray-600"><strong>Coordinates:</strong></p>
                                     <p className="font-mono text-xs">{location.lat.toFixed(6)}, {location.long.toFixed(6)}</p>
                                     <hr className="my-2" />
@@ -760,12 +764,13 @@ const HotspotPlanning = () => {
                             </React.Fragment>
                           ))}
 
-                          {/* Pickup Points */}
-                          {currentSlotData.pickup_points && currentSlotData.pickup_points.slice(0, 150).map((point, idx) => (
+                          {/* Pickup Points - Reduced opacity and smaller */}
+                          {currentSlotData.pickup_points && currentSlotData.pickup_points.slice(0, 100).map((point, idx) => (
                             <Marker
                               key={`pickup-${idx}`}
                               position={[point[0], point[1]]}
                               icon={point[2] ? pickupIconCovered : pickupIconUncovered}
+                              opacity={0.6}
                             >
                               <Popup>
                                 <div className="text-sm">
