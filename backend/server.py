@@ -4376,15 +4376,16 @@ async def analyze_hotspot_placement(
         
         # Find time column
         time_col = None
-        for col in ['time', 'createdAt', 'rideAssignedTime', 'pickup_time', 'request_time', 'updatedAt']:
+        for col in ['time', 'datetime', 'createdAt', 'rideAssignedTime', 'pickup_time', 'request_time', 'updatedAt']:
             if col in df_clean.columns:
                 time_col = col
+                logger.info(f"Using time column: {col}")
                 break
         
         if not time_col:
             raise HTTPException(
                 status_code=400,
-                detail="No time column found. Expected 'time', 'createdAt', 'rideAssignedTime', 'pickup_time', 'request_time', or 'updatedAt'"
+                detail="No time column found. Expected 'time', 'datetime', 'createdAt', 'rideAssignedTime', 'pickup_time', 'request_time', or 'updatedAt'"
             )
         
         # Convert time to IST hours
