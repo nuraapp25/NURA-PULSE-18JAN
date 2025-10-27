@@ -29,7 +29,7 @@ import AnalyticsDashboards from "@/pages/AnalyticsDashboards";
 import AppSettings from "@/pages/AppSettings";
 import UserActivityAnalytics from "@/pages/UserActivityAnalytics";
 import RidePayExtractV2 from "@/pages/RidePayExtractV2";
-import ManagePage from "@/pages/ManagePage";
+import ManageDB from "@/pages/ManagePage";
 import SettingsPage from "@/pages/SettingsPage";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
