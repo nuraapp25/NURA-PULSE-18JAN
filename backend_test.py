@@ -6114,6 +6114,212 @@ class NuraPulseBackendTester:
         
         return success_count >= 6  # At least 6 out of 8 tests should pass
 
+    def test_hotspot_planning_analyze_with_user_csv(self):
+        """Test Hotspot Planning analyze endpoint with actual user-provided CSV file"""
+        print("\n=== Testing Hotspot Planning Analyze with User CSV ===")
+        
+        success_count = 0
+        
+        # Test 1: Check if CSV file exists
+        csv_file_path = "/app/hotspot.csv"
+        try:
+            with open(csv_file_path, 'rb') as f:
+                csv_content = f.read()
+            
+            self.log_test("Hotspot CSV - File Access", True, 
+                        f"Successfully loaded CSV file ({len(csv_content)} bytes)")
+            success_count += 1
+        except Exception as e:
+            self.log_test("Hotspot CSV - File Access", False, 
+                        f"Failed to load CSV file: {e}")
+            return False
+        
+        # Test 2: Analyze CSV structure
+        try:
+            import pandas as pd
+            import io
+            df = pd.read_csv(io.BytesIO(csv_content))
+            
+            # Check required columns
+            required_cols = ['pickupLat', 'pickupLong', 'dropLat', 'dropLong', 'createdAt']
+            missing_cols = [col for col in required_cols if col not in df.columns]
+            
+            if not missing_cols:
+                self.log_test("Hotspot CSV - Column Validation", True, 
+                            f"CSV has all required columns. Total rows: {len(df)}")
+                success_count += 1
+                
+                # Check createdAt format
+                sample_created_at = df['createdAt'].iloc[0] if len(df) > 0 else None
+                if sample_created_at:
+                    self.log_test("Hotspot CSV - CreatedAt Format", True, 
+                                f"Sample createdAt format: '{sample_created_at}'")
+                    success_count += 1
+            else:
+                self.log_test("Hotspot CSV - Column Validation", False, 
+                            f"Missing required columns: {missing_cols}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Hotspot CSV - Structure Analysis", False, 
+                        f"Failed to analyze CSV structure: {e}")
+            return False
+        
+        # Test 3: Test POST /api/hotspot-planning/analyze endpoint
+        print("\n--- Testing Hotspot Planning Analyze Endpoint ---")
+        
+        try:
+            files = {'file': ('hotspot.csv', csv_content, 'text/csv')}
+            response = self.make_request("POST", "/hotspot-planning/analyze", files=files)
+            
+            if response is not None and response.status_code == 200:
+                try:
+                    result = response.json()
+                    
+                    # Test 4: Verify response structure
+                    required_fields = ['success', 'total_rides_analyzed', 'time_slots', 'analysis_params', 'message']
+                    missing_fields = [field for field in required_fields if field not in result]
+                    
+                    if not missing_fields:
+                        self.log_test("Hotspot Analysis - Response Structure", True, 
+                                    "Response contains all required fields")
+                        success_count += 1
+                        
+                        # Test 5: Verify success status
+                        if result.get('success') == True:
+                            self.log_test("Hotspot Analysis - Success Status", True, 
+                                        "Analysis completed successfully")
+                            success_count += 1
+                        else:
+                            self.log_test("Hotspot Analysis - Success Status", False, 
+                                        f"Expected success=True, got success={result.get('success')}")
+                        
+                        # Test 6: Verify time slots analysis
+                        time_slots = result.get('time_slots', {})
+                        expected_slots = [
+                            'Morning Rush (6AM-9AM)',
+                            'Mid-Morning (9AM-12PM)', 
+                            'Afternoon (12PM-4PM)',
+                            'Evening Rush (4PM-7PM)',
+                            'Night (7PM-10PM)',
+                            'Late Night (10PM-1AM)'
+                        ]
+                        
+                        slots_with_data = []
+                        slots_no_data = []
+                        
+                        for slot_name in expected_slots:
+                            if slot_name in time_slots:
+                                slot_data = time_slots[slot_name]
+                                status = slot_data.get('status', 'unknown')
+                                rides_count = slot_data.get('rides_count', 0)
+                                
+                                if status == 'success' and rides_count > 0:
+                                    slots_with_data.append(f"{slot_name} ({rides_count} rides)")
+                                    
+                                    # Verify hotspot locations structure
+                                    hotspot_locations = slot_data.get('hotspot_locations', [])
+                                    if hotspot_locations and len(hotspot_locations) > 0:
+                                        sample_location = hotspot_locations[0]
+                                        required_location_fields = ['location_id', 'lat', 'long', 'rides_assigned', 'rides_within_5min', 'coverage_percentage']
+                                        if all(field in sample_location for field in required_location_fields):
+                                            self.log_test(f"Hotspot Analysis - {slot_name} Location Structure", True, 
+                                                        f"Location has all required fields: lat={sample_location['lat']:.4f}, long={sample_location['long']:.4f}")
+                                        else:
+                                            missing_loc_fields = [field for field in required_location_fields if field not in sample_location]
+                                            self.log_test(f"Hotspot Analysis - {slot_name} Location Structure", False, 
+                                                        f"Location missing fields: {missing_loc_fields}")
+                                else:
+                                    slots_no_data.append(f"{slot_name} ({status})")
+                        
+                        if len(slots_with_data) > 0:
+                            self.log_test("Hotspot Analysis - Time Slots with Data", True, 
+                                        f"Found {len(slots_with_data)} time slots with data: {', '.join(slots_with_data)}")
+                            success_count += 1
+                        else:
+                            self.log_test("Hotspot Analysis - Time Slots with Data", False, 
+                                        "No time slots have data - all slots returned 'no_data'")
+                        
+                        # Test 7: Verify rides are properly distributed across time slots
+                        total_analyzed = result.get('total_rides_analyzed', 0)
+                        if total_analyzed > 0:
+                            self.log_test("Hotspot Analysis - Rides Distribution", True, 
+                                        f"Total rides analyzed: {total_analyzed}")
+                            success_count += 1
+                            
+                            # Check if rides are distributed based on createdAt timestamps
+                            slots_with_rides = [slot for slot in time_slots.values() if slot.get('rides_count', 0) > 0]
+                            if len(slots_with_rides) > 1:
+                                self.log_test("Hotspot Analysis - Multi-Slot Distribution", True, 
+                                            f"Rides distributed across {len(slots_with_rides)} time slots")
+                                success_count += 1
+                            else:
+                                self.log_test("Hotspot Analysis - Multi-Slot Distribution", False, 
+                                            f"Rides only found in {len(slots_with_rides)} time slot(s)")
+                        else:
+                            self.log_test("Hotspot Analysis - Rides Distribution", False, 
+                                        "No rides were analyzed")
+                        
+                        # Test 8: Verify analysis parameters
+                        analysis_params = result.get('analysis_params', {})
+                        expected_params = ['max_distance_km', 'speed_kmh', 'max_locations']
+                        if all(param in analysis_params for param in expected_params):
+                            self.log_test("Hotspot Analysis - Analysis Parameters", True, 
+                                        f"Analysis params: max_distance={analysis_params['max_distance_km']}km, speed={analysis_params['speed_kmh']}kmh, max_locations={analysis_params['max_locations']}")
+                            success_count += 1
+                        else:
+                            missing_params = [param for param in expected_params if param not in analysis_params]
+                            self.log_test("Hotspot Analysis - Analysis Parameters", False, 
+                                        f"Missing analysis parameters: {missing_params}")
+                        
+                        # Test 9: Verify coverage calculations
+                        successful_slots = [slot for slot in time_slots.values() if slot.get('status') == 'success']
+                        if successful_slots:
+                            coverage_percentages = [slot.get('coverage_percentage', 0) for slot in successful_slots]
+                            avg_coverage = sum(coverage_percentages) / len(coverage_percentages)
+                            self.log_test("Hotspot Analysis - Coverage Calculations", True, 
+                                        f"Average coverage across {len(successful_slots)} slots: {avg_coverage:.2f}%")
+                            success_count += 1
+                        else:
+                            self.log_test("Hotspot Analysis - Coverage Calculations", False, 
+                                        "No successful slots to calculate coverage")
+                        
+                    else:
+                        self.log_test("Hotspot Analysis - Response Structure", False, 
+                                    f"Response missing required fields: {missing_fields}")
+                        
+                except json.JSONDecodeError:
+                    self.log_test("Hotspot Analysis - JSON Response", False, 
+                                "Invalid JSON response", response.text)
+            else:
+                error_msg = "Network error" if not response else f"Status {response.status_code}"
+                error_detail = response.text if response else None
+                self.log_test("Hotspot Analysis - API Request", False, error_msg, error_detail)
+                
+        except Exception as e:
+            self.log_test("Hotspot Analysis - API Request", False, 
+                        f"Exception during API request: {e}")
+        
+        # Test 10: Test authentication requirement
+        print("\n--- Testing Authentication Requirement ---")
+        try:
+            files = {'file': ('hotspot.csv', csv_content, 'text/csv')}
+            response = self.make_request("POST", "/hotspot-planning/analyze", files=files, use_auth=False)
+            
+            if response is not None and response.status_code in [401, 403]:
+                self.log_test("Hotspot Analysis - Authentication Required", True, 
+                            f"Correctly requires authentication ({response.status_code} without token)")
+                success_count += 1
+            else:
+                status = response.status_code if response else "Network error"
+                self.log_test("Hotspot Analysis - Authentication Required", False, 
+                            f"Expected 401/403, got {status}")
+        except Exception as e:
+            self.log_test("Hotspot Analysis - Authentication Required", False, 
+                        f"Exception during auth test: {e}")
+        
+        return success_count >= 7  # At least 7 out of 10 tests should pass
+
     def run_all_tests(self):
         """Run all backend tests"""
         print("🚀 Starting Comprehensive Testing - Driver Onboarding Two-Way Sync with ID-Based Reconciliation")
