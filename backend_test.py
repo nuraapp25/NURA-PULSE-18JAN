@@ -6333,6 +6333,9 @@ class NuraPulseBackendTester:
             print("\n❌ Authentication failed - cannot proceed with other tests")
             return False
         
+        # PRIORITY: Test Hotspot Planning Locality Verification as requested in review
+        hotspot_locality_success = self.test_hotspot_planning_locality_verification()
+        
         # PRIORITY: Test Locality Extraction Fix as requested in review
         locality_extraction_success = self.test_locality_extraction_fix()
         
