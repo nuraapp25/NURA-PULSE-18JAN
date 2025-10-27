@@ -6,7 +6,7 @@ Direct test for Battery Consumption Analytics endpoint
 import requests
 import json
 
-BASE_URL = "https://driverhub-9.preview.emergentagent.com/api"
+BASE_URL = "https://hotspot-manager-10.preview.emergentagent.com/api"
 
 def test_battery_analytics():
     # Login first

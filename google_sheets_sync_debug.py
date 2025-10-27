@@ -11,7 +11,7 @@ import traceback
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://driverhub-9.preview.emergentagent.com/api"
+BASE_URL = "https://hotspot-manager-10.preview.emergentagent.com/api"
 MASTER_ADMIN_EMAIL = "admin"
 MASTER_ADMIN_PASSWORD = "Nura@1234$"
 

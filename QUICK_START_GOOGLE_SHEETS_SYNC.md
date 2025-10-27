@@ -120,7 +120,7 @@ Your Driver Onboarding data now syncs automatically between Google Sheets and Nu
 
 **Sheet URL**: https://docs.google.com/spreadsheets/d/1FfZYvc9EpSE03myhp3yk8lfOzCJoibVmaJ74Xm-qhv0/edit
 
-**Backend Webhook**: `https://driverhub-9.preview.emergentagent.com/api/driver-onboarding/webhook/sync-from-sheets`
+**Backend Webhook**: `https://hotspot-manager-10.preview.emergentagent.com/api/driver-onboarding/webhook/sync-from-sheets`
 
 ---
 

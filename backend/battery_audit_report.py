@@ -13,7 +13,7 @@ from tabulate import tabulate
 load_dotenv()
 
 # Configuration
-BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', 'https://driverhub-9.preview.emergentagent.com/api')
+BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', 'https://hotspot-manager-10.preview.emergentagent.com/api')
 LOGIN_EMAIL = os.getenv('ADMIN_EMAIL', 'admin')
 LOGIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'Nura@1234$')
 

@@ -1,128 +1,77 @@
 <analysis>
-The AI engineer successfully progressed the Nura Pulse application from MVP to a more feature-rich product. Key achievements include enhancing the Driver Onboarding with detailed forms, hierarchical statuses, and multi-format file imports, including a two-way Google Sheets sync. A Ride Deck Data Analysis feature was built, calculating distances via Google Maps and later expanded with customer/ride data imports, locality extraction refinements, and pagination. New functionalities like Cancellation RCA and Driver_Not_Found RCA tables, customizable Ride Status and SignUps analytics dashboards, and an App Enable/Disable toggle for the Payment Data Extractor were implemented. Document upload with OCR for driver leads was initiated. Debugging involved fixing backend URL issues, Excel date conversions, locality extraction logic, and ensuring proper sync functionality. The current focus is on debugging a failure in the Payment Data Extractor when processing multiple images.
+The AI engineer significantly enhanced the Nura Pulse application, addressing multiple feature requests and critical bugs. Initially, efforts focused on optimizing the Payment Data Extractor, which faced persistent issues with processing multiple images, leading to a planned background processing v2 (later paused) and then back to aggressive optimization of the original with GPT-4o-mini. Driver Onboarding was improved with intelligent CSV parsing, dynamic status matching (fixing Highly Interested and Not Interested misclassifications), and smart phone number duplicate detection. A critical IndentationError halted progress, requiring debugging and backend restarts. Battery consumption calculations proved challenging, involving deep dives into frontend and backend logic to correct column name inconsistencies and flawed calculation approaches (fixed by identifying min SOC and charging events). New features like Montra Feed Library View and Database Export/Import for Master Admins were initiated and partially implemented. The current focus is on building the Hotspot Planning Library, a major rewrite to store and view analysis files.
 </analysis>
 
 <product_requirements>
-The Nura Pulse application is a business data dashboard with authentication and role-based access, continually expanding its functionality. It includes:
-1.  **Expense Tracker:** Mini-app for expense management (partially implemented).
-2.  **Payment Data Extractor:** Processes screenshot for tabular analysis, now with parallel processing, loading animations, and Google Sheets sync. Recently, an enable/disable toggle was added for Master Admins, and editing is restricted to Admin/Master Admin roles.
-3.  **Hotspot Planning:** CSV trip data upload for optimal pickup location identification via K-Means clustering.
-4.  **Driver Onboarding Two-Way Sync:** Auto-sync between app and Google Sheets. UI/UX improvements: hierarchical statuses, inline editing, Lead Source and Date inputs for imports, multi-format file support. Expanded fields for driver forms now include document uploads and OCR scanning for data extraction.
-5.  **QR Code Management System (Master Admins only):** Dynamic QR code creation, scan data tracking, and analytics.
-6.  **Ride Deck Data Analysis (NEW):**
-    *   **Initial:** Upload XLSX, calculate Google Maps travel distances (pickup/drop).
-    *   **Enhanced:** Extracts Pickup Locality, Pickup Time, Drop Locality, Drop Time from addresses.
-    *   **New Data Import & Analysis:** Import Customer Data and Import Ride Data from CSV (upsert by 'id'). Computes derived fields (e.g., Most Common Pickup Point). Added view, download, delete data functionality with pagination. Locality extraction refined to show only specific parts.
-7.  **RCA Management (NEW):** Two tables (Cancellation RCA and Driver_Not_Found RCA) displaying filtered ride data. Allows Ops to select Status Reason from a dropdown and enter Status Detail with conditional validation.
-8.  **Analytics Dashboards (NEW):** Ride Status and SignUps pivot tables from ride and customer databases, with date, status, source fields, and count/sum/average aggregation. Includes a Pivot Table Editor. Converts UTC timestamps to IST.
-9.  **User Activity Analytics (NEW):** A dashboard to see user actions history and live feed, with data stored in backend.
+The Nura Pulse application is a role-based business data dashboard. Key features include:
+1.  **Expense Tracker:** Mini-app for expense management (fully implemented).
+2.  **Payment Data Extractor:** Processes screenshot data for tabular analysis. Optimized for speed, parallel processing, and with an enable/disable toggle for Master Admins.
+3.  **Hotspot Planning:** CSV trip data upload for K-Means clustering analysis. Currently being expanded with a library view for saved analyses.
+4.  **Driver Onboarding Two-Way Sync:** Auto-sync with Google Sheets. UI/UX improvements, hierarchical statuses, inline editing, multi-format imports with dynamic column reading, smart status matching (e.g., Highly Interested and correct Not Interested), and duplicate phone number detection.
+5.  **QR Code Management System (Master Admins):** Dynamic QR code creation, scan data tracking. Enhancements requested include UTM parameters (auto-fill from campaign), bulk QR code generation (vehicle-based IDs), and batch download.
+6.  **Ride Deck Data Analysis (NEW):** XLSX upload, Google Maps distance calculation, locality extraction, customer/ride data import, view/download/delete data with pagination.
+7.  **RCA Management (NEW):** Tables for Cancellation RCA and Driver_Not_Found RCA with status reason/detail.
+8.  **Analytics Dashboards (NEW):** Ride Status and SignUps pivot tables, converting UTC to IST. Fixes implemented for Excel serial date conversion and null handling.
+9.  **User Activity Analytics (NEW):** Dashboard for user actions history and live feed.
+10. **Montra Feed Library View (NEW):** Integrated into Montra Vehicle Insights, to manage CSV/XLSX files, with search, filters, and download.
+11. **Database Export/Import (NEW):** Master Admin only, under Manage DB, for full app data backup/restore.
 </product_requirements>
 
 <key_technical_concepts>
 -   **Full-stack**: React (Shadcn UI, Tailwind CSS, Chart.js), FastAPI, MongoDB.
--   **Auth & Authz**: JWT for role-based access control.
+-   **Auth & Authz**: JWT, role-based access control.
 -   **Geospatial**: Google Maps API, K-Means clustering.
--   **LLM Integration**: OpenAI GPT-4o Vision, Emergent LLM Key.
--   **Google Sheets**: Two-way sync via Apps Script, webhooks.
--   **Data Processing**: Pandas for Excel/CSV parsing, asynchronous processing.
+-   **LLM Integration**: OpenAI GPT-4o Vision, GPT-4o-mini, Emergent LLM Key for OCR.
+-   **Google Sheets**: Two-way sync via Apps Script.
+-   **Data Processing**: Pandas for Excel/CSV, asynchronous tasks.
 </key_technical_concepts>
 
 <code_architecture>
 
 -   ****: Core FastAPI backend.
-    -   **Summary**: Handles API routes for various features.
-    -   **Changes**: Added/modified logic for Driver Onboarding lead imports (Format 3, Lead Generator). Expanded webhook sync. New endpoints for  (Google Maps integration, customer/ride data import, view/download/delete data, locality fix). Added RCA Management endpoints (, , ). Added Analytics Dashboards endpoints (, ). Implemented App Settings toggle (). Added User Activity Analytics endpoints (, , ). Added document upload and OCR scanning endpoints for Driver Leads. Fixed  function logic, removed duplicate stats endpoint, fixed driver onboarding sync logic, and corrected role checking.
+    -   **Summary**: Central API handler.
+    -   **Changes**: Optimized Payment Data Extractor (GPT-4o-mini, parallel processing). Added Ride Pay Extract v2 endpoints (upload, background processing, status, data). Fixed Analytics Dashboards (date conversion, null handling). Enhanced Driver Onboarding import (dynamic header reading, smart status matching, duplicate phone number detection). Added QR Code Management bulk delete. Fixed Montra Vehicle Battery SOC column name sensitivity and corrected battery calculation logic placement. Implemented Database Export/Import endpoints. Added Hotspot Planning library endpoints.
 -   ****: Pydantic data models.
-    -   **Summary**: Defines data structures for the application.
-    -   **Changes**:  model expanded with new fields (e.g., , ). Added , , ,  models. New models for app settings, activity logs, and RCA update requests.
--   ****: Backend environment variables.
-    -   **Summary**: Configuration for backend services.
-    -   **Changes**: Added , , and .
--   ****: Python dependencies.
-    -   **Summary**: Lists all required Python packages.
-    -   **Changes**: Added , , , , , usage: openai [-h] [-v] [-b API_BASE] [-k API_KEY] [-p PROXY [PROXY ...]]
-              [-o ORGANIZATION] [-t {openai,azure}]
-              [--api-version API_VERSION] [--azure-endpoint AZURE_ENDPOINT]
-              [--azure-ad-token AZURE_AD_TOKEN] [-V]
-              {api,tools,migrate,grit} ...
-
-positional arguments:
-  {api,tools,migrate,grit}
-    api                 Direct API calls
-    tools               Client side tools for convenience
-
-options:
-  -h, --help            show this help message and exit
-  -v, --verbose         Set verbosity.
-  -b API_BASE, --api-base API_BASE
-                        What API base url to use.
-  -k API_KEY, --api-key API_KEY
-                        What API key to use.
-  -p PROXY [PROXY ...], --proxy PROXY [PROXY ...]
-                        What proxy to use.
-  -o ORGANIZATION, --organization ORGANIZATION
-                        Which organization to run as (will use your default
-                        organization if not specified)
-  -t {openai,azure}, --api-type {openai,azure}
-                        The backend API to call, must be `openai` or `azure`
-  --api-version API_VERSION
-                        The Azure API version, e.g.
-                        'https://learn.microsoft.com/en-us/azure/ai-
-                        services/openai/reference#rest-api-versioning'
-  --azure-endpoint AZURE_ENDPOINT
-                        The Azure endpoint, e.g.
-                        'https://endpoint.openai.azure.com'
-  --azure-ad-token AZURE_AD_TOKEN
-                        A token from Azure Active Directory,
-                        https://www.microsoft.com/en-
-                        us/security/business/identity-access/microsoft-entra-
-                        id
-  -V, --version         show program's version number and exit, .
--   ****: Frontend dependencies.
-    -   **Summary**: Lists all required Node.js packages.
-    -   **Changes**: Added  and .
--   ****: Frontend for driver lead management.
-    -   **Summary**: Manages driver lead data entry, display, and imports.
-    -   **Changes**: Implemented hierarchical , inline status editing. Added Lead Source and Date to import dialog. Updated UI for multiple import formats. Enhanced driver form to include new fields and document upload/OCR scanning interface for various documents.
--   ****: Main dashboard with sidebar navigation.
-    -   **Summary**: Provides main navigation and layout.
-    -   **Changes**: Added QR Code Manager, Ride Deck Data Analysis, RCA Management, Analytics Dashboards, App Settings, and User Activity Analytics links to the sidebar. Updated sidebar rendering to group items and apply role-based filtering.
+    -   **Summary**: Defines data structures.
+    -   **Changes**:  model updated for UTM parameters and campaign fields.
+-   ** (NEW file)**:
+    -   **Summary**: Worker for asynchronous payment data processing.
+    -   **Changes**: Newly created for the Ride Pay Extract v2 architecture.
 -   ****: Main application routes.
-    -   **Summary**: Defines all frontend routes.
-    -   **Changes**: Added routes for , , , , , , .
+    -   **Summary**: Defines frontend routing.
+    -   **Changes**: Added routes for  and renamed/updated  to .
+-   ****: Main dashboard.
+    -   **Summary**: Provides navigation.
+    -   **Changes**: Added Ride Pay Extract v2 and Manage DB to sidebar with respective icons.
+-   ****: Payment data extractor frontend.
+    -   **Summary**: Manages screenshot uploads.
+    -   **Changes**: Updated frontend timeout (initially increased, then reduced) and improved file selection feedback.
+-   ****: Driver lead management frontend.
+    -   **Summary**: Manages driver data.
+    -   **Changes**: UI updated to display duplicate phone numbers effectively; old duplicate action buttons removed.
+-   ****: Montra Vehicle Battery Analytics frontend.
+    -   **Summary**: Displays battery data and graphs.
+    -   **Changes**: Rewrote calculation logic for charge drop/percentage and fixed column name typo to ensure accurate graph display.
 -   ** (NEW file)**:
-    -   **Summary**: Comprehensive frontend for Ride Deck Analysis, replacing .
-    -   **Changes**: Implemented file upload for customer and ride data, progress bar, display of calculated distances. Added buttons to view, download, and delete backend data with pagination. Included a Fix Localities button to reprocess old data.
--   ** (NEW file)**:
-    -   **Summary**: Frontend for Root Cause Analysis (RCA) tables.
-    -   **Changes**: Contains UI for Cancellation RCA and Driver_Not_Found RCA tables with dropdowns for Status Reason and conditional Status Detail input.
--   ** (NEW file)**:
-    -   **Summary**: Frontend for interactive pivot table dashboards.
-    -   **Changes**: Contains UI for Ride Status and SignUps pivot tables with filtering and aggregation options.
--   ****: Frontend for payment data extraction.
-    -   **Summary**: Manages payment screenshot uploads and processing.
-    -   **Changes**: Implemented logic to check app status via backend, display a notification banner when disabled, and hide the entire app content when disabled. Restricted 'modify amount' and 'modify rows' (editing) functionality based on user roles (only for Admins/Master Admins).
--   ** (NEW file)**:
-    -   **Summary**: Frontend page for Master Admins to toggle application settings.
-    -   **Changes**: Contains a switch to enable/disable the Payment Data Extractor app.
--   ** (NEW file)**:
-    -   **Summary**: Frontend page for viewing user activity logs and live feed.
-    -   **Changes**: Placeholder for displaying historical user actions and current app usage.
--   ** /  (NEW file)**:
-    -   **Summary**: Google Apps Script for two-way sync with Driver Onboarding leads.
-    -   **Changes**: Updated column mapping to include all 28 new fields. Added  to the configuration. New file  created with updated script and comprehensive setup instructions ().
+    -   **Summary**: Frontend for the Ride Pay Extract v2 feature.
+    -   **Changes**: New page created.
+-   ** (Renamed from )**:
+    -   **Summary**: Frontend for Master Admin database export/import.
+    -   **Changes**: Completely rewritten to offer database backup/restore.
+-   ****: Hotspot Planning frontend.
+    -   **Summary**: Manages trip data upload.
+    -   **Changes**: Currently undergoing a major rewrite to incorporate a library view.
 </code_architecture>
 
 <pending_tasks>
--   Fully implement the remaining features for the Expense Tracker mini-app.
--   Complete the OCR scanning data extraction for Driver Onboarding documents, ensuring extracted data populates form fields.
--   Investigate and fix the Payment Data Extractor app failing to process 10 screenshots after 3 minutes.
+-   Complete the QR Code Manager enhancements, including UTM parameters in UI, auto-fill, bulk QR code generation, and batch download. (Frontend part pending).
+-   Complete the Hotspot Planning library feature, including frontend UI for storing and viewing analyses.
 </pending_tasks>
 
 <current_work>
-The AI engineer was immediately working on debugging an issue reported by the user concerning the Payment Data Extractor app. The user reported that after uploading 10 screenshots (including a WhatsApp Image 2025-10-01 at 7.07.10 AM.jpeg), the processing failed after 3 minutes. The AI engineer has analyzed the provided screenshot, noting it was a ride history screenshot rather than a payment one, and has identified the next step as investigating the Payment Data Extractor code to understand the failure after the 3-minute timeout. This indicates the engineer is actively troubleshooting a performance or processing error within the Payment Data Extractor feature.
+The AI engineer is currently in the process of implementing the Hotspot Planning library feature. The user requested this feature to store uploaded CSV/XLSX files for hotspot planning, allowing individual viewing of each saved analysis. The previous step involved updating the backend () by adding new API endpoints for library management (e.g., saving analyses, retrieving lists of saved analyses, viewing individual analyses, and potentially deletion). The most recent message from the user (Chat Message 533) was lets fork later after hotspot planning fix?, to which the AI responded (Chat Message 534) Yes, perfect! Let me complete the Hotspot Planning fix with the library feature, then you can fork with everything working. Let me now update the frontend:. This confirms the backend modifications are in place and the immediate next step is to proceed with implementing the corresponding frontend components and logic in  to integrate these new backend functionalities and create the desired library view.
 </current_work>
 
 <optional_next_step>
-Investigate the  code for the Payment Data Extractor to identify why it's failing after 3 minutes with 10 images.
+Implement the frontend for the Hotspot Planning library feature in .
 </optional_next_step>
