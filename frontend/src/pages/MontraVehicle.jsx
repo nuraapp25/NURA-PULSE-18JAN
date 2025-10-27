@@ -280,6 +280,92 @@ const MontraVehicle = () => {
     }));
   };
 
+  // NEW: Helper functions for filtering
+  const getUniqueVehicles = () => {
+    const vehicles = new Set();
+    getAllFiles().forEach(file => vehicles.add(file.vehicle_id));
+    return Array.from(vehicles).sort();
+  };
+
+  const getUniqueDates = () => {
+    const dates = new Set();
+    getAllFiles().forEach(file => {
+      const dateKey = `${file.date} ${file.month} ${file.year}`;
+      dates.add(dateKey);
+    });
+    return Array.from(dates).sort();
+  };
+
+  const getFilteredFiles = () => {
+    let files = getAllFiles();
+    
+    // Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      files = files.filter(file => 
+        file.vehicle_id.toLowerCase().includes(query) ||
+        file.filename.toLowerCase().includes(query) ||
+        file.registration_number.toLowerCase().includes(query)
+      );
+    }
+    
+    // Apply vehicle filter
+    if (selectedVehicleFilter) {
+      files = files.filter(file => file.vehicle_id === selectedVehicleFilter);
+    }
+    
+    // Apply date filter
+    if (selectedDateFilter) {
+      files = files.filter(file => {
+        const fileDate = `${file.date} ${file.month} ${file.year}`;
+        return fileDate === selectedDateFilter;
+      });
+    }
+    
+    return files;
+  };
+
+  // NEW: Download selected files
+  const handleDownloadSelected = async () => {
+    if (selectedFileIds.length === 0) {
+      toast.error("No files selected for download");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      const allFiles = getAllFiles();
+      const filesToDownload = allFiles.filter(file => {
+        const fileId = `${file.vehicle_id}-${file.date}-${file.filename}`;
+        return selectedFileIds.includes(fileId);
+      });
+
+      // Create download request
+      const response = await axios.post(
+        `${API}/montra-vehicle/feed-database/download`,
+        { files: filesToDownload },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: 'blob'
+        }
+      );
+
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `montra_feed_export_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      toast.success(`Downloaded ${selectedFileIds.length} file(s) data`);
+    } catch (error) {
+      toast.error("Failed to download files");
+      console.error("Download error:", error);
+    }
+  };
+
   const handleDeleteSelected = async () => {
     if (selectedFileIds.length === 0) {
       toast.error("No files selected for deletion");
