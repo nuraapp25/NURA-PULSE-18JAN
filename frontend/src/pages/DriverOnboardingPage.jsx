@@ -173,6 +173,12 @@ const DriverOnboardingPage = () => {
   // Delete confirmation
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingLead, setDeletingLead] = useState(false);
+  
+  // Status Summary Dashboard
+  const [statusSummary, setStatusSummary] = useState(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summaryStartDate, setSummaryStartDate] = useState(null);
+  const [summaryEndDate, setSummaryEndDate] = useState(null);
 
   const fetchLastSyncTime = async () => {
     try {
