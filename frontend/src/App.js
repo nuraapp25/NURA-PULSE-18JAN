@@ -148,7 +148,7 @@ function App() {
                 <Route path="admin/analytics" element={<Analytics />} />
                 <Route path="admin/files" element={<Files />} />
                 <Route path="admin/payment-screenshots" element={<PaymentScreenshots />} />
-                <Route path="manage" element={<ManagePage />} />
+                <Route path="manage" element={<ManageDB />} />
                 <Route path="settings" element={<SettingsPage />} />
               </Route>
               <Route path="/" element={<Navigate to={user ? "/dashboard" : "/login"} />} />
