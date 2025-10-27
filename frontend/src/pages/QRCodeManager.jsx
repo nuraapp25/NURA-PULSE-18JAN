@@ -569,6 +569,93 @@ export default function QRCodeManager() {
                 <p className="text-sm text-gray-500">* At least one landing page URL is required</p>
               </div>
             )}
+
+            {/* Campaign Name */}
+            <div>
+              <Label htmlFor="campaign_name">Campaign Name (Optional)</Label>
+              <Input
+                id="campaign_name"
+                placeholder="e.g., Summer 2025"
+                value={formData.campaign_name}
+                onChange={(e) => setFormData({ ...formData, campaign_name: e.target.value })}
+              />
+              <p className="text-xs text-gray-500 mt-1">Group multiple QR codes under a campaign</p>
+            </div>
+
+            {/* UTM Parameters Section */}
+            <div className="border-t pt-4">
+              <div className="flex items-center justify-between mb-3">
+                <Label className="text-base font-semibold">UTM Parameters (Optional)</Label>
+                {formData.name && (
+                  <Button 
+                    type="button"
+                    onClick={autoFillUTM}
+                    variant="outline" 
+                    size="sm"
+                    className="text-xs"
+                  >
+                    Auto-fill from Name
+                  </Button>
+                )}
+              </div>
+              <p className="text-xs text-gray-500 mb-3">
+                Add UTM parameters to track campaign performance in Google Analytics
+              </p>
+              
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="utm_source" className="text-sm">Source</Label>
+                    <Input
+                      id="utm_source"
+                      placeholder="e.g., qr_code"
+                      value={formData.utm_source}
+                      onChange={(e) => setFormData({ ...formData, utm_source: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="utm_medium" className="text-sm">Medium</Label>
+                    <Input
+                      id="utm_medium"
+                      placeholder="e.g., qr_scan"
+                      value={formData.utm_medium}
+                      onChange={(e) => setFormData({ ...formData, utm_medium: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="utm_campaign" className="text-sm">Campaign</Label>
+                  <Input
+                    id="utm_campaign"
+                    placeholder="e.g., product_launch"
+                    value={formData.utm_campaign}
+                    onChange={(e) => setFormData({ ...formData, utm_campaign: e.target.value })}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="utm_term" className="text-sm">Term (Optional)</Label>
+                    <Input
+                      id="utm_term"
+                      placeholder="e.g., keywords"
+                      value={formData.utm_term}
+                      onChange={(e) => setFormData({ ...formData, utm_term: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="utm_content" className="text-sm">Content (Optional)</Label>
+                    <Input
+                      id="utm_content"
+                      placeholder="e.g., banner_ad"
+                      value={formData.utm_content}
+                      onChange={(e) => setFormData({ ...formData, utm_content: e.target.value })}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <DialogFooter>
