@@ -2842,16 +2842,15 @@ async def get_battery_charge_audit(current_user: User = Depends(get_current_user
             else:
                 charge_drop_pct = 0
                 charge_pct = 0
-                            logger.info(f"Found low charge: {vehicle_id} on {date} at {time_str} - {battery_value}%")
-                            break  # Found first instance, stop checking this day
-                    
-                except Exception as e:
-                    logger.error(f"Error processing record for {vehicle_id} on {date}: {str(e)}")
-                    continue
             
-            # Add to results if we found a low charge instance
-            if first_low_charge:
-                audit_results.append(first_low_charge)
+            # Store the summary for this day
+            daily_summaries[date] = {
+                "charge_drop_pct": round(charge_drop_pct, 2),
+                "charge_pct": round(charge_pct, 2),
+                "start_battery": round(start_battery, 1) if start_battery else 0,
+                "end_battery": round(end_battery, 1) if end_battery else 0,
+                "min_battery": round(charging_started_battery, 1) if charging_started_battery else 0
+            }
         
         # Sort results by date and vehicle
         audit_results.sort(key=lambda x: (x["date"], x["vehicle_name"]))
