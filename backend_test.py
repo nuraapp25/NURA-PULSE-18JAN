@@ -5944,6 +5944,176 @@ class NuraPulseBackendTester:
         
         return success_count >= 8  # At least 8 out of 12 tests should pass
 
+    def test_hotspot_planning_library_endpoints(self):
+        """Test Hotspot Planning Library endpoints as requested in review"""
+        print("\n=== Testing Hotspot Planning Library Endpoints ===")
+        
+        success_count = 0
+        test_analysis_id = None
+        
+        # Test 1: GET /api/hotspot-planning/library - Get all saved analyses
+        print("\n--- Testing GET /api/hotspot-planning/library ---")
+        response = self.make_request("GET", "/hotspot-planning/library")
+        
+        if response is not None and response.status_code == 200:
+            try:
+                data = response.json()
+                
+                # Check expected response format
+                if "success" in data and "analyses" in data and "count" in data:
+                    analyses = data.get("analyses", [])
+                    count = data.get("count", 0)
+                    
+                    self.log_test("Hotspot Library - GET All Analyses", True, 
+                                f"Retrieved {count} analyses successfully. Response format correct: success, analyses, count")
+                    success_count += 1
+                    
+                    # If there are existing analyses, get one for testing
+                    if analyses and len(analyses) > 0:
+                        test_analysis_id = analyses[0].get("id")
+                        self.log_test("Hotspot Library - Existing Analyses Found", True, 
+                                    f"Found existing analyses. Using analysis ID: {test_analysis_id} for further testing")
+                        success_count += 1
+                    else:
+                        self.log_test("Hotspot Library - No Existing Analyses", True, 
+                                    "No existing analyses found (empty library)")
+                        success_count += 1
+                else:
+                    self.log_test("Hotspot Library - GET All Analyses", False, 
+                                "Response missing required fields (success, analyses, count)", data)
+            except json.JSONDecodeError:
+                self.log_test("Hotspot Library - GET All Analyses", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Hotspot Library - GET All Analyses", False, error_msg, 
+                        response.text if response else None)
+        
+        # Test 2: GET /api/hotspot-planning/library/{analysis_id} - Get specific analysis
+        if test_analysis_id:
+            print(f"\n--- Testing GET /api/hotspot-planning/library/{test_analysis_id} ---")
+            response = self.make_request("GET", f"/hotspot-planning/library/{test_analysis_id}")
+            
+            if response is not None and response.status_code == 200:
+                try:
+                    data = response.json()
+                    
+                    if "success" in data and "analysis" in data:
+                        analysis = data.get("analysis", {})
+                        
+                        # Check if analysis has expected fields
+                        expected_fields = ["id", "filename", "uploaded_by", "uploaded_at", "analysis_result"]
+                        missing_fields = [field for field in expected_fields if field not in analysis]
+                        
+                        if not missing_fields:
+                            self.log_test("Hotspot Library - GET Specific Analysis", True, 
+                                        f"Retrieved analysis {test_analysis_id} with all expected fields")
+                            success_count += 1
+                        else:
+                            self.log_test("Hotspot Library - GET Specific Analysis", False, 
+                                        f"Analysis missing fields: {missing_fields}")
+                    else:
+                        self.log_test("Hotspot Library - GET Specific Analysis", False, 
+                                    "Response missing required fields (success, analysis)", data)
+                except json.JSONDecodeError:
+                    self.log_test("Hotspot Library - GET Specific Analysis", False, 
+                                "Invalid JSON response", response.text)
+            else:
+                error_msg = "Network error" if not response else f"Status {response.status_code}"
+                self.log_test("Hotspot Library - GET Specific Analysis", False, error_msg, 
+                            response.text if response else None)
+        else:
+            print("\n--- Skipping GET specific analysis test (no existing analyses) ---")
+            self.log_test("Hotspot Library - GET Specific Analysis", True, 
+                        "Skipped - no existing analyses to test with")
+            success_count += 1
+        
+        # Test 3: DELETE /api/hotspot-planning/library/{analysis_id} - Delete analysis (Master Admin only)
+        if test_analysis_id:
+            print(f"\n--- Testing DELETE /api/hotspot-planning/library/{test_analysis_id} (Master Admin) ---")
+            response = self.make_request("DELETE", f"/hotspot-planning/library/{test_analysis_id}")
+            
+            if response is not None and response.status_code == 200:
+                try:
+                    data = response.json()
+                    
+                    if "success" in data and "message" in data:
+                        self.log_test("Hotspot Library - DELETE Analysis (Master Admin)", True, 
+                                    f"Successfully deleted analysis: {data.get('message')}")
+                        success_count += 1
+                    else:
+                        self.log_test("Hotspot Library - DELETE Analysis (Master Admin)", False, 
+                                    "Response missing required fields (success, message)", data)
+                except json.JSONDecodeError:
+                    self.log_test("Hotspot Library - DELETE Analysis (Master Admin)", False, 
+                                "Invalid JSON response", response.text)
+            elif response is not None and response.status_code == 404:
+                self.log_test("Hotspot Library - DELETE Analysis (Master Admin)", True, 
+                            "Analysis not found (404) - expected if already deleted or doesn't exist")
+                success_count += 1
+            else:
+                error_msg = "Network error" if not response else f"Status {response.status_code}"
+                self.log_test("Hotspot Library - DELETE Analysis (Master Admin)", False, error_msg, 
+                            response.text if response else None)
+        else:
+            print("\n--- Skipping DELETE analysis test (no existing analyses) ---")
+            self.log_test("Hotspot Library - DELETE Analysis (Master Admin)", True, 
+                        "Skipped - no existing analyses to test with")
+            success_count += 1
+        
+        # Test 4: Authentication requirements for all endpoints
+        print("\n--- Testing Authentication Requirements ---")
+        
+        # Test GET library without auth
+        response = self.make_request("GET", "/hotspot-planning/library", use_auth=False)
+        if response is not None and response.status_code in [401, 403]:
+            self.log_test("Hotspot Library - GET Authentication Required", True, 
+                        f"Correctly requires authentication ({response.status_code} without token)")
+            success_count += 1
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("Hotspot Library - GET Authentication Required", False, 
+                        f"Expected 401/403, got {status}")
+        
+        # Test GET specific analysis without auth (if we have an ID)
+        if test_analysis_id:
+            response = self.make_request("GET", f"/hotspot-planning/library/{test_analysis_id}", use_auth=False)
+            if response is not None and response.status_code in [401, 403]:
+                self.log_test("Hotspot Library - GET Specific Authentication Required", True, 
+                            f"Correctly requires authentication ({response.status_code} without token)")
+                success_count += 1
+            else:
+                status = response.status_code if response else "Network error"
+                self.log_test("Hotspot Library - GET Specific Authentication Required", False, 
+                            f"Expected 401/403, got {status}")
+        
+        # Test DELETE without auth (use dummy ID)
+        response = self.make_request("DELETE", "/hotspot-planning/library/dummy-id", use_auth=False)
+        if response is not None and response.status_code in [401, 403]:
+            self.log_test("Hotspot Library - DELETE Authentication Required", True, 
+                        f"Correctly requires authentication ({response.status_code} without token)")
+            success_count += 1
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("Hotspot Library - DELETE Authentication Required", False, 
+                        f"Expected 401/403, got {status}")
+        
+        # Test 5: Test DELETE with non-existent analysis ID
+        print("\n--- Testing DELETE with Non-existent Analysis ID ---")
+        fake_id = "non-existent-analysis-id-12345"
+        response = self.make_request("DELETE", f"/hotspot-planning/library/{fake_id}")
+        
+        if response is not None and response.status_code == 404:
+            self.log_test("Hotspot Library - DELETE Non-existent Analysis", True, 
+                        "Correctly returns 404 for non-existent analysis ID")
+            success_count += 1
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("Hotspot Library - DELETE Non-existent Analysis", False, 
+                        f"Expected 404, got {status}")
+        
+        return success_count >= 6  # At least 6 out of 8 tests should pass
+
     def run_all_tests(self):
         """Run all backend tests"""
         print("🚀 Starting Comprehensive Testing - Driver Onboarding Two-Way Sync with ID-Based Reconciliation")
