@@ -714,9 +714,19 @@ const HotspotPlanning = () => {
                   {/* Interactive Map */}
                   <Card className="dark:bg-gray-800 dark:border-gray-700">
                     <CardHeader>
-                      <CardTitle className="text-gray-900 dark:text-white">
-                        🗺️ Hotspot Locations for {selectedSlot}
-                      </CardTitle>
+                      <div className="flex justify-between items-center">
+                        <CardTitle className="text-gray-900 dark:text-white">
+                          🗺️ Hotspot Locations for {selectedSlot}
+                        </CardTitle>
+                        <Button
+                          onClick={() => setDarkMap(!darkMap)}
+                          variant="outline"
+                          size="sm"
+                          className="flex items-center gap-2"
+                        >
+                          {darkMap ? '☀️ Light Mode' : '🌙 Dark Mode'}
+                        </Button>
+                      </div>
                     </CardHeader>
                     <CardContent>
                       <div className="h-[600px] rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600">
@@ -728,8 +738,11 @@ const HotspotPlanning = () => {
                           key={selectedSlot}
                         >
                           <TileLayer
-                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                            url={darkMap 
+                              ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                              : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                            }
                           />
                           
                           {/* Hotspot Locations with Coverage Circles */}
