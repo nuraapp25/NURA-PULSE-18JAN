@@ -58,6 +58,7 @@ const HotspotPlanning = () => {
   const [savedAnalyses, setSavedAnalyses] = useState([]);
   const [loadingLibrary, setLoadingLibrary] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [darkMap, setDarkMap] = useState(false);
 
   const timeSlots = [
     'Morning Rush (6AM-9AM)',
