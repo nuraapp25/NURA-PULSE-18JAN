@@ -6163,6 +6163,9 @@ class NuraPulseBackendTester:
         # PRIORITY: Test Analytics Dashboards Pivot Tables (Fixed Version) as requested in review
         analytics_pivot_success = self.test_analytics_dashboards_pivot_tables()
         
+        # PRIORITY: Test Hotspot Planning Library Endpoints as requested in review
+        hotspot_library_success = self.test_hotspot_planning_library_endpoints()
+        
         # Summary
         print("\n" + "="*80)
         print("📊 TEST SUMMARY - DRIVER ONBOARDING TWO-WAY SYNC WITH ID-BASED RECONCILIATION")
