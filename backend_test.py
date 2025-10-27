@@ -4634,11 +4634,26 @@ class NuraPulseBackendTester:
                 try:
                     data = response.json()
                     
-                    # Check basic response structure
-                    if data.get("success") and "time_slots" in data:
+                    # Check basic response structure - analyze-and-save returns nested analysis
+                    if data.get("success") and "analysis" in data:
+                        analysis = data.get("analysis", {})
+                        if "time_slots" in analysis:
+                            self.log_test("Hotspot Locality - CSV Upload Success", True, 
+                                        f"Successfully uploaded and analyzed CSV with {analysis.get('total_rides_analyzed', 0)} rides")
+                            success_count += 1
+                            
+                            # Use the nested analysis data
+                            time_slots = analysis.get("time_slots", {})
+                        else:
+                            self.log_test("Hotspot Locality - CSV Upload Success", False, 
+                                        "Response missing time_slots in analysis", data)
+                            return success_count
+                    elif data.get("success") and "time_slots" in data:
+                        # Direct response format
                         self.log_test("Hotspot Locality - CSV Upload Success", True, 
                                     f"Successfully uploaded and analyzed CSV with {data.get('total_rides_analyzed', 0)} rides")
                         success_count += 1
+                        time_slots = data.get("time_slots", {})
                         
                         # Check each time slot for locality fields
                         time_slots = data.get("time_slots", {})
