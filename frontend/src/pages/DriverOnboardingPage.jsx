@@ -906,6 +906,177 @@ const DriverOnboardingPage = () => {
         </div>
       </div>
 
+      {/* Status Summary Dashboard */}
+      <Card className="dark:bg-gray-800 dark:border-gray-700">
+        <CardHeader>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <CardTitle className="text-lg font-semibold">Status Summary Dashboard</CardTitle>
+            
+            {/* Date Filter for Summary */}
+            <div className="flex flex-wrap items-center gap-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs dark:bg-gray-700 dark:border-gray-600"
+                  >
+                    <CalendarIcon className="mr-2 h-3 w-3" />
+                    {summaryStartDate ? format(summaryStartDate, "MMM dd, yyyy") : "Start Date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 dark:bg-gray-800 dark:border-gray-700">
+                  <Calendar
+                    mode="single"
+                    selected={summaryStartDate}
+                    onSelect={setSummaryStartDate}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+              
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs dark:bg-gray-700 dark:border-gray-600"
+                  >
+                    <CalendarIcon className="mr-2 h-3 w-3" />
+                    {summaryEndDate ? format(summaryEndDate, "MMM dd, yyyy") : "End Date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 dark:bg-gray-800 dark:border-gray-700">
+                  <Calendar
+                    mode="single"
+                    selected={summaryEndDate}
+                    onSelect={setSummaryEndDate}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+              
+              {(summaryStartDate || summaryEndDate) && (
+                <Button
+                  onClick={() => {
+                    setSummaryStartDate(null);
+                    setSummaryEndDate(null);
+                  }}
+                  variant="outline"
+                  size="sm"
+                  className="text-xs border-red-300 text-red-600 hover:bg-red-50"
+                >
+                  <X size={14} className="mr-1" />
+                  Clear
+                </Button>
+              )}
+            </div>
+          </div>
+          
+          {statusSummary && (
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+              Total Leads: <span className="font-semibold">{statusSummary.total_leads}</span>
+              {(summaryStartDate || summaryEndDate) && " (filtered)"}
+            </p>
+          )}
+        </CardHeader>
+        
+        <CardContent>
+          {summaryLoading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">Loading summary...</p>
+            </div>
+          ) : statusSummary ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* S1 - Filtering */}
+              <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gradient-to-br from-blue-50 to-white dark:from-blue-900/10 dark:to-gray-800">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-blue-700 dark:text-blue-400">S1 - Filtering</h3>
+                  <span className="text-xs font-bold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-1 rounded">
+                    {statusSummary.stage_totals.S1}
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  {Object.entries(statusSummary.summary.S1).map(([status, count]) => (
+                    <div key={status} className="flex items-center justify-between text-sm">
+                      <span className="text-gray-700 dark:text-gray-300 truncate pr-2">{status}</span>
+                      <span className={`font-semibold ${count > 0 ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400'}`}>
+                        {count}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              {/* S2 - Docs Collection */}
+              <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gradient-to-br from-green-50 to-white dark:from-green-900/10 dark:to-gray-800">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-green-700 dark:text-green-400">S2 - Docs Collection</h3>
+                  <span className="text-xs font-bold bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-1 rounded">
+                    {statusSummary.stage_totals.S2}
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  {Object.entries(statusSummary.summary.S2).map(([status, count]) => (
+                    <div key={status} className="flex items-center justify-between text-sm">
+                      <span className="text-gray-700 dark:text-gray-300 truncate pr-2">{status}</span>
+                      <span className={`font-semibold ${count > 0 ? 'text-green-600 dark:text-green-400' : 'text-gray-400'}`}>
+                        {count}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              {/* S3 - Training */}
+              <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gradient-to-br from-purple-50 to-white dark:from-purple-900/10 dark:to-gray-800">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-purple-700 dark:text-purple-400">S3 - Training</h3>
+                  <span className="text-xs font-bold bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 px-2 py-1 rounded">
+                    {statusSummary.stage_totals.S3}
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  {Object.entries(statusSummary.summary.S3).map(([status, count]) => (
+                    <div key={status} className="flex items-center justify-between text-sm">
+                      <span className="text-gray-700 dark:text-gray-300 truncate pr-2">{status}</span>
+                      <span className={`font-semibold ${count > 0 ? 'text-purple-600 dark:text-purple-400' : 'text-gray-400'}`}>
+                        {count}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              {/* S4 - Customer Readiness */}
+              <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gradient-to-br from-orange-50 to-white dark:from-orange-900/10 dark:to-gray-800">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-orange-700 dark:text-orange-400">S4 - Customer Readiness</h3>
+                  <span className="text-xs font-bold bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 px-2 py-1 rounded">
+                    {statusSummary.stage_totals.S4}
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  {Object.entries(statusSummary.summary.S4).map(([status, count]) => (
+                    <div key={status} className="flex items-center justify-between text-sm">
+                      <span className="text-gray-700 dark:text-gray-300 truncate pr-2">{status}</span>
+                      <span className={`font-semibold ${count > 0 ? 'text-orange-600 dark:text-orange-400' : 'text-gray-400'}`}>
+                        {count}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-600 dark:text-gray-400">No data available</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Date Filter Panel */}
       {showDateFilter && (
         <Card className="dark:bg-gray-800 dark:border-gray-700">
