@@ -545,6 +545,7 @@ const HotspotPlanning = () => {
           </div>
         </CardContent>
       </Card>
+          )}
 
       {/* Time Slot Selector */}
       {results && (
