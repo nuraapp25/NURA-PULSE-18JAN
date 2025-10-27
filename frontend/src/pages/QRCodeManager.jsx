@@ -464,6 +464,7 @@ export default function QRCodeManager() {
             </Card>
           ))}
         </div>
+        </>
       )}
 
       {/* Create QR Code Dialog */}
