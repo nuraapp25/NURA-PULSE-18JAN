@@ -84,8 +84,8 @@ const BatteryConsumption = () => {
           // Process data for this date
           const processedData = processChartData(response.data.data);
           
-          // Calculate summary stats
-          const summary = calculateSummary(processedData);
+          // Calculate summary stats (pass raw data for accurate min/max calculation)
+          const summary = calculateSummary(processedData, response.data.data);
           
           allChartsData.push({
             date: format(date, "PPP"),
