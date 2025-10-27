@@ -1,13 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Upload, Target, AlertCircle, TrendingUp, MapPin, Users, Activity, Download, Clock } from "lucide-react";
+import { Upload, Target, AlertCircle, TrendingUp, MapPin, Users, Activity, Download, Clock, Library, Save, Eye, Trash2, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import axios from "axios";
-import { API } from "@/App";
+import { API, useAuth } from "@/App";
 import { MapContainer, TileLayer, Marker, Popup, Circle } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
+import { Input } from "@/components/ui/input";
 
 // Fix Leaflet default icon issue
 delete L.Icon.Default.prototype._getIconUrl;
