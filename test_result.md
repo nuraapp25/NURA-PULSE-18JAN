@@ -793,14 +793,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Analytics Dashboards - Pivot Tables Backend"
-    - "Payment Data Extractor - Performance Optimization"
-    - "Ride Deck Data Analysis - Frontend Interface"
-    - "Driver Form Enhancement - New Document Fields"
-    - "Expense Tracker - Add Expense Dialog"
-    - "Expense Tracker - Expense List Table"
-    - "Expense Tracker - Approval Status Management"
-    - "Expense Tracker - Edit/Delete with Role Permissions"
+    - "QR Code Management - Frontend Interface"
+    - "Hotspot Planning Library Frontend Feature"
+    - "Hotspot Planning - Locality Name Verification"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
