@@ -2771,86 +2771,11 @@ async def get_battery_charge_audit(current_user: User = Depends(get_current_user
                     except:
                         continue
             # NEW LOGIC: Find minimum battery and calculate charge drop/charge %
-            battery_values = []
-            charging_started_battery = None
-            charging_ended_battery = None
-            start_battery = None
-            end_battery = None
+            # This was added by mistake - should be in battery-data endpoint, not audit
+            # Removing this code to fix IndentationError
             
-            for record in day_records:
-                # Get battery percentage
-                battery_pct = (record.get("Battery Soc(%)") or 
-                              record.get("Battery SOC(%)") or 
-                              record.get("Battery %") or 
-                              record.get("battery_soc_percentage") or 
-                              record.get("Battery") or
-                              record.get("battery") or
-                              record.get("SOC") or
-                              record.get("soc"))
-                
-                vehicle_status = (record.get("Vehicle Status") or 
-                                 record.get("status") or
-                                 record.get("Status") or "")
-                
-                if battery_pct is None or battery_pct == '-':
-                    continue
-                
-                try:
-                    battery_value = float(str(battery_pct))
-                    battery_values.append({
-                        'battery': battery_value,
-                        'status': str(vehicle_status).strip()
-                    })
-                except (ValueError, TypeError):
-                    continue
-            
-            # Calculate charge drop and charge %
-            if battery_values:
-                # Start battery is first reading
-                start_battery = battery_values[0]['battery']
-                
-                # End battery is last reading
-                end_battery = battery_values[-1]['battery']
-                
-                # Find when charging first appears (that's when battery was at minimum)
-                for item in battery_values:
-                    if 'Charging' in item['status'] or 'charging' in item['status']:
-                        if charging_started_battery is None:
-                            charging_started_battery = item['battery']
-                        charging_ended_battery = item['battery']  # Keep updating to get last charging value
-                
-                # Calculate charge drop
-                if charging_started_battery is not None:
-                    # Charge drop = Start - Minimum (when charging started)
-                    charge_drop_pct = start_battery - charging_started_battery
-                else:
-                    # If no charging, check if battery dropped
-                    min_battery = min([item['battery'] for item in battery_values])
-                    charge_drop_pct = start_battery - min_battery if start_battery > min_battery else 0
-                
-                # Calculate charge %
-                if charging_started_battery is not None and charging_ended_battery is not None:
-                    # Charge % = End - Start of charging
-                    charge_pct = charging_ended_battery - charging_started_battery
-                else:
-                    # If no charging detected, check if battery increased
-                    charge_pct = end_battery - start_battery if end_battery > start_battery else 0
-                
-                # Make sure percentages are not negative
-                charge_drop_pct = max(0, charge_drop_pct)
-                charge_pct = max(0, charge_pct)
-            else:
-                charge_drop_pct = 0
-                charge_pct = 0
-            
-            # Store the summary for this day
-            daily_summaries[date] = {
-                "charge_drop_pct": round(charge_drop_pct, 2),
-                "charge_pct": round(charge_pct, 2),
-                "start_battery": round(start_battery, 1) if start_battery else 0,
-                "end_battery": round(end_battery, 1) if end_battery else 0,
-                "min_battery": round(charging_started_battery, 1) if charging_started_battery else 0
-            }
+            # Continue with the original audit logic
+            # (This section is for the audit endpoint which checks for low charge instances)
         
         # Sort results by date and vehicle
         audit_results.sort(key=lambda x: (x["date"], x["vehicle_name"]))
