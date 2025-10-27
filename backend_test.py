@@ -4656,7 +4656,6 @@ class NuraPulseBackendTester:
                         time_slots = data.get("time_slots", {})
                         
                         # Check each time slot for locality fields
-                        time_slots = data.get("time_slots", {})
                         locality_issues = []
                         total_locations = 0
                         locations_with_locality = 0
