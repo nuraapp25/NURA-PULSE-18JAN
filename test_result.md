@@ -709,6 +709,9 @@ frontend:
         - working: "NA"
           agent: "main"
           comment: "IMPLEMENTATION COMPLETE: QR Code Management frontend with 2 pages. (1) QR Code Manager main page: Stats cards (Total QR Codes, Total Scans, Active QR Codes), Grid view of QR cards with actions (View Analytics, Download, Delete), Create QR Dialog with form (Name, Landing Page Type - Single/Multiple URLs, URL inputs based on type), Empty state UI. (2) QR Analytics page: Large QR preview, Download QR & Export CSV buttons, Filter toolbar (Today, Last 7/30/90 days, Custom date range), Chart.js line graph (Scans vs Date), Summary stats cards, Device breakdown, Top locations table, Recent scans table. Features: Master Admin only access via sidebar, Responsive design matching Hotspot Planning style, Form validation, Loading states, Toast notifications. Chart.js installed for analytics visualization. Routes added to App.js. Sidebar updated in Dashboard.jsx. Ready for frontend testing."
+        - working: "NA"
+          agent: "main"
+          comment: "ENHANCEMENTS IN PROGRESS: Adding UTM parameters support, campaign fields (source, medium, campaign, content, term), auto-fill functionality, bulk QR generation (multiple QRs from CSV), and batch download (zip file) as per user requirements."
 
   - task: "Corrected Montra Feed Import without Google Sheets"
     implemented: true
