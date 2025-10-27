@@ -2442,6 +2442,82 @@ async def delete_montra_feed_files(
         raise HTTPException(status_code=500, detail="Failed to delete montra feed files")
 
 
+@api_router.post("/montra-vehicle/feed-database/download")
+async def download_montra_feed_data(
+    request: Request,
+    current_user: User = Depends(get_current_user)
+):
+    """Download selected montra feed files as CSV
+    
+    Args:
+        request: Request containing files list in JSON body
+    """
+    try:
+        from fastapi.responses import StreamingResponse
+        import csv
+        from io import StringIO
+        
+        # Parse JSON body
+        body = await request.json()
+        files = body.get("files", [])
+        
+        if not files:
+            raise HTTPException(status_code=400, detail="No files specified for download")
+        
+        # Collect all records
+        all_records = []
+        
+        for file_info in files:
+            query = {
+                "vehicle_id": file_info["vehicle_id"],
+                "date": file_info["date"]
+            }
+            
+            records = await db.montra_feed_data.find(query).to_list(None)
+            all_records.extend(records)
+        
+        if not all_records:
+            raise HTTPException(status_code=404, detail="No data found for selected files")
+        
+        # Create CSV
+        output = StringIO()
+        
+        # Get all unique field names
+        fieldnames = set()
+        for record in all_records:
+            fieldnames.update(record.keys())
+        
+        # Remove MongoDB _id field
+        fieldnames.discard('_id')
+        fieldnames = sorted(fieldnames)
+        
+        writer = csv.DictWriter(output, fieldnames=fieldnames)
+        writer.writeheader()
+        
+        for record in all_records:
+            # Remove _id
+            if '_id' in record:
+                del record['_id']
+            writer.writerow(record)
+        
+        # Return as downloadable file
+        output.seek(0)
+        return StreamingResponse(
+            iter([output.getvalue()]),
+            media_type="text/csv",
+            headers={
+                "Content-Disposition": f"attachment; filename=montra_feed_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error downloading montra feed data: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Failed to download data: {str(e)}")
+
 
 @api_router.post("/montra-vehicle/battery-milestones")
 async def get_battery_milestones(
