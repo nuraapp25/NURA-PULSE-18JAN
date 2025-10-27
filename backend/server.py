@@ -4506,6 +4506,138 @@ async def analyze_hotspot_placement(
         raise HTTPException(status_code=500, detail=f"Failed to analyze data: {str(e)}")
 
 
+@api_router.post("/hotspot-planning/analyze-and-save")
+async def analyze_and_save_hotspot(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user)
+):
+    """Analyze hotspot data and save to library"""
+    try:
+        # First, run the analysis
+        file_content = await file.read()
+        
+        # Recreate file object for analysis
+        from io import BytesIO
+        file_for_analysis = UploadFile(filename=file.filename, file=BytesIO(file_content))
+        
+        # Call the original analyze function
+        analysis_result = await analyze_hotspot_placement(file_for_analysis, current_user)
+        
+        # Save to library
+        analysis_id = str(uuid.uuid4())
+        library_entry = {
+            "id": analysis_id,
+            "filename": file.filename,
+            "uploaded_by": current_user.id,
+            "uploaded_at": datetime.now(timezone.utc).isoformat(),
+            "file_size": len(file_content),
+            "analysis_result": analysis_result,
+            "total_rides": analysis_result.get('total_rides_analyzed', 0),
+            "time_slots_count": len([s for s in analysis_result.get('time_slots', {}).values() if s.get('status') == 'success'])
+        }
+        
+        await db.hotspot_analyses.insert_one(library_entry)
+        
+        logger.info(f"Hotspot analysis saved to library: {analysis_id} by {current_user.email}")
+        
+        return {
+            "success": True,
+            "analysis_id": analysis_id,
+            "analysis": analysis_result,
+            "message": "Analysis completed and saved to library"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to analyze and save hotspot: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Failed to save analysis: {str(e)}")
+
+
+@api_router.get("/hotspot-planning/library")
+async def get_hotspot_library(
+    current_user: User = Depends(get_current_user)
+):
+    """Get all saved hotspot analyses"""
+    try:
+        analyses = await db.hotspot_analyses.find({}).sort('uploaded_at', -1).to_list(None)
+        
+        # Remove _id and large analysis data for list view
+        for analysis in analyses:
+            if '_id' in analysis:
+                del analysis['_id']
+            # Keep only summary, not full analysis
+            if 'analysis_result' in analysis:
+                analysis['summary'] = {
+                    'total_rides': analysis['analysis_result'].get('total_rides_analyzed', 0),
+                    'time_slots': len([s for s in analysis['analysis_result'].get('time_slots', {}).values() if s.get('status') == 'success'])
+                }
+                del analysis['analysis_result']
+        
+        return {
+            "success": True,
+            "analyses": analyses,
+            "count": len(analyses)
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get hotspot library: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get library: {str(e)}")
+
+
+@api_router.get("/hotspot-planning/library/{analysis_id}")
+async def get_hotspot_analysis(
+    analysis_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get specific hotspot analysis"""
+    try:
+        analysis = await db.hotspot_analyses.find_one({"id": analysis_id}, {"_id": 0})
+        
+        if not analysis:
+            raise HTTPException(status_code=404, detail="Analysis not found")
+        
+        return {
+            "success": True,
+            "analysis": analysis
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get hotspot analysis: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get analysis: {str(e)}")
+
+
+@api_router.delete("/hotspot-planning/library/{analysis_id}")
+async def delete_hotspot_analysis(
+    analysis_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Delete hotspot analysis from library - Master Admin only"""
+    try:
+        if current_user.account_type != "master_admin":
+            raise HTTPException(status_code=403, detail="Only Master Admin can delete analyses")
+        
+        result = await db.hotspot_analyses.delete_one({"id": analysis_id})
+        
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Analysis not found")
+        
+        return {
+            "success": True,
+            "message": "Analysis deleted successfully"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to delete hotspot analysis: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete analysis: {str(e)}")
+
+
 # ==================== ANALYTICS ====================
 
 # In-memory storage for active sessions and page views
