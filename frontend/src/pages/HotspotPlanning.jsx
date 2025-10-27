@@ -547,9 +547,9 @@ const HotspotPlanning = () => {
       </Card>
           )}
 
-      {/* Time Slot Selector */}
-      {results && (
-        <>
+          {/* Time Slot Selector */}
+          {results && (
+            <>
           <Card className="dark:bg-gray-800 dark:border-gray-700">
             <CardHeader>
               <CardTitle className="text-gray-900 dark:text-white flex items-center">
