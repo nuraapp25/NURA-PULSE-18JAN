@@ -7404,6 +7404,161 @@ async def delete_folder(
         raise HTTPException(status_code=500, detail=f"Failed to delete folder: {str(e)}")
 
 
+# ==================== DATABASE EXPORT/IMPORT (Master Admin Only) ====================
+
+@api_router.get("/admin/database/export")
+async def export_database(
+    current_user: User = Depends(get_current_user)
+):
+    """Export entire database as JSON - Master Admin only"""
+    try:
+        # Check master admin permission
+        if current_user.account_type != "master_admin":
+            raise HTTPException(status_code=403, detail="Only Master Admin can export database")
+        
+        from fastapi.responses import StreamingResponse
+        import json
+        from io import BytesIO
+        
+        logger.info(f"Database export initiated by {current_user.email}")
+        
+        # Collections to export
+        collections_to_export = [
+            "users",
+            "driver_leads", 
+            "montra_feed_data",
+            "payment_records",
+            "qr_codes",
+            "qr_scans",
+            "expenses",
+            "customer_data",
+            "ride_data",
+            "activity_logs",
+            "app_settings",
+            "ride_pay_folders",
+            "ride_pay_images",
+            "ride_pay_data"
+        ]
+        
+        export_data = {
+            "export_timestamp": datetime.now(timezone.utc).isoformat(),
+            "exported_by": current_user.email,
+            "collections": {}
+        }
+        
+        # Export each collection
+        for collection_name in collections_to_export:
+            try:
+                collection = db[collection_name]
+                documents = await collection.find({}).to_list(None)
+                
+                # Remove _id field (not JSON serializable)
+                for doc in documents:
+                    if '_id' in doc:
+                        del doc['_id']
+                
+                export_data["collections"][collection_name] = documents
+                logger.info(f"Exported {len(documents)} documents from {collection_name}")
+            except Exception as e:
+                logger.warning(f"Failed to export {collection_name}: {str(e)}")
+                export_data["collections"][collection_name] = []
+        
+        # Convert to JSON
+        json_data = json.dumps(export_data, indent=2, default=str)
+        
+        # Return as downloadable file
+        return StreamingResponse(
+            iter([json_data]),
+            media_type="application/json",
+            headers={
+                "Content-Disposition": f"attachment; filename=nura_pulse_backup_{datetime.now().strftime('%Y%m%d')}.json"
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Database export failed: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Failed to export database: {str(e)}")
+
+
+@api_router.post("/admin/database/import")
+async def import_database(
+    request: Request,
+    current_user: User = Depends(get_current_user)
+):
+    """Import database from JSON backup - Master Admin only"""
+    try:
+        # Check master admin permission
+        if current_user.account_type != "master_admin":
+            raise HTTPException(status_code=403, detail="Only Master Admin can import database")
+        
+        import json
+        
+        logger.info(f"Database import initiated by {current_user.email}")
+        
+        # Parse form data
+        form = await request.form()
+        file = form.get('file')
+        
+        if not file:
+            raise HTTPException(status_code=400, detail="No backup file provided")
+        
+        # Read file content
+        content = await file.read()
+        
+        try:
+            import_data = json.loads(content)
+        except json.JSONDecodeError:
+            raise HTTPException(status_code=400, detail="Invalid JSON file")
+        
+        if "collections" not in import_data:
+            raise HTTPException(status_code=400, detail="Invalid backup file format")
+        
+        imported_collections = {}
+        
+        # Import each collection
+        for collection_name, documents in import_data["collections"].items():
+            if not documents:
+                logger.info(f"Skipping empty collection: {collection_name}")
+                continue
+            
+            try:
+                collection = db[collection_name]
+                
+                # Clear existing data
+                await collection.delete_many({})
+                logger.info(f"Cleared existing data from {collection_name}")
+                
+                # Insert new data
+                if len(documents) > 0:
+                    await collection.insert_many(documents)
+                    imported_collections[collection_name] = len(documents)
+                    logger.info(f"Imported {len(documents)} documents to {collection_name}")
+            except Exception as e:
+                logger.error(f"Failed to import {collection_name}: {str(e)}")
+                imported_collections[collection_name] = f"Error: {str(e)}"
+        
+        logger.info(f"Database import completed by {current_user.email}")
+        
+        return {
+            "success": True,
+            "message": "Database imported successfully",
+            "imported_collections": imported_collections,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Database import failed: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Failed to import database: {str(e)}")
+
+
 # ==================== APP SETTINGS MANAGEMENT (Master Admin) ====================
 
 @api_router.get("/app-settings")
