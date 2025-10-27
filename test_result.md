@@ -670,10 +670,10 @@ frontend:
   - task: "Driver Form Enhancement - New Document Fields"
     implemented: true
     working: true
-    file: "/app/frontend/src/pages/DriverOnboardingPage.jsx"
+    file: "/app/frontend/src/pages/DriverOnboardingPage.jsx, /app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: "NA"
           agent: "main"
@@ -681,6 +681,9 @@ frontend:
         - working: true
           agent: "main"
           comment: "✅ IMPLEMENTATION COMPLETE: Added all new document and shift fields to driver form edit dialog. Added 3 new sections: (1) Document Details - DL No., Badge No., Aadhar Card, Pan Card, Gas Bill, Bank Passbook with input fields and edit/view modes. (2) Shift & Vehicle Assignment - Preferred Shift (dropdown: Morning/Afternoon/Night/Flexible), Allotted Shift (dropdown), Default Vehicle (text input), End Date (date picker). All fields properly integrated with existing form structure, supporting both edit and view modes. Fields positioned logically between Pipeline Stages section and Import Date. Frontend restarted. Driver onboarding form now has complete document management capabilities matching backend model fields."
+        - working: "NA"
+          agent: "main"
+          comment: "STAGE-BASED ONBOARDING SYSTEM IMPLEMENTED: Completely revamped driver onboarding with 4-stage progression system. BACKEND CHANGES: 1) Updated app_models.py - Changed stage field to use S1/S2/S3/S4 format, added DriverStageSync model. 2) New endpoint POST /driver-onboarding/leads/{lead_id}/sync-stage - Auto-progresses driver to next stage when on completion status with validation. 3) Stage progression rules: S1 (Highly Interested) → S2 (Docs Upload Pending), S2 (Verified + mandatory docs) → S3 (Schedule Pending), S3 (Approved) → S4 (CT Pending). 4) Document validation for S2 - Requires Driver Licence, Aadhar Card, and Gas Bill OR Bank Passbook before progression. FRONTEND CHANGES: 1) Redefined all status constants - S1_STATUSES (8 statuses), S2_STATUSES (6 statuses), S3_STATUSES (7 statuses), S4_STATUSES (8 statuses). 2) Added stage selector dropdown in lead detail dialog. 3) Status dropdown now filtered by current stage. 4) Added SYNC button with green styling - appears next to stage/status section, auto-progresses to next stage. 5) Completion indicator - Shows green info box when on completion status. 6) Added getStatusesForStage() and getCompletionStatus() helper functions. 7) handleStageSync() function calls new API endpoint with error handling for missing docs. Color coding: Yellow = start status, Green = completion status. Ready for comprehensive testing with full stage progression workflow."
 
 
   - task: "QR Code Management - Backend APIs"
