@@ -238,6 +238,8 @@ const HotspotPlanning = () => {
     setResults(null);
     setSelectedSlot(null);
     setMapCenter([13.0827, 80.2707]);
+    setCurrentAnalysisId(null);
+    setView('upload');
   };
 
   const handleSlotSelect = (slot) => {
