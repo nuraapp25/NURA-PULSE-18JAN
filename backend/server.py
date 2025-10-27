@@ -4459,48 +4459,63 @@ async def analyze_hotspot_placement(
                     if not api_key:
                         return "Unknown"
                     
-                    url = f"https://maps.googleapis.com/maps/api/geocode/json?latlng={lat},{lng}&key={api_key}"
+                    # Use result_type to get neighborhood-level results first
+                    url = f"https://maps.googleapis.com/maps/api/geocode/json?latlng={lat},{lng}&result_type=neighborhood|sublocality&key={api_key}"
                     response = requests.get(url, timeout=5)
                     
                     if response.status_code == 200:
                         data = response.json()
                         if data['status'] == 'OK' and len(data['results']) > 0:
-                            address_components = data['results'][0]['address_components']
+                            # Try to get neighborhood or sublocality from the filtered results
+                            for result in data['results'][:2]:  # Check first 2 results
+                                address_components = result['address_components']
+                                
+                                neighborhood = None
+                                sublocality_2 = None
+                                sublocality_1 = None
+                                
+                                for component in address_components:
+                                    if 'neighborhood' in component['types']:
+                                        neighborhood = component['long_name']
+                                    elif 'sublocality_level_2' in component['types']:
+                                        sublocality_2 = component['long_name']
+                                    elif 'sublocality_level_1' in component['types'] or 'sublocality' in component['types']:
+                                        sublocality_1 = component['long_name']
+                                
+                                # Build area name with available components
+                                parts = []
+                                if neighborhood:
+                                    parts.append(neighborhood)
+                                if sublocality_2 and sublocality_2 != neighborhood:
+                                    parts.append(sublocality_2)
+                                if sublocality_1 and sublocality_1 not in parts:
+                                    parts.append(sublocality_1)
+                                
+                                if len(parts) >= 2:
+                                    return f"{parts[0]} / {parts[1]}"
+                                elif len(parts) == 1:
+                                    return parts[0]
                             
-                            # Extract multiple levels for better accuracy
-                            sublocality_2 = None
-                            sublocality_1 = None
-                            locality = None
-                            
+                            # Fallback: use the first result's main sublocality
+                            first_result = data['results'][0]
+                            for component in first_result['address_components']:
+                                if 'sublocality_level_1' in component['types'] or 'sublocality' in component['types']:
+                                    return component['long_name']
+                    
+                    # If filtered search fails, try standard geocoding
+                    url_standard = f"https://maps.googleapis.com/maps/api/geocode/json?latlng={lat},{lng}&key={api_key}"
+                    response_standard = requests.get(url_standard, timeout=5)
+                    
+                    if response_standard.status_code == 200:
+                        data_standard = response_standard.json()
+                        if data_standard['status'] == 'OK' and len(data_standard['results']) > 0:
+                            address_components = data_standard['results'][0]['address_components']
                             for component in address_components:
-                                if 'sublocality_level_2' in component['types']:
-                                    sublocality_2 = component['long_name']
-                                elif 'sublocality_level_1' in component['types'] or 'sublocality' in component['types']:
-                                    sublocality_1 = component['long_name']
-                                elif 'locality' in component['types']:
-                                    locality = component['long_name']
-                            
-                            # Combine the most specific available names
-                            parts = []
-                            if sublocality_2 and sublocality_2 != locality:
-                                parts.append(sublocality_2)
-                            if sublocality_1 and sublocality_1 != locality and sublocality_1 != sublocality_2:
-                                parts.append(sublocality_1)
-                            
-                            # If we have multiple parts, join them. Otherwise use what we have
-                            if len(parts) >= 2:
-                                return f"{parts[0]} / {parts[1]}"
-                            elif len(parts) == 1:
-                                return parts[0]
-                            elif locality:
-                                return locality
-                            
-                            # Fallback to formatted address
-                            formatted_address = data['results'][0].get('formatted_address', '')
-                            if formatted_address:
-                                # Extract first part before comma
-                                area = formatted_address.split(',')[0].strip()
-                                return area if area else "Unknown"
+                                if 'sublocality_level_1' in component['types']:
+                                    return component['long_name']
+                            for component in address_components:
+                                if 'locality' in component['types']:
+                                    return component['long_name']
                     
                     return "Unknown"
                 except Exception as e:
