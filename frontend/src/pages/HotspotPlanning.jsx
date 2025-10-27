@@ -815,7 +815,7 @@ const HotspotPlanning = () => {
                       
                       <div className="mt-4 flex flex-wrap items-center gap-6 text-sm">
                         <div className="flex items-center">
-                          <div className="w-4 h-4 bg-yellow-500 rounded-full mr-2"></div>
+                          <div className="w-4 h-4 bg-yellow-500 rounded-full mr-2 border-2 border-yellow-600"></div>
                           <span className="text-gray-700 dark:text-gray-300">Hotspot Locations</span>
                         </div>
                         <div className="flex items-center">
@@ -827,8 +827,16 @@ const HotspotPlanning = () => {
                           <span className="text-gray-700 dark:text-gray-300">Uncovered Pickups</span>
                         </div>
                         <div className="flex items-center">
-                          <div className="w-4 h-4 border-2 border-green-500 rounded-full mr-2"></div>
-                          <span className="text-gray-700 dark:text-gray-300">5-min Coverage (420m)</span>
+                          <div className="w-12 h-3 bg-green-500 opacity-30 rounded mr-2 border border-green-600"></div>
+                          <span className="text-gray-700 dark:text-gray-300">5-min Coverage (420m) - High Coverage</span>
+                        </div>
+                        <div className="flex items-center">
+                          <div className="w-12 h-3 bg-orange-500 opacity-30 rounded mr-2 border border-orange-600"></div>
+                          <span className="text-gray-700 dark:text-gray-300">5-min Coverage (420m) - Medium Coverage</span>
+                        </div>
+                        <div className="flex items-center">
+                          <div className="w-12 h-3 bg-red-500 opacity-30 rounded mr-2 border border-red-600"></div>
+                          <span className="text-gray-700 dark:text-gray-300">5-min Coverage (420m) - Low Coverage</span>
                         </div>
                       </div>
                     </CardContent>
