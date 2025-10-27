@@ -4268,6 +4268,18 @@ async def analyze_hotspot_placement(
         df_clean = df.dropna(subset=['pickupLat', 'pickupLong'])
         logger.info(f"Clean data: {len(df_clean)} rides with valid pickup coordinates")
         
+        # Handle case where date and time are in separate columns
+        if 'createdAt' in df_clean.columns and 'updatedAt' in df_clean.columns:
+            # Check if createdAt is just date and updatedAt is just time
+            sample_created = str(df_clean['createdAt'].iloc[0]).strip()
+            sample_updated = str(df_clean['updatedAt'].iloc[0]).strip()
+            
+            # If createdAt has date format and updatedAt has time format, combine them
+            if (',' not in sample_created and '-' in sample_created and 
+                ':' in sample_updated and ',' not in sample_updated):
+                logger.info("Combining createdAt (date) and updatedAt (time) columns")
+                df_clean['datetime'] = df_clean['createdAt'].astype(str) + ',' + df_clean['updatedAt'].astype(str)
+        
         # Geographic filter - Chennai bounds (to remove multi-city outliers)
         # This ensures all hotspots are within operational area
         CHENNAI_BOUNDS = {
