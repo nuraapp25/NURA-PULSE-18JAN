@@ -270,10 +270,18 @@ export default function QRCodeManager() {
           <h1 className="text-3xl font-bold text-gray-900">QR Code Manager</h1>
           <p className="text-gray-600 mt-1">Create and manage dynamic QR codes with scan tracking</p>
         </div>
-        <Button onClick={() => setIsCreateDialogOpen(true)} className="bg-blue-600 hover:bg-blue-700">
-          <Plus className="w-4 h-4 mr-2" />
-          Create QR Code
-        </Button>
+        <div className="flex gap-2">
+          {selectedQRs.length > 0 && (
+            <Button onClick={handleBatchDownload} variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50">
+              <Download className="w-4 h-4 mr-2" />
+              Download Selected ({selectedQRs.length})
+            </Button>
+          )}
+          <Button onClick={() => setIsCreateDialogOpen(true)} className="bg-blue-600 hover:bg-blue-700">
+            <Plus className="w-4 h-4 mr-2" />
+            Create QR Code
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}
