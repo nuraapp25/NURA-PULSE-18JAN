@@ -4307,8 +4307,28 @@ async def analyze_hotspot_placement(
                     return None
                 time_str = str(time_str).strip()
                 
-                # Try parsing different time formats
-                for fmt in ['%H:%M:%S', '%H:%M', '%I:%M:%S %p', '%I:%M %p']:
+                # Try parsing full datetime formats first (DD-MM-YYYY,HH:MM:SS or similar)
+                datetime_formats = [
+                    '%d-%m-%Y,%H:%M:%S',  # DD-MM-YYYY,HH:MM:SS
+                    '%d-%m-%Y %H:%M:%S',  # DD-MM-YYYY HH:MM:SS
+                    '%Y-%m-%d %H:%M:%S',  # YYYY-MM-DD HH:MM:SS
+                    '%d/%m/%Y %H:%M:%S',  # DD/MM/YYYY HH:MM:SS
+                    '%Y-%m-%d,%H:%M:%S',  # YYYY-MM-DD,HH:MM:SS
+                ]
+                
+                for fmt in datetime_formats:
+                    try:
+                        dt = datetime.strptime(time_str, fmt)
+                        # If already in IST, just return hour
+                        # If UTC, add IST offset (UTC + 5:30)
+                        # Assuming data is already in IST based on format
+                        return dt.hour
+                    except ValueError:
+                        continue
+                
+                # Try parsing time-only formats
+                time_formats = ['%H:%M:%S', '%H:%M', '%I:%M:%S %p', '%I:%M %p']
+                for fmt in time_formats:
                     try:
                         utc_time = datetime.strptime(time_str, fmt)
                         # Add IST offset (UTC + 5:30)
@@ -4319,10 +4339,13 @@ async def analyze_hotspot_placement(
                 
                 # If parsing fails, try extracting hour directly
                 if ':' in time_str:
-                    hour = int(time_str.split(':')[0])
-                    # Add 5.5 hours for IST
-                    ist_hour = (hour + 5) % 24
-                    return ist_hour
+                    # Handle formats like "DD-MM-YYYY,HH:MM:SS" by splitting and getting time part
+                    if ',' in time_str:
+                        time_part = time_str.split(',')[1].strip()
+                        hour = int(time_part.split(':')[0])
+                    else:
+                        hour = int(time_str.split(':')[0])
+                    return hour  # Assuming data is already in IST
                     
                 return None
             except Exception as e:
