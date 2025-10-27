@@ -4527,10 +4527,17 @@ async def analyze_hotspot_placement(
                 location_rides = slot_rides_copy[slot_rides_copy['nearest_location'] == i]
                 covered_in_location = location_rides['within_5min'].sum()
                 
+                # Get locality name for this hotspot
+                locality_name = get_locality_name(
+                    float(hotspot_locations[i][0]), 
+                    float(hotspot_locations[i][1])
+                )
+                
                 location_stats.append({
                     'location_id': int(i),
                     'lat': float(hotspot_locations[i][0]),
                     'long': float(hotspot_locations[i][1]),
+                    'locality': locality_name,
                     'rides_assigned': int(len(location_rides)),
                     'rides_within_5min': int(covered_in_location),
                     'coverage_percentage': float((covered_in_location / len(location_rides) * 100) if len(location_rides) > 0 else 0)
