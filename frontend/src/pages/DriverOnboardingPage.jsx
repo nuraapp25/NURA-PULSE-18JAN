@@ -1491,72 +1491,90 @@ const DriverOnboardingPage = () => {
           
           {selectedLead && editedLead && (
             <div className="space-y-6 mt-4">
-              {/* Status Update Section */}
-              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 block">
-                  Update Status
-                </Label>
-                <Select
-                  value={selectedLead.status || "New"}
-                  onValueChange={(value) => {
-                    handleStatusUpdate(value);
-                    setHasUnsavedChanges(true);
-                  }}
-                  disabled={updatingStatus}
-                >
-                  <SelectTrigger className="w-full dark:bg-gray-700 dark:border-gray-600">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700 max-h-[400px]">
-                    {/* Stage 1: Filtering */}
-                    <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-900 sticky top-0">
-                      Stage 1: Filtering
-                    </div>
-                    {FILTERING_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        <span className={`px-2 py-1 rounded text-xs ${option.color}`}>
-                          {option.label}
-                        </span>
-                      </SelectItem>
-                    ))}
-                    
-                    {/* Stage 2: Docs Collection */}
-                    <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-900 sticky top-0 mt-1">
-                      Stage 2: Docs Collection
-                    </div>
-                    {DOCS_COLLECTION_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        <span className={`px-2 py-1 rounded text-xs ${option.color}`}>
-                          {option.label}
-                        </span>
-                      </SelectItem>
-                    ))}
-                    
-                    {/* Stage 3: Driver Readiness */}
-                    <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-900 sticky top-0 mt-1">
-                      Stage 3: Driver Readiness
-                    </div>
-                    {DRIVER_READINESS_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        <span className={`px-2 py-1 rounded text-xs ${option.color}`}>
-                          {option.label}
-                        </span>
-                      </SelectItem>
-                    ))}
-                    
-                    {/* Stage 4: Customer Readiness */}
-                    <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-900 sticky top-0 mt-1">
-                      Stage 4: Customer Readiness
-                    </div>
-                    {CUSTOMER_READINESS_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        <span className={`px-2 py-1 rounded text-xs ${option.color}`}>
-                          {option.label}
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              {/* Stage and Status Update Section */}
+              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    Stage & Status Management
+                  </Label>
+                  {selectedLead.stage && selectedLead.status && (
+                    <Button
+                      onClick={() => handleStageSync(selectedLead.id)}
+                      variant="outline"
+                      size="sm"
+                      className="bg-green-50 hover:bg-green-100 text-green-700 border-green-300"
+                      disabled={updatingStatus}
+                    >
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      SYNC to Next Stage
+                    </Button>
+                  )}
+                </div>
+                
+                {/* Stage Selector */}
+                <div>
+                  <Label className="text-xs text-gray-600 dark:text-gray-400 mb-2 block">
+                    Current Stage
+                  </Label>
+                  <Select
+                    value={selectedLead.stage || "S1"}
+                    onValueChange={(value) => {
+                      handleFieldChange('stage', value);
+                      // Reset status to first status of new stage
+                      const newStatuses = getStatusesForStage(value);
+                      if (newStatuses.length > 0) {
+                        handleFieldChange('status', newStatuses[0].value);
+                      }
+                    }}
+                    disabled={updatingStatus}
+                  >
+                    <SelectTrigger className="w-full dark:bg-gray-700 dark:border-gray-600">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                      {STAGES.map((stage) => (
+                        <SelectItem key={stage.value} value={stage.value}>
+                          {stage.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {/* Status Selector (filtered by current stage) */}
+                <div>
+                  <Label className="text-xs text-gray-600 dark:text-gray-400 mb-2 block">
+                    Status within Stage
+                  </Label>
+                  <Select
+                    value={selectedLead.status || "New"}
+                    onValueChange={(value) => {
+                      handleStatusUpdate(value);
+                      setHasUnsavedChanges(true);
+                    }}
+                    disabled={updatingStatus}
+                  >
+                    <SelectTrigger className="w-full dark:bg-gray-700 dark:border-gray-600">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="dark:bg-gray-800 dark:border-gray-700 max-h-[300px]">
+                      {getStatusesForStage(selectedLead.stage || "S1").map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          <span className={`px-2 py-1 rounded text-xs ${option.color}`}>
+                            {option.label}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {/* Info about completion status */}
+                {selectedLead.stage && selectedLead.status === getCompletionStatus(selectedLead.stage) && selectedLead.stage !== "S4" && (
+                  <div className="text-xs text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20 p-2 rounded">
+                    ✓ Completion status reached! Click "SYNC to Next Stage" to auto-progress.
+                  </div>
+                )}
               </div>
 
               {/* Lead Information */}
