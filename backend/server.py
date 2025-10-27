@@ -1268,6 +1268,125 @@ async def update_lead_status(lead_id: str, status_data: LeadStatusUpdate, curren
     return {"message": "Lead status updated successfully", "lead": updated_lead}
 
 
+@api_router.post("/driver-onboarding/leads/{lead_id}/sync-stage")
+async def sync_driver_stage(lead_id: str, current_user: User = Depends(get_current_user)):
+    """
+    Auto-progress driver to next stage if on a completion (green) status.
+    Stage progression rules:
+    - S1 (Filtering) -> S2 (Docs Collection) when status is "Highly Interested"
+    - S2 (Docs Collection) -> S3 (Training) when status is "Verified" (and mandatory docs uploaded)
+    - S3 (Training) -> S4 (Customer Readiness) when status is "Approved"
+    - S4 is final stage, no further progression
+    """
+    # Find the lead
+    lead = await db.driver_leads.find_one({"id": lead_id})
+    if not lead:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    
+    current_stage = lead.get('stage', 'S1')
+    current_status = lead.get('status', 'New')
+    
+    # Define stage progression rules
+    stage_progression = {
+        'S1': {
+            'completion_status': 'Highly Interested',
+            'next_stage': 'S2',
+            'next_status': 'Docs Upload Pending'
+        },
+        'S2': {
+            'completion_status': 'Verified',
+            'next_stage': 'S3',
+            'next_status': 'Schedule Pending',
+            'requires_docs': True  # Mandatory docs check
+        },
+        'S3': {
+            'completion_status': 'Approved',
+            'next_stage': 'S4',
+            'next_status': 'CT Pending'
+        }
+    }
+    
+    # Check if current stage has progression rules
+    if current_stage not in stage_progression:
+        if current_stage == 'S4':
+            return {
+                "success": False,
+                "message": "Driver is already in final stage (S4). No further progression available.",
+                "current_stage": current_stage,
+                "current_status": current_status
+            }
+        return {
+            "success": False,
+            "message": f"Invalid stage: {current_stage}",
+            "current_stage": current_stage,
+            "current_status": current_status
+        }
+    
+    progression_rule = stage_progression[current_stage]
+    
+    # Check if on completion status
+    if current_status != progression_rule['completion_status']:
+        return {
+            "success": False,
+            "message": f"Cannot sync. Status must be '{progression_rule['completion_status']}' to progress from {current_stage}. Current status is '{current_status}'.",
+            "current_stage": current_stage,
+            "current_status": current_status,
+            "required_status": progression_rule['completion_status']
+        }
+    
+    # S2 specific: Check mandatory documents
+    if progression_rule.get('requires_docs'):
+        dl_no = lead.get('dl_no')
+        aadhar_card = lead.get('aadhar_card')
+        gas_bill = lead.get('gas_bill')
+        bank_passbook = lead.get('bank_passbook')  # Address verification alternative
+        
+        missing_docs = []
+        if not dl_no:
+            missing_docs.append('Driver Licence')
+        if not aadhar_card:
+            missing_docs.append('Aadhar Card')
+        if not gas_bill and not bank_passbook:
+            missing_docs.append('Gas Bill or Address Verification (Bank Passbook)')
+        
+        if missing_docs:
+            return {
+                "success": False,
+                "message": f"Cannot progress from S2. Missing mandatory documents: {', '.join(missing_docs)}",
+                "current_stage": current_stage,
+                "current_status": current_status,
+                "missing_documents": missing_docs
+            }
+    
+    # Perform stage progression
+    new_stage = progression_rule['next_stage']
+    new_status = progression_rule['next_status']
+    
+    await db.driver_leads.update_one(
+        {"id": lead_id},
+        {"$set": {
+            "stage": new_stage,
+            "status": new_status
+        }}
+    )
+    
+    # Get updated lead for sync
+    updated_lead = await db.driver_leads.find_one({"id": lead_id}, {"_id": 0})
+    
+    # Sync to Google Sheets
+    sync_single_record('leads', updated_lead)
+    
+    return {
+        "success": True,
+        "message": f"Successfully progressed from {current_stage} ({current_status}) to {new_stage} ({new_status})",
+        "previous_stage": current_stage,
+        "previous_status": current_status,
+        "new_stage": new_stage,
+        "new_status": new_status,
+        "lead": updated_lead
+    }
+
+
 @api_router.delete("/driver-onboarding/leads/{lead_id}")
 async def delete_lead(lead_id: str, current_user: User = Depends(get_current_user)):
     """Delete a single lead (Master Admin only)"""
