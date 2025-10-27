@@ -189,7 +189,7 @@ const HotspotPlanning = () => {
       formData.append("file", file);
 
       const response = await axios.post(
-        `${API}/hotspot-planning/analyze`,
+        `${API}/hotspot-planning/analyze-and-save`,
         formData,
         {
           headers: {
@@ -201,16 +201,17 @@ const HotspotPlanning = () => {
       );
 
       if (response.data.success) {
-        setResults(response.data);
+        setResults(response.data.analysis);
+        setCurrentAnalysisId(response.data.analysis_id);
         
         // Auto-select first slot with data
         const firstSlotWithData = timeSlots.find(
-          slot => response.data.time_slots[slot]?.status === 'success'
+          slot => response.data.analysis.time_slots[slot]?.status === 'success'
         );
         
         if (firstSlotWithData) {
           setSelectedSlot(firstSlotWithData);
-          const slotData = response.data.time_slots[firstSlotWithData];
+          const slotData = response.data.analysis.time_slots[firstSlotWithData];
           if (slotData.hotspot_locations && slotData.hotspot_locations.length > 0) {
             setMapCenter([slotData.hotspot_locations[0].lat, slotData.hotspot_locations[0].long]);
           }
@@ -218,7 +219,7 @@ const HotspotPlanning = () => {
         
         toast.success(
           <div>
-            <p className="font-semibold">Analysis Complete!</p>
+            <p className="font-semibold">Analysis Complete & Saved!</p>
             <p className="text-sm mt-1">{response.data.message}</p>
           </div>,
           { duration: 5000 }
