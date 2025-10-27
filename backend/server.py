@@ -4448,6 +4448,45 @@ async def analyze_hotspot_placement(
             
             hotspot_locations = kmeans.cluster_centers_
             
+            # Function to get locality name using Google Maps Reverse Geocoding
+            def get_locality_name(lat, lng):
+                """Get locality name from coordinates using Google Maps Geocoding API"""
+                try:
+                    import requests
+                    import os
+                    
+                    api_key = os.environ.get('GOOGLE_MAPS_API_KEY')
+                    if not api_key:
+                        return "Unknown"
+                    
+                    url = f"https://maps.googleapis.com/maps/api/geocode/json?latlng={lat},{lng}&key={api_key}"
+                    response = requests.get(url, timeout=5)
+                    
+                    if response.status_code == 200:
+                        data = response.json()
+                        if data['status'] == 'OK' and len(data['results']) > 0:
+                            # Try to find sublocality_level_1 or locality
+                            address_components = data['results'][0]['address_components']
+                            
+                            # First try to find sublocality_level_1 (more specific)
+                            for component in address_components:
+                                if 'sublocality_level_1' in component['types'] or 'sublocality' in component['types']:
+                                    return component['long_name']
+                            
+                            # Then try locality
+                            for component in address_components:
+                                if 'locality' in component['types']:
+                                    return component['long_name']
+                            
+                            # Fallback to first address component
+                            if len(address_components) > 0:
+                                return address_components[0]['long_name']
+                    
+                    return "Unknown"
+                except Exception as e:
+                    logger.warning(f"Failed to get locality for {lat}, {lng}: {e}")
+                    return "Unknown"
+            
             # Calculate coverage for this time slot
             def calculate_coverage(row, locations):
                 pickup_point = (row['pickupLat'], row['pickupLong'])
