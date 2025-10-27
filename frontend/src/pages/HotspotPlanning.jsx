@@ -835,6 +835,7 @@ const HotspotPlanning = () => {
                           <thead className="bg-gray-50 dark:bg-gray-900/50 border-b-2 border-gray-200 dark:border-gray-700">
                             <tr>
                               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Rank</th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Locality</th>
                               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Coordinates (Lat, Long)</th>
                               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Rides</th>
                               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Covered</th>
@@ -846,6 +847,9 @@ const HotspotPlanning = () => {
                             {currentSlotData.hotspot_locations.map((location, idx) => (
                               <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-gray-900/30">
                                 <td className="px-4 py-3 text-sm font-bold text-gray-900 dark:text-white">#{idx + 1}</td>
+                                <td className="px-4 py-3 text-sm font-semibold text-purple-600 dark:text-purple-400">
+                                  {location.locality || 'Loading...'}
+                                </td>
                                 <td className="px-4 py-3 text-sm font-mono text-blue-600 dark:text-blue-400">
                                   {location.lat.toFixed(6)}, {location.long.toFixed(6)}
                                 </td>
