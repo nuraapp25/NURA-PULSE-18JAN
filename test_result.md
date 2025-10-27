@@ -712,6 +712,9 @@ frontend:
         - working: "NA"
           agent: "main"
           comment: "ENHANCEMENTS IN PROGRESS: Adding UTM parameters support, campaign fields (source, medium, campaign, content, term), auto-fill functionality, bulk QR generation (multiple QRs from CSV), and batch download (zip file) as per user requirements."
+        - working: "NA"
+          agent: "testing"
+          comment: "TESTING IN PROGRESS: Starting comprehensive testing of QR Code Manager frontend with focus on: 1) QR Code Creation with UTM Parameters - verify all new fields in create dialog, test auto-fill UTM functionality. 2) Batch Selection and Download - test checkboxes, select all/deselect all, download selected functionality. 3) Campaign Name Display - verify campaign names show in blue text below creation date. Using Master Admin credentials (admin/Nura@1234$) for testing."
 
   - task: "Corrected Montra Feed Import without Google Sheets"
     implemented: true
