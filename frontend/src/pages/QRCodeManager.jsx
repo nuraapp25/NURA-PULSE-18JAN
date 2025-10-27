@@ -338,24 +338,59 @@ export default function QRCodeManager() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {qrCodes.map((qr) => (
-            <Card key={qr.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <CardTitle className="text-lg">{qr.name}</CardTitle>
-                    <p className="text-sm text-gray-500 mt-1">
-                      Created: {formatDate(qr.created_at)}
-                    </p>
+        <>
+          {qrCodes.length > 1 && (
+            <div className="flex items-center justify-between mb-4">
+              <Button 
+                onClick={toggleSelectAll} 
+                variant="outline" 
+                size="sm"
+              >
+                {selectedQRs.length === qrCodes.length ? 'Deselect All' : 'Select All'}
+              </Button>
+              {selectedQRs.length > 0 && (
+                <span className="text-sm text-gray-600">
+                  {selectedQRs.length} of {qrCodes.length} selected
+                </span>
+              )}
+            </div>
+          )}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {qrCodes.map((qr) => (
+              <Card 
+                key={qr.id} 
+                className={`hover:shadow-lg transition-shadow ${
+                  selectedQRs.includes(qr.id) ? 'ring-2 ring-blue-500' : ''
+                }`}
+              >
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start gap-2 flex-1">
+                      <input
+                        type="checkbox"
+                        checked={selectedQRs.includes(qr.id)}
+                        onChange={() => toggleQRSelection(qr.id)}
+                        className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
+                      />
+                      <div className="flex-1">
+                        <CardTitle className="text-lg">{qr.name}</CardTitle>
+                        <p className="text-sm text-gray-500 mt-1">
+                          Created: {formatDate(qr.created_at)}
+                        </p>
+                        {qr.campaign_name && (
+                          <p className="text-xs text-blue-600 mt-1">
+                            Campaign: {qr.campaign_name}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    {qr.is_active && (
+                      <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
+                        Active
+                      </span>
+                    )}
                   </div>
-                  {qr.is_active && (
-                    <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
-                      Active
-                    </span>
-                  )}
-                </div>
-              </CardHeader>
+                </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {/* QR Code Preview */}
