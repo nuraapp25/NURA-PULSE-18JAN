@@ -602,6 +602,47 @@ const DriverOnboardingPage = () => {
     }
   };
 
+  // Stage sync handler - auto-progress to next stage
+  const handleStageSync = async (leadId) => {
+    setUpdatingStatus(true);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.post(
+        `${API}/driver-onboarding/leads/${leadId}/sync-stage`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (response.data.success) {
+        toast.success(response.data.message);
+        
+        // Update local state with new stage and status
+        const updatedLeads = leads.map(lead => 
+          lead.id === leadId 
+            ? { ...lead, stage: response.data.new_stage, status: response.data.new_status } 
+            : lead
+        );
+        setLeads(updatedLeads);
+        setSelectedLead({ 
+          ...selectedLead, 
+          stage: response.data.new_stage, 
+          status: response.data.new_status 
+        });
+        
+        // Update last sync time
+        await fetchLastSyncTime();
+      } else {
+        toast.error(response.data.message);
+      }
+      
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.response?.data?.detail || "Failed to sync stage";
+      toast.error(errorMessage);
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
+
   // Bulk selection handlers
   const handleSelectAll = () => {
     setSelectedLeadIds(filteredLeads.map(lead => lead.id));
