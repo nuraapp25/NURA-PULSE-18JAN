@@ -47,11 +47,17 @@ const pickupIconUncovered = new L.Icon({
 });
 
 const HotspotPlanning = () => {
+  const { user } = useAuth();
+  const [view, setView] = useState('upload'); // 'upload' or 'library' or 'view-saved'
   const [file, setFile] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [results, setResults] = useState(null);
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [mapCenter, setMapCenter] = useState([13.0827, 80.2707]);
+  const [currentAnalysisId, setCurrentAnalysisId] = useState(null);
+  const [savedAnalyses, setSavedAnalyses] = useState([]);
+  const [loadingLibrary, setLoadingLibrary] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const timeSlots = [
     'Morning Rush (6AM-9AM)',
