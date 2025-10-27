@@ -14,63 +14,95 @@ import { toast } from "sonner";
 import { Upload, Users, FileSpreadsheet, RefreshCw, Plus, Calendar as CalendarIcon, Filter, X, CheckSquare, Square, XCircle, Save, ChevronDown } from "lucide-react";
 import { format } from "date-fns";
 
-// Stage 1: Filtering
-const FILTERING_OPTIONS = [
-  { value: "Not interested", label: "S1-a Not interested", category: "Stage 1: Filtering", color: "bg-gray-100 text-gray-700" },
-  { value: "Interested, No Driving License", label: "S1-b Interested, No DL", category: "Stage 1: Filtering", color: "bg-yellow-100 text-yellow-700" },
-  { value: "Highly Interested", label: "S1-c Highly Interested", category: "Stage 1: Filtering", color: "bg-green-100 text-green-700" },
-  { value: "Call back 1D", label: "S1-d Call back 1D", category: "Stage 1: Filtering", color: "bg-blue-100 text-blue-700" },
-  { value: "Call back 1W", label: "S1-e Call back 1W", category: "Stage 1: Filtering", color: "bg-blue-100 text-blue-700" },
-  { value: "Call back 2W", label: "S1-f Call back 2W", category: "Stage 1: Filtering", color: "bg-blue-100 text-blue-700" },
-  { value: "Call back 1M", label: "S1-g Call back 1M", category: "Stage 1: Filtering", color: "bg-blue-100 text-blue-700" },
+// Define stages
+const STAGES = [
+  { value: "S1", label: "S1 - Filtering" },
+  { value: "S2", label: "S2 - Docs Collection" },
+  { value: "S3", label: "S3 - Training" },
+  { value: "S4", label: "S4 - Customer Readiness" }
 ];
 
-// Stage 2: Docs Collection
-const DOCS_COLLECTION_OPTIONS = [
-  { value: "Docs Upload Pending", label: "S2-a Docs Upload Pending", category: "Stage 2: Docs Collection", color: "bg-orange-100 text-orange-700" },
-  { value: "Verification Pending", label: "S2-b Verification Pending", category: "Stage 2: Docs Collection", color: "bg-yellow-100 text-yellow-700" },
-  { value: "Duplicate License", label: "S2-c Duplicate License", category: "Stage 2: Docs Collection", color: "bg-red-100 text-red-700" },
-  { value: "DL - Amount", label: "S2-d DL - Amount", category: "Stage 2: Docs Collection", color: "bg-purple-100 text-purple-700" },
-  { value: "Verified", label: "S2-e Verified", category: "Stage 2: Docs Collection", color: "bg-green-100 text-green-700" },
+// S1 - Filtering Stage
+const S1_STATUSES = [
+  { value: "New", label: "New", color: "bg-yellow-100 text-yellow-700" },
+  { value: "Not interested", label: "Not interested", color: "bg-gray-100 text-gray-700" },
+  { value: "Interested, No DL", label: "Interested, No DL", color: "bg-gray-100 text-gray-700" },
+  { value: "Highly Interested", label: "Highly Interested", color: "bg-green-100 text-green-700" },  // Green = completion
+  { value: "Call back 1D", label: "Call back 1D", color: "bg-blue-100 text-blue-700" },
+  { value: "Call back 1W", label: "Call back 1W", color: "bg-blue-100 text-blue-700" },
+  { value: "Call back 2W", label: "Call back 2W", color: "bg-blue-100 text-blue-700" },
+  { value: "Call back 1M", label: "Call back 1M", color: "bg-blue-100 text-blue-700" },
 ];
 
-// Stage 3: Driver Readiness
-const DRIVER_READINESS_OPTIONS = [
-  { value: "Schedule_Pending", label: "S3-a Schedule Pending", category: "Stage 3: Driver Readiness", color: "bg-orange-100 text-orange-700" },
-  { value: "Training WIP", label: "S3-b Training WIP", category: "Stage 3: Driver Readiness", color: "bg-blue-100 text-blue-700" },
-  { value: "Training Completed", label: "S3-c Training Completed", category: "Stage 3: Driver Readiness", color: "bg-green-100 text-green-700" },
-  { value: "Training Rejected", label: "S3-d Training Rejected", category: "Stage 3: Driver Readiness", color: "bg-red-100 text-red-700" },
-  { value: "Re-Training", label: "S3-e Re-Training", category: "Stage 3: Driver Readiness", color: "bg-yellow-100 text-yellow-700" },
-  { value: "Absent for training", label: "S3-f Absent for training", category: "Stage 3: Driver Readiness", color: "bg-gray-100 text-gray-700" },
-  { value: "Approved", label: "S3-g Approved", category: "Stage 3: Driver Readiness", color: "bg-green-100 text-green-700" },
+// S2 - Docs Collection Stage
+const S2_STATUSES = [
+  { value: "Docs Upload Pending", label: "Docs Upload Pending", color: "bg-yellow-100 text-yellow-700" },
+  { value: "Verification Pending", label: "Verification Pending", color: "bg-gray-100 text-gray-700" },
+  { value: "Duplicate License", label: "Duplicate License", color: "bg-gray-100 text-gray-700" },
+  { value: "DL - Amount", label: "DL - Amount", color: "bg-gray-100 text-gray-700" },
+  { value: "Verified", label: "Verified", color: "bg-green-100 text-green-700" },  // Green = completion
+  { value: "Verification Rejected", label: "Verification Rejected", color: "bg-red-100 text-red-700" },
 ];
 
-// Stage 4: Customer Readiness
-const CUSTOMER_READINESS_OPTIONS = [
-  { value: "CT_Pending", label: "S4-a CT Pending", category: "Stage 4: Customer Readiness", color: "bg-orange-100 text-orange-700" },
-  { value: "CT_WIP", label: "S4-b CT WIP", category: "Stage 4: Customer Readiness", color: "bg-blue-100 text-blue-700" },
-  { value: "Shift details pending", label: "S4-c Shift Details Pending", category: "Stage 4: Customer Readiness", color: "bg-yellow-100 text-yellow-700" },
-  { value: "DONE!", label: "S4-d DONE!", category: "Stage 4: Customer Readiness", color: "bg-green-100 text-green-700" },
-  { value: "Training Rejected", label: "S4-e Training Rejected", category: "Stage 4: Customer Readiness", color: "bg-red-100 text-red-700" },
-  { value: "Re-Training", label: "S4-f Re-Training", category: "Stage 4: Customer Readiness", color: "bg-yellow-100 text-yellow-700" },
-  { value: "Absent for training", label: "S4-g Absent for training", category: "Stage 4: Customer Readiness", color: "bg-gray-100 text-gray-700" },
-  { value: "Terminated", label: "S4-h Terminated", category: "Stage 4: Customer Readiness", color: "bg-red-100 text-red-700" },
+// S3 - Training Stage
+const S3_STATUSES = [
+  { value: "Schedule Pending", label: "Schedule Pending", color: "bg-yellow-100 text-yellow-700" },
+  { value: "Training WIP", label: "Training WIP", color: "bg-gray-100 text-gray-700" },
+  { value: "Training Completed", label: "Training Completed", color: "bg-green-100 text-green-700" },
+  { value: "Training Rejected", label: "Training Rejected", color: "bg-red-100 text-red-700" },
+  { value: "Re-Training", label: "Re-Training", color: "bg-gray-100 text-gray-700" },
+  { value: "Absent for training", label: "Absent for training", color: "bg-gray-100 text-gray-700" },
+  { value: "Approved", label: "Approved", color: "bg-green-100 text-green-700" },  // Green = completion
 ];
 
-// Combined status options (for backward compatibility)
+// S4 - Customer Readiness Stage
+const S4_STATUSES = [
+  { value: "CT Pending", label: "CT Pending", color: "bg-yellow-100 text-yellow-700" },
+  { value: "CT WIP", label: "CT WIP", color: "bg-gray-100 text-gray-700" },
+  { value: "Shift Details Pending", label: "Shift Details Pending", color: "bg-gray-100 text-gray-700" },
+  { value: "DONE!", label: "DONE!", color: "bg-green-100 text-green-700" },  // Green = completion
+  { value: "Training Rejected", label: "Training Rejected", color: "bg-red-100 text-red-700" },
+  { value: "Re-Training", label: "Re-Training", color: "bg-gray-100 text-gray-700" },
+  { value: "Absent for training", label: "Absent for training", color: "bg-gray-100 text-gray-700" },
+  { value: "Terminated", label: "Terminated", color: "bg-red-100 text-red-700" },
+];
+
+// Get statuses for a specific stage
+const getStatusesForStage = (stage) => {
+  switch (stage) {
+    case "S1": return S1_STATUSES;
+    case "S2": return S2_STATUSES;
+    case "S3": return S3_STATUSES;
+    case "S4": return S4_STATUSES;
+    default: return S1_STATUSES;
+  }
+};
+
+// Get completion status for each stage (for auto-progression)
+const getCompletionStatus = (stage) => {
+  switch (stage) {
+    case "S1": return "Highly Interested";
+    case "S2": return "Verified";
+    case "S3": return "Approved";
+    case "S4": return "DONE!";
+    default: return null;
+  }
+};
+
+// Legacy options for backward compatibility (if needed)
 const STATUS_OPTIONS = [
-  ...FILTERING_OPTIONS,
-  ...DOCS_COLLECTION_OPTIONS,
-  ...DRIVER_READINESS_OPTIONS,
-  ...CUSTOMER_READINESS_OPTIONS
+  ...S1_STATUSES,
+  ...S2_STATUSES,
+  ...S3_STATUSES,
+  ...S4_STATUSES
 ];
 
 const LEAD_STAGE_OPTIONS = [
-  { value: "all", label: "All Status" },
-  { value: "filtering", label: "Filtering Stage" },
-  { value: "docs_collection", label: "Docs Collection" },
-  { value: "driver_readiness", label: "Driver Readiness" },
-  { value: "customer_readiness", label: "Customer Readiness" },
+  { value: "all", label: "All Stages" },
+  { value: "S1", label: "S1 - Filtering" },
+  { value: "S2", label: "S2 - Docs Collection" },
+  { value: "S3", label: "S3 - Training" },
+  { value: "S4", label: "S4 - Customer Readiness" },
 ];
 
 const DriverOnboardingPage = () => {
