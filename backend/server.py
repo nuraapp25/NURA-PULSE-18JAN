@@ -4465,22 +4465,42 @@ async def analyze_hotspot_placement(
                     if response.status_code == 200:
                         data = response.json()
                         if data['status'] == 'OK' and len(data['results']) > 0:
-                            # Try to find sublocality_level_1 or locality
                             address_components = data['results'][0]['address_components']
                             
-                            # First try to find sublocality_level_1 (more specific)
-                            for component in address_components:
-                                if 'sublocality_level_1' in component['types'] or 'sublocality' in component['types']:
-                                    return component['long_name']
+                            # Extract multiple levels for better accuracy
+                            sublocality_2 = None
+                            sublocality_1 = None
+                            locality = None
                             
-                            # Then try locality
                             for component in address_components:
-                                if 'locality' in component['types']:
-                                    return component['long_name']
+                                if 'sublocality_level_2' in component['types']:
+                                    sublocality_2 = component['long_name']
+                                elif 'sublocality_level_1' in component['types'] or 'sublocality' in component['types']:
+                                    sublocality_1 = component['long_name']
+                                elif 'locality' in component['types']:
+                                    locality = component['long_name']
                             
-                            # Fallback to first address component
-                            if len(address_components) > 0:
-                                return address_components[0]['long_name']
+                            # Combine the most specific available names
+                            parts = []
+                            if sublocality_2 and sublocality_2 != locality:
+                                parts.append(sublocality_2)
+                            if sublocality_1 and sublocality_1 != locality and sublocality_1 != sublocality_2:
+                                parts.append(sublocality_1)
+                            
+                            # If we have multiple parts, join them. Otherwise use what we have
+                            if len(parts) >= 2:
+                                return f"{parts[0]} / {parts[1]}"
+                            elif len(parts) == 1:
+                                return parts[0]
+                            elif locality:
+                                return locality
+                            
+                            # Fallback to formatted address
+                            formatted_address = data['results'][0].get('formatted_address', '')
+                            if formatted_address:
+                                # Extract first part before comma
+                                area = formatted_address.split(',')[0].strip()
+                                return area if area else "Unknown"
                     
                     return "Unknown"
                 except Exception as e:
