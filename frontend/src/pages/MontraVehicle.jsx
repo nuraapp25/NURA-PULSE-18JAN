@@ -256,8 +256,8 @@ const MontraVehicle = () => {
 
   const handleSelectAll = (checked) => {
     if (checked) {
-      const allFiles = getAllFiles();
-      const allIds = allFiles.map((file, index) => `${file.vehicle_id}-${file.date}-${file.filename}`);
+      const filteredFiles = getFilteredFiles();
+      const allIds = filteredFiles.map((file) => `${file.vehicle_id}-${file.date}-${file.filename}`);
       setSelectedFileIds(allIds);
     } else {
       setSelectedFileIds([]);
