@@ -762,7 +762,6 @@ async def sync_drivers(current_user: User = Depends(get_current_user)):
 
 
 # Driver Onboarding - Leads Import
-from fastapi import File, UploadFile
 import pandas as pd
 import io
 
@@ -3208,7 +3207,7 @@ async def get_drivers_and_vehicles(
                 except Exception as e:
                     logger.error(f"Error parsing drivers file tab '{tab_name}': {str(e)}")
         else:
-            logger.warning(f"Drivers List.xlsx file not found in admin files")
+            logger.warning("Drivers List.xlsx file not found in admin files")
         
         # Parse vehicles file - read from specific tab
         if vehicles_file:
@@ -3228,7 +3227,7 @@ async def get_drivers_and_vehicles(
                 except Exception as e:
                     logger.error(f"Error parsing vehicles file tab '{tab_name}': {str(e)}")
         else:
-            logger.warning(f"Vehicles List.xlsx file not found in admin files")
+            logger.warning("Vehicles List.xlsx file not found in admin files")
         
         if not result["drivers"] and not result["vehicles"]:
             # Return mock data as fallback
@@ -6215,7 +6214,7 @@ async def analyze_ride_deck(
             output,
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             headers={
-                "Content-Disposition": f"attachment; filename=ride_deck_analyzed.xlsx"
+                "Content-Disposition": "attachment; filename=ride_deck_analyzed.xlsx"
             }
         )
         
@@ -6930,7 +6929,7 @@ async def fix_ride_localities(
 
 # ==================== ANALYTICS DASHBOARDS - PIVOT TABLES ====================
 
-from datetime import datetime, timedelta, timezone as dt_timezone
+from datetime import datetime, timezone as dt_timezone
 from collections import defaultdict
 
 def convert_utc_to_ist(utc_date_str):
@@ -6963,7 +6962,7 @@ def convert_utc_to_ist(utc_date_str):
                     result = ist_dt.strftime('%Y-%m-%d')
                     logger.info(f"Converted Excel serial {serial_num} to IST date {result}")
                     return result
-            except (ValueError, TypeError) as e:
+            except (ValueError, TypeError):
                 # Not a numeric string, try other formats
                 pass
             
@@ -7230,7 +7229,6 @@ async def get_signups_pivot(
 # ==================== DRIVER ONBOARDING - DOCUMENT UPLOAD & OCR ====================
 
 from emergentintegrations.llm.chat import LlmChat, UserMessage
-import base64
 
 # Document upload folder
 DRIVER_DOCUMENTS_FOLDER = "driver_documents"
