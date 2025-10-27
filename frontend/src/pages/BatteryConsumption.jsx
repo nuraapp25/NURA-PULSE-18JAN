@@ -206,7 +206,7 @@ const BatteryConsumption = () => {
       
       const absoluteDistance = parseFloat(lastReading['Odometer (km)'] || 0);
       const normalizedDistance = absoluteDistance - startingOdometer;
-      const currentBattery = parseFloat(lastReading['Battery Soc(%)'] || lastReading['Battery SOC (%)'] || 0);
+      const currentBattery = parseFloat(lastReading['Battery Soc(%)'] || lastReading['Battery SOC(%)'] || 0);
       
       let chargeDrop = 0;
       let distanceTraveled = 0;
@@ -218,7 +218,7 @@ const BatteryConsumption = () => {
         const prevHourReadings = hourlyData[prevHourKey];
         const prevLastReading = prevHourReadings[prevHourReadings.length - 1];
         
-        const prevBattery = parseFloat(prevLastReading['Battery Soc(%)'] || prevLastReading['Battery SOC (%)'] || 0);
+        const prevBattery = parseFloat(prevLastReading['Battery Soc(%)'] || prevLastReading['Battery SOC(%)'] || 0);
         const prevAbsoluteDistance = parseFloat(prevLastReading['Odometer (km)'] || 0);
         
         batteryChange = currentBattery - prevBattery;
