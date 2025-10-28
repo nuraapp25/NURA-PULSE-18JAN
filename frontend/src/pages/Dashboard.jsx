@@ -178,40 +178,33 @@ const Dashboard = () => {
             {/* Apps Section */}
             <div>
               {!sidebarCollapsed && (
-                <button
-                  onClick={() => setAppsExpanded(!appsExpanded)}
-                  className="w-full flex items-center justify-between px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                >
-                  <span>Apps</span>
-                  <ChevronDown size={16} className={`transform transition-transform ${appsExpanded ? 'rotate-180' : ''}`} />
-                </button>
-              )}
-              {(appsExpanded || sidebarCollapsed) && (
-                <div className="mt-2 space-y-1">
-                  {apps.map((item) => (
-                    <button
-                      key={item.name}
-                      data-testid={`sidebar-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
-                      onClick={() => {
-                        navigate(item.path);
-                        setSidebarOpen(false);
-                      }}
-                      className={`
-                        w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'space-x-3'} px-4 py-3 rounded-lg font-medium text-sm
-                        ${isActive(item.path)
-                          ? 'bg-[#bceb39] dark:bg-[#bceb39] text-gray-900 dark:text-gray-900'
-                          : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                        }
-                      `}
-                      title={sidebarCollapsed ? item.name : ''}
-                    >
-                    >
-                      <item.icon size={18} />
-                      <span className="text-left leading-tight">{item.name}</span>
-                    </button>
-                  ))}
+                <div className="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Apps
                 </div>
               )}
+              <div className="mt-2 space-y-1">
+                {apps.map((item) => (
+                  <button
+                    key={item.name}
+                    data-testid={`sidebar-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
+                    onClick={() => {
+                      navigate(item.path);
+                      setSidebarOpen(false);
+                    }}
+                    className={`
+                      w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'space-x-3'} px-4 py-3 rounded-lg font-medium text-sm
+                      ${isActive(item.path)
+                        ? 'bg-[#bceb39] dark:bg-[#bceb39] text-gray-900 dark:text-gray-900'
+                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                      }
+                    `}
+                    title={sidebarCollapsed ? item.name : ''}
+                  >
+                    <item.icon size={18} />
+                    {!sidebarCollapsed && <span className="text-left leading-tight">{item.name}</span>}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Admin Section - User Management (Master Admin only), Files & Payment Screenshots (All Admins except Ops Team) */}
