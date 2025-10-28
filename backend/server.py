@@ -4795,11 +4795,35 @@ async def analyze_hotspot_placement(
         
         # UTC to IST conversion
         def convert_utc_to_ist(time_str):
-            """Convert UTC time string to IST hour"""
+            """Convert UTC time string to IST hour, handling Excel serial numbers"""
             try:
                 if pd.isna(time_str):
                     return None
+                
+                # Handle Excel serial date numbers (e.g., 45940.36467)
+                if isinstance(time_str, (int, float)):
+                    # Convert Excel serial number to datetime
+                    # Excel epoch starts at 1899-12-30
+                    utc_dt = pd.to_datetime(time_str, origin='1899-12-30', unit='D')
+                    # Convert to IST (UTC+5:30)
+                    ist_dt = utc_dt + timedelta(hours=5, minutes=30)
+                    logger.info(f"Converted Excel serial {time_str} to IST hour {ist_dt.hour}")
+                    return ist_dt.hour
+                
                 time_str = str(time_str).strip()
+                
+                # Try parsing as numeric (Excel serial number)
+                try:
+                    serial_num = float(time_str)
+                    # Excel serial numbers for dates are typically > 1 and < 100000
+                    if 1 < serial_num < 100000:
+                        utc_dt = pd.to_datetime(serial_num, origin='1899-12-30', unit='D')
+                        ist_dt = utc_dt + timedelta(hours=5, minutes=30)
+                        logger.info(f"Converted Excel serial string {serial_num} to IST hour {ist_dt.hour}")
+                        return ist_dt.hour
+                except (ValueError, TypeError):
+                    # Not a numeric string, try other formats
+                    pass
                 
                 # Try parsing full datetime formats first (DD-MM-YYYY,HH:MM:SS or similar)
                 datetime_formats = [
