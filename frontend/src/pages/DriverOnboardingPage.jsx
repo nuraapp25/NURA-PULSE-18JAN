@@ -130,6 +130,9 @@ const DriverOnboardingPage = () => {
   // Inline editing state
   const [inlineEditingId, setInlineEditingId] = useState(null);
   
+  // Track pending status changes (for manual apply)
+  const [pendingStatusChanges, setPendingStatusChanges] = useState({}); // { leadId: { status, stage, originalStatus, originalStage } }
+  
   // Track changes in edit dialog
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   
