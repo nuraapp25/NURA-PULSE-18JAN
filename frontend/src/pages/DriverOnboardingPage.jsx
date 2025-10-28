@@ -1509,10 +1509,99 @@ const DriverOnboardingPage = () => {
       {/* Leads Table */}
       <Card className="dark:bg-gray-800 dark:border-gray-700">
         <CardHeader>
-          <CardTitle className="flex items-center text-gray-900 dark:text-white">
-            <Users size={20} className="mr-2" />
-            Driver Leads ({filteredLeads.length})
-          </CardTitle>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <CardTitle className="flex items-center text-gray-900 dark:text-white">
+              <Users size={20} className="mr-2" />
+              Driver Leads ({filteredLeads.length})
+            </CardTitle>
+            
+            {/* Top Pagination & Filter Controls */}
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Results per page */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-600 dark:text-gray-400">Show</span>
+                <Select
+                  value={String(leadsPerPage)}
+                  onValueChange={(value) => {
+                    setLeadsPerPage(Number(value));
+                    setCurrentPage(1);
+                  }}
+                >
+                  <SelectTrigger className="w-16 h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="20">20</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                    <SelectItem value="100">100</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {/* Filter by Source */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs"
+                  >
+                    <Filter className="w-3 h-3 mr-1" />
+                    Filter by Source
+                    {sourceFilter && ` (${sourceFilter})`}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-56 dark:bg-gray-800 dark:border-gray-700">
+                  <div className="space-y-1">
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start text-sm"
+                      onClick={() => setSourceFilter(null)}
+                    >
+                      All Sources
+                    </Button>
+                    {uniqueSources.map((source) => (
+                      <Button
+                        key={source}
+                        variant="ghost"
+                        className="w-full justify-start text-xs"
+                        onClick={() => setSourceFilter(source)}
+                      >
+                        {source}
+                      </Button>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+              
+              {/* Page navigation */}
+              {totalPages > 1 && (
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                    className="h-8 w-8 p-0"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                  <span className="text-xs text-gray-600 dark:text-gray-400 px-2">
+                    {currentPage}/{totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages}
+                    className="h-8 w-8 p-0"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {filteredLeads.length === 0 ? (
