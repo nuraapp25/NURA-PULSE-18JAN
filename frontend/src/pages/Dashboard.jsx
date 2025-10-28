@@ -228,15 +228,16 @@ const Dashboard = () => {
                       setSidebarOpen(false);
                     }}
                     className={`
-                      w-full flex items-center space-x-3 px-4 py-3 rounded-lg font-medium
+                      w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'space-x-3'} px-4 py-3 rounded-lg font-medium
                       ${isActive("/dashboard/users")
-                        ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                        ? 'bg-[#bceb39] dark:bg-[#bceb39] text-gray-900 dark:text-gray-900'
                         : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                       }
                     `}
+                    title={sidebarCollapsed ? "User Management" : ''}
                   >
                     <Users size={20} />
-                    <span>User Management</span>
+                    {!sidebarCollapsed && <span>User Management</span>}
                   </button>
                 )}
                 <button
@@ -246,15 +247,16 @@ const Dashboard = () => {
                     setSidebarOpen(false);
                   }}
                   className={`
-                    w-full flex items-center space-x-3 px-4 py-3 rounded-lg font-medium
+                    w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'space-x-3'} px-4 py-3 rounded-lg font-medium
                     ${isActive("/dashboard/admin/files")
-                      ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                      ? 'bg-[#bceb39] dark:bg-[#bceb39] text-gray-900 dark:text-gray-900'
                       : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                     }
                   `}
+                  title={sidebarCollapsed ? "Files" : ''}
                 >
                   <Folder size={20} />
-                  <span>Files</span>
+                  {!sidebarCollapsed && <span>Files</span>}
                 </button>
                 {user?.account_type === "master_admin" && (
                   <button
@@ -264,15 +266,16 @@ const Dashboard = () => {
                       setSidebarOpen(false);
                     }}
                     className={`
-                      w-full flex items-center space-x-3 px-4 py-3 rounded-lg font-medium
+                      w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'space-x-3'} px-4 py-3 rounded-lg font-medium
                       ${isActive("/dashboard/admin/analytics")
-                        ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                        ? 'bg-[#bceb39] dark:bg-[#bceb39] text-gray-900 dark:text-gray-900'
                         : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                       }
                     `}
+                    title={sidebarCollapsed ? "Analytics" : ''}
                   >
                     <Activity size={20} />
-                    <span>Analytics</span>
+                    {!sidebarCollapsed && <span>Analytics</span>}
                   </button>
                 )}
               </div>
