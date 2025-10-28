@@ -1,5 +1,5 @@
 // ========== CONFIGURATION ==========
-var API_BASE_URL = "https://driver-fleet-hub.preview.emergentagent.com";
+var API_BASE_URL = "https://onboarding-dash.preview.emergentagent.com";
 var BEARER_TOKEN = "YOUR_TOKEN_HERE";
 
 // ========== MAIN FUNCTIONS ==========

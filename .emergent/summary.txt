@@ -1,26 +1,27 @@
 <analysis>
-The AI engineer meticulously addressed a broad spectrum of feature enhancements and bug fixes for the Nura Pulse application. The trajectory details the completion of the QR Code Manager enhancements, which now include UTM parameters, bulk generation, and batch download. A significant portion of the work was dedicated to improving the Driver Onboarding module by implementing a stage-based system with auto-progression, adding a dashboard summary with date filters, pagination, and a source filtering mechanism. Google Sheets sync scripts were repeatedly refined to resolve syntax errors and ensure correct data mapping. Furthermore, the Battery Consumption Analysis was overhauled with precise calculation logic for charge drop and charge percentage, CSV sorting, and a refined UI for displaying VIN and raw data downloads. A new Battery Audit Analysis page was also successfully integrated to identify critical charge drops. The current focus is on the Telecallers Management feature, for which backend models and endpoints have been created, and the initial frontend page and navigation have been set up. The AI engineer is currently preparing to implement manual status updates in the Driver Onboarding page as part of this ongoing task.
+The AI engineer systematically tackled a range of feature developments and bug fixes. Initially, work focused on the Apply Changes button for manual status updates in Driver Onboarding. Following this, the Telecallers Management feature was implemented across three batches: creating telecaller profiles, integrating telecaller assignment into Driver Onboarding, and establishing a Telecallers Desk" page with role-based access. Frontend UI was enhanced with default dark mode, a collapsible sidebar, updated highlight colors, and independent scrolling. Multiple Excel/CSV import formats were continuously refined to accurately map lead data, including complex status formats and varied column headers. A critical bug in Hotspot Planning related to Excel serial numbers was fixed. The Google Sheets sync was improved with a loading animation, remapped columns, and batch processing to prevent timeouts. The primary challenge became ensuring imported statuses, particularly "NOT INTERESTED," correctly mapped to internal app statuses and reflected accurately in the dashboard summary. The AI engineer has consistently debugged and refined the status mapping and dashboard display logic in response to user feedback, and is currently investigating a persistent "NOT INTERESTED" status mapping issue.
 </analysis>
 
 <product_requirements>
-The Nura Pulse application is a role-based business data dashboard designed for various operational needs. The goal is to continuously enhance its capabilities for improved efficiency and deeper data insights.
+The Nura Pulse application is a role-based business data dashboard for operational needs.
 **Implemented features based on user requests:**
--   **Hotspot Planning**: Trip data upload for K-Means clustering, with a library view and locality name extraction via Google Maps. (Initial locality issue identified, but deprioritized).
--   **QR Code Management**: Dynamic QR code creation, tracking, UTM parameters integration, bulk generation, and batch download functionality.
--   **Driver Onboarding**: A comprehensive stage-based system (S1: Filtering, S2: Docs Collection, S3: Training, S4: Customer Readiness) with auto-progression through specific statuses. A dashboard summary with date filtering and a leads table featuring stage-specific statuses, pagination (20, 50, 100 per page), and Filter by source functionality. Optimistic UI for faster status updates and an Apply Changes button (pending). Integration with Google Sheets for two-way sync, mapping to specific columns (ID, Name, Phone, Experience, Address, Lead Stage, Status, Assigned Telecaller, Telecaller Notes, Notes, Import Date, Last Modified).
--   **Montra Feed Database**: Checkbox selection for files, Select All option for months, and bulk delete/download capabilities for monthly data.
--   **Battery Consumption Analysis**: Corrected charge drop and charge % calculations based on full daily cycles, ensured sorted CSV data processing, displayed only KM Travelled, and included VIN display with options to view/download raw feed data per date.
--   **Battery Audit Analysis**: A new page for analyzing historical data to identify steep charge drops, featuring calculations for Charge at 6AM, 12PM, 5PM, KM driven, and Mileage with conditional highlighting for problematic data.
--   **Telecallers Management**: A new application (in progress) to clone Driver Onboarding with features for assigning leads to telecallers, creating telecaller profiles, and revamping the Telecallers Desk" for individual telecallers.
+- **Hotspot Planning**: Trip data upload for K-Means clustering, locality name extraction via Google Maps, with a critical bug fix for Excel serial numbers in `createdAt/updatedAt` columns.
+- **QR Code Management**: Dynamic QR code creation, tracking, UTM parameters integration, bulk generation, and batch download.
+- **Driver Onboarding**: A stage-based system (S1-S4) with dashboard summary, date filtering, pagination, source filtering, and an "Apply Changes" button for manual status updates. Enhanced Excel/CSV import for 16 diverse file formats, robust column detection, status parsing, and preservation of original display status. Google Sheets two-way sync implemented with specific column mapping, loading animation, and batch processing for large datasets. A refresh button was added to the dashboard.
+- **Montra Feed Database**: Checkbox selection for files, "Select All" option for months, and bulk delete/download.
+- **Battery Consumption Analysis**: Corrected charge drop/percentage calculations, sorted CSV data, displayed VIN, and view/download raw data options.
+- **Battery Audit Analysis**: New page for analyzing historical data to identify steep charge drops.
+- **Telecallers Management**: Comprehensive system including `TelecallerProfile` model and API, `TelecallersManagement.jsx` frontend for creating/managing profiles (name, email, phone, active status, notes), `TelecallerDesk.jsx` for telecallers to view assigned leads, self-registration with "Telecaller" role, and role-based access control (no delete/sheet view for telecallers).
+- **UI Improvements**: Default Dark Mode, collapsible sidebar with icons-only view, highlight color `#bceb39`, and independent vertical scrolling for sidebar and main content.
 </product_requirements>
 
 <key_technical_concepts>
--   **Full-stack**: React.js (Shadcn UI, Tailwind CSS, Chart.js), FastAPI, MongoDB.
--   **Geospatial**: Google Maps API (Reverse Geocoding).
--   **Data Processing**: Pandas (CSV/Excel), Asynchronous tasks.
--   **Google Sheets**: Apps Script (for two-way sync).
--   **State Management**: React `useState`, `useEffect`.
--   **API Integration**: RESTful API calls.
+- **Full-stack**: React.js (Shadcn UI, Tailwind CSS), FastAPI, MongoDB.
+- **Geospatial**: Google Maps API (Reverse Geocoding).
+- **Data Processing**: Pandas (CSV/Excel parsing), Asynchronous tasks.
+- **Google Sheets**: Apps Script (two-way sync, web app deployment, custom menu).
+- **State Management**: React `useState`, `useEffect`.
+- **API Integration**: RESTful API calls (axios), JWT bearer token authentication.
 </key_technical_concepts>
 
 <code_architecture>
@@ -33,6 +34,7 @@ The application employs a React frontend, a FastAPI backend, and MongoDB for dat
 │   ├── server.py
 │   ├── .env
 │   ├── app_models.py
+│   ├── sheets_multi_sync.py
 │   └── ...
 ├── frontend/
 │   ├── package.json
@@ -47,7 +49,8 @@ The application employs a React frontend, a FastAPI backend, and MongoDB for dat
 │       │   ├── MontraVehicle.jsx
 │       │   ├── BatteryConsumption.jsx
 │       │   ├── BatteryAudit.jsx
-│       │   └── TelecallersManagement.jsx (NEW)
+│       │   ├── TelecallersManagement.jsx
+│       │   └── TelecallerDesk.jsx (NEW)
 │       └── ...
 └── ...
 ```
@@ -55,78 +58,46 @@ The application employs a React frontend, a FastAPI backend, and MongoDB for dat
 -   **`/app/backend/server.py`**:
     -   **Summary**: Central API handler.
     -   **Changes**:
-        -   Hotspot Planning: Integrated Google Maps reverse geocoding for locality names.
-        -   Driver Onboarding: Added `sync-stage` endpoint, modified `update_lead` and `patch` for `last_modified`, and created `get_driver_onboarding_summary` for dashboard data.
-        -   Montra Vehicle Import: Added sorting for CSV/Excel data by Date during import.
-        -   Battery Audit: Rewrote `/montra-vehicle/battery-audit` for new audit logic.
-        -   Telecaller Management: Added endpoints (`/telecallers/profile`, `/telecallers/profiles`) for managing telecaller profiles.
+        -   **Hotspot Planning**: Fixed `createdAt/updatedAt` Excel serial number handling in `/hotspot-planning/analyze`.
+        -   **Driver Onboarding**: Enhanced `import-leads` for flexible column detection (16+ formats), phone number/email extraction, intelligent status/stage mapping, and storage of original `display_status`. `sync_leads_to_sheets` was modified for batch processing to prevent timeouts. The `get_driver_onboarding_summary` was updated to support new filtering and status aggregation.
+        -   **Telecaller Management**: Added `/telecallers` (POST) and `/telecallers/profile` (endpoints) for profile creation/management, including `notes`.
 -   **`/app/backend/app_models.py`**:
     -   **Summary**: Pydantic data models.
-    -   **Changes**:
-        -   `DriverLead`: Updated with stage/status definitions and `last_modified`.
-        -   `TelecallerProfile` (NEW): Added for telecaller details.
-        -   `User`: Updated to include `telecaller_id`.
+    -   **Changes**: `DriverLead` updated with `display_status`. `TelecallerProfile` added with fields like `notes`. `User` updated to include `telecaller_id`.
 -   **`/app/frontend/src/App.js`**:
-    -   **Summary**: Defines frontend routing.
-    -   **Changes**: Added route for `/telecallers-management`.
+    -   **Summary**: Defines frontend routing and global context.
+    -   **Changes**: Added routes for `/telecallers-management` and `/telecaller-desk`. Set Dark Mode as default theme.
 -   **`/app/frontend/src/pages/Dashboard.jsx`**:
-    -   **Summary**: Provides navigation.
-    -   **Changes**: Added "Telecallers Management" to the sidebar.
--   **`/app/frontend/src/pages/HotspotPlanning.jsx`**:
-    -   **Summary**: Manages trip data upload and analysis.
-    -   **Changes**: Examined for locality issue; no direct changes in this trajectory.
--   **`/app/frontend/src/pages/QRCodeManager.jsx`**:
-    -   **Summary**: UI for QR code management.
-    -   **Changes**: Enhanced with UTM fields, campaign name, bulk generation, and batch download.
--   **`/app/frontend/src/pages/DriverOnboardingPage.jsx`**:
+    -   **Summary**: Main layout with navigation.
+    -   **Changes**: Implemented a collapsible sidebar (icons-only when collapsed), updated highlight color to `#bceb39`, and ensured independent vertical scrolling. Added "Telecallers Management" and "Telecallers Desk to navigation and fixed icon visibility for collapsed admin sections.
+-   ****:
     -   **Summary**: Manages driver leads.
     -   **Changes**:
-        -   Updated status options for stage-based system, pagination, and `handleStageSync`.
-        -   Added dashboard summary, moved pagination to top, and added source filter.
-        -   Fixed inline status updates and "Edit Profile" save logic.
-        -   Modified status updates to be manual (pending "Apply Changes" button).
--   **`/app/frontend/src/pages/MontraVehicle.jsx`**:
-    -   **Summary**: Displays vehicle feed data.
-    -   **Changes**: Added "Select All Month" button and `handleSelectMonth` function for bulk selection.
--   **`/app/frontend/src/pages/BatteryConsumption.jsx`**:
-    -   **Summary**: Analyzes battery data.
-    -   **Changes**: Rewrote calculation logic, ensured data sorting, removed certain displays, added VIN, and view/download options.
--   **`/app/frontend/src/pages/BatteryAudit.jsx`**:
-    -   **Summary**: New page for battery audit.
-    -   **Changes**: Completely rewritten for the new audit logic with specific calculations and highlighting.
--   **`/app/frontend/src/pages/TelecallersManagement.jsx` (NEW)**:
-    -   **Summary**: Frontend for telecaller management.
-    -   **Changes**: Created.
--   **Google Apps Scripts**: (`GOOGLE_SHEETS_SYNC_UPDATED.gs`, `GOOGLE_SHEETS_SYNC_CLEAN.gs`, `GOOGLE_SHEETS_SYNC_FINAL.gs`)
-    -   **Summary**: Scripts for syncing driver leads with Google Sheets.
-    -   **Changes**: Iteratively refined to correct syntax, API paths, and simplify logic.
+        -   Implemented an Apply Changes button for manual lead status updates.
+        -   Integrated Assigned Telecaller as a dropdown filterable by telecaller names.
+        -   Added Filter by Source to the main leads table and the dashboard summary.
+        -   Introduced a loading modal for Sync to Google Sheets.
+        -   Updated dashboard summary to make all status items clickable and added a Refresh button.
+        -   Added  to remove alphabet codes from displayed statuses.
+-   ****:
+    -   **Summary**: Frontend for telecaller profile management.
+    -   **Changes**: Created and refined to support creating, viewing, and updating telecaller profiles with simplified fields (name, email, phone, active status, notes). Fixed notification feedback for profile actions.
+-   ** (NEW)**:
+    -   **Summary**: New page for telecallers to view only their assigned leads.
+    -   **Changes**: Created as a basic structure for role-based access.
+-   ** (Google Apps Script)**:
+    -   **Summary**: The final Google Apps Script for two-way synchronization between the app and Google Sheets.
+    -   **Changes**: Re-mapped to 12 specific columns (ID, Name, Phone, Experience, Address, Stage, Status, Assigned Telecaller, Telecaller Notes, Source, Import Date, Last Modified). Implemented robust  for app-to-sheet sync,  for sheet-to-app sync, and  for sheet initialization. Includes helper functions for API calls and date formatting, along with error handling.
 </code_architecture>
 
 <pending_tasks>
--   **Hotspot Planning**: Resolve discrepancy between Google Maps official locality names and users expected names from ChatGPT.
--   **Driver Onboarding**: Implement the "Apply Changes" button for manual status updates in the leads table.
--   **Telecallers Management**:
-    -   Clone Driver Onboarding app for telecaller lead assignment.
-    -   Develop Telecaller profiles section (create/view/update).
-    -   Implement manual assignment of leads from Google Sheets (reading Column H).
-    -   Revamp "Telecallers Desk to display only assigned leads for a single telecaller.
-    -   Add Telecaller role to account creation with restricted app access.
-    -   Ensure telecaller status changes update central database and Google Sheets.
+- **Driver Onboarding**: The NOT INTERESTED status (and potentially other statuses) from imported Excel sheets are not consistently mapping and reflecting accurately in the dashboard summary. This requires further investigation and fixing of the mapping logic or the summary query.
 </pending_tasks>
 
 <current_work>
-The AI engineer is currently engaged in the implementation of the Telecallers Management feature. This is a multi-phase task aimed at creating a dedicated system for managing telecallers and their assigned leads.
-
-**Completed work for Telecallers Management (Batch 1):**
--   **Backend Model Updates**:  model added to , and the  model updated to include .
--   **Backend Endpoints**: New API endpoints have been implemented in  for creating and managing telecaller profiles.
--   **Frontend Page Creation**: A new React component, , was created at .
--   **Routing and Navigation**: The application's routing in  and the sidebar navigation in  were updated to include the new Telecallers Management page.
-
-**Current immediate task:**
-The user has requested to proceed with Batch 2 of the Telecallers Management feature. The current work specifically involves modifying the  to change the behavior of status updates in the leads table. Instead of immediate auto-update, the status change should only be applied after a user explicitly clicks an Apply Changes button. This ensures a more controlled and intentional workflow for lead status modifications.
+The AI engineer is currently investigating a persistent issue within the Driver Onboarding module. Specifically, when leads are imported via Excel sheets with a NOT INTERESTED status, this status is not being correctly reflected in the top-level dashboard summary, showing a count of 0 despite the leads being imported. The previous steps involved enhancing the backend's  logic to better parse and map statuses, and introducing a refresh button on the dashboard. The immediate task is to debug why the NOT INTERESTED status remains unlinked or miscounted in the dashboard summary, focusing on the backend's summary aggregation logic and how the status is stored and queried from MongoDB.
 </current_work>
 
 <optional_next_step>
-Update  to implement the Apply Changes button for manual status updates, as specified for Batch 2 of Telecallers Management.
+Investigate the backend summary endpoint and lead data storage to ensure NOT INTERESTED status is correctly queried and aggregated.
 </optional_next_step>
