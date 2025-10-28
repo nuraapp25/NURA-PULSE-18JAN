@@ -466,15 +466,7 @@ const BatteryConsumption = () => {
                 </div>
                 
                 {/* Summary Stats */}
-                <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <div className="text-center">
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Charge Drop %</p>
-                    <p className="text-lg font-bold text-red-600 dark:text-red-400">{dayData.summary.chargeDrop}%</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Charge %</p>
-                    <p className="text-lg font-bold text-green-600 dark:text-green-400">{dayData.summary.charge}%</p>
-                  </div>
+                <div className="flex justify-center mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                   <div className="text-center">
                     <p className="text-xs text-gray-500 dark:text-gray-400">KM Travelled</p>
                     <p className="text-lg font-bold text-blue-600 dark:text-blue-400">{dayData.summary.kmTravelled} km</p>
