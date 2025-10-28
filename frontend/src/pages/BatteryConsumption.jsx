@@ -166,12 +166,11 @@ const BatteryConsumption = () => {
     }
 
     return {
-      chargeDrop: Math.max(0, chargeDrop).toFixed(2),
-      charge: Math.max(0, charge).toFixed(2),
+      chargeDrop: totalChargeDrop.toFixed(2),
+      charge: totalChargeGain.toFixed(2),
       kmTravelled: totalDistance.toFixed(2),
-      startBattery: startBattery.toFixed(1),
       minBattery: minBattery.toFixed(1),
-      endBattery: endBattery.toFixed(1)
+      maxBattery: maxBattery.toFixed(1)
     };
   };
 
