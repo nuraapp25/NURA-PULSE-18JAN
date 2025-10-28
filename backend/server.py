@@ -838,6 +838,15 @@ async def import_leads(
             
             file_status = str(file_status).strip()
             
+            # Extract status from formats like "S1-a Not interested" or "S1-c Highly Interested"
+            # Pattern: "S[1-4]-[a-z] Actual Status"
+            import re
+            stage_code_pattern = r'^S[1-4]-[a-z]\s+(.+)$'
+            match = re.match(stage_code_pattern, file_status, re.IGNORECASE)
+            if match:
+                file_status = match.group(1).strip()  # Extract the actual status text
+                logger.info(f"Extracted status from stage code: '{match.group(0)}' → '{file_status}'")
+            
             # Exact match (case-insensitive)
             for app_status in STATUS_HIERARCHY:
                 if file_status.lower() == app_status.lower():
@@ -861,6 +870,14 @@ async def import_leads(
             # Now check POSITIVE statuses (after ruling out negatives)
             elif "highly interested" in file_status_lower or "very interested" in file_status_lower:
                 return "Highly Interested"
+            elif "call back 1d" in file_status_lower:
+                return "Call back 1D"
+            elif "call back 1w" in file_status_lower:
+                return "Call back 1W"
+            elif "call back 2w" in file_status_lower:
+                return "Call back 2W"
+            elif "call back 1m" in file_status_lower:
+                return "Call back 1M"
             elif "interest" in file_status_lower or "follow" in file_status_lower or "call back" in file_status_lower or "callback" in file_status_lower:
                 return "Interested"
             elif "doc" in file_status_lower and ("pending" in file_status_lower or "upload" in file_status_lower or "collection" in file_status_lower):
@@ -881,12 +898,6 @@ async def import_leads(
                 return "Interested"  # Health issue but potentially interested
             elif "no badge" in file_status_lower:
                 return "Highly Interested"  # "no badge Highly Interested" should be "Highly Interested"
-            
-            # If no match found, try to infer from keywords
-            if "s1-" in file_status_lower or "s2-" in file_status_lower or "s3-" in file_status_lower or "s4-" in file_status_lower:
-                # These are stage codes, not actual statuses - look for actual status in Current Status column
-                logger.warning(f"Status '{file_status}' appears to be a stage code, not a status. Defaulting to 'New'")
-                return "New"
             
             # If no match, return original but log warning
             logger.warning(f"Status '{file_status}' not matched, defaulting to 'New'")
