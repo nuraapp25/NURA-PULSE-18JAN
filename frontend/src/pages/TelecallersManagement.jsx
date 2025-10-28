@@ -117,17 +117,20 @@ const TelecallersManagement = () => {
 
     try {
       const token = localStorage.getItem("token");
-      await axios.patch(
+      const response = await axios.patch(
         `${API}/telecallers/${selectedTelecaller.id}`,
         formData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
+      // Success - refresh telecallers list
+      await fetchTelecallers();
+      
       toast.success("Telecaller profile updated successfully!");
       setIsEditDialogOpen(false);
       resetForm();
-      fetchTelecallers();
     } catch (error) {
+      console.error("Update telecaller error:", error);
       toast.error(error.response?.data?.detail || "Failed to update telecaller");
     }
   };
