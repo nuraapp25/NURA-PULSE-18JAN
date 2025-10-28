@@ -203,9 +203,8 @@ const TelecallersManagement = () => {
       name: telecaller.name,
       phone_number: telecaller.phone_number,
       email: telecaller.email,
-      aadhar_card: telecaller.aadhar_card || "",
-      pan_card: telecaller.pan_card || "",
-      address_proof: telecaller.address_proof || ""
+      notes: telecaller.notes || "",
+      status: telecaller.status || "active"
     });
     setIsEditDialogOpen(true);
   };
