@@ -14,6 +14,17 @@ import { toast } from "sonner";
 import { Upload, Users, FileSpreadsheet, RefreshCw, Plus, Calendar as CalendarIcon, Filter, X, CheckSquare, Square, XCircle, Save, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
 
+// Helper function to format status display
+// Removes alphabet codes like "S1-a Not interested" → "S1 - Not interested"
+const formatStatusDisplay = (status) => {
+  if (!status) return "";
+  
+  // Pattern: "S1-a Not interested" or "S2-b Docs Upload Pending"
+  // Replace "S1-a" with "S1 -", "S2-b" with "S2 -", etc.
+  const formatted = status.replace(/^(S[1-4])-[a-z]\s+/i, '$1 - ');
+  return formatted;
+};
+
 // Define stages
 const STAGES = [
   { value: "S1", label: "S1 - Filtering" },
