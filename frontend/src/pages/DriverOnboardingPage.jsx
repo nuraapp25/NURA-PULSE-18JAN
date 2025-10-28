@@ -2364,12 +2364,22 @@ const DriverOnboardingPage = () => {
                   <div>
                     <Label className="text-sm text-gray-600 dark:text-gray-400">Assigned Telecaller</Label>
                     {isEditMode ? (
-                      <Input
+                      <Select
                         value={editedLead.assigned_telecaller || ''}
-                        onChange={(e) => handleFieldChange('assigned_telecaller', e.target.value)}
-                        className="mt-1 dark:bg-gray-700 dark:border-gray-600"
-                        placeholder="Enter telecaller name"
-                      />
+                        onValueChange={(value) => handleFieldChange('assigned_telecaller', value)}
+                      >
+                        <SelectTrigger className="mt-1 dark:bg-gray-700 dark:border-gray-600">
+                          <SelectValue placeholder="Select telecaller" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">None</SelectItem>
+                          {telecallers.map((telecaller) => (
+                            <SelectItem key={telecaller.id} value={telecaller.email}>
+                              {telecaller.name} ({telecaller.email})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     ) : (
                       <p className="text-base text-gray-900 dark:text-white mt-1">
                         {selectedLead.assigned_telecaller || '-'}
