@@ -1064,7 +1064,24 @@ const DriverOnboardingPage = () => {
       <Card className="dark:bg-gray-800 dark:border-gray-700">
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <CardTitle className="text-lg font-semibold">Status Summary Dashboard</CardTitle>
+            <div className="flex items-center gap-3">
+              <CardTitle className="text-lg font-semibold">Status Summary Dashboard</CardTitle>
+              {/* Refresh Button */}
+              <Button
+                onClick={() => {
+                  fetchStatusSummary();
+                  fetchLeads();
+                  toast.success("Dashboard refreshed!");
+                }}
+                variant="outline"
+                size="sm"
+                className="text-xs dark:bg-gray-700 dark:border-gray-600"
+                disabled={summaryLoading}
+              >
+                <RefreshCw className={`h-3 w-3 mr-1 ${summaryLoading ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+            </div>
             
             {/* Date Filter and Source Filter for Summary */}
             <div className="flex flex-wrap items-center gap-2">
