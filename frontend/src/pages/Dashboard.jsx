@@ -102,21 +102,33 @@ const Dashboard = () => {
       {/* Sidebar */}
       <aside className={`
         fixed lg:static inset-y-0 left-0 z-50
-        w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700
-        transform transition-transform duration-300 ease-in-out
+        ${sidebarCollapsed ? 'w-20' : 'w-64'} 
+        bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700
+        transform transition-all duration-300 ease-in-out
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
-        <div className="h-full flex flex-col">
-          {/* Logo */}
-          <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="h-full flex flex-col overflow-hidden">
+          {/* Logo & Collapse Button */}
+          <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
             <div className="flex items-center justify-between">
-              <div className="flex-1 flex items-center justify-center">
-                <img 
-                  src={theme === 'dark' ? '/nura-white.png' : '/nura-black.png'}
-                  alt="Nura Pulse Logo" 
-                  className="h-16 w-auto"
-                />
-              </div>
+              {!sidebarCollapsed ? (
+                <div className="flex-1 flex items-center justify-center">
+                  <img 
+                    src={theme === 'dark' ? '/nura-white.png' : '/nura-black.png'}
+                    alt="Nura Pulse Logo" 
+                    className="h-16 w-auto"
+                  />
+                </div>
+              ) : (
+                <div className="flex-1 flex items-center justify-center">
+                  <img 
+                    src={theme === 'dark' ? '/nura-white.png' : '/nura-black.png'}
+                    alt="Nura" 
+                    className="h-10 w-10 object-contain"
+                  />
+                </div>
+              )}
+              {/* Mobile close button */}
               <button
                 onClick={() => setSidebarOpen(false)}
                 className="lg:hidden text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 absolute right-6"
@@ -124,9 +136,19 @@ const Dashboard = () => {
                 <X size={24} />
               </button>
             </div>
+            {/* Collapse toggle button (desktop only) */}
+            <div className="hidden lg:flex justify-center mt-4">
+              <button
+                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400"
+                title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              >
+                <Menu size={20} />
+              </button>
+            </div>
           </div>
 
-          {/* Navigation */}
+          {/* Navigation - with independent scrolling */}
           <nav className="flex-1 overflow-y-auto p-4 space-y-6">
             {/* Home */}
             <div>
@@ -139,29 +161,32 @@ const Dashboard = () => {
                     setSidebarOpen(false);
                   }}
                   className={`
-                    w-full flex items-center space-x-3 px-4 py-3 rounded-lg font-medium
+                    w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'space-x-3'} px-4 py-3 rounded-lg font-medium
                     ${isActive(item.path, item.exact)
-                      ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                      ? 'bg-[#bceb39] dark:bg-[#bceb39] text-gray-900 dark:text-gray-900'
                       : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                     }
                   `}
+                  title={sidebarCollapsed ? item.name : ''}
                 >
                   <item.icon size={20} />
-                  <span>{item.name}</span>
+                  {!sidebarCollapsed && <span>{item.name}</span>}
                 </button>
               ))}
             </div>
 
             {/* Apps Section */}
             <div>
-              <button
-                onClick={() => setAppsExpanded(!appsExpanded)}
-                className="w-full flex items-center justify-between px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-              >
-                <span>Apps</span>
-                <ChevronDown size={16} className={`transform transition-transform ${appsExpanded ? 'rotate-180' : ''}`} />
-              </button>
-              {appsExpanded && (
+              {!sidebarCollapsed && (
+                <button
+                  onClick={() => setAppsExpanded(!appsExpanded)}
+                  className="w-full flex items-center justify-between px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                >
+                  <span>Apps</span>
+                  <ChevronDown size={16} className={`transform transition-transform ${appsExpanded ? 'rotate-180' : ''}`} />
+                </button>
+              )}
+              {(appsExpanded || sidebarCollapsed) && (
                 <div className="mt-2 space-y-1">
                   {apps.map((item) => (
                     <button
@@ -172,12 +197,14 @@ const Dashboard = () => {
                         setSidebarOpen(false);
                       }}
                       className={`
-                        w-full flex items-center space-x-3 px-4 py-3 rounded-lg font-medium text-sm
+                        w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'space-x-3'} px-4 py-3 rounded-lg font-medium text-sm
                         ${isActive(item.path)
-                          ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                          ? 'bg-[#bceb39] dark:bg-[#bceb39] text-gray-900 dark:text-gray-900'
                           : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                         }
                       `}
+                      title={sidebarCollapsed ? item.name : ''}
+                    >
                     >
                       <item.icon size={18} />
                       <span className="text-left leading-tight">{item.name}</span>
