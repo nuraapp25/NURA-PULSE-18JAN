@@ -2424,7 +2424,7 @@ const DriverOnboardingPage = () => {
                     <Label className="text-sm text-gray-600 dark:text-gray-400">Lead Stage</Label>
                     {isEditMode ? (
                       <Select
-                        value={editedLead.lead_stage || "New"}
+                        value={editedLead.lead_stage && editedLead.lead_stage.trim() !== "" ? editedLead.lead_stage : "New"}
                         onValueChange={(value) => handleFieldChange('lead_stage', value)}
                       >
                         <SelectTrigger className="mt-1 dark:bg-gray-700 dark:border-gray-600">
@@ -2447,7 +2447,7 @@ const DriverOnboardingPage = () => {
                     <Label className="text-sm text-gray-600 dark:text-gray-400">Driver Readiness</Label>
                     {isEditMode ? (
                       <Select
-                        value={editedLead.driver_readiness || "Not Started"}
+                        value={editedLead.driver_readiness && editedLead.driver_readiness.trim() !== "" ? editedLead.driver_readiness : "Not Started"}
                         onValueChange={(value) => handleFieldChange('driver_readiness', value)}
                       >
                         <SelectTrigger className="mt-1 dark:bg-gray-700 dark:border-gray-600">
@@ -2470,7 +2470,7 @@ const DriverOnboardingPage = () => {
                     <Label className="text-sm text-gray-600 dark:text-gray-400">Docs Collection</Label>
                     {isEditMode ? (
                       <Select
-                        value={editedLead.docs_collection || "Pending"}
+                        value={editedLead.docs_collection && editedLead.docs_collection.trim() !== "" ? editedLead.docs_collection : "Pending"}
                         onValueChange={(value) => handleFieldChange('docs_collection', value)}
                       >
                         <SelectTrigger className="mt-1 dark:bg-gray-700 dark:border-gray-600">
