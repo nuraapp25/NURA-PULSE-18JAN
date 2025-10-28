@@ -212,6 +212,7 @@ const DriverOnboardingPage = () => {
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryStartDate, setSummaryStartDate] = useState(null);
   const [summaryEndDate, setSummaryEndDate] = useState(null);
+  const [summarySourceFilter, setSummarySourceFilter] = useState(null); // New: source filter for summary dashboard
 
   const fetchLastSyncTime = async () => {
     try {
