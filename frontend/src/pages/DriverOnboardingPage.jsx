@@ -336,10 +336,15 @@ const DriverOnboardingPage = () => {
     if (sourceFilter) {
       filtered = filtered.filter(lead => lead.source === sourceFilter);
     }
+    
+    // Telecaller filter
+    if (telecallerFilter) {
+      filtered = filtered.filter(lead => lead.assigned_telecaller === telecallerFilter);
+    }
 
     setFilteredLeads(filtered);
     setCurrentPage(1); // Reset to first page when filters change
-  }, [startDate, endDate, activeStageFilter, activeSubStatus, sourceFilter]);
+  }, [startDate, endDate, activeStageFilter, activeSubStatus, sourceFilter, telecallerFilter]);
 
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
