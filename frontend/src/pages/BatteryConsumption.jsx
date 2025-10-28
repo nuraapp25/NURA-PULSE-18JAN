@@ -114,35 +114,50 @@ const BatteryConsumption = () => {
   };
 
   const calculateSummary = (data, rawData) => {
-    // NEW LOGIC: Find min/max battery and calculate properly
+    // Calculate actual battery percentage changes throughout the day
     const batteryValues = [];
-    let minBattery = 100;
-    let maxBattery = 0;
-    let startBattery = 0;
-    let endBattery = 0;
     
-    // Extract all battery values from raw data
+    // Extract all battery values from raw data with timestamps
     rawData.forEach((row) => {
       const battery = parseFloat(row['Battery Soc(%)'] || row['Battery SOC(%)'] || 0);
-      const status = (row['Vehicle Status'] || '').toLowerCase();
+      const time = row['Time'] || '';
       
-      if (battery > 0) {
-        batteryValues.push({ battery, status });
-        minBattery = Math.min(minBattery, battery);
-        maxBattery = Math.max(maxBattery, battery);
+      if (battery > 0 && time) {
+        batteryValues.push({ battery, time });
       }
     });
     
-    if (batteryValues.length > 0) {
-      startBattery = batteryValues[0].battery;
-      endBattery = batteryValues[batteryValues.length - 1].battery;
+    if (batteryValues.length === 0) {
+      return {
+        chargeDrop: 0,
+        charge: 0,
+        totalDistance: 0,
+        minBattery: 0,
+        maxBattery: 0
+      };
     }
     
-    // Calculate Charge Drop % (Start to Minimum)
-    const chargeDrop = startBattery - minBattery;
+    // Calculate cumulative charge gained and charge dropped
+    let totalChargeDrop = 0;  // Sum of all negative changes (battery going down)
+    let totalChargeGain = 0;  // Sum of all positive changes (battery going up)
     
-    // Calculate Charge % (Min to End)
-    const charge = endBattery - minBattery;
+    for (let i = 1; i < batteryValues.length; i++) {
+      const prevBattery = batteryValues[i - 1].battery;
+      const currBattery = batteryValues[i].battery;
+      const change = currBattery - prevBattery;
+      
+      if (change < 0) {
+        // Battery dropped (discharge)
+        totalChargeDrop += Math.abs(change);
+      } else if (change > 0) {
+        // Battery increased (charging)
+        totalChargeGain += change;
+      }
+    }
+    
+    // Calculate min and max for reference
+    const minBattery = Math.min(...batteryValues.map(v => v.battery));
+    const maxBattery = Math.max(...batteryValues.map(v => v.battery));
     
     // Total distance
     let totalDistance = 0;
