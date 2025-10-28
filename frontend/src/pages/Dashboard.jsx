@@ -210,9 +210,11 @@ const Dashboard = () => {
             {/* Admin Section - User Management (Master Admin only), Files & Payment Screenshots (All Admins except Ops Team) */}
             {(user?.account_type === "master_admin" || user?.account_type === "admin") && user?.account_type !== "ops_team" && (
               <div>
-                <div className="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Admin
-                </div>
+                {!sidebarCollapsed && (
+                  <div className="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Admin
+                  </div>
+                )}
                 {user?.account_type === "master_admin" && (
                   <button
                     data-testid="sidebar-user-management"
