@@ -5,7 +5,7 @@
 
 // ========== CONFIGURATION ==========
 var API_BASE_URL = "https://pulse-cluster.preview.emergentagent.com";
-var BEARER_TOKEN = "YOUR_TOKEN_HERE";
+var BEARER_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsImV4cCI6MTczNTg5MDQwMH0.abc123xyz...";
 var LEADS_SHEET_NAME = "Driver Leads";
 
 // Column positions
