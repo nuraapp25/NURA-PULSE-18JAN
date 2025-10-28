@@ -800,6 +800,18 @@ frontend:
           agent: "testing"
           comment: "✅ RCA LOCALITY FIX AND STATS TESTING COMPLETE: Successfully tested all critical fixes as requested in review. SUCCESS RATE: 100% (12/12 tests passed). KEY FINDINGS: 1) STATS ENDPOINT FIX VERIFIED - GET /api/ride-deck/stats now returns correct rides_count: 790 (not 0), proper response structure with customers_count: 389, ride_status_distribution working correctly. Duplicate endpoint issue resolved. 2) LOCALITY FORMATS DOCUMENTED - Before fix: rides showed duplicate localities like 'Old Tirumangalam, Anna Nagar' and 'Pallavan Nagar, Koyambedu'. 3) FIX-LOCALITIES ENDPOINT WORKING - POST /api/ride-deck/fix-localities successfully processed 777/790 rides, Master Admin role restriction enforced (403 for non-master-admin), proper response format with success, message, total_rides, updated_count. 4) LOCALITY FIX VERIFICATION - After fix: localities now show single names - Pickup: 'Anna Nagar', Drop: 'Koyambedu'. Before/after comparison confirmed: 'Old Tirumangalam, Anna Nagar' → 'Anna Nagar'. 5) DRIVER NOT FOUND RIDES ALSO FIXED - GET /api/ride-deck/rca/driver-not-found shows 106 rides with fixed localities (single names without duplication). 6) AUTHENTICATION VERIFIED - All endpoints properly require Bearer token. The locality extraction fix successfully removes duplicate locality patterns and shows clean single locality names as requested. All RCA endpoints operational and ready for production use."
 
+  - task: "Driver Onboarding - Manual Status Updates with Apply Changes Button"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/DriverOnboardingPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "✅ IMPLEMENTATION COMPLETE (Batch 2 - Telecallers Management): Modified Driver Onboarding page to implement manual status updates instead of immediate auto-update. Changes: 1) Added pendingStatusChanges state to track status changes before applying ({ leadId: { status, stage, originalStatus, originalStage } }). 2) Modified handleInlineStatusChange() to store pending changes locally without calling API immediately. 3) Created handleApplyStatusChange() function to apply pending change for a specific lead when 'Apply' button is clicked. 4) Created handleCancelStatusChange() function to revert status change and remove from pending changes. 5) Updated table cell UI to show 'Apply' (green with Save icon) and 'Cancel' (X icon) buttons next to status dropdown when there's a pending change. 6) Added visual indicators: (a) Green 'Apply' button with Save icon appears when status is changed, (b) Yellow ring highlight on status badge when change is pending, (c) '(Pending)' text in yellow appears on collapsed status badge. 7) Users can now: change status → see Apply/Cancel buttons → click Apply to save or Cancel to revert. Frontend code linted successfully with no errors. Ready for frontend testing to verify the manual apply workflow."
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
