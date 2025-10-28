@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Restore and verify Nura Pulse application to working state as it was before fork. The app includes authentication, user management, Google Sheets sync, and 4 mini-apps (Payment Reconciliation, Driver Onboarding, Telecaller Queue, Montra Vehicle Insights)."
+user_problem_statement: "Fix Driver Onboarding status mapping bug: 'NOT INTERESTED' status from imported Excel sheets not showing in dashboard summary. Also fix 'Edit Details' error when clicking on lead details. Ensure all features from previous forks work perfectly."
 
 backend:
   - task: "User Authentication (Login/Register)"
