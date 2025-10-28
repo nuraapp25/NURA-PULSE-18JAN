@@ -2240,7 +2240,7 @@ const DriverOnboardingPage = () => {
                     Current Stage
                   </Label>
                   <Select
-                    value={selectedLead.stage || "S1"}
+                    value={selectedLead.stage && selectedLead.stage.trim() !== "" ? selectedLead.stage : "S1"}
                     onValueChange={(value) => {
                       handleFieldChange('stage', value);
                       // Reset status to first status of new stage
@@ -2270,7 +2270,7 @@ const DriverOnboardingPage = () => {
                     Status within Stage
                   </Label>
                   <Select
-                    value={selectedLead.status || "New"}
+                    value={selectedLead.status && selectedLead.status.trim() !== "" ? selectedLead.status : "New"}
                     onValueChange={(value) => {
                       handleStatusUpdate(value);
                       setHasUnsavedChanges(true);
@@ -2281,7 +2281,7 @@ const DriverOnboardingPage = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="dark:bg-gray-800 dark:border-gray-700 max-h-[300px]">
-                      {getStatusesForStage(selectedLead.stage || "S1").map((option) => (
+                      {getStatusesForStage(selectedLead.stage && selectedLead.stage.trim() !== "" ? selectedLead.stage : "S1").map((option) => (
                         <SelectItem key={option.value} value={option.value}>
                           <span className={`px-2 py-1 rounded text-xs ${option.color}`}>
                             {option.label}
