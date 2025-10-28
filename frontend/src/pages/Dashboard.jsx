@@ -336,7 +336,7 @@ const Dashboard = () => {
                     title={sidebarCollapsed ? item.name : ''}
                   >
                     <item.icon size={20} />
-                    <span className="text-left">{item.name}</span>
+                    {!sidebarCollapsed && <span className="text-left">{item.name}</span>}
                   </button>
                 ))}
               </div>
@@ -353,15 +353,16 @@ const Dashboard = () => {
                     setSidebarOpen(false);
                   }}
                   className={`
-                    w-full flex items-center space-x-3 px-4 py-3 rounded-lg font-medium
+                    w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'space-x-3'} px-4 py-3 rounded-lg font-medium
                     ${isActive(item.path)
-                      ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                      ? 'bg-[#bceb39] dark:bg-[#bceb39] text-gray-900 dark:text-gray-900'
                       : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                     }
                   `}
+                  title={sidebarCollapsed ? item.name : ''}
                 >
                   <item.icon size={20} />
-                  <span>{item.name}</span>
+                  {!sidebarCollapsed && <span>{item.name}</span>}
                 </button>
               ))}
             </div>
