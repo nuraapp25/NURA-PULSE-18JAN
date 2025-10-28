@@ -2955,16 +2955,21 @@ async def get_battery_milestones(
 @api_router.get("/montra-vehicle/battery-audit")
 async def get_battery_charge_audit(current_user: User = Depends(get_current_user)):
     """
-    Battery Charge Audit: Find all instances where vehicle charge dropped to or below 20% 
-    between 7 AM and 7 PM. Returns the first instance per day per vehicle.
+    Battery Audit Analysis: Analyze charge drops at 6AM, 12PM, and 5PM across all historical data.
+    Calculates mileage and highlights problematic charge drops.
     
-    Returns: Date, Vehicle Name, Timestamp (when charge <=20%), KM driven from start of day
+    Returns table with:
+    - Date, Vehicle Name
+    - Charge at 6AM, 12PM, 5PM
+    - KM driven (6AM-12PM, 6AM-5PM)
+    - Mileage calculations
+    - Flags rows where 12PM < 60% AND 5PM < 20%
     """
     try:
         from datetime import datetime, time as dt_time
         
-        # Get all Montra feed data (increased limit to handle all records)
-        all_records = await db.montra_feed_data.find({}).to_list(250000)
+        # Get all Montra feed data
+        all_records = await db.montra_feed_data.find({}).to_list(500000)
         
         if not all_records:
             return {
@@ -2979,14 +2984,13 @@ async def get_battery_charge_audit(current_user: User = Depends(get_current_user
         # Group records by vehicle and date
         vehicle_date_groups = {}
         for record in all_records:
-            vehicle_id = record.get("vehicle_id") or record.get("Vehicle ID")
-            registration = record.get("registration_number") or record.get("Registration Number")
+            vehicle_id = record.get("vehicle_id")
+            registration = record.get("registration_number")
             date = record.get("date")
             
             if not vehicle_id or not date:
                 continue
             
-            # Use registration number if available, otherwise vehicle_id
             display_name = registration if registration else vehicle_id
             
             key = f"{vehicle_id}_{date}"
@@ -3010,91 +3014,100 @@ async def get_battery_charge_audit(current_user: User = Depends(get_current_user
             date = group_data["date"]
             day_records = group_data["records"]
             
-            # Sort records by time
+            # Sort records by timestamp
             try:
-                day_records.sort(key=lambda x: x.get("Portal Received Time", x.get("time", "00:00:00")) if x.get("Portal Received Time") or x.get("time") else "00:00:00")
-            except Exception as e:
-                logger.error(f"Error sorting records for {vehicle_id} on {date}: {str(e)}")
+                day_records.sort(key=lambda x: datetime.fromisoformat(
+                    str(x.get("Date", "")).replace(' ', 'T')
+                ) if x.get("Date") else datetime.min)
+            except:
                 continue
             
-            # Find first instance where charge <= 20% between 7 AM and 7 PM
-            first_low_charge = None
-            start_of_day_km = None
-            charge_at_7am = None
+            # Find readings at specific times
+            charge_6am = None
+            charge_12pm = None
+            charge_5pm = None
+            odometer_6am = None
+            odometer_12pm = None
+            odometer_5pm = None
             
-            # Get the KM at start of day (earliest record)
-            if day_records:
-                start_of_day_km = (day_records[0].get("Odometer (km)") or
-                                  day_records[0].get("KM") or 
-                                  day_records[0].get("km") or 
-                                  day_records[0].get("Kilometer"))
-            
-            # Find battery charge at or before 7 AM
             for record in day_records:
-                battery_pct_7am = (record.get("Battery Soc(%)") or 
-                                  record.get("Battery SOC(%)") or  # NEW: Handle uppercase SOC
-                                  record.get("Battery %") or 
-                                  record.get("battery_soc_percentage") or 
-                                  record.get("Battery") or
-                                  record.get("battery") or
-                                  record.get("SOC") or
-                                  record.get("soc"))
-                
-                time_str_7am = (record.get("Portal Received Time") or
-                               record.get("time") or 
-                               record.get("Time") or 
-                               record.get("Hour") or
-                               record.get("hour"))
-                
-                if battery_pct_7am and time_str_7am:
-                    try:
-                        if isinstance(time_str_7am, str):
-                            try:
-                                dt_7am = datetime.fromisoformat(time_str_7am.replace(' ', 'T'))
-                                record_time_7am = dt_7am.time()
-                            except:
-                                time_part = time_str_7am.split()[0] if ' ' in time_str_7am else time_str_7am
-                                try:
-                                    record_time_7am = datetime.strptime(time_part, "%H:%M:%S").time()
-                                except:
-                                    continue
-                        else:
-                            continue
-                        
-                        # Get battery at or just before 7 AM
-                        if record_time_7am <= dt_time(7, 0):
-                            if battery_pct_7am != '-':
-                                try:
-                                    charge_at_7am = float(str(battery_pct_7am))
-                                except:
-                                    pass
-                        else:
-                            # Once we pass 7 AM, stop looking
-                            break
-                    except:
+                try:
+                    date_str = str(record.get("Date", ""))
+                    if not date_str:
                         continue
-            # NEW LOGIC: Find minimum battery and calculate charge drop/charge %
-            # This was added by mistake - should be in battery-data endpoint, not audit
-            # Removing this code to fix IndentationError
+                        
+                    dt = datetime.fromisoformat(date_str.replace(' ', 'T'))
+                    record_time = dt.time()
+                    
+                    battery = float(record.get("Battery Soc(%)") or record.get("Battery SOC(%)") or 0)
+                    odometer = float(record.get("Odometer (km)") or 0)
+                    
+                    # Get closest reading to 6 AM (within 30 min window)
+                    if dt_time(5, 30) <= record_time <= dt_time(6, 30) and charge_6am is None:
+                        charge_6am = battery
+                        odometer_6am = odometer
+                    
+                    # Get closest reading to 12 PM (within 30 min window)
+                    if dt_time(11, 30) <= record_time <= dt_time(12, 30) and charge_12pm is None:
+                        charge_12pm = battery
+                        odometer_12pm = odometer
+                    
+                    # Get closest reading to 5 PM (within 30 min window)
+                    if dt_time(16, 30) <= record_time <= dt_time(17, 30) and charge_5pm is None:
+                        charge_5pm = battery
+                        odometer_5pm = odometer
+                        
+                except:
+                    continue
             
-            # Continue with the original audit logic
-            # (This section is for the audit endpoint which checks for low charge instances)
+            # Skip if we don't have all required readings
+            if charge_6am is None or charge_12pm is None or charge_5pm is None:
+                continue
+            if odometer_6am is None or odometer_12pm is None or odometer_5pm is None:
+                continue
+            
+            # Calculate distances
+            km_6am_12pm = odometer_12pm - odometer_6am
+            km_6am_5pm = odometer_5pm - odometer_6am
+            
+            # Calculate mileages (avoid division by zero)
+            charge_drop_6am_12pm = charge_6am - charge_12pm
+            charge_drop_6am_5pm = charge_6am - charge_5pm
+            
+            mileage_6am_12pm = (km_6am_12pm * 100 / charge_drop_6am_12pm) if charge_drop_6am_12pm > 0 else 0
+            mileage_6am_5pm = (km_6am_5pm * 100 / charge_drop_6am_5pm) if charge_drop_6am_5pm > 0 else 0
+            
+            # Flag if critical (12PM < 60% AND 5PM < 20%)
+            is_critical = (charge_12pm < 60 and charge_5pm < 20)
+            
+            audit_results.append({
+                "date": date,
+                "vehicle_name": display_name,
+                "vehicle_id": vehicle_id,
+                "charge_6am": round(charge_6am, 1),
+                "charge_12pm": round(charge_12pm, 1),
+                "charge_5pm": round(charge_5pm, 1),
+                "km_6am_12pm": round(km_6am_12pm, 2),
+                "km_6am_5pm": round(km_6am_5pm, 2),
+                "mileage_6am_12pm": round(mileage_6am_12pm, 2),
+                "mileage_6am_5pm": round(mileage_6am_5pm, 2),
+                "is_critical": is_critical
+            })
         
-        # Sort results by date and vehicle
-        audit_results.sort(key=lambda x: (x["date"], x["vehicle_name"]))
+        # Sort results by date (newest first) and vehicle
+        audit_results.sort(key=lambda x: (x["date"], x["vehicle_name"]), reverse=True)
         
-        logger.info(f"Battery audit complete: Found {len(audit_results)} low charge instances")
+        critical_count = sum(1 for r in audit_results if r["is_critical"])
+        
+        logger.info(f"Battery audit complete: {len(audit_results)} entries, {critical_count} critical")
         
         return {
             "success": True,
             "audit_results": audit_results,
             "count": len(audit_results),
-            "message": f"Found {len(audit_results)} instances where battery dropped to or below 20% between 7 AM - 7 PM"
+            "critical_count": critical_count,
+            "message": f"Analyzed {len(audit_results)} vehicle-days. Found {critical_count} critical charge drops."
         }
-        
-    except Exception as e:
-        logger.error(f"Error in battery charge audit: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error generating battery audit: {str(e)}")
         
     except Exception as e:
         logger.error(f"Error in battery charge audit: {str(e)}")
