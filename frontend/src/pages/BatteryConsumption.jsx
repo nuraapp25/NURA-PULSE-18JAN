@@ -327,6 +327,110 @@ const BatteryConsumption = () => {
     return null;
   };
 
+  const handleViewRawData = async (dayData) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        `${API}/montra-vehicle/analytics/battery-data`,
+        {
+          params: {
+            vehicle_id: selectedVehicle,
+            date: dayData.formattedDate
+          },
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+
+      if (response.data.success && response.data.data.length > 0) {
+        // Create a simple table view
+        const dataStr = JSON.stringify(response.data.data, null, 2);
+        const newWindow = window.open('', '_blank');
+        newWindow.document.write(`
+          <html>
+            <head>
+              <title>Raw Feed Data - ${selectedVehicle} - ${dayData.formattedDate}</title>
+              <style>
+                body { font-family: monospace; padding: 20px; background: #1a1a1a; color: #fff; }
+                pre { white-space: pre-wrap; word-wrap: break-word; }
+                h2 { color: #60a5fa; }
+              </style>
+            </head>
+            <body>
+              <h2>Raw Feed Data</h2>
+              <p><strong>Vehicle:</strong> ${selectedVehicle}</p>
+              <p><strong>Date:</strong> ${dayData.formattedDate}</p>
+              <p><strong>Total Records:</strong> ${response.data.count}</p>
+              <hr>
+              <pre>${dataStr}</pre>
+            </body>
+          </html>
+        `);
+        toast.success("Raw data opened in new tab");
+      }
+    } catch (error) {
+      toast.error("Failed to fetch raw data");
+    }
+  };
+
+  const handleDownloadCSV = async (dayData) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        `${API}/montra-vehicle/analytics/battery-data`,
+        {
+          params: {
+            vehicle_id: selectedVehicle,
+            date: dayData.formattedDate
+          },
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+
+      if (response.data.success && response.data.data.length > 0) {
+        const data = response.data.data;
+        
+        // Get all column headers (excluding internal MongoDB fields)
+        const headers = Object.keys(data[0]).filter(key => 
+          !['_id', 'vehicle_id', 'date', 'day', 'month', 'year', 'registration_number', 
+            'filename', 'imported_at', 'mode_name', 'mode_type'].includes(key)
+        );
+        
+        // Create CSV content
+        let csvContent = headers.join(',') + '\n';
+        
+        data.forEach(row => {
+          const values = headers.map(header => {
+            const value = row[header];
+            // Escape commas and quotes in values
+            if (value === null || value === undefined) return '';
+            const stringValue = String(value);
+            if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+              return `"${stringValue.replace(/"/g, '""')}"`;
+            }
+            return stringValue;
+          });
+          csvContent += values.join(',') + '\n';
+        });
+        
+        // Create blob and download
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        
+        link.setAttribute('href', url);
+        link.setAttribute('download', `${selectedVehicle}_${dayData.formattedDate.replace(/ /g, '_')}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        toast.success(`CSV downloaded: ${selectedVehicle}_${dayData.formattedDate.replace(/ /g, '_')}.csv`);
+      }
+    } catch (error) {
+      toast.error("Failed to download CSV");
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
