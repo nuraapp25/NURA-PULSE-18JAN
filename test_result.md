@@ -832,9 +832,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "QR Code Management - Frontend Interface"
-    - "Hotspot Planning Library Frontend Feature"
-    - "Hotspot Planning - Locality Name Verification"
+    - "Driver Onboarding - Manual Status Update with Apply/Cancel"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
