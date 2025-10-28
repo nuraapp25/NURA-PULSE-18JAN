@@ -947,16 +947,6 @@ async def import_leads(
             else:
                 return "S1"  # Default
         
-                return "Interested"  # They're interested but have distance constraints
-            elif "health" in file_status_lower or "medical" in file_status_lower:
-                return "Interested"  # Health issue but potentially interested
-            elif "no badge" in file_status_lower:
-                return "Highly Interested"  # "no badge Highly Interested" should be "Highly Interested"
-            
-            # If no match, return original but log warning
-            logger.warning(f"Status '{file_status}' not matched, defaulting to 'New'")
-            return "New"
-        
         # SMART COLUMN DETECTION
         logger.info(f"Columns in file: {list(df.columns)}")
         
