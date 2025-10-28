@@ -69,10 +69,11 @@ class User(BaseModel):
     first_name: str
     last_name: Optional[str] = None
     email: str
-    account_type: str  # "master_admin", "admin", "standard", "ops_team"
+    account_type: str  # "master_admin", "admin", "standard", "ops_team", "telecaller"
     status: str = "pending"  # "pending", "active", "rejected", "deleted"
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     is_temp_password: bool = False
+    telecaller_id: Optional[str] = None  # Link to telecaller profile if account_type is "telecaller"
 
 
 class UserCreate(BaseModel):
@@ -80,7 +81,7 @@ class UserCreate(BaseModel):
     last_name: Optional[str] = None
     email: str
     password: str
-    account_type: str  # "admin", "standard", or "ops_team"
+    account_type: str  # "admin", "standard", "ops_team", or "telecaller"
 
 
 class UserLogin(BaseModel):
