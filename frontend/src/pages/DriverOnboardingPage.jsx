@@ -2997,7 +2997,7 @@ const DriverOnboardingPage = () => {
                 <p className="text-sm text-gray-600 dark:text-gray-400">{selectedLead.phone_number}</p>
                 <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
                   Status: <span className={`px-2 py-1 rounded ${getStatusColor(selectedLead.status)}`}>
-                    {selectedLead.status || "New"}
+                    {formatStatusDisplay(selectedLead.status || "New")}
                   </span>
                 </p>
               </div>
