@@ -36,13 +36,18 @@ const STAGES = [
 // S1 - Filtering Stage
 const S1_STATUSES = [
   { value: "New", label: "New", color: "bg-yellow-100 text-yellow-700" },
-  { value: "Not interested", label: "Not interested", color: "bg-gray-100 text-gray-700" },
+  { value: "Not Interested", label: "Not Interested", color: "bg-gray-100 text-gray-700" },
   { value: "Interested, No DL", label: "Interested, No DL", color: "bg-gray-100 text-gray-700" },
   { value: "Highly Interested", label: "Highly Interested", color: "bg-green-100 text-green-700" },  // Green = completion
   { value: "Call back 1D", label: "Call back 1D", color: "bg-blue-100 text-blue-700" },
   { value: "Call back 1W", label: "Call back 1W", color: "bg-blue-100 text-blue-700" },
   { value: "Call back 2W", label: "Call back 2W", color: "bg-blue-100 text-blue-700" },
   { value: "Call back 1M", label: "Call back 1M", color: "bg-blue-100 text-blue-700" },
+  { value: "Interested", label: "Interested", color: "bg-blue-100 text-blue-700" },
+  { value: "Not Reachable", label: "Not Reachable", color: "bg-gray-100 text-gray-700" },
+  { value: "Wrong Number", label: "Wrong Number", color: "bg-gray-100 text-gray-700" },
+  { value: "Duplicate", label: "Duplicate", color: "bg-gray-100 text-gray-700" },
+  { value: "Junk", label: "Junk", color: "bg-gray-100 text-gray-700" },
 ];
 
 // S2 - Docs Collection Stage
