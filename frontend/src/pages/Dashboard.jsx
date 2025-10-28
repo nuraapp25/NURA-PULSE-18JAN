@@ -278,9 +278,11 @@ const Dashboard = () => {
 
             {/* Manage */}
             <div>
-              <div className="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Manage
-              </div>
+              {!sidebarCollapsed && (
+                <div className="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Manage
+                </div>
+              )}
               {manageItems
                 .filter(item => !item.roles || item.roles.includes(user?.account_type))
                 .map((item) => (
@@ -292,15 +294,16 @@ const Dashboard = () => {
                     setSidebarOpen(false);
                   }}
                   className={`
-                    w-full flex items-center space-x-3 px-4 py-3 rounded-lg font-medium text-left
+                    w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'space-x-3'} px-4 py-3 rounded-lg font-medium text-left
                     ${isActive(item.path)
-                      ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                      ? 'bg-[#bceb39] dark:bg-[#bceb39] text-gray-900 dark:text-gray-900'
                       : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                     }
                   `}
+                  title={sidebarCollapsed ? item.name : ''}
                 >
                   <item.icon size={20} />
-                  <span className="text-left">{item.name}</span>
+                  {!sidebarCollapsed && <span className="text-left">{item.name}</span>}
                 </button>
               ))}
             </div>
@@ -308,9 +311,11 @@ const Dashboard = () => {
             {/* Analytics */}
             {(user?.account_type === "master_admin" || user?.account_type === "admin") && (
               <div>
-                <div className="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Analytics
-                </div>
+                {!sidebarCollapsed && (
+                  <div className="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Analytics
+                  </div>
+                )}
                 {analyticsItems
                   .filter(item => !item.roles || item.roles.includes(user?.account_type))
                   .map((item) => (
@@ -322,12 +327,13 @@ const Dashboard = () => {
                       setSidebarOpen(false);
                     }}
                     className={`
-                      w-full flex items-center space-x-3 px-4 py-3 rounded-lg font-medium text-left
+                      w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'space-x-3'} px-4 py-3 rounded-lg font-medium text-left
                       ${isActive(item.path)
-                        ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                        ? 'bg-[#bceb39] dark:bg-[#bceb39] text-gray-900 dark:text-gray-900'
                         : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                       }
                     `}
+                    title={sidebarCollapsed ? item.name : ''}
                   >
                     <item.icon size={20} />
                     <span className="text-left">{item.name}</span>
