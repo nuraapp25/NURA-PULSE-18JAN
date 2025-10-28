@@ -219,9 +219,8 @@ const TelecallersManagement = () => {
       name: "",
       phone_number: "",
       email: "",
-      aadhar_card: "",
-      pan_card: "",
-      address_proof: ""
+      notes: "",
+      status: "active"
     });
     setSelectedTelecaller(null);
   };
