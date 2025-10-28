@@ -3197,6 +3197,29 @@ const DriverOnboardingPage = () => {
           )}
         </DialogContent>
       </Dialog>
+      
+      {/* Sync Loading Dialog */}
+      <Dialog open={syncing} onOpenChange={() => {}}>
+        <DialogContent className="max-w-sm" hideCloseButton>
+          <div className="flex flex-col items-center justify-center py-8 space-y-4">
+            <div className="relative w-20 h-20">
+              {/* Rotating spinner */}
+              <div className="absolute inset-0 border-4 border-blue-200 rounded-full"></div>
+              <div className="absolute inset-0 border-4 border-transparent border-t-blue-600 rounded-full animate-spin"></div>
+              {/* Inner pulsing circle */}
+              <div className="absolute inset-4 bg-blue-100 rounded-full animate-pulse"></div>
+            </div>
+            <div className="text-center space-y-2">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Syncing to Google Sheets...
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Please wait while we sync your leads
+              </p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
