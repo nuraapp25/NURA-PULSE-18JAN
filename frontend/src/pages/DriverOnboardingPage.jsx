@@ -276,6 +276,7 @@ const DriverOnboardingPage = () => {
 
   useEffect(() => {
     fetchLeads();
+    fetchTelecallers();
   }, []);
   
   // Refetch summary when date filter changes
