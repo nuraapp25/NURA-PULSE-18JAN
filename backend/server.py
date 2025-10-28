@@ -911,17 +911,22 @@ async def import_leads(
         name_col = find_column(df, ['name', 'driver name', 'full name', 'candidate name', 'Name ', 'name ', 'poc name', 'POC Name'])
         phone_col = find_column(df, ['phone', 'phone no', 'phone number', 'mobile', 'mobile no', 'contact', 'Phone No', 'phone_number'])
         address_col = find_column(df, ['address', 'location', 'current location', 'city', 'Address ', 'address '])
+        experience_col = find_column(df, ['experience', 'Experience', 'exp', 'years of experience'])
         # PRIORITY: Look for "Status" column FIRST, then "Final Status", then "Lead Status", then "Current Status" last
         status_col = find_column(df, ['status', 'Status', 'final status', 'Final Status', 'lead status', 'Lead Status', 'current status', 'Current Status'])
         stage_col = find_column(df, ['stage', 'lead stage', 'current stage', 'Stage', 'stage '])
         source_col = find_column(df, ['lead source', 'source', 'lead generator', 'Lead Generator', 'lead_source', 'LeadSource'])
-        date_col = find_column(df, ['date', 'lead date', 'lead creation date', 'created date', 'Lead Creation Date'])
+        date_col = find_column(df, ['date', 'lead date', 'lead creation date', 'created date', 'Lead Creation Date', 'import date'])
         vehicle_col = find_column(df, ['vehicle', 'vehicle type', 'Vehicle', 'vehicle '])
         poc_col = find_column(df, ['poc', 'assigned to', 'telecaller', 'POC', 'poc ', 'POC Name', 'poc name'])
-        remarks_col = find_column(df, ['remarks', 'notes', 'comments', 'Remarks', 'remarks '])
-        next_action_col = find_column(df, ['next action', 'action', 'follow up', 'Next Action'])
         
-        logger.info(f"Mapped columns - Name: {name_col}, Phone: {phone_col}, Status: {status_col}, Stage: {stage_col}, Source: {source_col}")
+        # Multiple possible telecaller notes columns (ss, sss, Current Status, etc.)
+        telecaller_notes_col = find_column(df, ['telecaller notes', 'Telecaller Notes', 'ss', 'sss', 'current status', 'Current Status', 'next action', 'action', 'follow up', 'Next Action'])
+        
+        # General remarks/notes columns
+        remarks_col = find_column(df, ['remarks', 'notes', 'comments', 'Remarks', 'remarks ', 'dd', 'ss.1'])
+        
+        logger.info(f"Mapped columns - Name: {name_col}, Phone: {phone_col}, Status: {status_col}, Stage: {stage_col}, Source: {source_col}, POC: {poc_col}, Telecaller Notes: {telecaller_notes_col}")
         
         # Process rows
         leads = []
