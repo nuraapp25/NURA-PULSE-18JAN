@@ -105,6 +105,18 @@
 user_problem_statement: "Fix Driver Onboarding status mapping bug: 'NOT INTERESTED' status from imported Excel sheets not showing in dashboard summary. Also fix 'Edit Details' error when clicking on lead details. Ensure all features from previous forks work perfectly."
 
 backend:
+  - task: "Driver Onboarding - Status Mapping Bug Fix"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "BUG FIX IMPLEMENTED: Fixed status mapping inconsistency causing 'NOT INTERESTED' leads to not appear in dashboard summary. ROOT CAUSE: Dashboard summary used 'Not interested' (lowercase 'i') while import/database stored 'Not Interested' (uppercase 'I'). FIXES: (1) Updated backend dashboard summary endpoint (line 1249) to use 'Not Interested' (uppercase) matching database. (2) Added missing S1 statuses to backend summary: 'Interested', 'Not Reachable', 'Wrong Number', 'Duplicate', 'Junk'. (3) Updated frontend S1_STATUSES in DriverOnboardingPage.jsx and TelecallerDesk.jsx to use 'Not Interested' (uppercase) and added all missing statuses. (4) All status values now consistent across backend/frontend/database. User uploaded Excel file (DigitalMarketing.xlsx) has all leads with 'Not Interested' status - these should now appear correctly in dashboard summary. Ready for backend testing."
+
   - task: "User Authentication (Login/Register)"
     implemented: true
     working: true
