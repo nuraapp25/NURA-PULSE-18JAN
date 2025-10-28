@@ -972,8 +972,10 @@ async def import_leads(
                 "current_location": str(row[address_col]) if address_col and pd.notna(row.get(address_col)) else None,
                 "import_date": import_date,
                 "lead_source": row_lead_source,
+                "source": file.filename if file.filename else row_lead_source,  # Track import source for filtering
                 "lead_date": row_lead_date,
                 "status": matched_status,  # USE MATCHED STATUS from file!
+                "stage": "S1",  # Default stage
                 "lead_stage": file_status if file_status else "New",
                 "driver_readiness": "Not Started",
                 "docs_collection": "Pending",
@@ -981,7 +983,8 @@ async def import_leads(
                 "assigned_telecaller": str(row[poc_col]) if poc_col and pd.notna(row.get(poc_col)) else None,
                 "telecaller_notes": str(row[next_action_col]) if next_action_col and pd.notna(row.get(next_action_col)) else None,
                 "notes": str(row[remarks_col]) if remarks_col and pd.notna(row.get(remarks_col)) else None,
-                "created_at": import_date
+                "created_at": import_date,
+                "last_modified": import_date
             }
             leads.append(lead)
         
