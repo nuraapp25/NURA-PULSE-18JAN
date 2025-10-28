@@ -964,8 +964,13 @@ async def import_leads(
             if not file_status and stage_col:
                 file_status = str(row[stage_col]) if pd.notna(row.get(stage_col)) else None
             
+            # Parse the status for internal logic but KEEP original for display
             matched_status = match_status(file_status)
             logger.info(f"File status '{file_status}' matched to app status '{matched_status}'")
+            
+            # IMPORTANT: Use ORIGINAL file_status for display (user requirement)
+            # This preserves formats like "S1-a Not interested", "S1-c Highly Interested"
+            display_status = file_status if file_status else "New"
             
             # Get lead source from file or form
             row_lead_source = lead_source
@@ -993,7 +998,7 @@ async def import_leads(
                 "lead_source": row_lead_source,
                 "source": row_lead_source if row_lead_source else file.filename,  # Track import source for filtering
                 "lead_date": row_lead_date,
-                "status": matched_status,  # USE MATCHED STATUS from file!
+                "status": display_status,  # USE ORIGINAL STATUS for display (e.g., "S1-a Not interested")
                 "stage": "S1",  # Default stage
                 "lead_stage": file_status if file_status else "New",
                 "driver_readiness": "Not Started",
