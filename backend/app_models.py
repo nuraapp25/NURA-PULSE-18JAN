@@ -247,6 +247,7 @@ class TelecallerProfile(BaseModel):
     phone_number: str
     email: str
     status: str = "active"  # "active", "inactive"
+    notes: Optional[str] = None  # General notes about telecaller
     
     # Documents (optional)
     aadhar_card: Optional[str] = None
@@ -269,6 +270,8 @@ class TelecallerProfileCreate(BaseModel):
     name: str
     phone_number: str
     email: str
+    notes: Optional[str] = None
+    status: Optional[str] = "active"
     aadhar_card: Optional[str] = None
     pan_card: Optional[str] = None
     address_proof: Optional[str] = None
@@ -280,6 +283,7 @@ class TelecallerProfileUpdate(BaseModel):
     phone_number: Optional[str] = None
     email: Optional[str] = None
     status: Optional[str] = None
+    notes: Optional[str] = None
     aadhar_card: Optional[str] = None
     pan_card: Optional[str] = None
     address_proof: Optional[str] = None
