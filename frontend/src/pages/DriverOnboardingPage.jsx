@@ -1066,8 +1066,43 @@ const DriverOnboardingPage = () => {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <CardTitle className="text-lg font-semibold">Status Summary Dashboard</CardTitle>
             
-            {/* Date Filter for Summary */}
+            {/* Date Filter and Source Filter for Summary */}
             <div className="flex flex-wrap items-center gap-2">
+              {/* Source Filter */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs dark:bg-gray-700 dark:border-gray-600"
+                  >
+                    <Filter className="mr-2 h-3 w-3" />
+                    {summarySourceFilter ? `Source: ${summarySourceFilter}` : "All Sources"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-56 dark:bg-gray-800 dark:border-gray-700">
+                  <div className="space-y-1">
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start text-sm"
+                      onClick={() => setSummarySourceFilter(null)}
+                    >
+                      All Sources
+                    </Button>
+                    {uniqueSources.map((source) => (
+                      <Button
+                        key={source}
+                        variant="ghost"
+                        className="w-full justify-start text-xs"
+                        onClick={() => setSummarySourceFilter(source)}
+                      >
+                        {source}
+                      </Button>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+              
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -1110,18 +1145,19 @@ const DriverOnboardingPage = () => {
                 </PopoverContent>
               </Popover>
               
-              {(summaryStartDate || summaryEndDate) && (
+              {(summaryStartDate || summaryEndDate || summarySourceFilter) && (
                 <Button
                   onClick={() => {
                     setSummaryStartDate(null);
                     setSummaryEndDate(null);
+                    setSummarySourceFilter(null);
                   }}
                   variant="outline"
                   size="sm"
-                  className="text-xs border-red-300 text-red-600 hover:bg-red-50"
+                  className="text-xs border-red-300 text-red-600 hover:bg-red-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-900/20"
                 >
                   <X size={14} className="mr-1" />
-                  Clear
+                  Clear All
                 </Button>
               )}
             </div>
@@ -1130,7 +1166,7 @@ const DriverOnboardingPage = () => {
           {statusSummary && (
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
               Total Leads: <span className="font-semibold">{statusSummary.total_leads}</span>
-              {(summaryStartDate || summaryEndDate) && " (filtered)"}
+              {(summaryStartDate || summaryEndDate || summarySourceFilter) && " (filtered)"}
             </p>
           )}
         </CardHeader>
