@@ -1224,10 +1224,10 @@ async def get_status_summary(
 
 @api_router.post("/driver-onboarding/sync-leads")
 async def sync_leads_to_sheets(current_user: User = Depends(get_current_user)):
-    """Sync all leads to Google Sheets"""
+    """Sync all leads to Google Sheets with batch processing to avoid timeouts"""
     try:
         # Get all leads from database
-        leads = await db.driver_leads.find({}, {"_id": 0}).to_list(10000)
+        leads = await db.driver_leads.find({}, {"_id": 0}).to_list(20000)
         
         if not leads:
             return {"message": "No leads to sync", "count": 0}
@@ -1238,37 +1238,60 @@ async def sync_leads_to_sheets(current_user: User = Depends(get_current_user)):
         if not web_app_url:
             raise HTTPException(status_code=500, detail="GOOGLE_SHEETS_WEB_APP_URL not configured")
         
-        # Prepare payload for Google Sheets
-        payload = {
-            "action": "sync_from_app",
-            "leads": leads
-        }
+        # BATCH PROCESSING to avoid timeout
+        BATCH_SIZE = 500  # Sync 500 leads at a time
+        total_leads = len(leads)
+        total_updated = 0
+        total_created = 0
         
-        # Send to Google Sheets Web App
         import requests
-        response = requests.post(
-            web_app_url,
-            json=payload,
-            headers={'Content-Type': 'application/json'},
-            timeout=30
-        )
         
-        if response.status_code == 200:
-            result = response.json()
-            if result.get('success'):
-                return {
-                    "success": True,
-                    "message": f"Successfully synced {len(leads)} leads to Google Sheets",
-                    "updated": result.get('updated', 0),
-                    "created": result.get('created', 0)
-                }
+        # Process in batches
+        for i in range(0, total_leads, BATCH_SIZE):
+            batch = leads[i:i + BATCH_SIZE]
+            batch_num = (i // BATCH_SIZE) + 1
+            total_batches = (total_leads + BATCH_SIZE - 1) // BATCH_SIZE
+            
+            logger.info(f"Syncing batch {batch_num}/{total_batches} ({len(batch)} leads)")
+            
+            # Prepare payload for Google Sheets
+            payload = {
+                "action": "sync_from_app",
+                "leads": batch
+            }
+            
+            # Send batch to Google Sheets Web App with longer timeout
+            response = requests.post(
+                web_app_url,
+                json=payload,
+                headers={'Content-Type': 'application/json'},
+                timeout=60  # Increased timeout to 60 seconds per batch
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                if result.get('success'):
+                    total_updated += result.get('updated', 0)
+                    total_created += result.get('created', 0)
+                    logger.info(f"Batch {batch_num} synced: {result.get('updated', 0)} updated, {result.get('created', 0)} created")
+                else:
+                    logger.error(f"Batch {batch_num} failed: {result.get('message', 'Unknown error')}")
+                    raise HTTPException(status_code=500, detail=f"Batch {batch_num} sync failed: {result.get('message', 'Unknown error')}")
             else:
-                raise HTTPException(status_code=500, detail=f"Google Sheets sync failed: {result.get('message', 'Unknown error')}")
-        else:
-            raise HTTPException(status_code=500, detail=f"Google Sheets API error: {response.status_code}")
+                logger.error(f"Batch {batch_num} API error: {response.status_code}")
+                raise HTTPException(status_code=500, detail=f"Batch {batch_num} API error: {response.status_code}")
+        
+        return {
+            "success": True,
+            "message": f"Successfully synced {total_leads} leads to Google Sheets in {total_batches} batches",
+            "total_leads": total_leads,
+            "updated": total_updated,
+            "created": total_created,
+            "batches": total_batches
+        }
             
     except requests.exceptions.Timeout:
-        raise HTTPException(status_code=504, detail="Google Sheets sync timed out. Please try again.")
+        raise HTTPException(status_code=504, detail="Google Sheets sync timed out. Please try again or reduce batch size.")
     except requests.exceptions.RequestException as e:
         logger.error(f"Request error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to connect to Google Sheets: {str(e)}")
