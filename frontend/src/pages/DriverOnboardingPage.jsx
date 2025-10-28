@@ -121,6 +121,7 @@ const DriverOnboardingPage = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [importing, setImporting] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [syncing, setSyncing] = useState(false); // For Google Sheets sync loading
   
   // Lead source and date for imports
   const [leadSource, setLeadSource] = useState("");
