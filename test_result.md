@@ -568,6 +568,18 @@ frontend:
           agent: "main"
           comment: "✅ ENHANCED: Added 3 new features - (1) Removed 'residing_chennai' field from Format 2 CSV import (2) Click on lead to view details and update status with 8 status options (New, Contacted, Interested, Documents Pending, Scheduled, Onboarded, Rejected, Not Interested) (3) Date filter with calendar view for Start/End date filtering. All features tested and working."
 
+  - task: "Driver Onboarding - Manual Status Update with Apply/Cancel"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/DriverOnboardingPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "NEW FEATURE IMPLEMENTED: Manual status update system with Apply/Cancel buttons. When user changes lead status from dropdown: (1) Status changes in UI immediately (optimistic update), (2) Green 'Apply' button with Save icon appears, (3) Cancel button (X icon) appears, (4) Status badge shows '(Pending)' text in yellow, (5) Status badge gets yellow ring highlight, (6) User must click 'Apply' to save to backend, (7) User can click 'Cancel' to revert. Supports multiple leads with pending changes simultaneously. Uses pendingStatusChanges state to track original vs new values. Backend API: PATCH /driver-onboarding/leads/{leadId} with status and stage fields."
+
   - task: "Battery Consumption Widget UI"
     implemented: true
     working: true
