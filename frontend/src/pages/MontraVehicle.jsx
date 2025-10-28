@@ -273,6 +273,22 @@ const MontraVehicle = () => {
     }
   };
 
+  const handleSelectMonth = (monthYear, files) => {
+    const monthFileIds = files.map(f => `${f.vehicle_id}-${f.date}-${f.filename}`);
+    const allSelected = monthFileIds.every(id => selectedFileIds.includes(id));
+    
+    if (allSelected) {
+      // Deselect all files in this month
+      setSelectedFileIds(prev => prev.filter(id => !monthFileIds.includes(id)));
+      toast.info(`Deselected all files from ${monthYear}`);
+    } else {
+      // Select all files in this month
+      const newIds = monthFileIds.filter(id => !selectedFileIds.includes(id));
+      setSelectedFileIds(prev => [...prev, ...newIds]);
+      toast.success(`Selected all ${files.length} file(s) from ${monthYear}`);
+    }
+  };
+
   const toggleFolder = (monthYear) => {
     setExpandedFolders(prev => ({
       ...prev,
