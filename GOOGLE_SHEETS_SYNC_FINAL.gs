@@ -1,39 +1,27 @@
 /**
  * NURA PULSE - DRIVER ONBOARDING SYNC
- * Google Apps Script for Two-Way Sync
- * 
- * Column Mapping:
- * A: ID | B: Name | C: Phone | D: Experience | E: Address
- * F: Stage | G: Status | H: Telecaller | I: Telecaller Notes
- * J: Notes | K: Import Date | L: Last Modified
+ * Fixed version with correct endpoints
  */
 
 // ========== CONFIGURATION ==========
 var API_BASE_URL = "https://pulse-cluster.preview.emergentagent.com";
-var BEARER_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsImV4cCI6MTczNTg5MDQwMH0.abc123xyz...";
+var BEARER_TOKEN = "YOUR_TOKEN_HERE";
 var LEADS_SHEET_NAME = "Driver Leads";
 
-// Column positions (1-indexed)
+// Column positions
 var COLUMNS = {
-  ID: 1,
-  NAME: 2,
-  PHONE: 3,
-  EXPERIENCE: 4,
-  ADDRESS: 5,
-  STAGE: 6,
-  STATUS: 7,
-  TELECALLER: 8,
-  TELECALLER_NOTES: 9,
-  NOTES: 10,
-  IMPORT_DATE: 11,
-  LAST_MODIFIED: 12
+  ID: 1, NAME: 2, PHONE: 3, EXPERIENCE: 4, ADDRESS: 5,
+  STAGE: 6, STATUS: 7, TELECALLER: 8, TELECALLER_NOTES: 9,
+  NOTES: 10, IMPORT_DATE: 11, LAST_MODIFIED: 12
 };
 
 // ========== HELPER FUNCTIONS ==========
 
 function makeAPIRequest(endpoint, method, payload) {
   method = method || "GET";
-  var url = API_BASE_URL + "/api" + endpoint;
+  var url = API_BASE_URL + endpoint;  // No /api prefix needed
+  
+  Logger.log("Making request to: " + url);
   
   var options = {
     method: method,
@@ -52,6 +40,8 @@ function makeAPIRequest(endpoint, method, payload) {
     var response = UrlFetchApp.fetch(url, options);
     var responseCode = response.getResponseCode();
     var responseText = response.getContentText();
+    
+    Logger.log("Response code: " + responseCode);
     
     if (responseCode >= 200 && responseCode < 300) {
       return JSON.parse(responseText);
@@ -103,21 +93,6 @@ function getOrCreateSheet(sheetName) {
   return sheet;
 }
 
-function findRowById(sheet, id) {
-  var lastRow = sheet.getLastRow();
-  if (lastRow < 2) return -1;
-  
-  var idColumn = sheet.getRange(2, COLUMNS.ID, lastRow - 1, 1).getValues();
-  
-  for (var i = 0; i < idColumn.length; i++) {
-    if (idColumn[i][0] === id) {
-      return i + 2;
-    }
-  }
-  
-  return -1;
-}
-
 function leadToRow(lead) {
   return [
     lead.id || "",
@@ -135,14 +110,17 @@ function leadToRow(lead) {
   ];
 }
 
-// ========== MAIN SYNC FUNCTIONS ==========
+// ========== MAIN SYNC FUNCTION ==========
 
 function syncFromAPI() {
   try {
     SpreadsheetApp.getActiveSpreadsheet().toast("Starting sync from API...", "Driver Leads Sync", 3);
     
-    var response = makeAPIRequest("/driver-onboarding/leads");
+    // CORRECT ENDPOINT: /api/driver-onboarding/leads
+    var response = makeAPIRequest("/api/driver-onboarding/leads");
     var leads = response;
+    
+    Logger.log("Received " + leads.length + " leads");
     
     if (!Array.isArray(leads) || leads.length === 0) {
       SpreadsheetApp.getActiveSpreadsheet().toast("No leads found in API", "Sync Complete", 3);
@@ -171,7 +149,7 @@ function syncFromAPI() {
     
   } catch (error) {
     Logger.log("Sync from API failed: " + error);
-    SpreadsheetApp.getActiveSpreadsheet().toast("Sync failed: " + error, "Error", 5);
+    SpreadsheetApp.getActiveSpreadsheet().toast("Sync failed: " + error.toString(), "Error", 5);
   }
 }
 
@@ -201,7 +179,8 @@ function onEdit(e) {
       notes: rowData[COLUMNS.NOTES - 1] || ""
     };
     
-    makeAPIRequest("/driver-onboarding/leads/" + leadId, "PATCH", updatedData);
+    // CORRECT ENDPOINT: /api/driver-onboarding/leads/{id}
+    makeAPIRequest("/api/driver-onboarding/leads/" + leadId, "PATCH", updatedData);
     
     sheet.getRange(row, COLUMNS.LAST_MODIFIED).setValue(new Date().toISOString());
     
@@ -215,7 +194,6 @@ function applyConditionalFormatting(sheet) {
   if (lastRow < 2) return;
   
   var statusRange = sheet.getRange(2, COLUMNS.STATUS, lastRow - 1, 1);
-  
   sheet.clearConditionalFormatRules();
   
   var rules = [];
@@ -255,6 +233,7 @@ function onOpen() {
   ui.createMenu('Driver Sync')
     .addItem('Sync from API', 'syncFromAPI')
     .addItem('Setup Auto Sync', 'setupTriggers')
+    .addItem('Test Connection', 'testConnection')
     .addSeparator()
     .addItem('Help', 'showHelp')
     .addToUi();
@@ -271,39 +250,53 @@ function setupTriggers() {
     .onEdit()
     .create();
   
-  SpreadsheetApp.getActiveSpreadsheet().toast("Auto-sync enabled! Edits will sync to API automatically.", "Setup Complete", 5);
+  SpreadsheetApp.getActiveSpreadsheet().toast("Auto-sync enabled!", "Setup Complete", 5);
+}
+
+function testConnection() {
+  try {
+    SpreadsheetApp.getActiveSpreadsheet().toast("Testing connection...", "Test", 3);
+    
+    var response = makeAPIRequest("/api/driver-onboarding/leads");
+    
+    if (Array.isArray(response) && response.length >= 0) {
+      SpreadsheetApp.getActiveSpreadsheet().toast(
+        "Connection successful! Found " + response.length + " leads.", 
+        "Test Passed", 
+        5
+      );
+    } else {
+      SpreadsheetApp.getActiveSpreadsheet().toast("Connection successful but unexpected response", "Test Warning", 5);
+    }
+  } catch (error) {
+    SpreadsheetApp.getActiveSpreadsheet().toast(
+      "Connection failed: " + error.toString(), 
+      "Test Failed", 
+      5
+    );
+  }
 }
 
 function showHelp() {
-  var htmlContent = '<div style="font-family: Arial, sans-serif; padding: 20px;">' +
-    '<h2>Nura Pulse Driver Onboarding Sync</h2>' +
-    '<h3>Column Mapping:</h3>' +
-    '<ul>' +
-    '<li><b>A:</b> ID (Auto-generated)</li>' +
-    '<li><b>B:</b> Name</li>' +
-    '<li><b>C:</b> Phone Number</li>' +
-    '<li><b>D:</b> Experience</li>' +
-    '<li><b>E:</b> Address</li>' +
-    '<li><b>F:</b> Lead Stage (S1/S2/S3/S4)</li>' +
-    '<li><b>G:</b> Status</li>' +
-    '<li><b>H:</b> Assigned Telecaller</li>' +
-    '<li><b>I:</b> Telecaller Notes</li>' +
-    '<li><b>J:</b> Notes</li>' +
-    '<li><b>K:</b> Import Date</li>' +
-    '<li><b>L:</b> Last Modified (Auto-updated)</li>' +
-    '</ul>' +
-    '<h3>How to Use:</h3>' +
+  var htmlContent = '<div style="font-family: Arial; padding: 20px;">' +
+    '<h2>Nura Pulse Driver Sync</h2>' +
+    '<h3>Setup:</h3>' +
     '<ol>' +
-    '<li>Update API_BASE_URL and BEARER_TOKEN in the script</li>' +
-    '<li>Run "Setup Auto Sync" from menu</li>' +
-    '<li>Run "Sync from API" to pull latest data</li>' +
-    '<li>Edit any cell - changes sync automatically!</li>' +
+    '<li>Update BEARER_TOKEN (line 9)</li>' +
+    '<li>Run "Test Connection" from menu</li>' +
+    '<li>Run "Setup Auto Sync"</li>' +
+    '<li>Run "Sync from API"</li>' +
     '</ol>' +
+    '<h3>Get Token:</h3>' +
+    '<p>1. Login to Nura Pulse<br>' +
+    '2. Press F12 (Console)<br>' +
+    '3. Type: localStorage.getItem("token")<br>' +
+    '4. Copy token and paste in script</p>' +
     '</div>';
   
   var htmlOutput = HtmlService.createHtmlOutput(htmlContent)
     .setWidth(500)
     .setHeight(400);
   
-  SpreadsheetApp.getUi().showModalDialog(htmlOutput, "Driver Sync Help");
+  SpreadsheetApp.getUi().showModalDialog(htmlOutput, "Help");
 }
