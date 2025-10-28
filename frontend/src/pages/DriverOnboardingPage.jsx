@@ -611,8 +611,8 @@ const DriverOnboardingPage = () => {
     }
   };
   
-  // Handle inline status change (directly in table)
-  const handleInlineStatusChange = async (leadId, newStatus) => {
+  // Handle inline status change (store pending change, don't call API immediately)
+  const handleInlineStatusChange = (leadId, newStatus) => {
     // Find the lead
     const lead = leads.find(l => l.id === leadId);
     if (!lead) return;
@@ -629,34 +629,101 @@ const DriverOnboardingPage = () => {
       newStage = "S4";
     }
     
-    // OPTIMISTIC UPDATE - Update UI immediately
+    // Store the original values if this is the first change for this lead
+    const originalStatus = pendingStatusChanges[leadId]?.originalStatus || lead.status;
+    const originalStage = pendingStatusChanges[leadId]?.originalStage || lead.stage;
+    
+    // Update UI immediately (optimistic update)
     setLeads(prevLeads =>
       prevLeads.map(l => (l.id === leadId ? { ...l, status: newStatus, stage: newStage } : l))
     );
-    setInlineEditingId(null);
     
-    // Then update backend in background
+    // Store pending change
+    setPendingStatusChanges(prev => ({
+      ...prev,
+      [leadId]: {
+        status: newStatus,
+        stage: newStage,
+        originalStatus: originalStatus,
+        originalStage: originalStage
+      }
+    }));
+    
+    // Keep the dropdown open
+    // setInlineEditingId(null); - Don't close it immediately
+  };
+  
+  // Apply the pending status change for a specific lead
+  const handleApplyStatusChange = async (leadId) => {
+    const pendingChange = pendingStatusChanges[leadId];
+    if (!pendingChange) return;
+    
+    setUpdatingStatus(true);
     try {
       const token = localStorage.getItem("token");
       
       // Single API call with both status and stage
       await axios.patch(
         `${API}/driver-onboarding/leads/${leadId}`,
-        { status: newStatus, stage: newStage },
+        { status: pendingChange.status, stage: pendingChange.stage },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
       toast.success("Status updated successfully");
+      
+      // Remove from pending changes
+      setPendingStatusChanges(prev => {
+        const updated = { ...prev };
+        delete updated[leadId];
+        return updated;
+      });
+      
+      // Close the dropdown
+      setInlineEditingId(null);
+      
       await fetchLastSyncTime();
     } catch (error) {
       console.error("Error updating status:", error);
       toast.error("Failed to update status");
       
       // Revert on error
-      setLeads(prevLeads =>
-        prevLeads.map(l => (l.id === leadId ? lead : l))
-      );
+      const lead = leads.find(l => l.id === leadId);
+      if (lead && pendingChange) {
+        setLeads(prevLeads =>
+          prevLeads.map(l => (l.id === leadId ? { ...l, status: pendingChange.originalStatus, stage: pendingChange.originalStage } : l))
+        );
+        
+        // Remove from pending changes
+        setPendingStatusChanges(prev => {
+          const updated = { ...prev };
+          delete updated[leadId];
+          return updated;
+        });
+      }
+    } finally {
+      setUpdatingStatus(false);
     }
+  };
+  
+  // Cancel pending status change for a specific lead
+  const handleCancelStatusChange = (leadId) => {
+    const pendingChange = pendingStatusChanges[leadId];
+    if (!pendingChange) return;
+    
+    // Revert to original values
+    setLeads(prevLeads =>
+      prevLeads.map(l => (l.id === leadId ? { ...l, status: pendingChange.originalStatus, stage: pendingChange.originalStage } : l))
+    );
+    
+    // Remove from pending changes
+    setPendingStatusChanges(prev => {
+      const updated = { ...prev };
+      delete updated[leadId];
+      return updated;
+    });
+    
+    // Close the dropdown
+    setInlineEditingId(null);
   };
 
   const handleStatusUpdate = async (newStatus) => {
