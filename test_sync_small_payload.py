@@ -9,7 +9,7 @@ import sys
 import time
 
 # Configuration
-BASE_URL = "https://pulse-cluster.preview.emergentagent.com/api"
+BASE_URL = "https://driver-fleet-hub.preview.emergentagent.com/api"
 MASTER_ADMIN_EMAIL = "admin"
 MASTER_ADMIN_PASSWORD = "Nura@1234$"
 
