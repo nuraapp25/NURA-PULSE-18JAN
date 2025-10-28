@@ -272,6 +272,9 @@ const DriverOnboardingPage = () => {
       if (summaryEndDate) {
         params.end_date = format(summaryEndDate, 'yyyy-MM-dd');
       }
+      if (summarySourceFilter) {
+        params.source = summarySourceFilter;
+      }
       
       const response = await axios.get(`${API}/driver-onboarding/status-summary`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -292,12 +295,12 @@ const DriverOnboardingPage = () => {
     fetchTelecallers();
   }, []);
   
-  // Refetch summary when date filter changes
+  // Refetch summary when date or source filter changes
   useEffect(() => {
     if (leads.length > 0) {
       fetchStatusSummary();
     }
-  }, [summaryStartDate, summaryEndDate]);
+  }, [summaryStartDate, summaryEndDate, summarySourceFilter]);
 
   // Filter leads by date range and stages
   useEffect(() => {
