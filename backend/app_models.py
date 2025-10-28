@@ -236,6 +236,66 @@ class DriverStageSync(BaseModel):
     lead_id: str
 
 
+# ==================== Telecaller Management ====================
+
+class TelecallerProfile(BaseModel):
+    """Telecaller Profile Model"""
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    phone_number: str
+    email: str
+    status: str = "active"  # "active", "inactive"
+    
+    # Documents (optional)
+    aadhar_card: Optional[str] = None
+    pan_card: Optional[str] = None
+    address_proof: Optional[str] = None
+    
+    # Assignment stats
+    total_assigned_leads: int = 0
+    active_leads: int = 0
+    converted_leads: int = 0
+    
+    # Timestamps
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    last_modified: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_by: Optional[str] = None  # Admin user ID
+
+
+class TelecallerProfileCreate(BaseModel):
+    """Model for creating telecaller profile"""
+    name: str
+    phone_number: str
+    email: str
+    aadhar_card: Optional[str] = None
+    pan_card: Optional[str] = None
+    address_proof: Optional[str] = None
+
+
+class TelecallerProfileUpdate(BaseModel):
+    """Model for updating telecaller profile"""
+    name: Optional[str] = None
+    phone_number: Optional[str] = None
+    email: Optional[str] = None
+    status: Optional[str] = None
+    aadhar_card: Optional[str] = None
+    pan_card: Optional[str] = None
+    address_proof: Optional[str] = None
+
+
+class LeadAssignment(BaseModel):
+    """Model for assigning leads to telecallers"""
+    lead_ids: List[str]
+    telecaller_id: str
+
+
+class BulkAssignFromSheets(BaseModel):
+    """Model for bulk assignment from Google Sheets Column H"""
+    pass  # No params needed, will read from sheets
+
+
 
 # ==================== QR Code Management ====================
 
