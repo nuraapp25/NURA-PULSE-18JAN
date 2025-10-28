@@ -570,15 +570,18 @@ frontend:
 
   - task: "Driver Onboarding - Manual Status Update with Apply/Cancel"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/frontend/src/pages/DriverOnboardingPage.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "NEW FEATURE IMPLEMENTED: Manual status update system with Apply/Cancel buttons. When user changes lead status from dropdown: (1) Status changes in UI immediately (optimistic update), (2) Green 'Apply' button with Save icon appears, (3) Cancel button (X icon) appears, (4) Status badge shows '(Pending)' text in yellow, (5) Status badge gets yellow ring highlight, (6) User must click 'Apply' to save to backend, (7) User can click 'Cancel' to revert. Supports multiple leads with pending changes simultaneously. Uses pendingStatusChanges state to track original vs new values. Backend API: PATCH /driver-onboarding/leads/{leadId} with status and stage fields."
+        - working: false
+          agent: "testing"
+          comment: "❌ COMPREHENSIVE TESTING FAILED: Manual status update feature with Apply/Cancel buttons is NOT working as expected. FINDINGS: 1) Successfully accessed Driver Onboarding page with Master Admin credentials (admin/Nura@1234$). 2) Found 20 leads in table with status badges (Verification Rejected, Call back 2W, New, Schedule Pending, etc.). 3) Status badges are clickable buttons in Status column (index 4). 4) Clicking status badges does NOT open dropdown with selectable options - no Radix UI Select content detected. 5) No Apply buttons found after attempting status changes. 6) No Cancel buttons (X icon) found. 7) No '(Pending)' indicators found. 8) No yellow ring highlights detected. 9) Status changes appear to be immediate without manual Apply/Cancel workflow. CRITICAL ISSUE: The manual status update feature described in review request is not functioning. Status changes seem to follow old immediate update pattern rather than new manual Apply/Cancel system. Code analysis shows pendingStatusChanges state and handleApplyStatusChange/handleCancelStatusChange functions exist but UI components (Apply/Cancel buttons, dropdown options) are not rendering properly."
 
   - task: "Battery Consumption Widget UI"
     implemented: true
