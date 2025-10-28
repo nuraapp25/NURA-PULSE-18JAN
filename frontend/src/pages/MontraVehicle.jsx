@@ -944,10 +944,12 @@ const MontraVehicle = () => {
                     <div key={monthYear}>
                       {/* Folder Header */}
                       <div 
-                        className="p-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 cursor-pointer flex items-center justify-between"
-                        onClick={() => toggleFolder(monthYear)}
+                        className="p-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 flex items-center justify-between"
                       >
-                        <div className="flex items-center space-x-2">
+                        <div 
+                          className="flex items-center space-x-2 flex-1 cursor-pointer"
+                          onClick={() => toggleFolder(monthYear)}
+                        >
                           {expandedFolders[monthYear] ? (
                             <ChevronDown size={16} className="text-gray-600 dark:text-gray-400" />
                           ) : (
@@ -962,9 +964,26 @@ const MontraVehicle = () => {
                             {monthYear}
                           </span>
                         </div>
-                        <span className="text-sm text-gray-500 dark:text-gray-400">
-                          {files.length} file{files.length !== 1 ? 's' : ''}
-                        </span>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm text-gray-500 dark:text-gray-400">
+                            {files.length} file{files.length !== 1 ? 's' : ''}
+                          </span>
+                          <Button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSelectMonth(monthYear, files);
+                            }}
+                            variant="outline"
+                            size="sm"
+                            className="text-xs h-7 px-2"
+                          >
+                            {(() => {
+                              const monthFileIds = files.map(f => `${f.vehicle_id}-${f.date}-${f.filename}`);
+                              const allSelected = monthFileIds.every(id => selectedFileIds.includes(id));
+                              return allSelected ? 'Deselect All' : 'Select All';
+                            })()}
+                          </Button>
+                        </div>
                       </div>
                       
                       {/* Files in Folder */}
