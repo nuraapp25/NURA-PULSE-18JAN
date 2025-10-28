@@ -456,13 +456,40 @@ const BatteryConsumption = () => {
           {chartsData.map((dayData, index) => (
             <Card key={index} className="dark:bg-gray-800 dark:border-gray-700">
               <CardHeader>
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                  <CardTitle className="dark:text-white">
-                    Battery Consumption for {vehicles.find(v => v.vehicle_id === selectedVehicle)?.registration_number}
-                    <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-3">
-                      on {dayData.date}
-                    </span>
-                  </CardTitle>
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                  <div>
+                    <CardTitle className="dark:text-white">
+                      Battery Consumption for {vehicles.find(v => v.vehicle_id === selectedVehicle)?.registration_number}
+                      <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-3">
+                        on {dayData.date}
+                      </span>
+                    </CardTitle>
+                    <p className="text-sm font-mono text-gray-600 dark:text-gray-400 mt-2">
+                      VIN: <span className="font-semibold text-blue-600 dark:text-blue-400">{selectedVehicle}</span>
+                    </p>
+                  </div>
+                  
+                  {/* Action Buttons */}
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => handleViewRawData(dayData)}
+                      variant="outline"
+                      size="sm"
+                      className="text-xs"
+                    >
+                      <Eye className="w-4 h-4 mr-1" />
+                      View Data
+                    </Button>
+                    <Button
+                      onClick={() => handleDownloadCSV(dayData)}
+                      variant="outline"
+                      size="sm"
+                      className="text-xs"
+                    >
+                      <Download className="w-4 h-4 mr-1" />
+                      Download CSV
+                    </Button>
+                  </div>
                 </div>
                 
                 {/* Summary Stats */}
