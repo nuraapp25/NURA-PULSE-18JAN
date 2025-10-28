@@ -311,9 +311,15 @@ const DriverOnboardingPage = () => {
     if (activeSubStatus) {
       filtered = filtered.filter(lead => lead.status === activeSubStatus);
     }
+    
+    // Source filter
+    if (sourceFilter) {
+      filtered = filtered.filter(lead => lead.source === sourceFilter);
+    }
 
     setFilteredLeads(filtered);
-  }, [startDate, endDate, activeStageFilter, activeSubStatus, leads]);
+    setCurrentPage(1); // Reset to first page when filters change
+  }, [startDate, endDate, activeStageFilter, activeSubStatus, sourceFilter]);
 
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
