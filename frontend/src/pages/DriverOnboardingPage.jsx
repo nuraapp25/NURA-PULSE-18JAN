@@ -158,6 +158,16 @@ const DriverOnboardingPage = () => {
   
   // Document upload states
   const [uploadingDoc, setUploadingDoc] = useState(null); // Which doc is being uploaded
+  
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [leadsPerPage, setLeadsPerPage] = useState(20);
+  
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredLeads.length / leadsPerPage);
+  const startIndex = (currentPage - 1) * leadsPerPage;
+  const endIndex = startIndex + leadsPerPage;
+  const paginatedLeads = filteredLeads.slice(startIndex, endIndex);
   const [scanningDoc, setScanningDoc] = useState(null); // Which doc is being scanned
   const [uploadedDocs, setUploadedDocs] = useState({
     dl: false,
