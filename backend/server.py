@@ -984,14 +984,14 @@ async def import_leads(
                 "phone_number": phone_val,
                 "vehicle": str(row[vehicle_col]) if vehicle_col and pd.notna(row.get(vehicle_col)) else None,
                 "driving_license": None,
-                "experience": None,
+                "experience": str(row[experience_col]) if experience_col and pd.notna(row.get(experience_col)) else None,
                 "interested_ev": None,
                 "monthly_salary": None,
                 "residing_chennai": None,
                 "current_location": str(row[address_col]) if address_col and pd.notna(row.get(address_col)) else None,
                 "import_date": import_date,
                 "lead_source": row_lead_source,
-                "source": file.filename if file.filename else row_lead_source,  # Track import source for filtering
+                "source": row_lead_source if row_lead_source else file.filename,  # Track import source for filtering
                 "lead_date": row_lead_date,
                 "status": matched_status,  # USE MATCHED STATUS from file!
                 "stage": "S1",  # Default stage
@@ -1000,7 +1000,7 @@ async def import_leads(
                 "docs_collection": "Pending",
                 "customer_readiness": "Not Ready",
                 "assigned_telecaller": str(row[poc_col]) if poc_col and pd.notna(row.get(poc_col)) else None,
-                "telecaller_notes": str(row[next_action_col]) if next_action_col and pd.notna(row.get(next_action_col)) else None,
+                "telecaller_notes": str(row[telecaller_notes_col]) if telecaller_notes_col and pd.notna(row.get(telecaller_notes_col)) else None,
                 "notes": str(row[remarks_col]) if remarks_col and pd.notna(row.get(remarks_col)) else None,
                 "created_at": import_date,
                 "last_modified": import_date
