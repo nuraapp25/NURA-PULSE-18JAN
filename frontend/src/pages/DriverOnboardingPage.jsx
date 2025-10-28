@@ -606,20 +606,46 @@ const DriverOnboardingPage = () => {
       
       if (!lead) return;
       
-      const updatedLead = { ...lead, status: newStatus };
+      // Determine which stage this status belongs to
+      let newStage = lead.stage || "S1";
+      if (S1_STATUSES.find(s => s.value === newStatus)) {
+        newStage = "S1";
+      } else if (S2_STATUSES.find(s => s.value === newStatus)) {
+        newStage = "S2";
+      } else if (S3_STATUSES.find(s => s.value === newStatus)) {
+        newStage = "S3";
+      } else if (S4_STATUSES.find(s => s.value === newStatus)) {
+        newStage = "S4";
+      }
       
-      await axios.put(`${API}/driver-onboarding/leads/${leadId}`, updatedLead, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      // Use PATCH to update only status and stage
+      await axios.patch(
+        `${API}/driver-onboarding/leads/${leadId}/status`,
+        { status: newStatus },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      // Also update stage if it changed
+      if (newStage !== lead.stage) {
+        await axios.patch(
+          `${API}/driver-onboarding/leads/${leadId}`,
+          { stage: newStage },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      }
 
       // Update local state
       setLeads(prevLeads =>
-        prevLeads.map(l => (l.id === leadId ? updatedLead : l))
+        prevLeads.map(l => (l.id === leadId ? { ...l, status: newStatus, stage: newStage } : l))
       );
       
       setInlineEditingId(null);
       toast.success("Status updated successfully");
+      
+      // Refresh last sync time
+      await fetchLastSyncTime();
     } catch (error) {
+      console.error("Error updating status:", error);
       toast.error("Failed to update status");
     }
   };
