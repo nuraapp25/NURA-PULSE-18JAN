@@ -96,15 +96,18 @@ const TelecallersManagement = () => {
 
     try {
       const token = localStorage.getItem("token");
-      await axios.post(`${API}/telecallers`, formData, {
+      const response = await axios.post(`${API}/telecallers`, formData, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      
+      // Success - refresh telecallers list
+      await fetchTelecallers();
       
       toast.success("Telecaller profile created successfully!");
       setIsCreateDialogOpen(false);
       resetForm();
-      fetchTelecallers();
     } catch (error) {
+      console.error("Create telecaller error:", error);
       toast.error(error.response?.data?.detail || "Failed to create telecaller");
     }
   };
