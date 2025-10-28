@@ -163,6 +163,10 @@ const DriverOnboardingPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [leadsPerPage, setLeadsPerPage] = useState(20);
   
+  // Source filter
+  const [sourceFilter, setSourceFilter] = useState(null);
+  const uniqueSources = [...new Set(leads.map(l => l.source).filter(Boolean))];
+  
   // Calculate pagination
   const totalPages = Math.ceil(filteredLeads.length / leadsPerPage);
   const startIndex = (currentPage - 1) * leadsPerPage;
