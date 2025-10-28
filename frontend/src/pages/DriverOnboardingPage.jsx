@@ -288,18 +288,18 @@ const DriverOnboardingPage = () => {
 
     // Stage filters - New hierarchical filtering
     if (activeStageFilter !== "all") {
-      if (activeStageFilter === "filtering") {
-        const filteringStatuses = FILTERING_OPTIONS.map(opt => opt.value);
-        filtered = filtered.filter(lead => filteringStatuses.includes(lead.status));
-      } else if (activeStageFilter === "docs") {
-        const docsStatuses = DOCS_COLLECTION_OPTIONS.map(opt => opt.value);
-        filtered = filtered.filter(lead => docsStatuses.includes(lead.status));
-      } else if (activeStageFilter === "driver") {
-        const driverStatuses = DRIVER_READINESS_OPTIONS.map(opt => opt.value);
-        filtered = filtered.filter(lead => driverStatuses.includes(lead.status));
-      } else if (activeStageFilter === "customer") {
-        const customerStatuses = CUSTOMER_READINESS_OPTIONS.map(opt => opt.value);
-        filtered = filtered.filter(lead => customerStatuses.includes(lead.status));
+      if (activeStageFilter === "S1") {
+        const s1Statuses = S1_STATUSES.map(opt => opt.value);
+        filtered = filtered.filter(lead => s1Statuses.includes(lead.status));
+      } else if (activeStageFilter === "S2") {
+        const s2Statuses = S2_STATUSES.map(opt => opt.value);
+        filtered = filtered.filter(lead => s2Statuses.includes(lead.status));
+      } else if (activeStageFilter === "S3") {
+        const s3Statuses = S3_STATUSES.map(opt => opt.value);
+        filtered = filtered.filter(lead => s3Statuses.includes(lead.status));
+      } else if (activeStageFilter === "S4") {
+        const s4Statuses = S4_STATUSES.map(opt => opt.value);
+        filtered = filtered.filter(lead => s4Statuses.includes(lead.status));
       }
     }
     
