@@ -852,12 +852,15 @@ async def import_leads(
                 file_status = match.group(2).strip()  # Extract the actual status text
                 logger.info(f"Extracted from '{match.group(0)}' → Stage: '{extracted_stage}', Status: '{file_status}'")
             
-            # Exact match (case-insensitive)
+            # Exact match (case-insensitive) - normalize spaces
+            file_status_clean = ' '.join(file_status.split()).lower()  # Normalize whitespace
             for app_status in STATUS_HIERARCHY:
-                if file_status.lower() == app_status.lower():
+                app_status_clean = ' '.join(app_status.split()).lower()
+                if file_status_clean == app_status_clean:
                     # If stage wasn't extracted, determine it from the status
                     if not extracted_stage:
                         extracted_stage = determine_stage_from_status(app_status)
+                    logger.info(f"Exact match: '{file_status}' → '{app_status}'")
                     return (app_status, extracted_stage)
             
             # Partial match (contains) - ORDER IS CRITICAL!
@@ -866,8 +869,9 @@ async def import_leads(
             matched_status = None
             
             # Check NEGATIVE statuses FIRST (to avoid false positives)
-            if "not interest" in file_status_lower or "reject" in file_status_lower or "no interest" in file_status_lower or "uninterested" in file_status_lower:
+            if "not interest" in file_status_lower or "reject" in file_status_lower or "no interest" in file_status_lower or "uninterested" in file_status_lower or "notinterested" in file_status_lower.replace(" ", ""):
                 matched_status = "Not Interested"
+                logger.info(f"Partial match (not interested): '{file_status}' → 'Not Interested'")
             elif "not reach" in file_status_lower or "unreachable" in file_status_lower or "no response" in file_status_lower or "not responding" in file_status_lower:
                 matched_status = "Not Reachable"
             elif "wrong" in file_status_lower or "incorrect" in file_status_lower:
