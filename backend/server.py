@@ -1931,6 +1931,20 @@ async def import_montra_feed(file: UploadFile = File(...), current_user: User = 
         
         logger.info(f"Parsed file with {len(df)} rows and {len(df.columns)} columns")
         
+        # CRITICAL: Sort data by time column (Column A - Date/Time) chronologically
+        # This ensures battery consumption calculations are accurate
+        time_col = df.columns[0]  # First column should be Date or Time
+        logger.info(f"Sorting data by time column: {time_col}")
+        
+        try:
+            # Convert to datetime and sort
+            df[time_col] = pd.to_datetime(df[time_col], errors='coerce')
+            df = df.sort_values(by=time_col)
+            df = df.reset_index(drop=True)
+            logger.info(f"Data sorted successfully from {df[time_col].min()} to {df[time_col].max()}")
+        except Exception as sort_error:
+            logger.warning(f"Could not sort by time column: {sort_error}. Proceeding with original order.")
+        
         # Verify we have the expected columns (A to U = 21 columns)
         if len(df.columns) != 21:
             raise HTTPException(
