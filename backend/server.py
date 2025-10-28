@@ -1246,8 +1246,9 @@ async def get_status_summary(
     
     # Define stage and status structure
     stages = {
-        'S1': ['New', 'Not interested', 'Interested, No DL', 'Highly Interested', 
-               'Call back 1D', 'Call back 1W', 'Call back 2W', 'Call back 1M'],
+        'S1': ['New', 'Not Interested', 'Interested, No DL', 'Highly Interested', 
+               'Call back 1D', 'Call back 1W', 'Call back 2W', 'Call back 1M', 
+               'Interested', 'Not Reachable', 'Wrong Number', 'Duplicate', 'Junk'],
         'S2': ['Docs Upload Pending', 'Verification Pending', 'Duplicate License', 
                'DL - Amount', 'Verified', 'Verification Rejected'],
         'S3': ['Schedule Pending', 'Training WIP', 'Training Completed', 'Training Rejected',
