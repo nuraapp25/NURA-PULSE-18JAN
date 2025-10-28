@@ -6565,6 +6565,308 @@ class NuraPulseBackendTester:
         
         return success_count >= 7  # At least 7 out of 10 tests should pass
 
+    def test_driver_onboarding_status_mapping_bug_fix(self):
+        """Test Driver Onboarding Status Mapping Bug Fix - Comprehensive testing for 'Not Interested' status"""
+        print("\n=== Testing Driver Onboarding Status Mapping Bug Fix ===")
+        
+        success_count = 0
+        
+        # Test 1: Create test leads with different case variations of "Not Interested"
+        print("\n--- Test 1: Import leads with various 'Not Interested' status formats ---")
+        
+        # Create CSV content with different case variations
+        test_csv_content = """Name,Phone Number,Status
+John Doe,9876543210,Not Interested
+Jane Smith,9876543211,NOT INTERESTED
+Bob Johnson,9876543212,not interested
+Alice Brown,9876543213,Not interested
+Charlie Wilson,9876543214,NOT interested
+Diana Davis,9876543215,not Interested"""
+        
+        # Import the test data
+        files = {'file': ('test_not_interested_leads.csv', test_csv_content, 'text/csv')}
+        form_data = {
+            'lead_source': 'Status Mapping Test',
+            'lead_date': '2024-01-15'
+        }
+        
+        try:
+            import requests
+            url = f"{self.base_url}/driver-onboarding/import-leads"
+            headers = {"Authorization": f"Bearer {self.token}"}
+            
+            response = requests.post(url, headers=headers, files=files, data=form_data, timeout=30)
+            
+            if response.status_code == 200:
+                try:
+                    result = response.json()
+                    if result.get("success"):
+                        imported_count = result.get("imported_count", 0)
+                        self.log_test("Status Mapping - Import Test Leads", True, 
+                                    f"Successfully imported {imported_count} test leads with various 'Not Interested' formats")
+                        success_count += 1
+                    else:
+                        self.log_test("Status Mapping - Import Test Leads", False, 
+                                    f"Import failed: {result.get('message', 'Unknown error')}")
+                except json.JSONDecodeError:
+                    self.log_test("Status Mapping - Import Test Leads", False, 
+                                "Invalid JSON response from import", response.text)
+            else:
+                self.log_test("Status Mapping - Import Test Leads", False, 
+                            f"Import failed with status {response.status_code}", response.text)
+        except Exception as e:
+            self.log_test("Status Mapping - Import Test Leads", False, 
+                        f"Exception during import: {e}")
+        
+        # Test 2: Verify leads are stored with correct normalized status
+        print("\n--- Test 2: Verify leads stored with normalized 'Not Interested' status ---")
+        
+        response = self.make_request("GET", "/driver-onboarding/leads")
+        
+        if response is not None and response.status_code == 200:
+            try:
+                leads = response.json()
+                
+                # Filter leads from our test import
+                test_leads = [lead for lead in leads if lead.get('lead_source') == 'Status Mapping Test']
+                
+                if test_leads:
+                    # Check if all test leads have normalized "Not Interested" status
+                    not_interested_count = 0
+                    status_variations = set()
+                    
+                    for lead in test_leads:
+                        status = lead.get('status', '')
+                        status_variations.add(status)
+                        if status == 'Not Interested':  # Exact match with proper case
+                            not_interested_count += 1
+                    
+                    if not_interested_count == len(test_leads):
+                        self.log_test("Status Mapping - Normalized Status Storage", True, 
+                                    f"All {len(test_leads)} test leads correctly stored with 'Not Interested' status")
+                        success_count += 1
+                    else:
+                        self.log_test("Status Mapping - Normalized Status Storage", False, 
+                                    f"Only {not_interested_count}/{len(test_leads)} leads have correct status. Variations found: {status_variations}")
+                    
+                    # Verify stage assignment
+                    s1_stage_count = sum(1 for lead in test_leads if lead.get('stage') == 'S1')
+                    if s1_stage_count == len(test_leads):
+                        self.log_test("Status Mapping - S1 Stage Assignment", True, 
+                                    f"All {len(test_leads)} 'Not Interested' leads correctly assigned to S1 stage")
+                        success_count += 1
+                    else:
+                        self.log_test("Status Mapping - S1 Stage Assignment", False, 
+                                    f"Only {s1_stage_count}/{len(test_leads)} leads assigned to S1 stage")
+                else:
+                    self.log_test("Status Mapping - Normalized Status Storage", False, 
+                                "No test leads found in database")
+            except json.JSONDecodeError:
+                self.log_test("Status Mapping - Normalized Status Storage", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Status Mapping - Normalized Status Storage", False, error_msg)
+        
+        # Test 3: Test dashboard summary endpoint for "Not Interested" counting
+        print("\n--- Test 3: Verify dashboard summary counts 'Not Interested' leads correctly ---")
+        
+        response = self.make_request("GET", "/driver-onboarding/status-summary")
+        
+        if response is not None and response.status_code == 200:
+            try:
+                summary_data = response.json()
+                
+                if summary_data.get("success"):
+                    summary = summary_data.get("summary", {})
+                    s1_summary = summary.get("S1", {})
+                    not_interested_count = s1_summary.get("Not Interested", 0)
+                    
+                    if not_interested_count > 0:
+                        self.log_test("Status Mapping - Dashboard Summary Count", True, 
+                                    f"Dashboard summary correctly shows {not_interested_count} 'Not Interested' leads in S1")
+                        success_count += 1
+                        
+                        # Verify stage totals include Not Interested leads
+                        stage_totals = summary_data.get("stage_totals", {})
+                        s1_total = stage_totals.get("S1", 0)
+                        
+                        if s1_total >= not_interested_count:
+                            self.log_test("Status Mapping - S1 Stage Total", True, 
+                                        f"S1 stage total ({s1_total}) includes 'Not Interested' leads ({not_interested_count})")
+                            success_count += 1
+                        else:
+                            self.log_test("Status Mapping - S1 Stage Total", False, 
+                                        f"S1 stage total ({s1_total}) is less than 'Not Interested' count ({not_interested_count})")
+                    else:
+                        self.log_test("Status Mapping - Dashboard Summary Count", False, 
+                                    "Dashboard summary shows 0 'Not Interested' leads - bug not fixed")
+                else:
+                    self.log_test("Status Mapping - Dashboard Summary Count", False, 
+                                "Dashboard summary request failed", summary_data)
+            except json.JSONDecodeError:
+                self.log_test("Status Mapping - Dashboard Summary Count", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Status Mapping - Dashboard Summary Count", False, error_msg)
+        
+        # Test 4: Verify all S1 statuses are included in backend
+        print("\n--- Test 4: Verify all S1 statuses are supported in backend ---")
+        
+        # Expected S1 statuses from the bug fix
+        expected_s1_statuses = [
+            'New', 'Not Interested', 'Interested', 'Not Reachable', 
+            'Wrong Number', 'Duplicate', 'Junk', 'Highly Interested',
+            'Call back 1D', 'Call back 1W', 'Call back 2W', 'Call back 1M'
+        ]
+        
+        # Create test leads with each status
+        test_csv_content_all_statuses = "Name,Phone Number,Status\n"
+        for i, status in enumerate(expected_s1_statuses):
+            test_csv_content_all_statuses += f"Test User {i+1},987654{i+3220:04d},{status}\n"
+        
+        files = {'file': ('test_all_s1_statuses.csv', test_csv_content_all_statuses, 'text/csv')}
+        form_data = {
+            'lead_source': 'All S1 Status Test',
+            'lead_date': '2024-01-16'
+        }
+        
+        try:
+            url = f"{self.base_url}/driver-onboarding/import-leads"
+            headers = {"Authorization": f"Bearer {self.token}"}
+            
+            response = requests.post(url, headers=headers, files=files, data=form_data, timeout=30)
+            
+            if response.status_code == 200:
+                try:
+                    result = response.json()
+                    if result.get("success"):
+                        imported_count = result.get("imported_count", 0)
+                        if imported_count == len(expected_s1_statuses):
+                            self.log_test("Status Mapping - All S1 Statuses Import", True, 
+                                        f"Successfully imported all {imported_count} S1 status variations")
+                            success_count += 1
+                        else:
+                            self.log_test("Status Mapping - All S1 Statuses Import", False, 
+                                        f"Expected {len(expected_s1_statuses)} imports, got {imported_count}")
+                    else:
+                        self.log_test("Status Mapping - All S1 Statuses Import", False, 
+                                    f"Import failed: {result.get('message', 'Unknown error')}")
+                except json.JSONDecodeError:
+                    self.log_test("Status Mapping - All S1 Statuses Import", False, 
+                                "Invalid JSON response", response.text)
+            else:
+                self.log_test("Status Mapping - All S1 Statuses Import", False, 
+                            f"Import failed with status {response.status_code}")
+        except Exception as e:
+            self.log_test("Status Mapping - All S1 Statuses Import", False, 
+                        f"Exception during import: {e}")
+        
+        # Test 5: Verify dashboard summary includes all S1 statuses
+        print("\n--- Test 5: Verify dashboard summary includes all imported S1 statuses ---")
+        
+        response = self.make_request("GET", "/driver-onboarding/status-summary")
+        
+        if response is not None and response.status_code == 200:
+            try:
+                summary_data = response.json()
+                
+                if summary_data.get("success"):
+                    summary = summary_data.get("summary", {})
+                    s1_summary = summary.get("S1", {})
+                    
+                    # Count how many of our expected statuses have non-zero counts
+                    statuses_with_counts = 0
+                    for status in expected_s1_statuses:
+                        if s1_summary.get(status, 0) > 0:
+                            statuses_with_counts += 1
+                    
+                    if statuses_with_counts >= len(expected_s1_statuses) * 0.8:  # At least 80% should be found
+                        self.log_test("Status Mapping - All S1 Statuses in Summary", True, 
+                                    f"Dashboard summary includes {statuses_with_counts}/{len(expected_s1_statuses)} S1 statuses")
+                        success_count += 1
+                    else:
+                        self.log_test("Status Mapping - All S1 Statuses in Summary", False, 
+                                    f"Only {statuses_with_counts}/{len(expected_s1_statuses)} S1 statuses found in summary")
+                        
+                        # Log which statuses are missing
+                        missing_statuses = [status for status in expected_s1_statuses if s1_summary.get(status, 0) == 0]
+                        print(f"   Missing statuses: {missing_statuses}")
+                else:
+                    self.log_test("Status Mapping - All S1 Statuses in Summary", False, 
+                                "Dashboard summary request failed")
+            except json.JSONDecodeError:
+                self.log_test("Status Mapping - All S1 Statuses in Summary", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Status Mapping - All S1 Statuses in Summary", False, error_msg)
+        
+        # Test 6: Test case-insensitive status matching
+        print("\n--- Test 6: Verify case-insensitive status matching works ---")
+        
+        # Create leads with extreme case variations
+        case_test_csv = """Name,Phone Number,Status
+Case Test 1,9876540001,NOT INTERESTED
+Case Test 2,9876540002,not interested  
+Case Test 3,9876540003,Not Interested
+Case Test 4,9876540004,nOt InTeReStEd
+Case Test 5,9876540005,INTERESTED
+Case Test 6,9876540006,interested"""
+        
+        files = {'file': ('case_test_leads.csv', case_test_csv, 'text/csv')}
+        form_data = {
+            'lead_source': 'Case Sensitivity Test',
+            'lead_date': '2024-01-17'
+        }
+        
+        try:
+            url = f"{self.base_url}/driver-onboarding/import-leads"
+            headers = {"Authorization": f"Bearer {self.token}"}
+            
+            response = requests.post(url, headers=headers, files=files, data=form_data, timeout=30)
+            
+            if response.status_code == 200:
+                try:
+                    result = response.json()
+                    if result.get("success"):
+                        imported_count = result.get("imported_count", 0)
+                        self.log_test("Status Mapping - Case Insensitive Import", True, 
+                                    f"Successfully imported {imported_count} leads with case variations")
+                        success_count += 1
+                        
+                        # Verify the leads were normalized correctly
+                        leads_response = self.make_request("GET", "/driver-onboarding/leads")
+                        if leads_response and leads_response.status_code == 200:
+                            leads = leads_response.json()
+                            case_test_leads = [lead for lead in leads if lead.get('lead_source') == 'Case Sensitivity Test']
+                            
+                            not_interested_normalized = sum(1 for lead in case_test_leads if lead.get('status') == 'Not Interested')
+                            interested_normalized = sum(1 for lead in case_test_leads if lead.get('status') == 'Interested')
+                            
+                            if not_interested_normalized == 4 and interested_normalized == 2:
+                                self.log_test("Status Mapping - Case Insensitive Normalization", True, 
+                                            f"Correctly normalized: 4 'Not Interested', 2 'Interested'")
+                                success_count += 1
+                            else:
+                                self.log_test("Status Mapping - Case Insensitive Normalization", False, 
+                                            f"Incorrect normalization: {not_interested_normalized} 'Not Interested', {interested_normalized} 'Interested'")
+                    else:
+                        self.log_test("Status Mapping - Case Insensitive Import", False, 
+                                    f"Import failed: {result.get('message', 'Unknown error')}")
+                except json.JSONDecodeError:
+                    self.log_test("Status Mapping - Case Insensitive Import", False, 
+                                "Invalid JSON response", response.text)
+            else:
+                self.log_test("Status Mapping - Case Insensitive Import", False, 
+                            f"Import failed with status {response.status_code}")
+        except Exception as e:
+            self.log_test("Status Mapping - Case Insensitive Import", False, 
+                        f"Exception during import: {e}")
+        
+        return success_count >= 4  # At least 4 out of 7 tests should pass
+
     def run_all_tests(self):
         """Run all backend tests"""
         print("🚀 Starting Comprehensive Testing - Driver Onboarding Two-Way Sync with ID-Based Reconciliation")
