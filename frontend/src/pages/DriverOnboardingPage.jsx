@@ -444,19 +444,23 @@ const DriverOnboardingPage = () => {
   };
 
   const handleSyncToSheets = async () => {
+    setSyncing(true);
     try {
       const token = localStorage.getItem("token");
-      await axios.post(
+      const response = await axios.post(
         `${API}/driver-onboarding/sync-leads`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      toast.success("✅ Leads synced to Google Sheets successfully!");
+      
+      toast.success(`✅ Successfully synced ${response.data.updated || 0} updated and ${response.data.created || 0} new leads to Google Sheets!`);
       
       // Update last sync time
       await fetchLastSyncTime();
     } catch (error) {
       toast.error(error.response?.data?.detail || "Failed to sync to Google Sheets");
+    } finally {
+      setSyncing(false);
     }
   };
 
