@@ -1217,12 +1217,20 @@ const DriverOnboardingPage = () => {
                 </div>
                 <div className="space-y-2">
                   {Object.entries(statusSummary.summary.S2).map(([status, count]) => (
-                    <div key={status} className="flex items-center justify-between text-sm">
-                      <span className="text-gray-700 dark:text-gray-300 truncate pr-2">{status}</span>
+                    <button
+                      key={status}
+                      onClick={() => {
+                        setActiveStageFilter("S2");
+                        setActiveSubStatus(status);
+                        setCurrentPage(1);
+                      }}
+                      className="w-full flex items-center justify-between text-sm hover:bg-green-50 dark:hover:bg-green-900/20 rounded px-2 py-1 transition-colors cursor-pointer"
+                    >
+                      <span className="text-gray-700 dark:text-gray-300 truncate pr-2">{formatStatusDisplay(status)}</span>
                       <span className={`font-semibold ${count > 0 ? 'text-green-600 dark:text-green-400' : 'text-gray-400'}`}>
                         {count}
                       </span>
-                    </div>
+                    </button>
                   ))}
                 </div>
               </div>
