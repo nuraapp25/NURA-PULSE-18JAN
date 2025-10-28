@@ -1244,11 +1244,10 @@ async def get_status_summary(
     # Get all leads matching the date filter
     leads = await db.driver_leads.find(query, {"_id": 0, "stage": 1, "status": 1}).to_list(10000)
     
-    # Define stage and status structure
+    # Define stage and status structure (for dashboard summary display)
     stages = {
         'S1': ['New', 'Not Interested', 'Interested, No DL', 'Highly Interested', 
-               'Call back 1D', 'Call back 1W', 'Call back 2W', 'Call back 1M', 
-               'Interested', 'Not Reachable', 'Wrong Number', 'Duplicate', 'Junk'],
+               'Call back 1D', 'Call back 1W', 'Call back 2W', 'Call back 1M'],
         'S2': ['Docs Upload Pending', 'Verification Pending', 'Duplicate License', 
                'DL - Amount', 'Verified', 'Verification Rejected'],
         'S3': ['Schedule Pending', 'Training WIP', 'Training Completed', 'Training Rejected',
