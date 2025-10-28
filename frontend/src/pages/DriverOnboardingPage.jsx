@@ -1671,6 +1671,42 @@ const DriverOnboardingPage = () => {
                 </PopoverContent>
               </Popover>
               
+              {/* Filter by Telecaller */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs"
+                  >
+                    <Users className="w-3 h-3 mr-1" />
+                    Filter by Telecaller
+                    {telecallerFilter && ` (${telecallers.find(t => t.email === telecallerFilter)?.name || telecallerFilter})`}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-56 dark:bg-gray-800 dark:border-gray-700">
+                  <div className="space-y-1">
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start text-sm"
+                      onClick={() => setTelecallerFilter(null)}
+                    >
+                      All Telecallers
+                    </Button>
+                    {telecallers.map((telecaller) => (
+                      <Button
+                        key={telecaller.id}
+                        variant="ghost"
+                        className="w-full justify-start text-xs"
+                        onClick={() => setTelecallerFilter(telecaller.email)}
+                      >
+                        {telecaller.name}
+                      </Button>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+              
               {/* Page navigation */}
               {totalPages > 1 && (
                 <div className="flex items-center gap-1">
