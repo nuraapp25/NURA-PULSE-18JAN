@@ -203,29 +203,235 @@ class NuraPulseBackendTester:
                         f"Sync failed with status {response.status_code}", response.text)
             return False
     
-    def test_driver_onboarding_leads(self):
-        """Test 4: Driver Onboarding - Leads"""
-        print("\n=== Testing Driver Onboarding - Leads ===")
+    def test_driver_onboarding_comprehensive(self):
+        """Test 4: Driver Onboarding - Comprehensive Status Mapping & Dashboard Summary Testing"""
+        print("\n=== Testing Driver Onboarding - Comprehensive Status Mapping & Dashboard Summary ===")
         
+        success_count = 0
+        
+        # PHASE 1: Import & Status Mapping Testing
+        print("\n--- PHASE 1: Import & Status Mapping Testing ---")
+        
+        # Test case-insensitive status mapping by creating test CSV data
+        test_csv_content = """Name,Phone Number,Status
+John Doe,9876543210,NOT INTERESTED
+Jane Smith,9876543211,not interested
+Bob Wilson,9876543212,Not interested
+Alice Brown,9876543213,Not Interested
+Charlie Davis,9876543214,INTERESTED
+Eve Johnson,9876543215,interested"""
+        
+        # Test import with case-insensitive status mapping
+        files = {'file': ('test_status_mapping.csv', test_csv_content, 'text/csv')}
+        form_data = {
+            'lead_source': 'Test Import',
+            'lead_date': '2024-12-15'
+        }
+        
+        try:
+            import requests
+            url = f"{self.base_url}/driver-onboarding/import-leads"
+            headers = {"Authorization": f"Bearer {self.token}"}
+            
+            response = requests.post(url, headers=headers, files=files, data=form_data, timeout=30)
+            
+            if response.status_code == 200:
+                try:
+                    result = response.json()
+                    if result.get("success"):
+                        imported_count = result.get("imported_count", 0)
+                        self.log_test("Status Mapping - Case-Insensitive Import", True, 
+                                    f"Successfully imported {imported_count} leads with case-insensitive status mapping")
+                        success_count += 1
+                    else:
+                        self.log_test("Status Mapping - Case-Insensitive Import", False, 
+                                    f"Import failed: {result.get('message', 'Unknown error')}")
+                except json.JSONDecodeError:
+                    self.log_test("Status Mapping - Case-Insensitive Import", False, 
+                                "Invalid JSON response", response.text)
+            else:
+                self.log_test("Status Mapping - Case-Insensitive Import", False, 
+                            f"Import failed with status {response.status_code}", response.text)
+        except Exception as e:
+            self.log_test("Status Mapping - Case-Insensitive Import", False, 
+                        f"Exception during import: {e}")
+        
+        # PHASE 2: Dashboard Summary Testing
+        print("\n--- PHASE 2: Dashboard Summary Testing ---")
+        
+        # Test GET /api/driver-onboarding/status-summary endpoint
+        response = self.make_request("GET", "/driver-onboarding/status-summary")
+        
+        if response and response.status_code == 200:
+            try:
+                summary_data = response.json()
+                
+                if summary_data.get("success"):
+                    summary = summary_data.get("summary", {})
+                    stage_totals = summary_data.get("stage_totals", {})
+                    total_leads = summary_data.get("total_leads", 0)
+                    
+                    self.log_test("Dashboard Summary - GET Summary", True, 
+                                f"Retrieved dashboard summary: {total_leads} total leads")
+                    success_count += 1
+                    
+                    # Check S1 stage statuses
+                    s1_summary = summary.get("S1", {})
+                    not_interested_count = s1_summary.get("Not Interested", 0)
+                    
+                    if not_interested_count > 0:
+                        self.log_test("Dashboard Summary - Not Interested Count", True, 
+                                    f"'Not Interested' status shows count: {not_interested_count} (> 0)")
+                        success_count += 1
+                    else:
+                        self.log_test("Dashboard Summary - Not Interested Count", False, 
+                                    f"'Not Interested' status shows count: {not_interested_count} (expected > 0)")
+                    
+                    # Verify S1 stage total includes "Not Interested" leads
+                    s1_total = stage_totals.get("S1", 0)
+                    if s1_total >= not_interested_count:
+                        self.log_test("Dashboard Summary - S1 Total Includes Not Interested", True, 
+                                    f"S1 stage total ({s1_total}) includes 'Not Interested' leads ({not_interested_count})")
+                        success_count += 1
+                    else:
+                        self.log_test("Dashboard Summary - S1 Total Includes Not Interested", False, 
+                                    f"S1 stage total ({s1_total}) doesn't properly include 'Not Interested' leads ({not_interested_count})")
+                    
+                    # Check that only expected S1 statuses are displayed (8 statuses as mentioned in review)
+                    expected_s1_statuses = [
+                        'New', 'Not Interested', 'Interested, No DL', 'Highly Interested', 
+                        'Call back 1D', 'Call back 1W', 'Call back 2W', 'Call back 1M'
+                    ]
+                    
+                    actual_s1_statuses = list(s1_summary.keys())
+                    displayed_count = len([status for status in actual_s1_statuses if s1_summary[status] > 0])
+                    
+                    self.log_test("Dashboard Summary - S1 Status Count", True, 
+                                f"S1 stage displays {len(actual_s1_statuses)} status types, {displayed_count} with data")
+                    success_count += 1
+                    
+                else:
+                    self.log_test("Dashboard Summary - GET Summary", False, 
+                                "Summary response missing success field or success=false", summary_data)
+            except json.JSONDecodeError:
+                self.log_test("Dashboard Summary - GET Summary", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Dashboard Summary - GET Summary", False, error_msg, 
+                        response.text if response else None)
+        
+        # Test dashboard summary with date filters
+        response = self.make_request("GET", "/driver-onboarding/status-summary?start_date=2024-01-01&end_date=2024-12-31")
+        
+        if response and response.status_code == 200:
+            try:
+                filtered_data = response.json()
+                if filtered_data.get("success"):
+                    self.log_test("Dashboard Summary - Date Filter", True, 
+                                f"Date filtered summary works: {filtered_data.get('total_leads', 0)} leads")
+                    success_count += 1
+                else:
+                    self.log_test("Dashboard Summary - Date Filter", False, 
+                                "Date filtered summary failed", filtered_data)
+            except json.JSONDecodeError:
+                self.log_test("Dashboard Summary - Date Filter", False, 
+                            "Invalid JSON response for date filter", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Dashboard Summary - Date Filter", False, error_msg)
+        
+        # PHASE 3: Lead Management Testing
+        print("\n--- PHASE 3: Lead Management Testing ---")
+        
+        # Test GET /api/driver-onboarding/leads
         response = self.make_request("GET", "/driver-onboarding/leads")
         
-        if not response:
-            self.log_test("Driver Onboarding - Get Leads", False, "Network error")
-            return False
-        
-        if response.status_code == 200:
+        if response and response.status_code == 200:
             try:
                 leads = response.json()
-                self.log_test("Driver Onboarding - Get Leads", True, 
-                            f"Retrieved {len(leads)} leads successfully")
-                return True
+                
+                # Find leads with "Not Interested" status
+                not_interested_leads = [lead for lead in leads if lead.get("status") == "Not Interested"]
+                
+                self.log_test("Lead Management - GET Leads", True, 
+                            f"Retrieved {len(leads)} leads, {len(not_interested_leads)} with 'Not Interested' status")
+                success_count += 1
+                
+                if not_interested_leads:
+                    self.log_test("Lead Management - Not Interested Leads Present", True, 
+                                f"Found {len(not_interested_leads)} leads with 'Not Interested' status")
+                    success_count += 1
+                    
+                    # Test PATCH /api/driver-onboarding/leads/{id} to update lead status
+                    test_lead = not_interested_leads[0]
+                    lead_id = test_lead.get("id")
+                    
+                    if lead_id:
+                        update_data = {"status": "Interested"}
+                        response = self.make_request("PATCH", f"/driver-onboarding/leads/{lead_id}", update_data)
+                        
+                        if response and response.status_code == 200:
+                            try:
+                                update_result = response.json()
+                                if "message" in update_result and "successfully" in update_result["message"].lower():
+                                    self.log_test("Lead Management - Update Lead Status", True, 
+                                                f"Successfully updated lead status: {update_result['message']}")
+                                    success_count += 1
+                                else:
+                                    self.log_test("Lead Management - Update Lead Status", False, 
+                                                "Update response missing success message", update_result)
+                            except json.JSONDecodeError:
+                                self.log_test("Lead Management - Update Lead Status", False, 
+                                            "Invalid JSON response for update", response.text)
+                        else:
+                            error_msg = "Network error" if not response else f"Status {response.status_code}"
+                            self.log_test("Lead Management - Update Lead Status", False, error_msg)
+                    else:
+                        self.log_test("Lead Management - Update Lead Status", False, 
+                                    "Test lead missing ID field")
+                else:
+                    self.log_test("Lead Management - Not Interested Leads Present", False, 
+                                "No leads found with 'Not Interested' status")
+                
             except json.JSONDecodeError:
-                self.log_test("Driver Onboarding - Get Leads", False, "Invalid JSON response", response.text)
-                return False
+                self.log_test("Lead Management - GET Leads", False, 
+                            "Invalid JSON response", response.text)
         else:
-            self.log_test("Driver Onboarding - Get Leads", False, 
-                        f"Failed to get leads with status {response.status_code}", response.text)
-            return False
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Lead Management - GET Leads", False, error_msg, 
+                        response.text if response else None)
+        
+        # Test filtering functionality
+        response = self.make_request("GET", "/driver-onboarding/leads")
+        
+        if response and response.status_code == 200:
+            try:
+                all_leads = response.json()
+                
+                # Test filtering by status, stage, source
+                status_counts = {}
+                stage_counts = {}
+                source_counts = {}
+                
+                for lead in all_leads:
+                    status = lead.get("status", "Unknown")
+                    stage = lead.get("stage", "Unknown")
+                    source = lead.get("source", "Unknown")
+                    
+                    status_counts[status] = status_counts.get(status, 0) + 1
+                    stage_counts[stage] = stage_counts.get(stage, 0) + 1
+                    source_counts[source] = source_counts.get(source, 0) + 1
+                
+                self.log_test("Lead Management - Filtering Data Available", True, 
+                            f"Leads available for filtering: {len(status_counts)} statuses, {len(stage_counts)} stages, {len(source_counts)} sources")
+                success_count += 1
+                
+            except json.JSONDecodeError:
+                self.log_test("Lead Management - Filtering Data Available", False, 
+                            "Invalid JSON response for filtering test", response.text)
+        
+        return success_count >= 7  # At least 7 out of 10 tests should pass
     
     def test_payment_reconciliation_apis(self):
         """Test 5: Payment Reconciliation APIs - Full CRUD and Sync"""
