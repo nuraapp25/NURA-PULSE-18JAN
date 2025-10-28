@@ -1030,13 +1030,13 @@ async def import_leads(
             if not file_status and stage_col:
                 file_status = str(row[stage_col]) if pd.notna(row.get(stage_col)) else None
             
-            # Parse the status for internal logic but KEEP original for display
-            matched_status = match_status(file_status)
-            logger.info(f"File status '{file_status}' matched to app status '{matched_status}'")
+            # Parse the status and extract stage
+            matched_status, extracted_stage = match_status(file_status)
+            logger.info(f"File status '{file_status}' → Matched status: '{matched_status}', Stage: '{extracted_stage}'")
             
-            # IMPORTANT: Use ORIGINAL file_status for display (user requirement)
-            # This preserves formats like "S1-a Not interested", "S1-c Highly Interested"
-            display_status = file_status if file_status else "New"
+            # Use the MATCHED status (clean app status) for the database
+            # This ensures dashboard summary counts work correctly
+            display_status = matched_status
             
             # Get lead source from file or form
             row_lead_source = lead_source
@@ -1065,9 +1065,9 @@ async def import_leads(
                 "lead_source": row_lead_source,
                 "source": row_lead_source if row_lead_source else file.filename,  # Track import source for filtering
                 "lead_date": row_lead_date,
-                "status": display_status,  # USE ORIGINAL STATUS for display (e.g., "S1-a Not interested")
-                "stage": "S1",  # Default stage
-                "lead_stage": file_status if file_status else "New",
+                "status": display_status,  # USE MATCHED APP STATUS (e.g., "Not Interested")
+                "stage": extracted_stage,  # Use extracted stage (e.g., "S1", "S2")
+                "lead_stage": file_status if file_status else "New",  # Keep original for reference
                 "driver_readiness": "Not Started",
                 "docs_collection": "Pending",
                 "customer_readiness": "Not Ready",
