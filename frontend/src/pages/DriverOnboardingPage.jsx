@@ -2518,7 +2518,7 @@ const DriverOnboardingPage = () => {
                           <SelectValue placeholder="Select telecaller" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">None</SelectItem>
+                          <SelectItem value="none">None</SelectItem>
                           {telecallers.map((telecaller) => (
                             <SelectItem key={telecaller.id} value={telecaller.email}>
                               {telecaller.name} ({telecaller.email})
