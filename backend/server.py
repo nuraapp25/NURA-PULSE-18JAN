@@ -960,8 +960,16 @@ async def import_leads(
             if not name_val and not phone_val:
                 continue
             
-            # Clean phone number
-            phone_val = phone_val.strip().replace(' ', '').replace('-', '')
+            # Clean phone number - handle various formats
+            # Remove 'p:' prefix (Google Forms format), spaces, dashes, dots
+            phone_val = phone_val.strip()
+            phone_val = phone_val.replace('p:', '').replace('p:+', '+')  # Remove p: prefix
+            phone_val = phone_val.replace(' ', '').replace('-', '').replace('.', '')
+            # Remove leading +91 or 91 if present (keep only 10 digits)
+            if phone_val.startswith('+91'):
+                phone_val = phone_val[3:]
+            elif phone_val.startswith('91') and len(phone_val) > 10:
+                phone_val = phone_val[2:]
             
             # Get status from file and match with app's status hierarchy
             file_status = str(row[status_col]) if status_col and pd.notna(row.get(status_col)) else None
