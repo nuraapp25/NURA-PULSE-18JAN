@@ -498,19 +498,26 @@ const TelecallersManagement = () => {
               />
             </div>
             <div>
-              <Label>Aadhar Card</Label>
-              <Input
-                value={formData.aadhar_card}
-                onChange={(e) => setFormData({ ...formData, aadhar_card: e.target.value })}
-                placeholder="Enter Aadhar number"
-              />
+              <Label>Status</Label>
+              <Select
+                value={formData.status}
+                onValueChange={(value) => setFormData({ ...formData, status: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div>
-              <Label>PAN Card</Label>
+              <Label>Notes</Label>
               <Input
-                value={formData.pan_card}
-                onChange={(e) => setFormData({ ...formData, pan_card: e.target.value })}
-                placeholder="Enter PAN number"
+                value={formData.notes}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                placeholder="Enter notes (optional)"
               />
             </div>
           </div>
