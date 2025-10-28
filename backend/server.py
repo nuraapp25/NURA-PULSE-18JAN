@@ -919,16 +919,20 @@ async def import_leads(
             df = df.iloc[1:].reset_index(drop=True)
         
         # Find columns dynamically
-        name_col = find_column(df, ['name', 'driver name', 'full name', 'candidate name', 'Name ', 'name ', 'poc name', 'POC Name'])
-        phone_col = find_column(df, ['phone', 'phone no', 'phone number', 'mobile', 'mobile no', 'contact', 'Phone No', 'phone_number'])
+        name_col = find_column(df, ['name', 'driver name', 'full name', 'full_name', 'candidate name', 'Name ', 'name ', 'poc name', 'POC Name'])
+        phone_col = find_column(df, ['phone', 'phone no', 'phone number', 'phone_number', 'mobile', 'mobile no', 'contact', 'Phone No', 'Phone Number'])
         address_col = find_column(df, ['address', 'location', 'current location', 'city', 'Address ', 'address '])
+        email_col = find_column(df, ['email', 'email address', 'email_address', 'Email', 'Email Address'])
         experience_col = find_column(df, ['experience', 'Experience', 'exp', 'years of experience'])
+        vehicle_col = find_column(df, ['vehicle', 'vehicle type', 'Vehicle', 'vehicle '])
+        
         # PRIORITY: Look for "Status.1", "Status" column FIRST, then "Final Status", then "Lead Status", then "Current Status" last
-        status_col = find_column(df, ['Status.1', 'status', 'Status', 'final status', 'Final Status', 'lead status', 'Lead Status', 'current status', 'Current Status'])
+        # Also check for "STATUS" (uppercase) for Google Forms data
+        status_col = find_column(df, ['Status.1', 'STATUS', 'status', 'Status', 'final status', 'Final Status', 'lead status', 'Lead Status', 'current status', 'Current Status'])
         stage_col = find_column(df, ['stage', 'lead stage', 'current stage', 'Stage', 'stage '])
         source_col = find_column(df, ['lead source', 'source', 'lead generator', 'Lead Generator', 'lead_source', 'LeadSource'])
         date_col = find_column(df, ['date', 'lead date', 'lead creation date', 'created date', 'Lead Creation Date', 'import date'])
-        vehicle_col = find_column(df, ['vehicle', 'vehicle type', 'Vehicle', 'vehicle '])
+        
         poc_col = find_column(df, ['poc', 'assigned to', 'telecaller', 'POC', 'poc ', 'POC Name', 'poc name'])
         
         # Multiple possible telecaller notes columns (ss, sss, Current Status, etc.)
@@ -937,7 +941,7 @@ async def import_leads(
         # General remarks/notes columns
         remarks_col = find_column(df, ['remarks', 'notes', 'comments', 'Remarks', 'remarks ', 'dd', 'dd.1', 'ss.2'])
         
-        logger.info(f"Mapped columns - Name: {name_col}, Phone: {phone_col}, Status: {status_col}, Stage: {stage_col}, Source: {source_col}, POC: {poc_col}, Telecaller Notes: {telecaller_notes_col}")
+        logger.info(f"Mapped columns - Name: {name_col}, Phone: {phone_col}, Email: {email_col}, Status: {status_col}, Stage: {stage_col}, Source: {source_col}, POC: {poc_col}, Vehicle: {vehicle_col}")
         
         # Process rows
         leads = []
