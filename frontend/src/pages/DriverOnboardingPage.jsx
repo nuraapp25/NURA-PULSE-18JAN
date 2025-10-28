@@ -2128,7 +2128,7 @@ const DriverOnboardingPage = () => {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
-                          {CUSTOMER_READINESS_OPTIONS.map((option) => (
+                          {S4_STATUSES.map((option) => (
                             <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
                           ))}
                         </SelectContent>
