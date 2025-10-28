@@ -832,67 +832,121 @@ async def import_leads(
         ]
         
         def match_status(file_status):
-            """Match file status with app's status hierarchy"""
+            """
+            Match file status with app's status hierarchy
+            Returns tuple: (matched_status, extracted_stage)
+            """
             if not file_status or pd.isna(file_status):
-                return "New"
+                return ("New", "S1")
             
             file_status = str(file_status).strip()
+            extracted_stage = None
             
             # Extract status from formats like "S1-a Not interested" or "S1-c Highly Interested"
             # Pattern: "S[1-4]-[a-z] Actual Status"
             import re
-            stage_code_pattern = r'^S[1-4]-[a-z]\s+(.+)$'
+            stage_code_pattern = r'^(S[1-4])-[a-z]\s+(.+)$'
             match = re.match(stage_code_pattern, file_status, re.IGNORECASE)
             if match:
-                file_status = match.group(1).strip()  # Extract the actual status text
-                logger.info(f"Extracted status from stage code: '{match.group(0)}' → '{file_status}'")
+                extracted_stage = match.group(1).upper()  # Extract stage (S1, S2, S3, S4)
+                file_status = match.group(2).strip()  # Extract the actual status text
+                logger.info(f"Extracted from '{match.group(0)}' → Stage: '{extracted_stage}', Status: '{file_status}'")
             
             # Exact match (case-insensitive)
             for app_status in STATUS_HIERARCHY:
                 if file_status.lower() == app_status.lower():
-                    return app_status
+                    # If stage wasn't extracted, determine it from the status
+                    if not extracted_stage:
+                        extracted_stage = determine_stage_from_status(app_status)
+                    return (app_status, extracted_stage)
             
             # Partial match (contains) - ORDER IS CRITICAL!
             # ALWAYS check negative/rejection statuses FIRST before positive ones
             file_status_lower = file_status.lower()
+            matched_status = None
             
             # Check NEGATIVE statuses FIRST (to avoid false positives)
             if "not interest" in file_status_lower or "reject" in file_status_lower or "no interest" in file_status_lower or "uninterested" in file_status_lower:
-                return "Not Interested"
+                matched_status = "Not Interested"
             elif "not reach" in file_status_lower or "unreachable" in file_status_lower or "no response" in file_status_lower or "not responding" in file_status_lower:
-                return "Not Reachable"
+                matched_status = "Not Reachable"
             elif "wrong" in file_status_lower or "incorrect" in file_status_lower:
-                return "Wrong Number"
+                matched_status = "Wrong Number"
             elif "duplicate" in file_status_lower or "dup" in file_status_lower:
-                return "Duplicate"
+                matched_status = "Duplicate"
             elif "junk" in file_status_lower or "invalid" in file_status_lower or "spam" in file_status_lower:
-                return "Junk"
+                matched_status = "Junk"
             # Now check POSITIVE statuses (after ruling out negatives)
             elif "highly interested" in file_status_lower or "very interested" in file_status_lower:
-                return "Highly Interested"
+                matched_status = "Highly Interested"
+            elif "interested, no dl" in file_status_lower or "interest no dl" in file_status_lower:
+                matched_status = "Interested, No DL"
             elif "call back 1d" in file_status_lower:
-                return "Call back 1D"
+                matched_status = "Call back 1D"
             elif "call back 1w" in file_status_lower:
-                return "Call back 1W"
+                matched_status = "Call back 1W"
             elif "call back 2w" in file_status_lower:
-                return "Call back 2W"
+                matched_status = "Call back 2W"
             elif "call back 1m" in file_status_lower:
-                return "Call back 1M"
+                matched_status = "Call back 1M"
             elif "interest" in file_status_lower or "follow" in file_status_lower or "call back" in file_status_lower or "callback" in file_status_lower:
-                return "Interested"
+                matched_status = "Interested"
             elif "doc" in file_status_lower and ("pending" in file_status_lower or "upload" in file_status_lower or "collection" in file_status_lower):
-                return "Docs Upload Pending"
-            elif "onboard" in file_status_lower and "incomplete" in file_status_lower:
-                return "Onboarding Incomplete"
-            elif "train" in file_status_lower or "wip" in file_status_lower:
-                return "Training WIP"
-            elif "onboard" in file_status_lower and "complete" in file_status_lower:
-                return "Onboarding Complete"
-            elif "ready" in file_status_lower or ("deploy" in file_status_lower and "not" not in file_status_lower):
-                return "Ready to Deploy"
-            elif "deployed" in file_status_lower or "active" in file_status_lower:
-                return "Deployed"
+                matched_status = "Docs Upload Pending"
+            elif "verif" in file_status_lower and "pending" in file_status_lower:
+                matched_status = "Verification Pending"
+            elif "verified" in file_status_lower:
+                matched_status = "Verified"
+            elif "training wip" in file_status_lower or "train wip" in file_status_lower:
+                matched_status = "Training WIP"
+            elif "training complete" in file_status_lower:
+                matched_status = "Training Completed"
+            elif "approved" in file_status_lower:
+                matched_status = "Approved"
+            elif "ct pending" in file_status_lower:
+                matched_status = "CT Pending"
+            elif "done" in file_status_lower:
+                matched_status = "DONE!"
             elif "long distance" in file_status_lower or "out of town" in file_status_lower or "outside" in file_status_lower:
+                matched_status = "Interested"  # They're interested but have distance constraints
+            elif "health" in file_status_lower or "medical" in file_status_lower:
+                matched_status = "Interested"  # Health issue but potentially interested
+            elif "no badge" in file_status_lower:
+                matched_status = "Highly Interested"  # "no badge Highly Interested" should be "Highly Interested"
+            
+            # If matched, return with stage
+            if matched_status:
+                if not extracted_stage:
+                    extracted_stage = determine_stage_from_status(matched_status)
+                return (matched_status, extracted_stage)
+            
+            # If no match found, return original but log warning
+            logger.warning(f"Status '{file_status}' not matched, defaulting to 'New'")
+            return ("New", extracted_stage or "S1")
+        
+        def determine_stage_from_status(status):
+            """Determine which stage a status belongs to"""
+            s1_statuses = ["New", "Not Interested", "Interested, No DL", "Highly Interested", 
+                          "Call back 1D", "Call back 1W", "Call back 2W", "Call back 1M", 
+                          "Interested", "Not Reachable", "Wrong Number", "Duplicate", "Junk"]
+            s2_statuses = ["Docs Upload Pending", "Verification Pending", "Duplicate License", 
+                          "DL - Amount", "Verified", "Verification Rejected"]
+            s3_statuses = ["Schedule Pending", "Training WIP", "Training Completed", 
+                          "Training Rejected", "Re-Training", "Absent for training", "Approved"]
+            s4_statuses = ["CT Pending", "CT WIP", "Shift Details Pending", "DONE!", 
+                          "Terminated"]
+            
+            if status in s1_statuses:
+                return "S1"
+            elif status in s2_statuses:
+                return "S2"
+            elif status in s3_statuses:
+                return "S3"
+            elif status in s4_statuses:
+                return "S4"
+            else:
+                return "S1"  # Default
+        
                 return "Interested"  # They're interested but have distance constraints
             elif "health" in file_status_lower or "medical" in file_status_lower:
                 return "Interested"  # Health issue but potentially interested
