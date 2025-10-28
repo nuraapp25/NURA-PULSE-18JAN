@@ -11,6 +11,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false); // New: collapsed state
   const [appsExpanded, setAppsExpanded] = useState(true);
 
   // Track page views
