@@ -170,6 +170,10 @@ const DriverOnboardingPage = () => {
   const [sourceFilter, setSourceFilter] = useState(null);
   const uniqueSources = [...new Set(leads.map(l => l.source).filter(Boolean))];
   
+  // Telecallers for assignment
+  const [telecallers, setTelecallers] = useState([]);
+  const [telecallerFilter, setTelecallerFilter] = useState(null);
+  
   // Calculate pagination
   const totalPages = Math.ceil(filteredLeads.length / leadsPerPage);
   const startIndex = (currentPage - 1) * leadsPerPage;
