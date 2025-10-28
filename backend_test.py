@@ -7086,8 +7086,8 @@ Case Test 6,9876540006,interested"""
             print("\n❌ Authentication failed - cannot proceed with other tests")
             return False
         
-        # PRIORITY: Test Driver Onboarding Status Mapping Bug Fix as requested in review
-        status_mapping_success = self.test_driver_onboarding_status_mapping_bug_fix()
+        # PRIORITY: Test Driver Onboarding Comprehensive Status Mapping & Dashboard Summary as requested in review
+        status_mapping_success = self.test_driver_onboarding_comprehensive()
         
         # PRIORITY: Test Hotspot Planning Locality Verification as requested in review
         hotspot_locality_success = self.test_hotspot_planning_locality_verification()
