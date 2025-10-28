@@ -1207,15 +1207,15 @@ const DriverOnboardingPage = () => {
                 All Status
               </Button>
 
-              {/* Filtering Stage Dropdown */}
+              {/* S1 - Filtering Stage Dropdown */}
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
-                    variant={activeStageFilter === "filtering" ? "default" : "outline"}
-                    className={activeStageFilter === "filtering" ? "bg-green-600 text-white" : "border-green-600 text-green-600"}
+                    variant={activeStageFilter === "S1" ? "default" : "outline"}
+                    className={activeStageFilter === "S1" ? "bg-green-600 text-white" : "border-green-600 text-green-600"}
                     size="sm"
                   >
-                    FILTERING STAGE
+                    S1 - FILTERING
                     <ChevronDown size={16} className="ml-2" />
                   </Button>
                 </PopoverTrigger>
@@ -1225,19 +1225,19 @@ const DriverOnboardingPage = () => {
                       variant="ghost"
                       className="w-full justify-start text-sm"
                       onClick={() => {
-                        setActiveStageFilter("filtering");
+                        setActiveStageFilter("S1");
                         setActiveSubStatus(null);
                       }}
                     >
-                      All Filtering Statuses
+                      All S1 Statuses
                     </Button>
-                    {FILTERING_OPTIONS.map((option) => (
+                    {S1_STATUSES.map((option) => (
                       <Button
                         key={option.value}
                         variant="ghost"
                         className="w-full justify-start text-xs"
                         onClick={() => {
-                          setActiveStageFilter("filtering");
+                          setActiveStageFilter("S1");
                           setActiveSubStatus(option.value);
                         }}
                       >
@@ -1248,15 +1248,15 @@ const DriverOnboardingPage = () => {
                 </PopoverContent>
               </Popover>
 
-              {/* Docs Collection Dropdown */}
+              {/* S2 - Docs Collection Stage Dropdown */}
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
-                    variant={activeStageFilter === "docs" ? "default" : "outline"}
-                    className={activeStageFilter === "docs" ? "bg-orange-600 text-white" : "border-orange-600 text-orange-600"}
+                    variant={activeStageFilter === "S2" ? "default" : "outline"}
+                    className={activeStageFilter === "S2" ? "bg-yellow-600 text-white" : "border-yellow-600 text-yellow-600"}
                     size="sm"
                   >
-                    DOCS_COLLECTION
+                    S2 - DOCS COLLECTION
                     <ChevronDown size={16} className="ml-2" />
                   </Button>
                 </PopoverTrigger>
@@ -1266,19 +1266,19 @@ const DriverOnboardingPage = () => {
                       variant="ghost"
                       className="w-full justify-start text-sm"
                       onClick={() => {
-                        setActiveStageFilter("docs");
+                        setActiveStageFilter("S2");
                         setActiveSubStatus(null);
                       }}
                     >
-                      All Docs Statuses
+                      All S2 Statuses
                     </Button>
-                    {DOCS_COLLECTION_OPTIONS.map((option) => (
+                    {S2_STATUSES.map((option) => (
                       <Button
                         key={option.value}
                         variant="ghost"
                         className="w-full justify-start text-xs"
                         onClick={() => {
-                          setActiveStageFilter("docs");
+                          setActiveStageFilter("S2");
                           setActiveSubStatus(option.value);
                         }}
                       >
@@ -1289,15 +1289,15 @@ const DriverOnboardingPage = () => {
                 </PopoverContent>
               </Popover>
 
-              {/* Driver Readiness Dropdown */}
+              {/* S3 - Training Stage Dropdown */}
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
-                    variant={activeStageFilter === "driver" ? "default" : "outline"}
-                    className={activeStageFilter === "driver" ? "bg-purple-600 text-white" : "border-purple-600 text-purple-600"}
+                    variant={activeStageFilter === "S3" ? "default" : "outline"}
+                    className={activeStageFilter === "S3" ? "bg-purple-600 text-white" : "border-purple-600 text-purple-600"}
                     size="sm"
                   >
-                    DRIVER READINESS
+                    S3 - TRAINING
                     <ChevronDown size={16} className="ml-2" />
                   </Button>
                 </PopoverTrigger>
@@ -1307,19 +1307,19 @@ const DriverOnboardingPage = () => {
                       variant="ghost"
                       className="w-full justify-start text-sm"
                       onClick={() => {
-                        setActiveStageFilter("driver");
+                        setActiveStageFilter("S3");
                         setActiveSubStatus(null);
                       }}
                     >
-                      All Driver Statuses
+                      All S3 Statuses
                     </Button>
-                    {DRIVER_READINESS_OPTIONS.map((option) => (
+                    {S3_STATUSES.map((option) => (
                       <Button
                         key={option.value}
                         variant="ghost"
                         className="w-full justify-start text-xs"
                         onClick={() => {
-                          setActiveStageFilter("driver");
+                          setActiveStageFilter("S3");
                           setActiveSubStatus(option.value);
                         }}
                       >
@@ -1330,15 +1330,15 @@ const DriverOnboardingPage = () => {
                 </PopoverContent>
               </Popover>
 
-              {/* Customer Readiness Dropdown */}
+              {/* S4 - Customer Readiness Stage Dropdown */}
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
-                    variant={activeStageFilter === "customer" ? "default" : "outline"}
-                    className={activeStageFilter === "customer" ? "bg-pink-600 text-white" : "border-pink-600 text-pink-600"}
+                    variant={activeStageFilter === "S4" ? "default" : "outline"}
+                    className={activeStageFilter === "S4" ? "bg-orange-600 text-white" : "border-orange-600 text-orange-600"}
                     size="sm"
                   >
-                    CUSTOMER READINESS
+                    S4 - CUSTOMER READINESS
                     <ChevronDown size={16} className="ml-2" />
                   </Button>
                 </PopoverTrigger>
@@ -1348,19 +1348,19 @@ const DriverOnboardingPage = () => {
                       variant="ghost"
                       className="w-full justify-start text-sm"
                       onClick={() => {
-                        setActiveStageFilter("customer");
+                        setActiveStageFilter("S4");
                         setActiveSubStatus(null);
                       }}
                     >
-                      All Customer Statuses
+                      All S4 Statuses
                     </Button>
-                    {CUSTOMER_READINESS_OPTIONS.map((option) => (
+                    {S4_STATUSES.map((option) => (
                       <Button
                         key={option.value}
                         variant="ghost"
                         className="w-full justify-start text-xs"
                         onClick={() => {
-                          setActiveStageFilter("customer");
+                          setActiveStageFilter("S4");
                           setActiveSubStatus(option.value);
                         }}
                       >
