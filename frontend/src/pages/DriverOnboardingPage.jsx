@@ -234,6 +234,18 @@ const DriverOnboardingPage = () => {
       setLoading(false);
     }
   };
+  
+  const fetchTelecallers = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(`${API}/telecallers`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setTelecallers(response.data.filter(t => t.status === "active"));
+    } catch (error) {
+      console.error("Failed to fetch telecallers");
+    }
+  };
 
   const fetchStatusSummary = async () => {
     setSummaryLoading(true);
