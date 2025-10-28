@@ -162,6 +162,7 @@ class DriverLead(BaseModel):
     
     # Lead source tracking
     lead_source: Optional[str] = None
+    source: Optional[str] = None  # Import source for filtering
     
     # Stage and Status (Stage-based onboarding system)
     stage: str = "S1"  # S1, S2, S3, S4
@@ -173,6 +174,7 @@ class DriverLead(BaseModel):
     
     notes: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    last_modified: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     
     # New document fields
     dl_no: Optional[str] = None  # DL No.
