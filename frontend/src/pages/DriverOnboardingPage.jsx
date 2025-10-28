@@ -2488,7 +2488,7 @@ const DriverOnboardingPage = () => {
                     <Label className="text-sm text-gray-600 dark:text-gray-400">Customer Readiness</Label>
                     {isEditMode ? (
                       <Select
-                        value={editedLead.customer_readiness || "Not Ready"}
+                        value={editedLead.customer_readiness && editedLead.customer_readiness.trim() !== "" ? editedLead.customer_readiness : "Not Ready"}
                         onValueChange={(value) => handleFieldChange('customer_readiness', value)}
                       >
                         <SelectTrigger className="mt-1 dark:bg-gray-700 dark:border-gray-600">
@@ -2511,8 +2511,8 @@ const DriverOnboardingPage = () => {
                     <Label className="text-sm text-gray-600 dark:text-gray-400">Assigned Telecaller</Label>
                     {isEditMode ? (
                       <Select
-                        value={editedLead.assigned_telecaller || ''}
-                        onValueChange={(value) => handleFieldChange('assigned_telecaller', value)}
+                        value={editedLead.assigned_telecaller && editedLead.assigned_telecaller.trim() !== "" ? editedLead.assigned_telecaller : "none"}
+                        onValueChange={(value) => handleFieldChange('assigned_telecaller', value === "none" ? "" : value)}
                       >
                         <SelectTrigger className="mt-1 dark:bg-gray-700 dark:border-gray-600">
                           <SelectValue placeholder="Select telecaller" />
