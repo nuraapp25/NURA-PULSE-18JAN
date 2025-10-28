@@ -3154,7 +3154,7 @@ const DriverOnboardingPage = () => {
                             </td>
                             <td className="px-3 py-2">
                               <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(dup.existing_status)}`}>
-                                {dup.existing_status}
+                                {formatStatusDisplay(dup.existing_status)}
                               </span>
                             </td>
                           </tr>
