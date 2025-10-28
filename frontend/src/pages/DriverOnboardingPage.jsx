@@ -1535,7 +1535,7 @@ const DriverOnboardingPage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredLeads.map((lead, index) => (
+                  {paginatedLeads.map((lead, index) => (
                     <tr 
                       key={lead.id || index} 
                       onClick={(e) => handleLeadClick(lead, e)}
@@ -1547,9 +1547,9 @@ const DriverOnboardingPage = () => {
                           onCheckedChange={() => handleLeadCheckboxChange(lead.id)}
                         />
                       </td>
-                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm text-gray-900 dark:text-white hidden sm:table-cell">{index + 1}</td>
+                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm text-gray-900 dark:text-white hidden sm:table-cell">{startIndex + index + 1}</td>
                       <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm text-gray-900 dark:text-white font-medium">
-                        <div className="sm:hidden text-xs text-gray-500 dark:text-gray-400">#{index + 1}</div>
+                        <div className="sm:hidden text-xs text-gray-500 dark:text-gray-400">#{startIndex + index + 1}</div>
                         {lead.name}
                       </td>
                       <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm text-gray-600 dark:text-gray-400">{lead.phone_number}</td>
@@ -1563,38 +1563,38 @@ const DriverOnboardingPage = () => {
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent className="dark:bg-gray-800 max-h-[300px]">
-                              {/* Stage 1 */}
+                              {/* S1 - Filtering */}
                               <div className="px-2 py-1 text-xs font-semibold text-gray-500 bg-gray-100 dark:bg-gray-900">
-                                Stage 1: Filtering
+                                S1 - Filtering
                               </div>
-                              {FILTERING_OPTIONS.map((opt) => (
+                              {S1_STATUSES.map((opt) => (
                                 <SelectItem key={opt.value} value={opt.value} className="text-xs">
                                   {opt.label}
                                 </SelectItem>
                               ))}
-                              {/* Stage 2 */}
+                              {/* S2 - Docs Collection */}
                               <div className="px-2 py-1 text-xs font-semibold text-gray-500 bg-gray-100 dark:bg-gray-900 mt-1">
-                                Stage 2: Docs Collection
+                                S2 - Docs Collection
                               </div>
-                              {DOCS_COLLECTION_OPTIONS.map((opt) => (
+                              {S2_STATUSES.map((opt) => (
                                 <SelectItem key={opt.value} value={opt.value} className="text-xs">
                                   {opt.label}
                                 </SelectItem>
                               ))}
-                              {/* Stage 3 */}
+                              {/* S3 - Training */}
                               <div className="px-2 py-1 text-xs font-semibold text-gray-500 bg-gray-100 dark:bg-gray-900 mt-1">
-                                Stage 3: Driver Readiness
+                                S3 - Training
                               </div>
-                              {DRIVER_READINESS_OPTIONS.map((opt) => (
+                              {S3_STATUSES.map((opt) => (
                                 <SelectItem key={opt.value} value={opt.value} className="text-xs">
                                   {opt.label}
                                 </SelectItem>
                               ))}
-                              {/* Stage 4 */}
+                              {/* S4 - Customer Readiness */}
                               <div className="px-2 py-1 text-xs font-semibold text-gray-500 bg-gray-100 dark:bg-gray-900 mt-1">
-                                Stage 4: Customer Readiness
+                                S4 - Customer Readiness
                               </div>
-                              {CUSTOMER_READINESS_OPTIONS.map((opt) => (
+                              {S4_STATUSES.map((opt) => (
                                 <SelectItem key={opt.value} value={opt.value} className="text-xs">
                                   {opt.label}
                                 </SelectItem>
