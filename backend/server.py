@@ -1520,6 +1520,231 @@ async def delete_lead(lead_id: str, current_user: User = Depends(get_current_use
     return {"message": "Lead deleted successfully"}
 
 
+# ==================== TELECALLER MANAGEMENT ENDPOINTS ====================
+
+@api_router.get("/telecallers")
+async def get_telecallers(current_user: User = Depends(get_current_user)):
+    """Get all telecaller profiles"""
+    telecallers = await db.telecaller_profiles.find({}, {"_id": 0}).to_list(1000)
+    return telecallers
+
+
+@api_router.post("/telecallers")
+async def create_telecaller(
+    telecaller_data: TelecallerProfileCreate,
+    current_user: User = Depends(get_current_user)
+):
+    """Create new telecaller profile (Admin only)"""
+    from datetime import datetime, timezone
+    
+    # Check if user is admin or master_admin
+    if current_user.account_type not in ["admin", "master_admin"]:
+        raise HTTPException(status_code=403, detail="Only admins can create telecaller profiles")
+    
+    # Check if email already exists
+    existing = await db.telecaller_profiles.find_one({"email": telecaller_data.email})
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already exists")
+    
+    # Create telecaller profile
+    telecaller = {
+        "id": str(uuid.uuid4()),
+        "name": telecaller_data.name,
+        "phone_number": telecaller_data.phone_number,
+        "email": telecaller_data.email,
+        "status": "active",
+        "aadhar_card": telecaller_data.aadhar_card,
+        "pan_card": telecaller_data.pan_card,
+        "address_proof": telecaller_data.address_proof,
+        "total_assigned_leads": 0,
+        "active_leads": 0,
+        "converted_leads": 0,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "last_modified": datetime.now(timezone.utc).isoformat(),
+        "created_by": current_user.id
+    }
+    
+    await db.telecaller_profiles.insert_one(telecaller)
+    
+    return {"message": "Telecaller profile created successfully", "telecaller": telecaller}
+
+
+@api_router.patch("/telecallers/{telecaller_id}")
+async def update_telecaller(
+    telecaller_id: str,
+    telecaller_data: TelecallerProfileUpdate,
+    current_user: User = Depends(get_current_user)
+):
+    """Update telecaller profile"""
+    from datetime import datetime, timezone
+    
+    if current_user.account_type not in ["admin", "master_admin"]:
+        raise HTTPException(status_code=403, detail="Only admins can update telecaller profiles")
+    
+    telecaller = await db.telecaller_profiles.find_one({"id": telecaller_id})
+    if not telecaller:
+        raise HTTPException(status_code=404, detail="Telecaller not found")
+    
+    # Prepare update data
+    update_data = {}
+    for field, value in telecaller_data.model_dump(exclude_unset=True).items():
+        if value is not None:
+            update_data[field] = value
+    
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No fields to update")
+    
+    update_data['last_modified'] = datetime.now(timezone.utc).isoformat()
+    
+    await db.telecaller_profiles.update_one(
+        {"id": telecaller_id},
+        {"$set": update_data}
+    )
+    
+    updated_telecaller = await db.telecaller_profiles.find_one({"id": telecaller_id}, {"_id": 0})
+    
+    return {"message": "Telecaller profile updated successfully", "telecaller": updated_telecaller}
+
+
+@api_router.delete("/telecallers/{telecaller_id}")
+async def delete_telecaller(telecaller_id: str, current_user: User = Depends(get_current_user)):
+    """Delete telecaller profile (Admin only)"""
+    if current_user.account_type not in ["admin", "master_admin"]:
+        raise HTTPException(status_code=403, detail="Only admins can delete telecaller profiles")
+    
+    telecaller = await db.telecaller_profiles.find_one({"id": telecaller_id})
+    if not telecaller:
+        raise HTTPException(status_code=404, detail="Telecaller not found")
+    
+    # Check if telecaller has assigned leads
+    assigned_leads = await db.driver_leads.count_documents({"assigned_telecaller": telecaller['email']})
+    if assigned_leads > 0:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot delete telecaller with {assigned_leads} assigned leads. Please reassign first."
+        )
+    
+    await db.telecaller_profiles.delete_one({"id": telecaller_id})
+    
+    return {"message": "Telecaller profile deleted successfully"}
+
+
+@api_router.post("/telecallers/assign-leads")
+async def assign_leads_to_telecaller(
+    assignment: LeadAssignment,
+    current_user: User = Depends(get_current_user)
+):
+    """Manually assign leads to a telecaller"""
+    from datetime import datetime, timezone
+    
+    if current_user.account_type not in ["admin", "master_admin"]:
+        raise HTTPException(status_code=403, detail="Only admins can assign leads")
+    
+    # Verify telecaller exists
+    telecaller = await db.telecaller_profiles.find_one({"id": assignment.telecaller_id})
+    if not telecaller:
+        raise HTTPException(status_code=404, detail="Telecaller not found")
+    
+    # Update leads with assigned telecaller
+    result = await db.driver_leads.update_many(
+        {"id": {"$in": assignment.lead_ids}},
+        {"$set": {
+            "assigned_telecaller": telecaller['email'],
+            "last_modified": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    # Update telecaller stats
+    await db.telecaller_profiles.update_one(
+        {"id": assignment.telecaller_id},
+        {"$inc": {"total_assigned_leads": result.modified_count}}
+    )
+    
+    # Sync updated leads to Google Sheets
+    for lead_id in assignment.lead_ids:
+        lead = await db.driver_leads.find_one({"id": lead_id}, {"_id": 0})
+        if lead:
+            sync_single_record('leads', lead)
+    
+    return {
+        "message": f"Successfully assigned {result.modified_count} leads to {telecaller['name']}",
+        "assigned_count": result.modified_count
+    }
+
+
+@api_router.post("/telecallers/sync-from-sheets")
+async def sync_assignments_from_sheets(current_user: User = Depends(get_current_user)):
+    """Read Column H from Google Sheets and assign leads to telecallers"""
+    from datetime import datetime, timezone
+    
+    if current_user.account_type not in ["admin", "master_admin"]:
+        raise HTTPException(status_code=403, detail="Only admins can sync assignments")
+    
+    try:
+        # Get all leads from database
+        all_leads = await db.driver_leads.find({}, {"_id": 0}).to_list(10000)
+        
+        # Get all telecallers
+        all_telecallers = await db.telecaller_profiles.find({}, {"_id": 0}).to_list(1000)
+        telecaller_map = {t['email']: t for t in all_telecallers}
+        telecaller_map_by_name = {t['name'].lower(): t for t in all_telecallers}
+        
+        updated_count = 0
+        
+        for lead in all_leads:
+            # Check if assigned_telecaller is set and different from current
+            assigned_telecaller = lead.get('assigned_telecaller', '').strip()
+            
+            if assigned_telecaller:
+                # Try to match by email or name
+                telecaller = None
+                if assigned_telecaller in telecaller_map:
+                    telecaller = telecaller_map[assigned_telecaller]
+                elif assigned_telecaller.lower() in telecaller_map_by_name:
+                    telecaller = telecaller_map_by_name[assigned_telecaller.lower()]
+                
+                if telecaller:
+                    # Update lead with telecaller email
+                    await db.driver_leads.update_one(
+                        {"id": lead['id']},
+                        {"$set": {
+                            "assigned_telecaller": telecaller['email'],
+                            "last_modified": datetime.now(timezone.utc).isoformat()
+                        }}
+                    )
+                    updated_count += 1
+        
+        return {
+            "success": True,
+            "message": f"Synced assignments for {updated_count} leads from sheets",
+            "updated_count": updated_count
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to sync from sheets: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to sync from sheets: {str(e)}")
+
+
+@api_router.get("/telecallers/my-leads")
+async def get_my_assigned_leads(current_user: User = Depends(get_current_user)):
+    """Get leads assigned to the logged-in telecaller"""
+    
+    # This endpoint is for telecaller users only
+    if current_user.account_type != "telecaller":
+        raise HTTPException(status_code=403, detail="This endpoint is for telecallers only")
+    
+    # Get telecaller's email
+    user_email = current_user.email
+    
+    # Find leads assigned to this telecaller
+    leads = await db.driver_leads.find(
+        {"assigned_telecaller": user_email},
+        {"_id": 0}
+    ).to_list(10000)
+    
+    return leads
+
+
 @api_router.post("/driver-onboarding/leads/bulk-delete")
 async def bulk_delete_leads(bulk_data: BulkLeadDelete, current_user: User = Depends(get_current_user)):
     """Bulk delete leads (Master Admin only)"""
