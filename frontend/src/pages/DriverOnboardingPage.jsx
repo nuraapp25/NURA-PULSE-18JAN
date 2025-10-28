@@ -1908,7 +1908,7 @@ const DriverOnboardingPage = () => {
                               }`}
                             >
                               <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(lead.status || "New")}`}>
-                                {STATUS_OPTIONS.find(opt => opt.value === lead.status)?.label || lead.status || "New"}
+                                {formatStatusDisplay(STATUS_OPTIONS.find(opt => opt.value === lead.status)?.label || lead.status || "New")}
                               </span>
                               {pendingStatusChanges[lead.id] && (
                                 <span className="text-xs text-yellow-600 dark:text-yellow-400 font-medium">
