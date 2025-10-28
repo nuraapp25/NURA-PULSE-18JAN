@@ -999,6 +999,7 @@ async def import_leads(
                 "id": str(uuid.uuid4()),
                 "name": name_val,
                 "phone_number": phone_val,
+                "email": str(row[email_col]) if email_col and pd.notna(row.get(email_col)) else None,
                 "vehicle": str(row[vehicle_col]) if vehicle_col and pd.notna(row.get(vehicle_col)) else None,
                 "driving_license": None,
                 "experience": str(row[experience_col]) if experience_col and pd.notna(row.get(experience_col)) else None,
