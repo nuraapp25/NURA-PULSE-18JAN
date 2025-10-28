@@ -21,11 +21,6 @@ const S1_STATUSES = [
   { value: "Call back 1W", label: "Call back 1W" },
   { value: "Call back 2W", label: "Call back 2W" },
   { value: "Call back 1M", label: "Call back 1M" },
-  { value: "Interested", label: "Interested" },
-  { value: "Not Reachable", label: "Not Reachable" },
-  { value: "Wrong Number", label: "Wrong Number" },
-  { value: "Duplicate", label: "Duplicate" },
-  { value: "Junk", label: "Junk" },
 ];
 
 const S2_STATUSES = [
