@@ -1313,6 +1313,8 @@ async def bulk_update_lead_status(bulk_data: BulkLeadStatusUpdate, current_user:
 @api_router.patch("/driver-onboarding/leads/{lead_id}")
 async def update_lead(lead_id: str, lead_data: DriverLeadUpdate, current_user: User = Depends(get_current_user)):
     """Update lead details"""
+    from datetime import datetime, timezone
+    
     # Find the lead
     lead = await db.driver_leads.find_one({"id": lead_id})
     if not lead:
@@ -1326,6 +1328,9 @@ async def update_lead(lead_id: str, lead_data: DriverLeadUpdate, current_user: U
     
     if not update_data:
         raise HTTPException(status_code=400, detail="No fields to update")
+    
+    # Add last_modified timestamp
+    update_data['last_modified'] = datetime.now(timezone.utc).isoformat()
     
     # Update lead
     await db.driver_leads.update_one(
@@ -1345,15 +1350,20 @@ async def update_lead(lead_id: str, lead_data: DriverLeadUpdate, current_user: U
 @api_router.patch("/driver-onboarding/leads/{lead_id}/status")
 async def update_lead_status(lead_id: str, status_data: LeadStatusUpdate, current_user: User = Depends(get_current_user)):
     """Update lead status"""
+    from datetime import datetime, timezone
+    
     # Find the lead
     lead = await db.driver_leads.find_one({"id": lead_id})
     if not lead:
         raise HTTPException(status_code=404, detail="Lead not found")
     
-    # Update status
+    # Update status and last_modified
     await db.driver_leads.update_one(
         {"id": lead_id},
-        {"$set": {"status": status_data.status}}
+        {"$set": {
+            "status": status_data.status,
+            "last_modified": datetime.now(timezone.utc).isoformat()
+        }}
     )
     
     # Get updated lead for sync
