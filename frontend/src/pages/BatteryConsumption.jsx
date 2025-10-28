@@ -120,10 +120,14 @@ const BatteryConsumption = () => {
     // Extract all battery values from raw data with timestamps
     rawData.forEach((row) => {
       const battery = parseFloat(row['Battery Soc(%)'] || row['Battery SOC(%)'] || 0);
-      const time = row['Time'] || '';
+      const dateTime = row['Date'] || row['Time'] || '';  // Support both 'Date' and 'Time' columns
       
-      if (battery > 0 && time) {
-        batteryValues.push({ battery, time });
+      if (battery > 0 && dateTime) {
+        batteryValues.push({ 
+          battery, 
+          dateTime,
+          timestamp: new Date(dateTime).getTime()  // For sorting
+        });
       }
     });
     
@@ -136,6 +140,10 @@ const BatteryConsumption = () => {
         maxBattery: 0
       };
     }
+    
+    // CRITICAL: Sort battery values chronologically by timestamp
+    // This ensures we process data in correct time order (12:00 AM to 11:59 PM)
+    batteryValues.sort((a, b) => a.timestamp - b.timestamp);
     
     // Calculate cumulative charge gained and charge dropped
     let totalChargeDrop = 0;  // Sum of all negative changes (battery going down)
