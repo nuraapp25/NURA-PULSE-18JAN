@@ -6941,6 +6941,7 @@ Case Test 6,9876540006,interested"""
         
         # Priority test results
         print(f"\n🎯 PRIORITY TEST RESULTS:")
+        print(f"   Driver Onboarding Status Mapping Bug Fix: {'✅ PASS' if status_mapping_success else '❌ FAIL'}")
         print(f"   Locality Extraction Fix: {'✅ PASS' if locality_extraction_success else '❌ FAIL'}")
         print(f"   QR Code Management APIs: {'✅ PASS' if qr_code_success else '❌ FAIL'}")
         print(f"   Ride Deck Data Analysis APIs: {'✅ PASS' if ride_deck_success else '❌ FAIL'}")
