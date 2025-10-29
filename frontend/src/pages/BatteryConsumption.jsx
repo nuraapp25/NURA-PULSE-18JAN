@@ -167,13 +167,11 @@ const BatteryConsumption = () => {
     const minBattery = Math.min(...batteryValues.map(v => v.battery));
     const maxBattery = Math.max(...batteryValues.map(v => v.battery));
     
-    // Total distance = sum of all hourly distances
+    // Total distance = final cumulative value (last data point)
     let totalDistance = 0;
-    data.forEach(point => {
-      if (point.distance !== null && point.distance >= 0) {
-        totalDistance += point.distance;
-      }
-    });
+    if (data.length > 0 && data[data.length - 1].distance !== null) {
+      totalDistance = data[data.length - 1].distance;
+    }
 
     return {
       chargeDrop: totalChargeDrop.toFixed(2),
