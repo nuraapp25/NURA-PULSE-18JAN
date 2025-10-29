@@ -1909,6 +1909,42 @@ const DriverOnboardingPage = () => {
                 </PopoverContent>
               </Popover>
               
+              {/* Filter by Status */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs"
+                  >
+                    <CheckSquare className="w-3 h-3 mr-1" />
+                    Filter by Status
+                    {statusFilter && ` (${statusFilter})`}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-56 dark:bg-gray-800 dark:border-gray-700 max-h-96 overflow-y-auto">
+                  <div className="space-y-1">
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start text-sm"
+                      onClick={() => setStatusFilter(null)}
+                    >
+                      All Statuses
+                    </Button>
+                    {uniqueStatuses.map((status) => (
+                      <Button
+                        key={status}
+                        variant="ghost"
+                        className="w-full justify-start text-xs"
+                        onClick={() => setStatusFilter(status)}
+                      >
+                        {status}
+                      </Button>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+              
               {/* Page navigation */}
               {totalPages > 1 && (
                 <div className="flex items-center gap-1">
