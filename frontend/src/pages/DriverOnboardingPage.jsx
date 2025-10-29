@@ -243,11 +243,25 @@ const DriverOnboardingPage = () => {
 
   const fetchLeads = async () => {
     setLoading(true);
+    setLoadingProgress(0);
+    
+    // Simulate progress bar animation
+    const progressInterval = setInterval(() => {
+      setLoadingProgress(prev => {
+        if (prev >= 90) return prev; // Cap at 90% until actual load completes
+        return prev + Math.random() * 15; // Random increment for realistic feel
+      });
+    }, 200);
+    
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(`${API}/driver-onboarding/leads`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      
+      // Jump to 95% when data is received
+      setLoadingProgress(95);
+      
       setLeads(response.data);
       setFilteredLeads(response.data);
       
@@ -256,10 +270,18 @@ const DriverOnboardingPage = () => {
       
       // Fetch status summary
       await fetchStatusSummary();
+      
+      // Complete progress
+      setLoadingProgress(100);
     } catch (error) {
       toast.error("Failed to fetch leads");
     } finally {
-      setLoading(false);
+      clearInterval(progressInterval);
+      // Small delay to show 100% before hiding
+      setTimeout(() => {
+        setLoading(false);
+        setLoadingProgress(0);
+      }, 500);
     }
   };
   
