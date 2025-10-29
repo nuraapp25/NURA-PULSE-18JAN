@@ -588,6 +588,9 @@ frontend:
         - working: true
           agent: "main"
           comment: "✅ ENHANCED: Added 3 new features - (1) Removed 'residing_chennai' field from Format 2 CSV import (2) Click on lead to view details and update status with 8 status options (New, Contacted, Interested, Documents Pending, Scheduled, Onboarded, Rejected, Not Interested) (3) Date filter with calendar view for Start/End date filtering. All features tested and working."
+        - working: true
+          agent: "main"
+          comment: "✅ NEW FEATURES ADDED: (1) Filter by Status button - Added alongside existing Source and Telecaller filters. Displays all unique statuses from leads in a dropdown menu. Successfully tested filtering by 'DONE!' status - table correctly filtered from 16,724 to 21 leads, dashboard summary updated to show 21 total leads, 21 onboarded, 0 new, 0 in progress. Clear filter works correctly. (2) Loading Animation with Progress Bar - Beautiful animated loading overlay when fetching 15k+ leads. Features: spinning icon, progress bar 0-100%, gradient color effect with shimmer animation, dynamic status messages ('Connecting to database...', 'Fetching lead records...', 'Processing data...', 'Almost there...', 'Complete!'). Progress animates smoothly from 0-90% during fetch, jumps to 95% on data received, completes at 100%. Overlay has backdrop blur effect for professional look."
 
   - task: "Driver Onboarding - Manual Status Update with Apply/Cancel"
     implemented: true
