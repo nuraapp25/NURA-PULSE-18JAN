@@ -1756,16 +1756,28 @@ const DriverOnboardingPage = () => {
             <span className="sm:hidden">All</span>
           </Button>
           {selectedLeadIds.length > 0 && (
-            <Button
-              onClick={handleClearSelection}
-              variant="outline"
-              size="sm"
-              className="border-gray-300 dark:border-gray-600 text-sm"
-            >
-              <Square size={14} className="mr-1 sm:mr-2" />
-              <span className="hidden sm:inline">Clear</span>
-              <span className="sm:hidden">Clear</span>
-            </Button>
+            <>
+              <Button
+                onClick={handleClearSelection}
+                variant="outline"
+                size="sm"
+                className="border-gray-300 dark:border-gray-600 text-sm"
+              >
+                <Square size={14} className="mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Clear</span>
+                <span className="sm:hidden">Clear</span>
+              </Button>
+              <Button
+                onClick={() => setIsAssignDialogOpen(true)}
+                variant="outline"
+                size="sm"
+                className="border-green-500 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 text-sm"
+              >
+                <Users size={14} className="mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Assign Leads ({selectedLeadIds.length})</span>
+                <span className="sm:hidden">Assign ({selectedLeadIds.length})</span>
+              </Button>
+            </>
           )}
         </div>
       )}
