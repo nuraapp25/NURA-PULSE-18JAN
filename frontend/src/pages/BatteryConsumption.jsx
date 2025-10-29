@@ -696,6 +696,7 @@ const BatteryConsumption = () => {
                         name="Battery %"
                         dot={false}
                         activeDot={false}
+                        connectNulls={true}
                       />
                       <Line 
                         yAxisId="right"
@@ -706,6 +707,7 @@ const BatteryConsumption = () => {
                         name="Distance (km)"
                         dot={false}
                         activeDot={false}
+                        connectNulls={true}
                       />
                     </LineChart>
                   </ResponsiveContainer>
