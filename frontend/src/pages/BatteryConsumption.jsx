@@ -183,7 +183,7 @@ const BatteryConsumption = () => {
   };
 
   const processChartData = (rawData) => {
-    console.log("Processing chart data, sample row:", rawData[0]);
+    console.log("Processing chart data, total rows:", rawData.length);
     
     // Check for different possible distance column names
     const possibleDistanceColumns = [
@@ -218,10 +218,26 @@ const BatteryConsumption = () => {
       }
     }
     
-    // Group data by hour first
+    // FIRST: Filter out rows with invalid odometer values (-, empty, null)
+    const validRows = rawData.filter(row => {
+      if (!distanceColumn) return true; // If no distance column, keep all rows
+      
+      const odometerValue = row[distanceColumn];
+      // Keep only rows with valid odometer values (not "-", not empty, not null)
+      const isValid = odometerValue && 
+                      odometerValue !== "-" && 
+                      odometerValue.toString().trim() !== "" &&
+                      !isNaN(parseFloat(odometerValue));
+      
+      return isValid;
+    });
+    
+    console.log(`Filtered data: ${rawData.length} total rows → ${validRows.length} valid rows (${rawData.length - validRows.length} rows with "-" or invalid odometer ignored)`);
+    
+    // Group VALID data by hour
     const hourlyData = {};
     
-    rawData.forEach((row) => {
+    validRows.forEach((row) => {
       const timeStr = row['Portal Received Time'] || "";
       let hourKey = "N/A";
       
@@ -245,9 +261,11 @@ const BatteryConsumption = () => {
       hourlyData[hourKey].push(row);
     });
     
-    // Process hourly data - take last reading of each hour
+    // Process hourly data - take last reading of each hour (all have valid odometer)
     const processedData = [];
     const hourKeys = Object.keys(hourlyData).filter(k => k !== "N/A");
+    
+    console.log(`Processing ${hourKeys.length} hours with valid odometer data`);
     
     // Track cumulative distance (always increasing)
     let cumulativeDistance = 0;
@@ -257,16 +275,8 @@ const BatteryConsumption = () => {
       const hourReadings = hourlyData[hourKey];
       const lastReading = hourReadings[hourReadings.length - 1];
       
-      // Get odometer reading - handle "-" or missing values
-      let currentOdometer = null;
-      if (distanceColumn) {
-        const odometerValue = lastReading[distanceColumn];
-        // Check if value is valid (not "-", not empty, not null)
-        if (odometerValue && odometerValue !== "-" && odometerValue.toString().trim() !== "") {
-          currentOdometer = parseFloat(odometerValue);
-        }
-      }
-      
+      // Get odometer reading (already validated in filter, but double-check)
+      const currentOdometer = parseFloat(lastReading[distanceColumn]);
       const currentBattery = parseFloat(lastReading['Battery Soc(%)'] || lastReading['Battery SOC(%)'] || 0);
       
       let chargeDrop = 0;
@@ -275,27 +285,23 @@ const BatteryConsumption = () => {
       
       // Calculate distance traveled in THIS hour and add to cumulative
       if (index === 0) {
-        // First hour - baseline, cumulative starts at 0
+        // First hour with valid data - baseline, cumulative starts at 0
         cumulativeDistance = 0;
         distanceTraveled = 0;
         previousOdometer = currentOdometer;
-        console.log("Hour 0 baseline - Odometer:", currentOdometer, "Cumulative:", cumulativeDistance);
-      } else if (currentOdometer !== null && previousOdometer !== null) {
+        console.log(`Hour 0 (${hourKey}) - Baseline Odometer: ${currentOdometer} km, Cumulative: 0 km`);
+      } else {
         // Calculate distance traveled this hour = current - previous
         if (currentOdometer >= previousOdometer) {
           distanceTraveled = currentOdometer - previousOdometer;
           cumulativeDistance += distanceTraveled; // ADD to cumulative total
-          console.log(`Hour ${index}: Odometer ${currentOdometer} - ${previousOdometer} = ${distanceTraveled} km, Cumulative: ${cumulativeDistance} km`);
+          console.log(`Hour ${index} (${hourKey}): Odometer ${currentOdometer} - ${previousOdometer} = ${distanceTraveled} km, Cumulative: ${cumulativeDistance} km`);
         } else {
           // Odometer decreased - data error, don't add to cumulative
-          console.warn(`Hour ${index}: Odometer decreased from ${previousOdometer} to ${currentOdometer}, ignoring`);
+          console.warn(`Hour ${index} (${hourKey}): Odometer decreased from ${previousOdometer} to ${currentOdometer}, ignoring this increment`);
           distanceTraveled = 0;
         }
         previousOdometer = currentOdometer;
-      } else if (currentOdometer === null && previousOdometer !== null) {
-        // No valid odometer reading this hour (was "-"), distance = 0, keep cumulative
-        distanceTraveled = 0;
-        console.log(`Hour ${index}: No valid odometer, keeping cumulative at ${cumulativeDistance} km`);
       }
       
       // Compare with previous hour for battery changes
@@ -325,8 +331,8 @@ const BatteryConsumption = () => {
       });
     });
     
-    console.log("Processed data points:", processedData.length);
-    console.log("First 5 hours:", processedData.slice(0, 5).map(d => ({ 
+    console.log(`✅ Processed ${processedData.length} data points successfully`);
+    console.log("Sample data (first 3 hours):", processedData.slice(0, 3).map(d => ({ 
       time: d.time, 
       distance: d.distance, 
       battery: d.battery 
