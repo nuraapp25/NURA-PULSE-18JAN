@@ -1192,6 +1192,235 @@ const DriverOnboardingPage = () => {
     }
   };
 
+  // ==================== BULK EXPORT/IMPORT & BACKUP LIBRARY HANDLERS ====================
+  
+  // Handle Bulk Export
+  const handleBulkExport = async () => {
+    setBulkExporting(true);
+    try {
+      const token = localStorage.getItem("token");
+      toast.info("📊 Starting bulk export... This may take a few moments for large datasets.");
+      
+      const response = await axios.post(
+        `${API}/driver-onboarding/bulk-export`,
+        {},
+        {
+          headers: { 'Authorization': `Bearer ${token}` },
+          responseType: 'blob',
+          timeout: 300000 // 5 minutes timeout for large exports
+        }
+      );
+      
+      // Get total leads from response header
+      const totalLeads = response.headers['x-total-leads'] || 'Unknown';
+      
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Get filename from Content-Disposition header or use default
+      const contentDisposition = response.headers['content-disposition'];
+      const filenameMatch = contentDisposition && contentDisposition.match(/filename="?(.+)"?/);
+      const filename = filenameMatch ? filenameMatch[1] : `driver_leads_export_${new Date().toISOString().split('T')[0]}.xlsx`;
+      
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      toast.success(`✅ Successfully exported ${totalLeads} leads to Excel!`);
+    } catch (error) {
+      console.error("Bulk export error:", error);
+      toast.error(error.response?.data?.detail || "Failed to export leads. Please try again.");
+    } finally {
+      setBulkExporting(false);
+    }
+  };
+  
+  // Handle Bulk Import
+  const handleBulkImport = async () => {
+    if (!bulkImportFile) {
+      toast.error("Please select an Excel file to import");
+      return;
+    }
+    
+    // Confirmation dialog
+    if (!window.confirm(
+      "⚠️ WARNING: This will REPLACE ALL current leads with the data from your Excel file.\n\n" +
+      "A backup will be created automatically before import.\n\n" +
+      "Are you sure you want to proceed?"
+    )) {
+      return;
+    }
+    
+    setBulkImporting(true);
+    try {
+      const token = localStorage.getItem("token");
+      const formData = new FormData();
+      formData.append('file', bulkImportFile);
+      
+      toast.info("📥 Starting bulk import... Creating backup and processing data...");
+      
+      const response = await axios.post(
+        `${API}/driver-onboarding/bulk-import`,
+        formData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          },
+          timeout: 600000 // 10 minutes timeout for large imports
+        }
+      );
+      
+      const { backup_created, deleted_count, inserted_count, total_leads_now } = response.data;
+      
+      toast.success(
+        `✅ Bulk import completed!\n\n` +
+        `Backup: ${backup_created || 'N/A'}\n` +
+        `Deleted: ${deleted_count} leads\n` +
+        `Imported: ${inserted_count} leads\n` +
+        `Total leads now: ${total_leads_now}`,
+        { duration: 8000 }
+      );
+      
+      // Reset and refresh
+      setBulkImportFile(null);
+      setBulkImportDialogOpen(false);
+      fetchLeads();
+      
+    } catch (error) {
+      console.error("Bulk import error:", error);
+      toast.error(error.response?.data?.detail || "Failed to import leads. Please try again.");
+    } finally {
+      setBulkImporting(false);
+    }
+  };
+  
+  // Fetch Backup Library
+  const fetchBackupLibrary = async () => {
+    setLoadingBackups(true);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        `${API}/driver-onboarding/backup-library`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+      
+      setBackups(response.data.backups || []);
+    } catch (error) {
+      console.error("Failed to fetch backups:", error);
+      toast.error("Failed to load backup library");
+    } finally {
+      setLoadingBackups(false);
+    }
+  };
+  
+  // Download Backup
+  const handleDownloadBackup = async (filename) => {
+    try {
+      const token = localStorage.getItem("token");
+      toast.info(`📥 Downloading ${filename}...`);
+      
+      const response = await axios.get(
+        `${API}/driver-onboarding/backup-library/${filename}/download`,
+        {
+          headers: { 'Authorization': `Bearer ${token}` },
+          responseType: 'blob'
+        }
+      );
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      toast.success(`✅ Downloaded ${filename}`);
+    } catch (error) {
+      toast.error("Failed to download backup");
+    }
+  };
+  
+  // Delete Backup
+  const handleDeleteBackup = async (filename) => {
+    if (!window.confirm(`Are you sure you want to delete backup: ${filename}?`)) {
+      return;
+    }
+    
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(
+        `${API}/driver-onboarding/backup-library/${filename}`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+      
+      toast.success(`🗑️ Deleted ${filename}`);
+      fetchBackupLibrary(); // Refresh list
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to delete backup");
+    }
+  };
+  
+  // Rollback to Backup
+  const handleRollback = async (filename) => {
+    if (!window.confirm(
+      `⚠️ CRITICAL ACTION: Rollback to ${filename}\n\n` +
+      "This will REPLACE ALL current leads with the data from this backup.\n\n" +
+      "A backup of your current data will be created before rollback.\n\n" +
+      "Are you absolutely sure you want to proceed?"
+    )) {
+      return;
+    }
+    
+    setRollingBack(true);
+    try {
+      const token = localStorage.getItem("token");
+      toast.info(`🔄 Rolling back to ${filename}... This may take a few moments.`);
+      
+      const response = await axios.post(
+        `${API}/driver-onboarding/backup-library/${filename}/rollback`,
+        {},
+        {
+          headers: { 'Authorization': `Bearer ${token}` },
+          timeout: 600000 // 10 minutes timeout
+        }
+      );
+      
+      const { pre_rollback_backup, deleted_count, restored_count } = response.data;
+      
+      toast.success(
+        `✅ Rollback completed!\n\n` +
+        `Pre-rollback backup: ${pre_rollback_backup || 'N/A'}\n` +
+        `Deleted: ${deleted_count} current leads\n` +
+        `Restored: ${restored_count} leads from backup`,
+        { duration: 8000 }
+      );
+      
+      // Close dialog and refresh
+      setBackupLibraryOpen(false);
+      fetchLeads();
+      fetchBackupLibrary();
+      
+    } catch (error) {
+      console.error("Rollback error:", error);
+      toast.error(error.response?.data?.detail || "Failed to rollback. Please try again.");
+    } finally {
+      setRollingBack(false);
+    }
+  };
+  
+  // Open backup library
+  const openBackupLibrary = () => {
+    setBackupLibraryOpen(true);
+    fetchBackupLibrary();
+  };
+
   const getStatusColor = (status) => {
     const statusOption = STATUS_OPTIONS.find(opt => opt.value === status);
     return statusOption ? statusOption.color : "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400";
