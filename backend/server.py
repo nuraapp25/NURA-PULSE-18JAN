@@ -1189,7 +1189,7 @@ async def import_leads(
 @api_router.get("/driver-onboarding/leads")
 async def get_leads(current_user: User = Depends(get_current_user)):
     """Get all driver leads"""
-    leads = await db.driver_leads.find({}, {"_id": 0}).to_list(10000)
+    leads = await db.driver_leads.find({}, {"_id": 0}).to_list(length=None)
     return leads
 
 
