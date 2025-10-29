@@ -1257,6 +1257,350 @@ async def import_leads(
         raise HTTPException(status_code=500, detail=f"Failed to import leads: {str(e)}")
 
 
+# ==================== BULK EXPORT/IMPORT WITH BACKUP LIBRARY ====================
+
+# Backup storage folder
+BACKUP_LIBRARY_FOLDER = "driver_onboarding_backups"
+os.makedirs(BACKUP_LIBRARY_FOLDER, exist_ok=True)
+
+
+@api_router.post("/driver-onboarding/bulk-export")
+async def bulk_export_leads(current_user: User = Depends(get_current_user)):
+    """
+    Export ALL driver leads to Excel file with all fields
+    Handles large datasets (16,731+ leads) efficiently
+    """
+    try:
+        import pandas as pd
+        from datetime import datetime
+        import io
+        
+        logger.info(f"Starting bulk export for user {current_user.email}")
+        
+        # Fetch all leads from database
+        leads_collection = db['driver_leads']
+        leads = await leads_collection.find({}, {"_id": 0}).to_list(length=None)
+        
+        total_leads = len(leads)
+        logger.info(f"Fetched {total_leads} leads for export")
+        
+        if not leads:
+            raise HTTPException(status_code=404, detail="No leads found to export")
+        
+        # Convert to DataFrame
+        df = pd.DataFrame(leads)
+        
+        # Create Excel file in memory
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False, sheet_name='Driver Leads')
+        
+        output.seek(0)
+        
+        # Generate filename with timestamp
+        timestamp = datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
+        filename = f"driver_leads_export_{timestamp}.xlsx"
+        
+        logger.info(f"Bulk export complete: {total_leads} leads exported")
+        
+        return StreamingResponse(
+            output,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={
+                "Content-Disposition": f"attachment; filename={filename}",
+                "X-Total-Leads": str(total_leads)
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Bulk export failed: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Bulk export failed: {str(e)}")
+
+
+@api_router.post("/driver-onboarding/bulk-import")
+async def bulk_import_leads(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Import Excel file and OVERWRITE all existing leads
+    Automatically creates backup before import
+    """
+    try:
+        import pandas as pd
+        from datetime import datetime
+        import shutil
+        
+        logger.info(f"Starting bulk import for user {current_user.email}")
+        
+        # Validate file type
+        if not file.filename.endswith(('.xlsx', '.xls')):
+            raise HTTPException(status_code=400, detail="File must be Excel format (.xlsx or .xls)")
+        
+        # Step 1: Create backup of current leads before import
+        logger.info("Creating backup of current leads...")
+        leads_collection = db['driver_leads']
+        current_leads = await leads_collection.find({}, {"_id": 0}).to_list(length=None)
+        
+        if current_leads:
+            # Save backup to library
+            backup_df = pd.DataFrame(current_leads)
+            timestamp = datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
+            backup_filename = f"backup-{timestamp}.xlsx"
+            backup_path = os.path.join(BACKUP_LIBRARY_FOLDER, backup_filename)
+            
+            backup_df.to_excel(backup_path, index=False, sheet_name='Driver Leads')
+            logger.info(f"Backup created: {backup_filename} ({len(current_leads)} leads)")
+        else:
+            logger.info("No existing leads to backup")
+        
+        # Step 2: Read uploaded Excel file
+        contents = await file.read()
+        df = pd.read_excel(io.BytesIO(contents))
+        
+        total_rows = len(df)
+        logger.info(f"Read {total_rows} rows from uploaded file")
+        
+        if total_rows == 0:
+            raise HTTPException(status_code=400, detail="Uploaded file is empty")
+        
+        # Step 3: Validate required columns
+        if 'id' not in df.columns:
+            raise HTTPException(status_code=400, detail="Excel file must contain 'id' column for lead identification")
+        
+        # Step 4: Convert DataFrame to list of dictionaries
+        new_leads = df.to_dict('records')
+        
+        # Clean up NaN values
+        for lead in new_leads:
+            for key, value in list(lead.items()):
+                if pd.isna(value):
+                    lead[key] = None
+        
+        # Step 5: DELETE all existing leads
+        delete_result = await leads_collection.delete_many({})
+        logger.info(f"Deleted {delete_result.deleted_count} existing leads")
+        
+        # Step 6: INSERT all new leads from Excel
+        if new_leads:
+            insert_result = await leads_collection.insert_many(new_leads)
+            inserted_count = len(insert_result.inserted_ids)
+            logger.info(f"Inserted {inserted_count} new leads")
+        else:
+            inserted_count = 0
+        
+        return {
+            "success": True,
+            "message": "Bulk import completed successfully",
+            "backup_created": backup_filename if current_leads else None,
+            "deleted_count": delete_result.deleted_count,
+            "inserted_count": inserted_count,
+            "total_leads_now": inserted_count
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Bulk import failed: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Bulk import failed: {str(e)}")
+
+
+@api_router.get("/driver-onboarding/backup-library")
+async def get_backup_library(current_user: User = Depends(get_current_user)):
+    """
+    Get list of all backup files in library
+    """
+    try:
+        import os
+        from datetime import datetime
+        
+        backups = []
+        
+        # List all files in backup folder
+        if os.path.exists(BACKUP_LIBRARY_FOLDER):
+            for filename in os.listdir(BACKUP_LIBRARY_FOLDER):
+                if filename.endswith('.xlsx') and filename.startswith('backup-'):
+                    file_path = os.path.join(BACKUP_LIBRARY_FOLDER, filename)
+                    file_stats = os.stat(file_path)
+                    
+                    backups.append({
+                        "filename": filename,
+                        "size_bytes": file_stats.st_size,
+                        "size_mb": round(file_stats.st_size / (1024 * 1024), 2),
+                        "created_at": datetime.fromtimestamp(file_stats.st_ctime).isoformat(),
+                        "modified_at": datetime.fromtimestamp(file_stats.st_mtime).isoformat()
+                    })
+        
+        # Sort by created date (newest first)
+        backups.sort(key=lambda x: x['created_at'], reverse=True)
+        
+        return {
+            "success": True,
+            "backups": backups,
+            "total_backups": len(backups)
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get backup library: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get backup library: {str(e)}")
+
+
+@api_router.get("/driver-onboarding/backup-library/{filename}/download")
+async def download_backup(
+    filename: str,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Download a specific backup file from library
+    """
+    try:
+        # Validate filename
+        if not filename.endswith('.xlsx') or not filename.startswith('backup-'):
+            raise HTTPException(status_code=400, detail="Invalid backup filename")
+        
+        file_path = os.path.join(BACKUP_LIBRARY_FOLDER, filename)
+        
+        if not os.path.exists(file_path):
+            raise HTTPException(status_code=404, detail="Backup file not found")
+        
+        return FileResponse(
+            path=file_path,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            filename=filename,
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to download backup: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to download backup: {str(e)}")
+
+
+@api_router.delete("/driver-onboarding/backup-library/{filename}")
+async def delete_backup(
+    filename: str,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Delete a backup file from library (Master Admin only)
+    """
+    try:
+        # Check if user is master admin
+        if current_user.account_type != 'master_admin':
+            raise HTTPException(status_code=403, detail="Only Master Admin can delete backups")
+        
+        # Validate filename
+        if not filename.endswith('.xlsx') or not filename.startswith('backup-'):
+            raise HTTPException(status_code=400, detail="Invalid backup filename")
+        
+        file_path = os.path.join(BACKUP_LIBRARY_FOLDER, filename)
+        
+        if not os.path.exists(file_path):
+            raise HTTPException(status_code=404, detail="Backup file not found")
+        
+        # Delete the file
+        os.remove(file_path)
+        logger.info(f"Backup deleted by {current_user.email}: {filename}")
+        
+        return {
+            "success": True,
+            "message": f"Backup {filename} deleted successfully"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to delete backup: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete backup: {str(e)}")
+
+
+@api_router.post("/driver-onboarding/backup-library/{filename}/rollback")
+async def rollback_to_backup(
+    filename: str,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Rollback to a backup file - REPLACES all current leads with backup data
+    Creates a backup of current state before rollback
+    """
+    try:
+        import pandas as pd
+        from datetime import datetime
+        
+        logger.info(f"Starting rollback to {filename} by user {current_user.email}")
+        
+        # Validate filename
+        if not filename.endswith('.xlsx') or not filename.startswith('backup-'):
+            raise HTTPException(status_code=400, detail="Invalid backup filename")
+        
+        backup_file_path = os.path.join(BACKUP_LIBRARY_FOLDER, filename)
+        
+        if not os.path.exists(backup_file_path):
+            raise HTTPException(status_code=404, detail="Backup file not found")
+        
+        # Step 1: Create backup of CURRENT state before rollback
+        leads_collection = db['driver_leads']
+        current_leads = await leads_collection.find({}, {"_id": 0}).to_list(length=None)
+        
+        if current_leads:
+            current_backup_df = pd.DataFrame(current_leads)
+            timestamp = datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
+            current_backup_filename = f"backup-before-rollback-{timestamp}.xlsx"
+            current_backup_path = os.path.join(BACKUP_LIBRARY_FOLDER, current_backup_filename)
+            
+            current_backup_df.to_excel(current_backup_path, index=False, sheet_name='Driver Leads')
+            logger.info(f"Pre-rollback backup created: {current_backup_filename}")
+        else:
+            current_backup_filename = None
+        
+        # Step 2: Read backup file to restore
+        backup_df = pd.read_excel(backup_file_path)
+        restore_leads = backup_df.to_dict('records')
+        
+        # Clean up NaN values
+        for lead in restore_leads:
+            for key, value in list(lead.items()):
+                if pd.isna(value):
+                    lead[key] = None
+        
+        # Step 3: DELETE all current leads
+        delete_result = await leads_collection.delete_many({})
+        deleted_count = delete_result.deleted_count
+        logger.info(f"Deleted {deleted_count} current leads")
+        
+        # Step 4: INSERT leads from backup
+        if restore_leads:
+            insert_result = await leads_collection.insert_many(restore_leads)
+            restored_count = len(insert_result.inserted_ids)
+            logger.info(f"Restored {restored_count} leads from backup")
+        else:
+            restored_count = 0
+        
+        return {
+            "success": True,
+            "message": f"Successfully rolled back to {filename}",
+            "pre_rollback_backup": current_backup_filename,
+            "deleted_count": deleted_count,
+            "restored_count": restored_count,
+            "rollback_from": filename
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Rollback failed: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Rollback failed: {str(e)}")
+
+
 @api_router.get("/driver-onboarding/leads")
 async def get_leads(current_user: User = Depends(get_current_user)):
     """Get all driver leads"""
