@@ -226,6 +226,37 @@ export default function QRCodeManager() {
     }
   };
 
+  const handleBatchDelete = async () => {
+    if (selectedQRs.length === 0) {
+      toast.error('Please select at least one QR code to delete');
+      return;
+    }
+
+    const confirmMessage = `Are you sure you want to delete ${selectedQRs.length} selected QR code(s)? This will also delete all their scan data. This action cannot be undone.`;
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+
+    try {
+      toast.info('Deleting selected QR codes...');
+      const token = localStorage.getItem('token');
+      
+      // Delete all selected QRs
+      for (const qrId of selectedQRs) {
+        await axios.delete(`${API}/qr-codes/${qrId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }
+      
+      toast.success(`Successfully deleted ${selectedQRs.length} QR code(s)!`);
+      setSelectedQRs([]);
+      fetchQRCodes(); // Refresh the list
+    } catch (error) {
+      console.error('Failed to batch delete:', error);
+      toast.error('Failed to delete some QR codes');
+    }
+  };
+
   const toggleQRSelection = (qrId) => {
     setSelectedQRs(prev => 
       prev.includes(qrId) 
