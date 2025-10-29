@@ -4962,7 +4962,11 @@ async def analyze_hotspot_placement(
         df = df.dropna(subset=['lat', 'lon']).copy()
         
         # Parse timestamp and extract hour
-        if 'timestamp' in df.columns:
+        if 'hour' in df.columns:
+            # Hour column already exists
+            df['hour'] = pd.to_numeric(df['hour'], errors='coerce')
+            df = df.dropna(subset=['hour'])
+        elif 'timestamp' in df.columns:
             # Handle Excel serial numbers
             def parse_time(val):
                 try:
@@ -4976,6 +4980,31 @@ async def analyze_hotspot_placement(
                     return None
             
             df['datetime'] = df['timestamp'].apply(parse_time)
+            df = df.dropna(subset=['datetime'])
+            df['hour'] = df['datetime'].dt.hour
+        elif 'createdat' in df.columns or 'updatedat' in df.columns:
+            # Try to parse from createdAt/updatedAt
+            time_col = 'updatedat' if 'updatedat' in df.columns else 'createdat'
+            def parse_time(val):
+                try:
+                    if pd.isna(val):
+                        return None
+                    # Handle Excel serial numbers
+                    if isinstance(val, (int, float)):
+                        dt = pd.to_datetime(val, origin='1899-12-30', unit='D')
+                        return dt + timedelta(hours=5, minutes=30)
+                    # Try parsing time strings
+                    time_str = str(val).strip()
+                    for fmt in ['%H:%M:%S', '%H:%M', '%I:%M:%S %p']:
+                        try:
+                            return pd.to_datetime(time_str, format=fmt)
+                        except:
+                            continue
+                    return pd.to_datetime(val, errors='coerce')
+                except:
+                    return None
+            
+            df['datetime'] = df[time_col].apply(parse_time)
             df = df.dropna(subset=['datetime'])
             df['hour'] = df['datetime'].dt.hour
         else:
