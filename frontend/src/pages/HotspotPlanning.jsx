@@ -347,51 +347,73 @@ function HotspotPlanning() {
                 {/* Hotspots */}
                 {selectedSlotData.hotspots?.map((hotspot, idx) => (
                   <React.Fragment key={idx}>
-                    {/* Hotspot marker */}
+                    {/* Hotspot marker - bigger size */}
                     <CircleMarker
                       center={[hotspot.lat, hotspot.lon]}
-                      radius={10}
+                      radius={15}
                       fillColor="#f59e0b"
                       color="#fff"
-                      weight={2}
+                      weight={3}
                       fillOpacity={0.9}
                     >
                       <Popup>
-                        <div>
-                          <strong>Hotspot #{hotspot.rank}</strong><br />
-                          Lat: {hotspot.lat.toFixed(6)}<br />
-                          Lon: {hotspot.lon.toFixed(6)}<br />
-                          Covered: {hotspot.covered_count} rides
+                        <div className="font-sans">
+                          <strong className="text-lg">Hotspot #{hotspot.rank}</strong><br />
+                          <span className="text-sm text-gray-600">{hotspot.locality || 'Unknown'}</span><br />
+                          <span className="text-xs">Lat: {hotspot.lat.toFixed(6)}</span><br />
+                          <span className="text-xs">Lon: {hotspot.lon.toFixed(6)}</span><br />
+                          <span className="text-sm font-semibold text-green-600 mt-2">Covered: {hotspot.covered_count} rides</span>
                         </div>
                       </Popup>
                     </CircleMarker>
                     
-                    {/* Coverage circle */}
+                    {/* Coverage circle with tooltip */}
                     <Circle
                       center={[hotspot.lat, hotspot.lon]}
                       radius={1000}
                       fillColor="#10b981"
                       color="#10b981"
                       weight={2}
-                      fillOpacity={0.1}
-                    />
+                      fillOpacity={0.15}
+                    >
+                      <Tooltip permanent={false} direction="top">
+                        <div className="text-xs">
+                          <strong>{hotspot.locality || 'Hotspot'}</strong><br />
+                          1km coverage radius<br />
+                          {hotspot.covered_count} rides covered
+                        </div>
+                      </Tooltip>
+                    </Circle>
                   </React.Fragment>
                 ))}
                 
-                {/* Pickup points */}
+                {/* Pickup points - bigger and show all including uncovered */}
                 {selectedSlotData.geojson?.features
                   .filter(f => f.properties.type === 'pickup')
-                  .slice(0, 200) // Limit for performance
-                  .map((feature, idx) => (
-                    <CircleMarker
-                      key={`pickup-${idx}`}
-                      center={[feature.geometry.coordinates[1], feature.geometry.coordinates[0]]}
-                      radius={3}
-                      fillColor={feature.properties.assigned_rank > 0 ? '#3b82f6' : '#ef4444'}
-                      color="transparent"
-                      fillOpacity={0.5}
-                    />
-                  ))
+                  .slice(0, 300) // Increased limit
+                  .map((feature, idx) => {
+                    const isCovered = feature.properties.assigned_rank > 0;
+                    return (
+                      <CircleMarker
+                        key={`pickup-${idx}`}
+                        center={[feature.geometry.coordinates[1], feature.geometry.coordinates[0]]}
+                        radius={isCovered ? 5 : 4}
+                        fillColor={isCovered ? '#3b82f6' : '#ef4444'}
+                        color="transparent"
+                        fillOpacity={isCovered ? 0.6 : 0.5}
+                      >
+                        <Tooltip>
+                          <div className="text-xs">
+                            {isCovered ? (
+                              <>Covered by Hotspot #{feature.properties.assigned_rank}</>
+                            ) : (
+                              <>Uncovered pickup</>
+                            )}
+                          </div>
+                        </Tooltip>
+                      </CircleMarker>
+                    );
+                  })
                 }
               </MapContainer>
             </div>
