@@ -671,13 +671,14 @@ const DriverOnboardingPage = () => {
   };
   
   // Fetch documents status for a lead
-  const fetchDocumentsStatus = async () => {
-    if (!selectedLead?.id) return;
+  const fetchDocumentsStatus = async (leadId = null) => {
+    const idToUse = leadId || selectedLead?.id;
+    if (!idToUse) return;
     
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `${API}/driver-onboarding/documents/status/${selectedLead.id}`,
+        `${API}/driver-onboarding/documents/status/${idToUse}`,
         {
           headers: { 'Authorization': `Bearer ${token}` }
         }
