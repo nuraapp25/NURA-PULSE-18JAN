@@ -31,36 +31,59 @@ const S1_STATUSES = [
 ];
 
 const S2_STATUSES = [
-  { value: "Docs Upload Pending", label: "Docs Upload Pending" },
-  { value: "Verification Pending", label: "Verification Pending" },
-  { value: "Duplicate License", label: "Duplicate License" },
-  { value: "DL - Amount", label: "DL - Amount" },
-  { value: "Verified", label: "Verified" },
-  { value: "Verification Rejected", label: "Verification Rejected" },
+  { value: "Docs Upload Pending", label: "Docs Upload Pending", color: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400" },
+  { value: "Verification Pending", label: "Verification Pending", color: "bg-gray-100 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400" },
+  { value: "Duplicate License", label: "Duplicate License", color: "bg-gray-100 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400" },
+  { value: "DL - Amount", label: "DL - Amount", color: "bg-gray-100 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400" },
+  { value: "Verified", label: "Verified", color: "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400" },
+  { value: "Verification Rejected", label: "Verification Rejected", color: "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400" },
 ];
 
 const S3_STATUSES = [
-  { value: "Schedule Pending", label: "Schedule Pending" },
-  { value: "Training WIP", label: "Training WIP" },
-  { value: "Training Completed", label: "Training Completed" },
-  { value: "Training Rejected", label: "Training Rejected" },
-  { value: "Re-Training", label: "Re-Training" },
-  { value: "Absent for training", label: "Absent for training" },
-  { value: "Approved", label: "Approved" },
+  { value: "Schedule Pending", label: "Schedule Pending", color: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400" },
+  { value: "Training WIP", label: "Training WIP", color: "bg-gray-100 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400" },
+  { value: "Training Completed", label: "Training Completed", color: "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400" },
+  { value: "Training Rejected", label: "Training Rejected", color: "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400" },
+  { value: "Re-Training", label: "Re-Training", color: "bg-gray-100 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400" },
+  { value: "Absent for training", label: "Absent for training", color: "bg-gray-100 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400" },
+  { value: "Approved", label: "Approved", color: "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400" },
 ];
 
 const S4_STATUSES = [
-  { value: "CT Pending", label: "CT Pending" },
-  { value: "CT WIP", label: "CT WIP" },
-  { value: "Shift Details Pending", label: "Shift Details Pending" },
-  { value: "DONE!", label: "DONE!" },
-  { value: "Training Rejected", label: "Training Rejected" },
-  { value: "Re-Training", label: "Re-Training" },
-  { value: "Absent for training", label: "Absent for training" },
-  { value: "Terminated", label: "Terminated" },
+  { value: "CT Pending", label: "CT Pending", color: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400" },
+  { value: "CT WIP", label: "CT WIP", color: "bg-gray-100 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400" },
+  { value: "Shift Details Pending", label: "Shift Details Pending", color: "bg-gray-100 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400" },
+  { value: "DONE!", label: "DONE!", color: "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400" },
+  { value: "Training Rejected", label: "Training Rejected", color: "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400" },
+  { value: "Re-Training", label: "Re-Training", color: "bg-gray-100 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400" },
+  { value: "Absent for training", label: "Absent for training", color: "bg-gray-100 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400" },
+  { value: "Terminated", label: "Terminated", color: "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400" },
 ];
 
 const ALL_STATUSES = [...S1_STATUSES, ...S2_STATUSES, ...S3_STATUSES, ...S4_STATUSES];
+
+// Get statuses for a specific stage
+const getStatusesForStage = (stage) => {
+  switch (stage) {
+    case "S1": return S1_STATUSES;
+    case "S2": return S2_STATUSES;
+    case "S3": return S3_STATUSES;
+    case "S4": return S4_STATUSES;
+    default: return S1_STATUSES;
+  }
+};
+
+// Get completion status for each stage
+const getCompletionStatus = (stage) => {
+  switch (stage) {
+    case "S1": return "Highly Interested";
+    case "S2": return "Verified";
+    case "S3": return "Approved";
+    case "S4": return "DONE!";
+    default: return null;
+  }
+};
+
 
 const TelecallerDesk = () => {
   const { user } = useAuth();
