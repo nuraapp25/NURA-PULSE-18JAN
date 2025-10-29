@@ -321,14 +321,6 @@ const TelecallersManagement = () => {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button
-            onClick={handleSyncFromSheets}
-            variant="outline"
-            disabled={loading}
-          >
-            <FileSpreadsheet className="w-4 h-4 mr-2" />
-            Sync from Sheets
-          </Button>
           <Button onClick={fetchTelecallers} variant="outline">
             <RefreshCw className="w-4 h-4 mr-2" />
             Refresh
