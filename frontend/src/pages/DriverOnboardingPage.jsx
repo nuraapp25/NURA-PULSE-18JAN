@@ -3259,8 +3259,62 @@ const DriverOnboardingPage = () => {
                           </p>
                         )}
                       </div>
-                      {isEditMode && (
-                        <div className="flex gap-2">
+                      {/* Show document actions in both view and edit mode */}
+                      {uploadedDocs.bank_passbook && (
+                        <div className="flex flex-col gap-2">
+                          <div className="flex gap-1">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleViewDocument('bank_passbook')}
+                              className="flex-1"
+                              title="View document"
+                            >
+                              <Eye className="w-3 h-3 mr-1" />
+                              View
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDownloadDocument('bank_passbook')}
+                              className="flex-1"
+                              title="Download document"
+                            >
+                              <Download className="w-3 h-3 mr-1" />
+                              Download
+                            </Button>
+                          </div>
+                          {isEditMode && (
+                            <div className="flex gap-1">
+                              <Button
+                                type="button"
+                                variant="default"
+                                size="sm"
+                                onClick={() => handleDocumentScan('bank_passbook')}
+                                disabled={scanningDoc === 'bank_passbook'}
+                                className="flex-1 bg-blue-600 hover:bg-blue-700"
+                              >
+                                {scanningDoc === 'bank_passbook' ? 'Scanning...' : 'Scan'}
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleDeleteDocument('bank_passbook')}
+                                className="flex-1"
+                                title="Delete document"
+                              >
+                                <Trash2 className="w-3 h-3 mr-1" />
+                                Delete
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {isEditMode && !uploadedDocs.bank_passbook && (
+                        <div className="flex flex-col gap-2">
                           <label className="flex-1">
                             <Input
                               type="file"
@@ -3277,21 +3331,10 @@ const DriverOnboardingPage = () => {
                               disabled={uploadingDoc === 'bank_passbook'}
                               onClick={() => document.getElementById('bank-passbook-upload').click()}
                             >
-                              {uploadingDoc === 'bank_passbook' ? 'Uploading...' : uploadedDocs.bank_passbook ? '✓ Uploaded' : 'Upload'}
+                              <Upload className="w-3 h-3 mr-2" />
+                              {uploadingDoc === 'bank_passbook' ? 'Uploading...' : 'Upload'}
                             </Button>
                           </label>
-                          {uploadedDocs.bank_passbook && (
-                            <Button
-                              type="button"
-                              variant="default"
-                              size="sm"
-                              onClick={() => handleDocumentScan('bank_passbook')}
-                              disabled={scanningDoc === 'bank_passbook'}
-                              className="bg-blue-600 hover:bg-blue-700"
-                            >
-                              {scanningDoc === 'bank_passbook' ? 'Scanning...' : 'Scan'}
-                            </Button>
-                          )}
                         </div>
                       )}
                     </div>
