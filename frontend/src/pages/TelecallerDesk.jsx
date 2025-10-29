@@ -7,15 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Phone, RefreshCw, FileText, Save, MessageCircle, Edit, MoreVertical, PhoneCall } from "lucide-react";
+import { Phone, RefreshCw, FileText, Save, MessageCircle, Edit, PhoneCall, Eye, Download, Trash2, Upload } from "lucide-react";
 
 // Status options grouped by stage
 const S1_STATUSES = [
