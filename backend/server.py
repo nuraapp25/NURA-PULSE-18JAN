@@ -265,7 +265,7 @@ async def register(user_data: UserCreate):
             raise HTTPException(status_code=400, detail="Email already registered. If you're awaiting approval, please contact admin.")
     
     # Validate account type
-    if user_data.account_type not in ["admin", "standard", "ops_team"]:
+    if user_data.account_type not in ["admin", "standard", "ops_team", "telecaller"]:
         raise HTTPException(status_code=400, detail="Invalid account type")
     
     # Create user with pending status
@@ -505,7 +505,7 @@ async def create_user(user_data: UserCreate, current_user: User = Depends(get_cu
         raise HTTPException(status_code=400, detail="Email already registered")
     
     # Validate account type
-    if user_data.account_type not in ["admin", "standard", "ops_team"]:
+    if user_data.account_type not in ["admin", "standard", "ops_team", "telecaller"]:
         raise HTTPException(status_code=400, detail="Invalid account type")
     
     # Create user (master admin created users are auto-approved)
