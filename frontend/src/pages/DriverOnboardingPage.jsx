@@ -3821,14 +3821,27 @@ const DriverOnboardingPage = () => {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <Label htmlFor="telecaller-select" className="dark:text-gray-300">
-                Select Telecaller
-              </Label>
+              <div className="flex items-center justify-between mb-2">
+                <Label htmlFor="telecaller-select" className="dark:text-gray-300">
+                  Select Telecaller
+                </Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={fetchTelecallers}
+                  className="h-8 px-2 text-xs"
+                  title="Refresh telecaller list"
+                >
+                  <RefreshCw className="w-3 h-3 mr-1" />
+                  Refresh
+                </Button>
+              </div>
               <Select
                 value={selectedTelecallerForAssignment}
                 onValueChange={setSelectedTelecallerForAssignment}
               >
-                <SelectTrigger id="telecaller-select" className="dark:bg-gray-700 dark:border-gray-600 mt-2">
+                <SelectTrigger id="telecaller-select" className="dark:bg-gray-700 dark:border-gray-600">
                   <SelectValue placeholder="Choose a telecaller..." />
                 </SelectTrigger>
                 <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
@@ -3837,6 +3850,11 @@ const DriverOnboardingPage = () => {
                       {telecaller.name} ({telecaller.email})
                     </SelectItem>
                   ))}
+                  {telecallers.filter(t => t.status === "active").length === 0 && (
+                    <div className="px-2 py-4 text-sm text-gray-500 text-center">
+                      No active telecallers found
+                    </div>
+                  )}
                 </SelectContent>
               </Select>
             </div>
