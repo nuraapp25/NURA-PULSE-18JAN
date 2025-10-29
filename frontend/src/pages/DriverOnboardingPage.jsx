@@ -191,8 +191,7 @@ const DriverOnboardingPage = () => {
   const [telecallers, setTelecallers] = useState([]);
   const [telecallerFilter, setTelecallerFilter] = useState(null);
   
-  // Bulk lead selection and assignment
-  const [selectedLeadIds, setSelectedLeadIds] = useState([]);
+  // Bulk lead assignment dialog
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
   const [selectedTelecallerForAssignment, setSelectedTelecallerForAssignment] = useState("");
   
