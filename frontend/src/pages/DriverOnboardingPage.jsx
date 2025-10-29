@@ -1060,6 +1060,56 @@ const DriverOnboardingPage = () => {
 
   return (
     <div className="space-y-6" data-testid="driver-onboarding-page">
+      {/* Loading Animation Overlay */}
+      {loading && (
+        <div className="fixed inset-0 bg-gray-900/80 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
+            {/* Animated Icon */}
+            <div className="flex justify-center mb-6">
+              <div className="relative">
+                <div className="w-20 h-20 border-8 border-blue-200 dark:border-blue-900 rounded-full"></div>
+                <div className="w-20 h-20 border-8 border-blue-600 border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
+                <Users className="w-8 h-8 text-blue-600 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+              </div>
+            </div>
+            
+            {/* Title */}
+            <h2 className="text-2xl font-bold text-center text-gray-900 dark:text-white mb-2">
+              Loading Driver Leads
+            </h2>
+            <p className="text-center text-gray-600 dark:text-gray-400 mb-6">
+              Please wait while we fetch your data...
+            </p>
+            
+            {/* Progress Bar */}
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
+                <span>Progress</span>
+                <span className="font-semibold text-blue-600">{Math.round(loadingProgress)}%</span>
+              </div>
+              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
+                <div 
+                  className="bg-gradient-to-r from-blue-500 to-purple-600 h-full rounded-full transition-all duration-300 ease-out relative overflow-hidden"
+                  style={{ width: `${loadingProgress}%` }}
+                >
+                  {/* Shimmer effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
+                </div>
+              </div>
+              
+              {/* Status messages */}
+              <div className="text-center text-xs text-gray-500 dark:text-gray-500 mt-4">
+                {loadingProgress < 30 && "Connecting to database..."}
+                {loadingProgress >= 30 && loadingProgress < 60 && "Fetching lead records..."}
+                {loadingProgress >= 60 && loadingProgress < 90 && "Processing data..."}
+                {loadingProgress >= 90 && loadingProgress < 100 && "Almost there..."}
+                {loadingProgress >= 100 && "Complete!"}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
         <div>
