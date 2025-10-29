@@ -12,15 +12,22 @@ import { toast } from "sonner";
 import { Phone, RefreshCw, FileText, Save, MessageCircle, Edit, PhoneCall, Eye, Download, Trash2, Upload } from "lucide-react";
 
 // Status options grouped by stage
+const STAGES = [
+  { value: "S1", label: "S1 - Filtering" },
+  { value: "S2", label: "S2 - Docs Collection" },
+  { value: "S3", label: "S3 - Training" },
+  { value: "S4", label: "S4 - Customer Readiness" }
+];
+
 const S1_STATUSES = [
-  { value: "New", label: "New" },
-  { value: "Not Interested", label: "Not Interested" },
-  { value: "Interested, No DL", label: "Interested, No DL" },
-  { value: "Highly Interested", label: "Highly Interested" },
-  { value: "Call back 1D", label: "Call back 1D" },
-  { value: "Call back 1W", label: "Call back 1W" },
-  { value: "Call back 2W", label: "Call back 2W" },
-  { value: "Call back 1M", label: "Call back 1M" },
+  { value: "New", label: "New", color: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400" },
+  { value: "Not Interested", label: "Not Interested", color: "bg-gray-100 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400" },
+  { value: "Interested, No DL", label: "Interested, No DL", color: "bg-gray-100 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400" },
+  { value: "Highly Interested", label: "Highly Interested", color: "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400" },
+  { value: "Call back 1D", label: "Call back 1D", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400" },
+  { value: "Call back 1W", label: "Call back 1W", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400" },
+  { value: "Call back 2W", label: "Call back 2W", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400" },
+  { value: "Call back 1M", label: "Call back 1M", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400" },
 ];
 
 const S2_STATUSES = [
