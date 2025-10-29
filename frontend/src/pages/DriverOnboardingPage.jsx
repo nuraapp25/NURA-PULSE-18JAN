@@ -191,6 +191,11 @@ const DriverOnboardingPage = () => {
   const [telecallers, setTelecallers] = useState([]);
   const [telecallerFilter, setTelecallerFilter] = useState(null);
   
+  // Bulk lead selection and assignment
+  const [selectedLeadIds, setSelectedLeadIds] = useState([]);
+  const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
+  const [selectedTelecallerForAssignment, setSelectedTelecallerForAssignment] = useState("");
+  
   // Calculate pagination
   const totalPages = Math.ceil(filteredLeads.length / leadsPerPage);
   const startIndex = (currentPage - 1) * leadsPerPage;
