@@ -187,6 +187,13 @@ const DriverOnboardingPage = () => {
       .map(s => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()) // Normalize to title case
   )].sort();
   
+  // Extract unique statuses from all leads
+  const uniqueStatuses = [...new Set(
+    leads
+      .map(l => l.status?.trim())
+      .filter(Boolean)
+  )].sort();
+  
   // Telecallers for assignment
   const [telecallers, setTelecallers] = useState([]);
   const [telecallerFilter, setTelecallerFilter] = useState(null);
