@@ -1246,8 +1246,8 @@ async def get_status_summary(
         if date_filter:
             query['import_date'] = date_filter
     
-    # Get all leads matching the date filter
-    leads = await db.driver_leads.find(query, {"_id": 0, "stage": 1, "status": 1}).to_list(10000)
+    # Get all leads matching the filters (no limit)
+    leads = await db.driver_leads.find(query, {"_id": 0, "stage": 1, "status": 1}).to_list(length=None)
     
     # Define stage and status structure (for dashboard summary display)
     stages = {
