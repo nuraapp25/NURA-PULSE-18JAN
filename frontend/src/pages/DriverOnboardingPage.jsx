@@ -978,6 +978,50 @@ const DriverOnboardingPage = () => {
     setActiveSubStatus(null);
   };
 
+  // Bulk lead selection functions
+  const toggleLeadSelection = (leadId) => {
+    setSelectedLeadIds(prev =>
+      prev.includes(leadId)
+        ? prev.filter(id => id !== leadId)
+        : [...prev, leadId]
+    );
+  };
+
+  const toggleSelectAllLeads = () => {
+    if (selectedLeadIds.length === paginatedLeads.length) {
+      setSelectedLeadIds([]);
+    } else {
+      setSelectedLeadIds(paginatedLeads.map(lead => lead.id));
+    }
+  };
+
+  const handleBulkAssignLeads = async () => {
+    if (!selectedTelecallerForAssignment) {
+      toast.error("Please select a telecaller");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      await axios.patch(
+        `${API}/driver-onboarding/bulk-assign`,
+        {
+          lead_ids: selectedLeadIds,
+          telecaller_email: selectedTelecallerForAssignment
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      toast.success(`Successfully assigned ${selectedLeadIds.length} lead(s) to telecaller`);
+      setSelectedLeadIds([]);
+      setIsAssignDialogOpen(false);
+      setSelectedTelecallerForAssignment("");
+      fetchLeads(); // Refresh leads
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to assign leads");
+    }
+  };
+
   const getStatusColor = (status) => {
     const statusOption = STATUS_OPTIONS.find(opt => opt.value === status);
     return statusOption ? statusOption.color : "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400";
