@@ -1329,6 +1329,7 @@ async def bulk_import_leads(
     """
     Import Excel file and OVERWRITE all existing leads
     Automatically creates backup before import
+    Processes telecaller assignments from 'assigned_telecaller' column (Column V)
     """
     try:
         import pandas as pd
@@ -1372,7 +1373,52 @@ async def bulk_import_leads(
         if 'id' not in df.columns:
             raise HTTPException(status_code=400, detail="Excel file must contain 'id' column for lead identification")
         
-        # Step 4: Convert DataFrame to list of dictionaries
+        # Step 4: Process telecaller assignments from Column V (assigned_telecaller)
+        telecallers_collection = db['telecallers']
+        telecaller_assignments = {}  # Map telecaller_name -> [lead_ids]
+        leads_with_assignments = 0
+        
+        if 'assigned_telecaller' in df.columns:
+            logger.info("Processing telecaller assignments from Column V (assigned_telecaller)...")
+            
+            # Get all active telecallers
+            all_telecallers = await telecallers_collection.find({"is_active": True}).to_list(length=None)
+            telecaller_name_map = {tc['name'].strip().lower(): tc for tc in all_telecallers}
+            
+            logger.info(f"Found {len(all_telecallers)} active telecallers in database")
+            
+            # Process each lead's telecaller assignment
+            for idx, row in df.iterrows():
+                assigned_telecaller = row.get('assigned_telecaller')
+                
+                # Check if telecaller name is provided and not NaN
+                if pd.notna(assigned_telecaller) and str(assigned_telecaller).strip():
+                    telecaller_name = str(assigned_telecaller).strip()
+                    telecaller_name_lower = telecaller_name.lower()
+                    
+                    # Find matching telecaller
+                    if telecaller_name_lower in telecaller_name_map:
+                        telecaller = telecaller_name_map[telecaller_name_lower]
+                        lead_id = row['id']
+                        
+                        # Update the lead with telecaller email
+                        df.at[idx, 'assigned_telecaller'] = telecaller['email']
+                        
+                        # Track assignments for updating telecaller profiles
+                        if telecaller['email'] not in telecaller_assignments:
+                            telecaller_assignments[telecaller['email']] = []
+                        telecaller_assignments[telecaller['email']].append(lead_id)
+                        
+                        leads_with_assignments += 1
+                        logger.info(f"Assigned lead {lead_id} to telecaller {telecaller['name']} ({telecaller['email']})")
+                    else:
+                        logger.warning(f"Telecaller '{telecaller_name}' not found in database for lead {row['id']}")
+                        df.at[idx, 'assigned_telecaller'] = None
+                else:
+                    # No telecaller assigned
+                    df.at[idx, 'assigned_telecaller'] = None
+        
+        # Step 5: Convert DataFrame to list of dictionaries
         new_leads = df.to_dict('records')
         
         # Clean up NaN values
@@ -1381,11 +1427,11 @@ async def bulk_import_leads(
                 if pd.isna(value):
                     lead[key] = None
         
-        # Step 5: DELETE all existing leads
+        # Step 6: DELETE all existing leads
         delete_result = await leads_collection.delete_many({})
         logger.info(f"Deleted {delete_result.deleted_count} existing leads")
         
-        # Step 6: INSERT all new leads from Excel
+        # Step 7: INSERT all new leads from Excel
         if new_leads:
             insert_result = await leads_collection.insert_many(new_leads)
             inserted_count = len(insert_result.inserted_ids)
@@ -1393,11 +1439,45 @@ async def bulk_import_leads(
         else:
             inserted_count = 0
         
+        # Step 8: Update telecaller profiles with assigned leads
+        updated_telecallers = 0
+        if telecaller_assignments:
+            logger.info(f"Updating {len(telecaller_assignments)} telecaller profiles with assigned leads...")
+            
+            for telecaller_email, lead_ids in telecaller_assignments.items():
+                # Get existing assigned leads (if any) and merge with new assignments
+                existing_telecaller = await telecallers_collection.find_one({"email": telecaller_email})
+                if existing_telecaller:
+                    existing_assigned_leads = existing_telecaller.get('assigned_leads', [])
+                    
+                    # Merge and deduplicate
+                    all_assigned_leads = list(set(existing_assigned_leads + lead_ids))
+                    
+                    # Update telecaller profile
+                    await telecallers_collection.update_one(
+                        {"email": telecaller_email},
+                        {
+                            "$set": {
+                                "assigned_leads": all_assigned_leads,
+                                "last_modified": datetime.now(timezone.utc).isoformat()
+                            }
+                        }
+                    )
+                    updated_telecallers += 1
+                    logger.info(f"Updated telecaller {telecaller_email} with {len(lead_ids)} new assigned leads")
+        
         return {
             "success": True,
             "message": "Bulk import completed successfully",
             "backup_created": backup_filename if current_leads else None,
             "deleted_count": delete_result.deleted_count,
+            "inserted_count": inserted_count,
+            "total_leads_now": inserted_count,
+            "telecaller_assignments": {
+                "leads_assigned": leads_with_assignments,
+                "telecallers_updated": updated_telecallers
+            }
+        }
             "inserted_count": inserted_count,
             "total_leads_now": inserted_count
         }
