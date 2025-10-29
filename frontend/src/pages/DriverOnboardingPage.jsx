@@ -572,9 +572,7 @@ const DriverOnboardingPage = () => {
     setDetailDialogOpen(true);
     // Fetch documents status for this lead
     setTimeout(() => {
-      if (lead.id) {
-        fetchDocumentsStatus();
-      }
+      fetchDocumentsStatus(lead.id);
     }, 100);
   };
 
