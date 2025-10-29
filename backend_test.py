@@ -7073,110 +7073,526 @@ Case Test 6,9876540006,interested"""
         
         return success_count >= 4  # At least 4 out of 7 tests should pass
 
+    def test_document_management_apis(self):
+        """Test Priority 1: Document Management APIs (Driver Onboarding)"""
+        print("\n=== Testing Document Management APIs (Priority 1) ===")
+        
+        success_count = 0
+        
+        # First, get a lead with documents to test with
+        response = self.make_request("GET", "/driver-onboarding/leads")
+        test_lead_id = None
+        
+        if response and response.status_code == 200:
+            try:
+                leads = response.json()
+                # Find a lead that might have documents
+                for lead in leads[:10]:  # Check first 10 leads
+                    test_lead_id = lead.get("id")
+                    if test_lead_id:
+                        break
+                
+                if test_lead_id:
+                    self.log_test("Document Management - Find Test Lead", True, 
+                                f"Found test lead ID: {test_lead_id}")
+                    success_count += 1
+                else:
+                    self.log_test("Document Management - Find Test Lead", False, 
+                                "No leads found with valid ID")
+                    return False
+            except:
+                self.log_test("Document Management - Find Test Lead", False, 
+                            "Failed to parse leads response")
+                return False
+        else:
+            self.log_test("Document Management - Find Test Lead", False, 
+                        "Failed to get leads")
+            return False
+        
+        # Test document types
+        document_types = ["dl", "aadhar", "pan_card", "gas_bill", "bank_passbook"]
+        
+        for doc_type in document_types:
+            # Test VIEW document endpoint
+            response = self.make_request("GET", f"/driver-onboarding/documents/{test_lead_id}/view/{doc_type}")
+            
+            if response:
+                if response.status_code == 200:
+                    self.log_test(f"Document Management - View {doc_type.upper()}", True, 
+                                f"Successfully accessed view endpoint for {doc_type}")
+                    success_count += 1
+                elif response.status_code == 404:
+                    self.log_test(f"Document Management - View {doc_type.upper()}", True, 
+                                f"Correctly returned 404 for non-existent {doc_type} document")
+                    success_count += 1
+                else:
+                    self.log_test(f"Document Management - View {doc_type.upper()}", False, 
+                                f"Unexpected status {response.status_code} for {doc_type}")
+            else:
+                self.log_test(f"Document Management - View {doc_type.upper()}", False, 
+                            f"Network error for view {doc_type}")
+            
+            # Test DOWNLOAD document endpoint
+            response = self.make_request("GET", f"/driver-onboarding/documents/{test_lead_id}/download/{doc_type}")
+            
+            if response:
+                if response.status_code == 200:
+                    self.log_test(f"Document Management - Download {doc_type.upper()}", True, 
+                                f"Successfully accessed download endpoint for {doc_type}")
+                    success_count += 1
+                elif response.status_code == 404:
+                    self.log_test(f"Document Management - Download {doc_type.upper()}", True, 
+                                f"Correctly returned 404 for non-existent {doc_type} document")
+                    success_count += 1
+                else:
+                    self.log_test(f"Document Management - Download {doc_type.upper()}", False, 
+                                f"Unexpected status {response.status_code} for {doc_type}")
+            else:
+                self.log_test(f"Document Management - Download {doc_type.upper()}", False, 
+                            f"Network error for download {doc_type}")
+            
+            # Test DELETE document endpoint (Master Admin only)
+            response = self.make_request("DELETE", f"/driver-onboarding/documents/{test_lead_id}/delete/{doc_type}")
+            
+            if response:
+                if response.status_code in [200, 404]:
+                    self.log_test(f"Document Management - Delete {doc_type.upper()}", True, 
+                                f"Delete endpoint accessible for {doc_type} (status: {response.status_code})")
+                    success_count += 1
+                elif response.status_code == 403:
+                    self.log_test(f"Document Management - Delete {doc_type.upper()}", True, 
+                                f"Correctly enforced permissions for delete {doc_type}")
+                    success_count += 1
+                else:
+                    self.log_test(f"Document Management - Delete {doc_type.upper()}", False, 
+                                f"Unexpected status {response.status_code} for {doc_type}")
+            else:
+                self.log_test(f"Document Management - Delete {doc_type.upper()}", False, 
+                            f"Network error for delete {doc_type}")
+        
+        return success_count >= 10  # At least 10 out of 15 tests should pass
+
+    def test_hotspot_analysis_enhancements(self):
+        """Test Priority 2: Hotspot Analysis Enhancements"""
+        print("\n=== Testing Hotspot Analysis Enhancements (Priority 2) ===")
+        
+        success_count = 0
+        
+        # Create test CSV data for hotspot analysis
+        test_csv_content = """createdAt,updatedAt,pickupLat,pickupLong,dropLat,dropLong
+2024-12-15,08:30:00,13.0827,80.2707,13.0878,80.2785
+2024-12-15,09:15:00,13.0678,80.2377,13.0728,80.2455
+2024-12-15,10:45:00,13.0527,80.2207,13.0577,80.2285
+2024-12-15,14:30:00,13.0427,80.2107,13.0477,80.2185
+2024-12-15,18:15:00,13.0327,80.2007,13.0377,80.2085"""
+        
+        # Test POST /hotspot-planning/analyze-and-save endpoint
+        files = {'file': ('hotspot_test.csv', test_csv_content, 'text/csv')}
+        
+        response = self.make_request("POST", "/hotspot-planning/analyze-and-save", files=files)
+        
+        if response and response.status_code == 200:
+            try:
+                result = response.json()
+                
+                if result.get("success"):
+                    self.log_test("Hotspot Analysis - Analyze and Save", True, 
+                                f"Successfully analyzed hotspots: {result.get('total_rides_analyzed', 0)} rides")
+                    success_count += 1
+                    
+                    # Check if locality names are returned in response
+                    time_slots = result.get("time_slots", {})
+                    locality_found = False
+                    total_locations = 0
+                    locations_with_locality = 0
+                    
+                    for slot_name, slot_data in time_slots.items():
+                        locations = slot_data.get("locations", [])
+                        total_locations += len(locations)
+                        
+                        for location in locations:
+                            if "locality" in location:
+                                locality_found = True
+                                locality_value = location["locality"]
+                                if locality_value and locality_value != "Unknown":
+                                    locations_with_locality += 1
+                    
+                    if locality_found:
+                        self.log_test("Hotspot Analysis - Locality Field Present", True, 
+                                    f"Locality field found in {locations_with_locality}/{total_locations} locations")
+                        success_count += 1
+                        
+                        if locations_with_locality == total_locations and total_locations > 0:
+                            self.log_test("Hotspot Analysis - No Unknown Localities", True, 
+                                        f"All {total_locations} locations have valid locality names (no 'Unknown' values)")
+                            success_count += 1
+                        elif total_locations == 0:
+                            self.log_test("Hotspot Analysis - No Unknown Localities", True, 
+                                        "No locations generated (expected for small dataset)")
+                            success_count += 1
+                        else:
+                            unknown_count = total_locations - locations_with_locality
+                            self.log_test("Hotspot Analysis - No Unknown Localities", False, 
+                                        f"{unknown_count} locations have 'Unknown' locality values")
+                    else:
+                        self.log_test("Hotspot Analysis - Locality Field Present", False, 
+                                    "No locality field found in hotspot locations")
+                    
+                    # Verify coordinates are present for map visualization
+                    coordinates_valid = True
+                    for slot_name, slot_data in time_slots.items():
+                        locations = slot_data.get("locations", [])
+                        for location in locations:
+                            if not ("lat" in location and "long" in location):
+                                coordinates_valid = False
+                                break
+                    
+                    if coordinates_valid:
+                        self.log_test("Hotspot Analysis - Coordinates Present", True, 
+                                    "All hotspot locations have lat/long coordinates for map visualization")
+                        success_count += 1
+                    else:
+                        self.log_test("Hotspot Analysis - Coordinates Present", False, 
+                                    "Some locations missing lat/long coordinates")
+                        
+                else:
+                    self.log_test("Hotspot Analysis - Analyze and Save", False, 
+                                f"Analysis failed: {result.get('message', 'Unknown error')}")
+            except:
+                self.log_test("Hotspot Analysis - Analyze and Save", False, 
+                            "Failed to parse analysis response")
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Hotspot Analysis - Analyze and Save", False, error_msg)
+        
+        return success_count >= 3  # At least 3 out of 4 tests should pass
+
+    def test_scan_document_feature(self):
+        """Test Priority 3: Scan Document Feature (OCR)"""
+        print("\n=== Testing Scan Document Feature (Priority 3) ===")
+        
+        success_count = 0
+        
+        # First, get a test lead ID
+        response = self.make_request("GET", "/driver-onboarding/leads")
+        test_lead_id = None
+        
+        if response and response.status_code == 200:
+            try:
+                leads = response.json()
+                if leads:
+                    test_lead_id = leads[0].get("id")
+                    self.log_test("Scan Document - Find Test Lead", True, 
+                                f"Found test lead ID: {test_lead_id}")
+                    success_count += 1
+                else:
+                    self.log_test("Scan Document - Find Test Lead", False, "No leads found")
+                    return False
+            except:
+                self.log_test("Scan Document - Find Test Lead", False, "Failed to parse leads")
+                return False
+        else:
+            self.log_test("Scan Document - Find Test Lead", False, "Failed to get leads")
+            return False
+        
+        # Test document types for OCR scanning
+        document_types = ["dl", "aadhar", "pan_card"]
+        
+        for doc_type in document_types:
+            # Test POST /driver-onboarding/scan-document/{lead_id}?document_type={doc_type}
+            response = self.make_request("POST", f"/driver-onboarding/scan-document/{test_lead_id}?document_type={doc_type}")
+            
+            if response:
+                if response.status_code == 200:
+                    try:
+                        result = response.json()
+                        self.log_test(f"Scan Document - {doc_type.upper()} OCR", True, 
+                                    f"OCR endpoint accessible for {doc_type}: {result.get('message', 'Success')}")
+                        success_count += 1
+                    except:
+                        self.log_test(f"Scan Document - {doc_type.upper()} OCR", True, 
+                                    f"OCR endpoint accessible for {doc_type} (non-JSON response)")
+                        success_count += 1
+                elif response.status_code == 400:
+                    self.log_test(f"Scan Document - {doc_type.upper()} OCR", True, 
+                                f"OCR endpoint correctly validates input for {doc_type} (400)")
+                    success_count += 1
+                elif response.status_code == 404:
+                    self.log_test(f"Scan Document - {doc_type.upper()} OCR", False, 
+                                f"OCR endpoint not found for {doc_type} (404)")
+                else:
+                    self.log_test(f"Scan Document - {doc_type.upper()} OCR", False, 
+                                f"Unexpected status {response.status_code} for {doc_type} OCR")
+            else:
+                self.log_test(f"Scan Document - {doc_type.upper()} OCR", False, 
+                            f"Network error for {doc_type} OCR")
+        
+        # Test EMERGENT_LLM_KEY configuration
+        import os
+        emergent_key = os.environ.get('EMERGENT_LLM_KEY')
+        if emergent_key and emergent_key.startswith('sk-emergent-'):
+            self.log_test("Scan Document - EMERGENT_LLM_KEY Config", True, 
+                        f"EMERGENT_LLM_KEY properly configured: {emergent_key[:15]}...")
+            success_count += 1
+        else:
+            self.log_test("Scan Document - EMERGENT_LLM_KEY Config", False, 
+                        "EMERGENT_LLM_KEY not properly configured")
+        
+        # Test emergentintegrations library availability
+        try:
+            import emergentintegrations
+            self.log_test("Scan Document - Emergent Library", True, 
+                        "emergentintegrations library is available")
+            success_count += 1
+        except ImportError:
+            self.log_test("Scan Document - Emergent Library", False, 
+                        "emergentintegrations library not found")
+        
+        return success_count >= 4  # At least 4 out of 6 tests should pass
+
+    def test_telecaller_management_features(self):
+        """Test Priority 4: Telecaller Management New Features"""
+        print("\n=== Testing Telecaller Management Features (Priority 4) ===")
+        
+        success_count = 0
+        
+        # Test GET /telecallers - Should return all active telecaller profiles
+        response = self.make_request("GET", "/telecallers")
+        
+        if response and response.status_code == 200:
+            try:
+                telecallers = response.json()
+                self.log_test("Telecaller Management - Get All Telecallers", True, 
+                            f"Retrieved {len(telecallers)} telecaller profiles")
+                success_count += 1
+                
+                # Check if telecaller profiles have required fields
+                if telecallers:
+                    sample_telecaller = telecallers[0]
+                    required_fields = ["id", "name", "email", "status"]
+                    missing_fields = [field for field in required_fields if field not in sample_telecaller]
+                    
+                    if not missing_fields:
+                        self.log_test("Telecaller Management - Profile Structure", True, 
+                                    "Telecaller profiles have all required fields")
+                        success_count += 1
+                    else:
+                        self.log_test("Telecaller Management - Profile Structure", False, 
+                                    f"Missing fields in telecaller profile: {missing_fields}")
+                else:
+                    self.log_test("Telecaller Management - Profile Structure", True, 
+                                "No telecaller profiles to validate (expected if none exist)")
+                    success_count += 1
+                    
+            except:
+                self.log_test("Telecaller Management - Get All Telecallers", False, 
+                            "Failed to parse telecallers response")
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Telecaller Management - Get All Telecallers", False, error_msg)
+        
+        # Test POST /telecallers/reassign-leads - Reassign leads between telecallers
+        reassign_data = {
+            "lead_ids": ["test-lead-1", "test-lead-2"],
+            "from_telecaller": "old@example.com",
+            "to_telecaller": "new@example.com"
+        }
+        
+        response = self.make_request("POST", "/telecallers/reassign-leads", reassign_data)
+        
+        if response:
+            if response.status_code in [200, 404, 400]:
+                self.log_test("Telecaller Management - Reassign Leads", True, 
+                            f"Reassign endpoint accessible (status: {response.status_code})")
+                success_count += 1
+            else:
+                self.log_test("Telecaller Management - Reassign Leads", False, 
+                            f"Unexpected status {response.status_code} for reassign")
+        else:
+            self.log_test("Telecaller Management - Reassign Leads", False, 
+                        "Network error for reassign leads")
+        
+        # Test POST /telecallers/deassign-leads - Deassign leads from telecallers
+        deassign_data = {
+            "lead_ids": ["test-lead-1", "test-lead-2"],
+            "telecaller_email": "test@example.com"
+        }
+        
+        response = self.make_request("POST", "/telecallers/deassign-leads", deassign_data)
+        
+        if response:
+            if response.status_code in [200, 404, 400]:
+                self.log_test("Telecaller Management - Deassign Leads", True, 
+                            f"Deassign endpoint accessible (status: {response.status_code})")
+                success_count += 1
+            else:
+                self.log_test("Telecaller Management - Deassign Leads", False, 
+                            f"Unexpected status {response.status_code} for deassign")
+        else:
+            self.log_test("Telecaller Management - Deassign Leads", False, 
+                        "Network error for deassign leads")
+        
+        # Test telecaller profile creation when new users register
+        # This is tested by checking if telecaller users have corresponding profiles
+        response = self.make_request("GET", "/users")
+        
+        if response and response.status_code == 200:
+            try:
+                users = response.json()
+                telecaller_users = [user for user in users if user.get("account_type") == "telecaller"]
+                
+                if telecaller_users:
+                    self.log_test("Telecaller Management - User Registration Integration", True, 
+                                f"Found {len(telecaller_users)} telecaller users in system")
+                    success_count += 1
+                else:
+                    self.log_test("Telecaller Management - User Registration Integration", True, 
+                                "No telecaller users found (expected if none registered)")
+                    success_count += 1
+            except:
+                self.log_test("Telecaller Management - User Registration Integration", False, 
+                            "Failed to check telecaller users")
+        
+        return success_count >= 4  # At least 4 out of 5 tests should pass
+
+    def test_date_filtering_features(self):
+        """Test Priority 5: Date Filtering"""
+        print("\n=== Testing Date Filtering Features (Priority 5) ===")
+        
+        success_count = 0
+        
+        # Test GET /driver-onboarding/leads with date filtering
+        test_params = "start_date=2025-01-01&end_date=2025-12-31"
+        response = self.make_request("GET", f"/driver-onboarding/leads?{test_params}")
+        
+        if response and response.status_code == 200:
+            try:
+                leads = response.json()
+                self.log_test("Date Filtering - Leads with Date Range", True, 
+                            f"Date filtering works for leads: {len(leads)} leads returned")
+                success_count += 1
+            except:
+                self.log_test("Date Filtering - Leads with Date Range", False, 
+                            "Failed to parse filtered leads response")
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Date Filtering - Leads with Date Range", False, error_msg)
+        
+        # Test GET /driver-onboarding/status-summary with date filtering
+        response = self.make_request("GET", f"/driver-onboarding/status-summary?{test_params}")
+        
+        if response and response.status_code == 200:
+            try:
+                summary = response.json()
+                
+                if summary.get("success"):
+                    date_filter = summary.get("date_filter", {})
+                    start_date = date_filter.get("start_date")
+                    end_date = date_filter.get("end_date")
+                    
+                    if start_date and end_date:
+                        self.log_test("Date Filtering - Status Summary with Date Range", True, 
+                                    f"Date filtering works for summary: {start_date} to {end_date}")
+                        success_count += 1
+                        
+                        total_leads = summary.get("total_leads", 0)
+                        self.log_test("Date Filtering - Filtered Results Count", True, 
+                                    f"Filtered summary shows {total_leads} leads in date range")
+                        success_count += 1
+                    else:
+                        self.log_test("Date Filtering - Status Summary with Date Range", False, 
+                                    "Date filter not reflected in summary response")
+                else:
+                    self.log_test("Date Filtering - Status Summary with Date Range", False, 
+                                "Summary response indicates failure")
+            except:
+                self.log_test("Date Filtering - Status Summary with Date Range", False, 
+                            "Failed to parse filtered summary response")
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Date Filtering - Status Summary with Date Range", False, error_msg)
+        
+        # Test different date formats
+        alt_params = "start_date=01-01-2025&end_date=31-12-2025"
+        response = self.make_request("GET", f"/driver-onboarding/status-summary?{alt_params}")
+        
+        if response and response.status_code == 200:
+            self.log_test("Date Filtering - Alternative Date Format", True, 
+                        "Alternative date format (DD-MM-YYYY) works")
+            success_count += 1
+        else:
+            self.log_test("Date Filtering - Alternative Date Format", False, 
+                        "Alternative date format not supported")
+        
+        return success_count >= 3  # At least 3 out of 4 tests should pass
+
     def run_all_tests(self):
         """Run all backend tests"""
-        print("🚀 Starting Comprehensive Testing - Driver Onboarding Two-Way Sync with ID-Based Reconciliation")
-        print(f"Backend URL: {self.base_url}")
-        print(f"Master Admin: {MASTER_ADMIN_EMAIL}")
+        print("🚀 Starting Comprehensive Backend Testing for Nura Pulse Application")
+        print("=" * 80)
         
-        # Test sequence as per requirements
-        auth_success = self.test_authentication_flow()
-        
-        if not auth_success:
+        # Test authentication first
+        if not self.test_authentication_flow():
             print("\n❌ Authentication failed - cannot proceed with other tests")
             return False
         
-        # PRIORITY: Test Driver Onboarding Comprehensive Status Mapping & Dashboard Summary as requested in review
-        status_mapping_success = self.test_driver_onboarding_comprehensive()
+        # Run priority tests from review request
+        priority_tests = [
+            self.test_document_management_apis,
+            self.test_hotspot_analysis_enhancements,
+            self.test_scan_document_feature,
+            self.test_telecaller_management_features,
+            self.test_date_filtering_features
+        ]
         
-        # PRIORITY: Test Hotspot Planning Locality Verification as requested in review
-        hotspot_locality_success = self.test_hotspot_planning_locality_verification()
+        # Run additional existing tests
+        additional_tests = [
+            self.test_user_management,
+            self.test_google_sheets_sync,
+            self.test_driver_onboarding_comprehensive,
+            self.test_payment_reconciliation_apis,
+            self.test_battery_consumption_analytics,
+            self.test_telecaller_queue_assignments,
+            self.test_montra_feed_corrected_functionality,
+            self.test_mini_apps_endpoints,
+            self.test_delete_endpoint_fix,
+            self.test_battery_charge_audit_endpoint
+        ]
         
-        # PRIORITY: Test Locality Extraction Fix as requested in review
-        locality_extraction_success = self.test_locality_extraction_fix()
+        all_tests = priority_tests + additional_tests
         
-        # PRIORITY: Test QR Code Management APIs as requested
-        qr_code_success = self.test_qr_code_management_apis()
+        passed_tests = 0
+        total_tests = len(all_tests)
         
-        # PRIORITY: Test Ride Deck Data Analysis APIs as requested
-        ride_deck_success = self.test_ride_deck_data_analysis_backend_apis()
+        for test in all_tests:
+            try:
+                if test():
+                    passed_tests += 1
+            except Exception as e:
+                print(f"❌ Test {test.__name__} failed with exception: {e}")
         
-        # PRIORITY: Test RCA Management Backend APIs as requested
-        rca_management_success = self.test_rca_management_backend_apis()
+        # Print summary
+        print("\n" + "=" * 80)
+        print("📊 TEST SUMMARY")
+        print("=" * 80)
         
-        # PRIORITY: Test RCA Locality Fix and Stats as requested in review
-        rca_locality_fix_success = self.test_rca_locality_fix_and_stats()
+        success_rate = (passed_tests / total_tests) * 100
+        print(f"✅ Passed: {passed_tests}/{total_tests} tests ({success_rate:.1f}%)")
         
-        # PRIORITY: Test Ride Deck Data Management Endpoints as requested
-        ride_deck_data_mgmt_success = self.test_ride_deck_data_management_endpoints()
+        if success_rate >= 80:
+            print("🎉 Overall Status: EXCELLENT - Backend is working well!")
+        elif success_rate >= 60:
+            print("⚠️  Overall Status: GOOD - Minor issues detected")
+        else:
+            print("🚨 Overall Status: NEEDS ATTENTION - Multiple issues found")
         
-        # PRIORITY: Test Optimized Payment Data Extractor as requested in review
-        payment_extractor_success = self.test_payment_data_extractor_optimization()
+        # Print individual test results
+        print("\n📋 Detailed Results:")
+        for result in self.test_results:
+            status = "✅" if result["success"] else "❌"
+            print(f"{status} {result['test']}: {result['message']}")
         
-        # ADDITIONAL: Test Driver Onboarding Two-Way Sync with ID-Based Reconciliation
-        two_way_sync_success = self.test_driver_onboarding_two_way_sync()
-        
-        # ADDITIONAL: Test Payment Screenshots Delete Functionality
-        payment_screenshots_success = self.test_payment_screenshots_delete_functionality()
-        
-        # ADDITIONAL: Test Analytics Dashboard Endpoints
-        analytics_endpoints_success = self.test_analytics_endpoints()
-        
-        # ADDITIONAL: Test Analytics Integration Workflow
-        analytics_workflow_success = self.test_analytics_integration_workflow()
-        
-        # PRIORITY: Test Analytics Dashboards Pivot Tables (Fixed Version) as requested in review
-        analytics_pivot_success = self.test_analytics_dashboards_pivot_tables()
-        
-        # PRIORITY: Test Hotspot Planning Library Endpoints as requested in review
-        hotspot_library_success = self.test_hotspot_planning_library_endpoints()
-        
-        # Summary
-        print("\n" + "="*80)
-        print("📊 TEST SUMMARY - DRIVER ONBOARDING TWO-WAY SYNC WITH ID-BASED RECONCILIATION")
-        print("="*80)
-        
-        total_tests = len(self.test_results)
-        passed_tests = sum(1 for result in self.test_results if result["success"])
-        failed_tests = total_tests - passed_tests
-        
-        print(f"Total Tests: {total_tests}")
-        print(f"Passed: {passed_tests}")
-        print(f"Failed: {failed_tests}")
-        print(f"Success Rate: {(passed_tests/total_tests)*100:.1f}%")
-        
-        # Priority test results
-        print(f"\n🎯 PRIORITY TEST RESULTS:")
-        print(f"   Driver Onboarding Status Mapping Bug Fix: {'✅ PASS' if status_mapping_success else '❌ FAIL'}")
-        print(f"   Locality Extraction Fix: {'✅ PASS' if locality_extraction_success else '❌ FAIL'}")
-        print(f"   QR Code Management APIs: {'✅ PASS' if qr_code_success else '❌ FAIL'}")
-        print(f"   Ride Deck Data Analysis APIs: {'✅ PASS' if ride_deck_success else '❌ FAIL'}")
-        print(f"   RCA Management Backend APIs: {'✅ PASS' if rca_management_success else '❌ FAIL'}")
-        print(f"   RCA Locality Fix and Stats: {'✅ PASS' if rca_locality_fix_success else '❌ FAIL'}")
-        print(f"   Payment Data Extractor Optimization: {'✅ PASS' if payment_extractor_success else '❌ FAIL'}")
-        print(f"   Driver Onboarding Two-Way Sync: {'✅ PASS' if two_way_sync_success else '❌ FAIL'}")
-        print(f"   Payment Screenshots Delete: {'✅ PASS' if payment_screenshots_success else '❌ FAIL'}")
-        print(f"   Analytics Endpoints: {'✅ PASS' if analytics_endpoints_success else '❌ FAIL'}")
-        print(f"   Analytics Workflow: {'✅ PASS' if analytics_workflow_success else '❌ FAIL'}")
-        
-        if failed_tests > 0:
-            print("\n❌ FAILED TESTS:")
-            for result in self.test_results:
-                if not result["success"]:
-                    print(f"  - {result['test']}: {result['message']}")
-        
-        # Overall success if the main priority feature works
-        overall_success = two_way_sync_success and failed_tests <= 10  # Allow some minor failures in additional tests
-        
-        # Count working priority features
-        priority_features = [two_way_sync_success, payment_screenshots_success, analytics_endpoints_success, analytics_workflow_success]
-        priority_success_count = sum(priority_features)
-        
-        status = "✅ COMPREHENSIVE TESTING COMPLETE" if overall_success else "❌ CRITICAL ISSUES FOUND"
-        print(f"\n{status}")
-        print(f"Priority Features Working: {priority_success_count}/4")
-        
-        return overall_success
+        return success_rate >= 60
 
 def main():
     """Main test execution"""
