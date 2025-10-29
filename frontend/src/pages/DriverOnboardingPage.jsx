@@ -360,7 +360,7 @@ const DriverOnboardingPage = () => {
 
     setFilteredLeads(filtered);
     setCurrentPage(1); // Reset to first page when filters change
-  }, [startDate, endDate, activeStageFilter, activeSubStatus, sourceFilter, telecallerFilter]);
+  }, [leads, startDate, endDate, activeStageFilter, activeSubStatus, sourceFilter, telecallerFilter]);
 
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
