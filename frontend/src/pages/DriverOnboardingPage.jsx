@@ -570,6 +570,12 @@ const DriverOnboardingPage = () => {
     setEditedLead({...lead}); // Create a copy for editing
     setIsEditMode(false); // Start in view mode
     setDetailDialogOpen(true);
+    // Fetch documents status for this lead
+    setTimeout(() => {
+      if (lead.id) {
+        fetchDocumentsStatus();
+      }
+    }, 100);
   };
 
   const handleFieldChange = (field, value) => {
