@@ -1418,6 +1418,10 @@ async def bulk_update_lead_status(bulk_data: BulkLeadStatusUpdate, current_user:
     # Return success message
     count = len(updated_leads)
     return {
+        "success": True,
+        "message": f"Successfully updated {count} lead(s)",
+        "updated_count": count
+    }
 
 
 @api_router.patch("/driver-onboarding/bulk-assign")
@@ -1465,7 +1469,7 @@ async def bulk_assign_telecaller(
     }
 
 
-@api_router.patch("/driver-onboarding/leads/bulk-update-status")
+@api_router.patch("/driver-onboarding/leads/{lead_id}")
 async def bulk_update_lead_status(bulk_data: BulkLeadStatusUpdate, current_user: User = Depends(get_current_user)):
     """Bulk update lead status for multiple leads"""
     print("=== BULK UPDATE CALLED ===")
