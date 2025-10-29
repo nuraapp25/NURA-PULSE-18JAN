@@ -526,7 +526,10 @@ export default function QRCodeManager() {
               </CardContent>
             </Card>
           ))}
-        </div>
+                </div>
+              </div>
+            ));
+          })()}
         </>
       )}
 
