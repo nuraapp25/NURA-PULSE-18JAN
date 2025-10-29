@@ -1197,16 +1197,21 @@ async def get_leads(current_user: User = Depends(get_current_user)):
 async def get_status_summary(
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
+    source: Optional[str] = None,
     current_user: User = Depends(get_current_user)
 ):
     """
     Get status summary dashboard with counts grouped by stage and status.
-    Optionally filter by date range (import_date field).
+    Optionally filter by date range (import_date field) and source.
     """
     from datetime import datetime, timezone
     
     # Build query filter
     query = {}
+    
+    # Source filter
+    if source:
+        query['source'] = {'$regex': f'^{source}$', '$options': 'i'}  # Case-insensitive exact match
     
     if start_date or end_date:
         date_filter = {}
