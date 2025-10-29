@@ -264,6 +264,7 @@ const BatteryConsumption = () => {
     // Track cumulative distance (always increasing)
     let cumulativeDistance = 0;
     let lastAbsoluteDistance = null;
+    let firstOdometerReading = null; // Track the very first odometer reading of the day
     
     hourKeys.forEach((hourKey, index) => {
       const hourReadings = hourlyData[hourKey];
@@ -279,16 +280,20 @@ const BatteryConsumption = () => {
       
       // Calculate distance increment (always positive or zero)
       if (distanceColumn && absoluteDistance > 0) {
-        if (lastAbsoluteDistance !== null && absoluteDistance >= lastAbsoluteDistance) {
+        if (index === 0) {
+          // First data point of the day - set as baseline, cumulative starts at 0
+          firstOdometerReading = absoluteDistance;
+          lastAbsoluteDistance = absoluteDistance;
+          cumulativeDistance = 0; // Day starts at 0 km traveled
+        } else if (lastAbsoluteDistance !== null && absoluteDistance >= lastAbsoluteDistance) {
+          // Normal case: accumulate distance traveled since last reading
           distanceTraveled = absoluteDistance - lastAbsoluteDistance;
           cumulativeDistance += distanceTraveled;
-        } else if (lastAbsoluteDistance === null) {
-          // First data point - use normalized distance from start
-          cumulativeDistance = absoluteDistance - startingOdometer;
+          lastAbsoluteDistance = absoluteDistance;
+        } else if (absoluteDistance < lastAbsoluteDistance) {
+          // Odometer decreased - likely data error or vehicle swap, keep cumulative as is
+          // Don't update lastAbsoluteDistance to avoid negative increments
         }
-        // If absoluteDistance < lastAbsoluteDistance, it's likely an error/reset, so keep cumulative as is
-        
-        lastAbsoluteDistance = absoluteDistance;
       }
       
       // Compare with previous hour for battery changes
