@@ -1677,7 +1677,7 @@ const DriverOnboardingPage = () => {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-gray-900 dark:text-white">
-              {filteredLeads.filter(l => l.status === "Onboarded").length}
+              {filteredLeads.filter(l => l.status === "DONE!").length}
             </p>
           </CardContent>
         </Card>
@@ -1687,7 +1687,7 @@ const DriverOnboardingPage = () => {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-gray-900 dark:text-white">
-              {filteredLeads.filter(l => ["Contacted", "Interested", "Documents Pending", "Scheduled"].includes(l.status)).length}
+              {filteredLeads.filter(l => !["New", "Not Interested", "DONE!"].includes(l.status)).length}
             </p>
           </CardContent>
         </Card>
