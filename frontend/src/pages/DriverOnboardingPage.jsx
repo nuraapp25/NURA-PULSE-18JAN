@@ -2962,8 +2962,62 @@ const DriverOnboardingPage = () => {
                           </p>
                         )}
                       </div>
-                      {isEditMode && (
-                        <div className="flex gap-2">
+                      {/* Show document actions in both view and edit mode */}
+                      {uploadedDocs.aadhar && (
+                        <div className="flex flex-col gap-2">
+                          <div className="flex gap-1">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleViewDocument('aadhar')}
+                              className="flex-1"
+                              title="View document"
+                            >
+                              <Eye className="w-3 h-3 mr-1" />
+                              View
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDownloadDocument('aadhar')}
+                              className="flex-1"
+                              title="Download document"
+                            >
+                              <Download className="w-3 h-3 mr-1" />
+                              Download
+                            </Button>
+                          </div>
+                          {isEditMode && (
+                            <div className="flex gap-1">
+                              <Button
+                                type="button"
+                                variant="default"
+                                size="sm"
+                                onClick={() => handleDocumentScan('aadhar')}
+                                disabled={scanningDoc === 'aadhar'}
+                                className="flex-1 bg-blue-600 hover:bg-blue-700"
+                              >
+                                {scanningDoc === 'aadhar' ? 'Scanning...' : 'Scan'}
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleDeleteDocument('aadhar')}
+                                className="flex-1"
+                                title="Delete document"
+                              >
+                                <Trash2 className="w-3 h-3 mr-1" />
+                                Delete
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {isEditMode && !uploadedDocs.aadhar && (
+                        <div className="flex flex-col gap-2">
                           <label className="flex-1">
                             <Input
                               type="file"
@@ -2980,21 +3034,10 @@ const DriverOnboardingPage = () => {
                               disabled={uploadingDoc === 'aadhar'}
                               onClick={() => document.getElementById('aadhar-upload').click()}
                             >
-                              {uploadingDoc === 'aadhar' ? 'Uploading...' : uploadedDocs.aadhar ? '✓ Uploaded' : 'Upload'}
+                              <Upload className="w-3 h-3 mr-2" />
+                              {uploadingDoc === 'aadhar' ? 'Uploading...' : 'Upload'}
                             </Button>
                           </label>
-                          {uploadedDocs.aadhar && (
-                            <Button
-                              type="button"
-                              variant="default"
-                              size="sm"
-                              onClick={() => handleDocumentScan('aadhar')}
-                              disabled={scanningDoc === 'aadhar'}
-                              className="bg-blue-600 hover:bg-blue-700"
-                            >
-                              {scanningDoc === 'aadhar' ? 'Scanning...' : 'Scan'}
-                            </Button>
-                          )}
                         </div>
                       )}
                     </div>
