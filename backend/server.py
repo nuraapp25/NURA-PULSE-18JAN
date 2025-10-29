@@ -7819,6 +7819,157 @@ async def upload_driver_document(
         raise HTTPException(status_code=500, detail=f"Failed to upload document: {str(e)}")
 
 
+@api_router.get("/driver-onboarding/documents/{lead_id}/view/{document_type}")
+async def view_driver_document(
+    lead_id: str,
+    document_type: str,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    View/display document for a driver lead (returns file for inline viewing)
+    """
+    try:
+        # Validate document type
+        valid_types = ['dl', 'aadhar', 'pan_card', 'gas_bill', 'bank_passbook']
+        if document_type not in valid_types:
+            raise HTTPException(status_code=400, detail=f"Invalid document type. Must be one of: {', '.join(valid_types)}")
+        
+        # Get lead to find document path
+        leads_collection = db['driver_leads']
+        lead = await leads_collection.find_one({'id': lead_id})
+        
+        if not lead:
+            raise HTTPException(status_code=404, detail="Lead not found")
+        
+        # Get document path from lead record
+        field_name = f"{document_type}_document_path"
+        document_path = lead.get(field_name)
+        
+        if not document_path or not os.path.exists(document_path):
+            raise HTTPException(status_code=404, detail="Document not found")
+        
+        # Determine media type based on file extension
+        file_ext = os.path.splitext(document_path)[1].lower()
+        media_type_map = {
+            '.png': 'image/png',
+            '.jpg': 'image/jpeg',
+            '.jpeg': 'image/jpeg',
+            '.pdf': 'application/pdf'
+        }
+        media_type = media_type_map.get(file_ext, 'application/octet-stream')
+        
+        # Return file for inline viewing
+        return FileResponse(
+            path=document_path,
+            media_type=media_type,
+            filename=os.path.basename(document_path)
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to view document: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to view document: {str(e)}")
+
+
+@api_router.get("/driver-onboarding/documents/{lead_id}/download/{document_type}")
+async def download_driver_document(
+    lead_id: str,
+    document_type: str,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Download document for a driver lead
+    """
+    try:
+        # Validate document type
+        valid_types = ['dl', 'aadhar', 'pan_card', 'gas_bill', 'bank_passbook']
+        if document_type not in valid_types:
+            raise HTTPException(status_code=400, detail=f"Invalid document type. Must be one of: {', '.join(valid_types)}")
+        
+        # Get lead to find document path
+        leads_collection = db['driver_leads']
+        lead = await leads_collection.find_one({'id': lead_id})
+        
+        if not lead:
+            raise HTTPException(status_code=404, detail="Lead not found")
+        
+        # Get document path from lead record
+        field_name = f"{document_type}_document_path"
+        document_path = lead.get(field_name)
+        
+        if not document_path or not os.path.exists(document_path):
+            raise HTTPException(status_code=404, detail="Document not found")
+        
+        # Return file for download (with Content-Disposition: attachment)
+        return FileResponse(
+            path=document_path,
+            media_type='application/octet-stream',
+            filename=os.path.basename(document_path),
+            headers={"Content-Disposition": f"attachment; filename={os.path.basename(document_path)}"}
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to download document: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to download document: {str(e)}")
+
+
+@api_router.delete("/driver-onboarding/documents/{lead_id}/delete/{document_type}")
+async def delete_driver_document(
+    lead_id: str,
+    document_type: str,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Delete document for a driver lead
+    """
+    try:
+        # Validate document type
+        valid_types = ['dl', 'aadhar', 'pan_card', 'gas_bill', 'bank_passbook']
+        if document_type not in valid_types:
+            raise HTTPException(status_code=400, detail=f"Invalid document type. Must be one of: {', '.join(valid_types)}")
+        
+        # Get lead to find document path
+        leads_collection = db['driver_leads']
+        lead = await leads_collection.find_one({'id': lead_id})
+        
+        if not lead:
+            raise HTTPException(status_code=404, detail="Lead not found")
+        
+        # Get document path from lead record
+        field_name = f"{document_type}_document_path"
+        document_path = lead.get(field_name)
+        
+        if not document_path:
+            raise HTTPException(status_code=404, detail="Document not found")
+        
+        # Delete file from disk if it exists
+        if os.path.exists(document_path):
+            os.remove(document_path)
+        
+        # Update lead record to remove document path and uploaded_at fields
+        await leads_collection.update_one(
+            {'id': lead_id},
+            {'$unset': {
+                field_name: "",
+                f"{document_type}_document_uploaded_at": ""
+            }}
+        )
+        
+        return {
+            "success": True,
+            "message": f"{document_type.upper()} document deleted successfully"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to delete document: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete document: {str(e)}")
+
+
 @api_router.post("/driver-onboarding/scan-document/{lead_id}")
 async def scan_driver_document(
     lead_id: str,
