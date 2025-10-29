@@ -120,7 +120,7 @@ Your Driver Onboarding data now syncs automatically between Google Sheets and Nu
 
 **Sheet URL**: https://docs.google.com/spreadsheets/d/1FfZYvc9EpSE03myhp3yk8lfOzCJoibVmaJ74Xm-qhv0/edit
 
-**Backend Webhook**: `https://nurapulse-2.preview.emergentagent.com/api/driver-onboarding/webhook/sync-from-sheets`
+**Backend Webhook**: `https://telemanager-2.preview.emergentagent.com/api/driver-onboarding/webhook/sync-from-sheets`
 
 ---
 

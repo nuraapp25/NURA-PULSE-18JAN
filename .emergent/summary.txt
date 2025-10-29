@@ -1,23 +1,23 @@
 <analysis>
-The AI engineer successfully progressed the Nura Pulse application through several phases. Initial efforts focused on refining the Driver Onboarding module by implementing a Filter by Status feature and a captivating loading animation. Critical bug fixes were performed, including correcting the Battery Consumption graph to show cumulative distance and resolving Save Changes and telecaller registration issues. A significant re-architecture of the Hotspot Analysis module was undertaken, adopting a CELF greedy + 1-swap algorithm for optimal location finding. The backend for this was rebuilt, a new  module created, and the frontend  was replaced. Enhancements like reverse geocoding for locality names and improved map visualization were integrated. Challenges included fixing API key usage for LLM integration, handling duplicate backend routes, and ensuring comprehensive UI updates across all document types.
+The AI engineer's work focused on iterating and refining core features of the Nura Pulse application, primarily Driver Onboarding, Hotspot Analysis, Telecaller Management, and Battery Consumption. Key achievements include implementing comprehensive document management (view/download/delete) for all document types in Driver Onboarding and fixing a loading progress bar bug. A significant effort was made to enhance Telecaller Management, introducing reassign/deassign lead functionalities, integrating telecaller accounts with profiles, and improving the Telecaller's Desk UI. The Battery Consumption graph underwent several critical fixes to accurately display cumulative distance and handle invalid odometer data. The most recent work involved refactoring the complex Lead Details dialog into a reusable  component to be used in Telecaller Desk, improving modularity and maintainability. Challenges included clarifying user requirements, particularly for graph plotting logic, and managing large UI code changes.
 </analysis>
 
 <product_requirements>
-The Nura Pulse application is a role-based business data dashboard. Key features and ongoing development:
-- **Driver Onboarding**: Manages driver leads with a stage-based system, dashboard summary, filtering (date, source, telecaller), pagination, and bulk assignment. Recent enhancements include: Filter by Status, a visible loading animation with progress bar, a fix for the Save Changes error in lead details, and enabling telecaller account creation. Document upload functionality needs robust view/download/delete for all types.
-- **Hotspot Analysis (Rebuilt)**: Identifies top 5 optimal lat-longs (hotspots) to maximize trip coverage within a 1km radius per hour-slot. It now uses a CELF Greedy + 1-swap algorithm, processes hourly data from uploaded CSVs, displays results with Kepler.gl (default with Leaflet/Folium options), database persistence, shows locality names via reverse geocoding, larger map points, uncovered pickups, and hover tooltips.
-- **Battery Consumption**: Analyzes trip and battery data. The distance graph was fixed to display cumulative, ever-increasing distance.
-- **UI Improvements**: Default Dark Mode was changed to Light Mode.
-- **QR Code Management**: Dynamic QR generation, tracking, bulk delete, and campaign grouping.
-- **Telecallers Management**: Comprehensive profile creation/management.
+The Nura Pulse application is a role-based business data dashboard.
+-   **Driver Onboarding**: Manages driver leads, filtering, pagination, and bulk assignment. Enhanced with Filter by Status, a progress bar loading animation (fixed to cap at 100%), and robust document management (view/download/delete) for all document types (DL, Aadhar, PAN, Gas Bill, Bank Passbook). Telecaller assignment dropdowns now refresh automatically and include newly registered telecallers. Sync to Google Sheets and related buttons were removed.
+-   **Hotspot Analysis**: Identifies optimal locations using CELF Greedy + 1-swap algorithm. Displays results with locality names (reverse geocoding), larger map points, uncovered pickups, and hover tooltips. The backend and frontend () were rebuilt for this.
+-   **Battery Consumption**: Analyzes trip and battery data. The distance graph was fixed multiple times to display cumulative, ever-increasing distance, starting from 0 km at the beginning of the day. It now correctly handles and ignores rows with non-numeric odometer values (-) and prevents  value errors in tooltips.
+-   **Telecallers Management**: Comprehensive profile creation/management. Now supports reassigning and deassigning leads from telecallers. Sync from Google Sheets button was removed. Telecaller accounts registered via Register New Account are now linked to telecaller profiles, ensuring they appear in assignment dropdowns.
+-   **Telecaller's Desk**: Enhanced with direct Call, WhatsApp, Update Status, and Edit Lead Profile buttons in the leads table. The Edit Lead Profile opens a full Lead Details window, identical to the Driver Onboarding one, providing comprehensive lead and document management.
+-   **UI Improvements**: Default Dark Mode was changed to Light Mode.
 </product_requirements>
 
 <key_technical_concepts>
-- **Full-stack**: React.js (Shadcn UI, Radix UI, Sonner for toasts), Tailwind CSS, FastAPI, MongoDB.
-- **Spatial Analysis**: H3 (hexagonal grids), Scikit-learn (BallTree for nearest neighbors), Haversine distance, Google Maps API (reverse geocoding).
-- **Optimization**: CELF Greedy + 1-Swap algorithm for maximum coverage.
-- **State Management**: React , .
-- **LLM Integration**:  for OpenAI (GPT-4o Vision).
+-   **Full-stack**: React.js (Shadcn UI, Radix UI, Sonner for toasts), Tailwind CSS, FastAPI, MongoDB.
+-   **Spatial Analysis**: H3 (hexagonal grids), Scikit-learn (BallTree), Google Maps API (reverse geocoding).
+-   **Optimization**: CELF Greedy + 1-Swap algorithm.
+-   **State Management**: React , .
+-   **LLM Integration**:  for OpenAI.
 </key_technical_concepts>
 
 <code_architecture>
@@ -27,52 +27,62 @@ The application uses a React frontend, a FastAPI backend, and MongoDB.
 -   ****:
     -   **Summary**: Central API handler.
     -   **Changes**:
-        -   **Document Management**: Added GET and DELETE endpoints for driver onboarding documents.
-        -   **Scan Document**: Modified OpenAI API client initialization to use  for LLM calls.
-        -   **Driver Onboarding**: Fixed a duplicate PATCH endpoint for .
-        -   **Telecaller Registration**: Updated  to allow telecaller role.
-        -   **Hotspot Analysis**: The entire previous hotspot planning section (approx. lines 4919-5463) was replaced with a new implementation leveraging , handling file uploads, processing, and result storage for hourly hotspot calculations. Updated to correctly parse the 'hour' column from uploaded CSVs.
--   ** (New File)**:
-    -   **Summary**: Contains the core logic for the greedy maximum-coverage hotspot optimization algorithm.
-    -   **Changes**: Implemented , , , , , , , , ,  functions. Integrated Google Maps API reverse geocoding to retrieve locality names.
+        -   **Document Management**: Existing GET/DELETE endpoints were utilized by frontend updates.
+        -   **Hotspot Analysis**: Updated to handle file uploads, processing, and result storage.
+        -   **Telecaller Management**: Added new API endpoints:  and . Modified  to auto-create a telecaller profile. Updated , , and  (delete) to activate/deactivate associated telecaller profiles.
+-   ****:
+    -   **Summary**: Core logic for hotspot optimization.
+    -   **Changes**: Integrated Google Maps API reverse geocoding to retrieve locality names for hotspots.
+-   ****:
+    -   **Summary**: Pydantic models for request/response validation.
+    -   **Changes**: Added  and  models for new telecaller lead management endpoints.
 -   ****:
     -   **Summary**: Manages driver lead display, filtering, and editing.
     -   **Changes**:
-        -   **Status Filter**: Added state, logic, and UI for filtering leads by status.
-        -   **Loading Animation**: Implemented a progress bar loading animation for initial lead fetch and removed an early return that bypassed it.
-        -   **Document Management**: Added state (), handlers (, , , ), and UI components (buttons) for view, download, and delete for uploaded documents in both edit and view modes. Fixed  call to ensure  is available.
+        -   **Document Management**: Added View/Download/Delete buttons for Aadhar, PAN, Gas Bill, Bank Passbook, aligning with existing DL functionality.
+        -   **Loading Animation**: Capped progress bar at 100% and added a safeguard to prevent exceeding it.
+        -   **Telecaller Sync**: Added page visibility listener and manual refresh buttons for telecaller dropdowns to ensure newly created telecallers appear instantly.
+        -   **UI Cleanup**: Removed Sync to Google Sheets, Sync from Google Sheets, and Open Google Sheet buttons.
 -   ****:
     -   **Summary**: Displays battery consumption data.
-    -   **Changes**: Modified  to ensure the distance line on the graph is cumulative and does not drop.
+    -   **Changes**:
+        -   **Distance Graph**: Modified  to correctly calculate and display **cumulative** distance, ensuring it starts from 0 km at the beginning of the day and always increases.
+        -   **Data Robustness**: Updated logic to ignore rows with - values in the odometer column.
+        -   **Tooltip Fix**: Handled null  and  values in  to prevent  errors.
+        -   **Graph Rendering**: Added  to  components for smoother line rendering despite potential missing data points.
 -   ****:
-    -   **Summary**: The entire page was re-implemented for the new Hotspot Analysis.
-    -   **Changes**: Replaced with a new component for file upload, configuration of hour slots, displaying analysis results (table and map), and offering map visualization options. Initially used , later refined to support Kepler.gl. Updated to show locality names in the table, made map points bigger, rendered uncovered pickups, and added hover tooltips for hotspots. Imports updated to use  for toast notifications.
+    -   **Summary**: Re-implemented for Hotspot Analysis.
+    -   **Changes**: Fully re-implemented to support file upload, hourly analysis configuration, results table, and map visualization. Enhanced to show locality names, bigger map points, uncovered pickups, and hover tooltips.
 -   ****:
-    -   **Summary**: Main application component, handles routing and global state.
-    -   **Changes**: Changed the default theme setting from dark to light.
+    -   **Summary**: Manages telecaller profiles and lead assignments.
+    -   **Changes**: Added Reassign and Deassign buttons and their associated dialogs. Removed Sync from Sheets button.
 -   ****:
-    -   **Summary**: Global CSS styles.
-    -   **Changes**: Added CSS for the shimmer effect used in the new loading animation.
+    -   **Summary**: Telecaller's view of assigned leads.
+    -   **Changes**: Replaced Actions dropdown with individual icon buttons (Call, WhatsApp, Update Status, Edit Lead Profile) directly in the table. The Edit Lead Profile now opens the comprehensive  component. Removed old DropdownMenu imports.
+-   ** (New File)**:
+    -   **Summary**: A new reusable React component created by extracting the comprehensive lead details and document management dialog from . It includes stage/status management, personal information fields, and full document (Upload/View/Download/Delete/Scan) sections.
+-   ****: Default theme setting changed from dark to light.
+-   ****: Added CSS for shimmer effect.
 -   ****: Updated to include  and .
--   ****: Updated to include .
+-   ****: Updated to include  and .
 </code_architecture>
 
 <pending_tasks>
-- **Driver Onboarding - Date Filters**: Investigate and resolve potential issues with date filtering logic or timezone handling.
-- **Driver Onboarding - Scan Document Feature**: Further debug and fix the scan document feature, specifically issues related to the  library and API key usage.
-- **Driver Onboarding - Document Upload (Full Rollout)**: Implement view/download/delete functionality for all document types (Aadhar, PAN, Gas Bill, Bank Passbook) in the Driver Onboarding lead details window, as only the DL section was explicitly updated.
+-   **Driver Onboarding - Date Filters**: Investigate and resolve potential issues with date filtering logic or timezone handling.
+-   **Driver Onboarding - Scan Document Feature**: Further debug and fix the scan document feature, specifically issues related to the  library and API key usage.
+-   **Hotspot Analysis Enhancements**: Thoroughly test the newly implemented Hotspot Analysis enhancements (locality names, map point size, uncovered pickups, tooltips) on the frontend.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary request, the AI engineer was focused on enhancing the newly rebuilt Hotspot Analysis application. The specific work involved addressing user requests to improve the visualization and data presentation for the analysis results. This included:
-1.  **Showing Locality Names**: Integrating reverse geocoding to display human-readable locality names in the results table for each hotspot. This required modifying the  backend module to perform the geocoding using the  and update the  function's output, and updating the frontend  to render this new data.
-2.  **Bigger Map Points**: Adjusting the map visualization in  to make the pickup points more prominent and easily visible for better user experience.
-3.  **Displaying Uncovered Pickups**: Modifying the map to visually represent pickup points that are *not* covered by any of the identified hotspots, providing a more complete picture of the analysis.
-4.  **Hover Tooltips**: Adding interactive tooltips to the hotspot areas on the map, which would display detailed information about the specific hotspot when a user hovers over it.
+Immediately before this summary request, the AI engineer successfully completed a major refactoring task for the  page. The user had requested that the Edit Lead Profile button in the Telecaller's Desk open a comprehensive Lead Details window, identical to the one in Driver Onboarding, including full document management (Upload/View/Download/Delete/Scan).
 
-The backend was restarted after the geocoding changes, and the trajectory concludes with the AI preparing to create a summary, indicating these changes were just completed.
+To achieve this, the AI engineer adopted a recommended approach:
+1.  **Component Extraction**: The large (~1050 lines) Lead Details dialog from  was extracted into a new reusable component: . This component encapsulates all the logic and UI for stage/status management, personal information editing, and document handling.
+2.  **Integration into TelecallerDesk**: The existing simple profile dialog in  was replaced with an instance of the newly created  component. This reduced the  file size and improved modularity.
+
+This change ensures that telecallers now have full capabilities to manage lead details and documents directly from their desk, using a consistent UI with the Driver Onboarding page.
 </current_work>
 
 <optional_next_step>
-Thoroughly test the newly implemented Hotspot Analysis enhancements (locality names, map point size, uncovered pickups, tooltips) on the frontend.
+Thoroughly test the newly integrated  component in .
 </optional_next_step>
