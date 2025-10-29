@@ -7939,10 +7939,10 @@ async def scan_driver_document(
         prompt = prompts.get(document_type, "Extract relevant information from this document.")
         
         # Use OpenAI GPT-4o Vision for OCR
-        import openai
-        openai.api_key = api_key
+        from openai import OpenAI
+        client = OpenAI(api_key=api_key)
         
-        response = openai.chat.completions.create(
+        response = client.chat.completions.create(
             model="gpt-4o",
             messages=[
                 {
