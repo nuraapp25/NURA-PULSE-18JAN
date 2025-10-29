@@ -1469,7 +1469,7 @@ async def bulk_assign_telecaller(
     }
 
 
-@api_router.patch("/driver-onboarding/leads/{lead_id}")
+@api_router.patch("/driver-onboarding/leads-bulk/status")
 async def bulk_update_lead_status(bulk_data: BulkLeadStatusUpdate, current_user: User = Depends(get_current_user)):
     """Bulk update lead status for multiple leads"""
     print("=== BULK UPDATE CALLED ===")
