@@ -4930,14 +4930,129 @@ async def analyze_hotspot_placement(
     Groups trips into 6 time slots and finds top 5 hotspots per slot.
     """
     try:
-        import pandas as pd
-        import numpy as np
-        from sklearn.cluster import KMeans
-        from geopy.distance import geodesic
-        import json
-        from collections import defaultdict
-        from datetime import datetime, timedelta
-        import pytz
+        # Read CSV file
+        contents = await file.read()
+        import io
+        df = pd.read_csv(io.BytesIO(contents))
+        
+        logger.info(f"Loaded {len(df)} rides from CSV")
+        
+        # Normalize column names (case-insensitive)
+        df.columns = df.columns.str.lower().str.strip()
+        col_map = {col: col for col in df.columns}
+        
+        # Find required columns
+        lat_col = next((c for c in df.columns if 'lat' in c.lower() and 'pickup' in c.lower()), None)
+        lon_col = next((c for c in df.columns if ('long' in c.lower() or 'lon' in c.lower()) and 'pickup' in c.lower()), None)
+        time_col = next((c for c in df.columns if any(t in c.lower() for t in ['createdat', 'time', 'timestamp', 'datetime'])), None)
+        
+        if not lat_col or not lon_col:
+            raise HTTPException(status_code=400, detail="Missing pickup latitude/longitude columns")
+        
+        # Rename columns
+        df = df.rename(columns={
+            lat_col: 'lat',
+            lon_col: 'lon'
+        })
+        
+        if time_col:
+            df = df.rename(columns={time_col: 'timestamp'})
+        
+        # Clean data
+        df = df.dropna(subset=['lat', 'lon']).copy()
+        
+        # Parse timestamp and extract hour
+        if 'timestamp' in df.columns:
+            # Handle Excel serial numbers
+            def parse_time(val):
+                try:
+                    if pd.isna(val):
+                        return None
+                    if isinstance(val, (int, float)):
+                        dt = pd.to_datetime(val, origin='1899-12-30', unit='D')
+                        return dt + timedelta(hours=5, minutes=30)  # UTC to IST
+                    return pd.to_datetime(val, errors='coerce')
+                except:
+                    return None
+            
+            df['datetime'] = df['timestamp'].apply(parse_time)
+            df = df.dropna(subset=['datetime'])
+            df['hour'] = df['datetime'].dt.hour
+        else:
+            # No timestamp, assume uniform distribution
+            df['hour'] = 12  # Default to afternoon
+        
+        # Add weight column (default 1)
+        df['weight'] = 1.0
+        
+        # Group into time slots
+        time_slot_results = {}
+        
+        for slot in TIME_SLOTS:
+            slot_name = slot['name']
+            slot_label = slot['label']
+            start_hour = slot['start']
+            end_hour = slot['end']
+            
+            # Filter rides in this time slot
+            if end_hour <= 24:
+                slot_df = df[(df['hour'] >= start_hour) & (df['hour'] < end_hour)].copy()
+            else:
+                # Handle overnight slots (e.g., 22-25 means 10PM-1AM)
+                slot_df = df[(df['hour'] >= start_hour) | (df['hour'] < (end_hour - 24))].copy()
+            
+            if len(slot_df) < 10:
+                time_slot_results[slot_name] = {
+                    'status': 'insufficient_data',
+                    'slot_label': slot_label,
+                    'rides_count': int(len(slot_df)),
+                    'message': f'Not enough rides in this slot (minimum 10 required)'
+                }
+                continue
+            
+            # Run hotspot optimization
+            result = optimize_hotspots(
+                df=slot_df[['lat', 'lon', 'weight']],
+                N=5,
+                h3_res=9,
+                use_h3=True
+            )
+            
+            time_slot_results[slot_name] = {
+                'status': 'success',
+                'slot_label': slot_label,
+                'rides_count': result['total_rides'],
+                'covered_rides': result['covered_rides'],
+                'coverage_percentage': result['coverage_percentage'],
+                'hotspots': result['hotspots'],
+                'geojson': result['geojson']
+            }
+            
+            logger.info(f"{slot_name}: {result['covered_rides']}/{result['total_rides']} rides covered ({result['coverage_percentage']}%)")
+        
+        total_rides = len(df)
+        slots_with_data = len([s for s in time_slot_results.values() if s['status'] == 'success'])
+        
+        return {
+            'success': True,
+            'total_rides_analyzed': int(total_rides),
+            'time_slots': time_slot_results,
+            'analysis_params': {
+                'algorithm': 'CELF Greedy + 1-Swap Local Search',
+                'radius_m': 1000,
+                'hotspots_per_slot': 5
+            },
+            'message': f'Analysis complete: {slots_with_data} time slots analyzed from {total_rides} rides'
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in hotspot analysis: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Failed to analyze data: {str(e)}")
+
         
         # Read CSV file
         contents = await file.read()
