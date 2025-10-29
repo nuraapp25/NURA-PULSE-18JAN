@@ -580,13 +580,16 @@ backend:
     implemented: true
     working: false
     file: "/app/backend/server.py"
-    stuck_count: 1
+    stuck_count: 2
     priority: "high"
     needs_retesting: false
     status_history:
         - working: false
           agent: "testing"
           comment: "❌ IMPLEMENTATION ISSUES: Scan Document OCR feature has critical problems. Testing findings: 1) ENDPOINT EXISTS: Found POST /driver-onboarding/scan-document/{lead_id} endpoint in backend code. 2) CRITICAL ERRORS: DL scanning returns 500 internal server error, Aadhar and PAN scanning return 404 (not found). 3) LIBRARY AVAILABLE: emergentintegrations library is properly installed and accessible. 4) CONFIGURATION ISSUE: EMERGENT_LLM_KEY is configured in backend/.env (sk-emergent-7A22c66Ac15208b2aC) but not being loaded properly in the test environment. 5) BACKEND LOGS NEEDED: 500 errors suggest implementation issues that require checking backend error logs. REQUIRED FIXES: Main agent needs to: (a) Fix the 500 error for DL scanning, (b) Implement or fix Aadhar and PAN document scanning endpoints, (c) Verify EMERGENT_LLM_KEY environment variable loading, (d) Check backend logs for specific OCR integration errors. Success rate: 33.3% (2/6 tests passed) - library available but endpoints failing."
+        - working: false
+          agent: "testing"
+          comment: "❌ CRITICAL BACKEND TESTING RESULTS: Scan Document OCR ENDPOINT ROUTING ISSUE. Testing findings: 1) ENDPOINT IMPLEMENTATION ISSUE: POST /driver-onboarding/scan-document/{lead_id} endpoint exists but has parameter mismatch. 2) ROUTING PROBLEM: All document types (dl, pan_card, aadhar) return 404 - endpoint not found. 3) ROOT CAUSE IDENTIFIED: Function signature expects document_type as parameter but endpoint URL doesn't include it as path parameter or Query parameter. 4) BACKEND LOGS CONFIRM: All scan requests return 404 Not Found. 5) PARAMETER MISMATCH: Function defined as scan_driver_document(lead_id: str, document_type: str) but document_type not properly defined as Query parameter. 6) EMERGENT_LLM_KEY AVAILABLE: Environment variable properly configured. REQUIRED FIX: Main agent needs to fix the endpoint parameter definition - document_type should be Query parameter: document_type: str = Query(...). Success rate: 25% (1/4 tests passed) - lead retrieval works but OCR endpoint has routing issues."
 
   - task: "Telecaller Management New Features"
     implemented: true
