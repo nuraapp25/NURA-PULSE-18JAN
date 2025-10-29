@@ -434,6 +434,187 @@ const TelecallerDesk = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Lead Profile Dialog - Read-only view */}
+      <Dialog open={profileDialogOpen} onOpenChange={setProfileDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Lead Profile - {selectedLead?.name}</DialogTitle>
+          </DialogHeader>
+          
+          {selectedLead && (
+            <div className="space-y-6">
+              {/* Personal Information */}
+              <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Personal Information</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm text-gray-600 dark:text-gray-400">Full Name</Label>
+                    <p className="text-base font-medium text-gray-900 dark:text-white mt-1">
+                      {selectedLead.name || "-"}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-sm text-gray-600 dark:text-gray-400">Phone Number</Label>
+                    <p className="text-base font-medium text-gray-900 dark:text-white mt-1">
+                      {selectedLead.phone_number || "-"}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-sm text-gray-600 dark:text-gray-400">Email</Label>
+                    <p className="text-base text-gray-900 dark:text-white mt-1">
+                      {selectedLead.email || "-"}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-sm text-gray-600 dark:text-gray-400">Experience</Label>
+                    <p className="text-base text-gray-900 dark:text-white mt-1">
+                      {selectedLead.experience || "-"}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-sm text-gray-600 dark:text-gray-400">Current Location</Label>
+                    <p className="text-base text-gray-900 dark:text-white mt-1">
+                      {selectedLead.current_location || "-"}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-sm text-gray-600 dark:text-gray-400">Preferred Shift</Label>
+                    <p className="text-base text-gray-900 dark:text-white mt-1">
+                      {selectedLead.preferred_shift || "-"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Status Information */}
+              <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Status & Progress</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm text-gray-600 dark:text-gray-400">Current Stage</Label>
+                    <p className="text-base font-medium text-gray-900 dark:text-white mt-1">
+                      {selectedLead.stage || "S1"}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-sm text-gray-600 dark:text-gray-400">Status</Label>
+                    <p className="text-base font-medium mt-1">
+                      <span className={`px-2 py-1 rounded text-xs ${getStatusColor(selectedLead.status)}`}>
+                        {selectedLead.status || "New"}
+                      </span>
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-sm text-gray-600 dark:text-gray-400">Source</Label>
+                    <p className="text-base text-gray-900 dark:text-white mt-1">
+                      {selectedLead.source || "-"}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-sm text-gray-600 dark:text-gray-400">Last Modified</Label>
+                    <p className="text-base text-gray-900 dark:text-white mt-1">
+                      {selectedLead.last_modified ? new Date(selectedLead.last_modified).toLocaleString() : "-"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Documents */}
+              <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Documents</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm text-gray-600 dark:text-gray-400">Driver License</Label>
+                    <p className="text-base text-gray-900 dark:text-white mt-1">
+                      {selectedLead.driver_license || "-"}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-sm text-gray-600 dark:text-gray-400">Aadhar Card</Label>
+                    <p className="text-base text-gray-900 dark:text-white mt-1">
+                      {selectedLead.aadhar_card || "-"}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-sm text-gray-600 dark:text-gray-400">PAN Card</Label>
+                    <p className="text-base text-gray-900 dark:text-white mt-1">
+                      {selectedLead.pan_card || "-"}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-sm text-gray-600 dark:text-gray-400">Gas Bill</Label>
+                    <p className="text-base text-gray-900 dark:text-white mt-1">
+                      {selectedLead.gas_bill || "-"}
+                    </p>
+                  </div>
+                  <div className="col-span-2">
+                    <Label className="text-sm text-gray-600 dark:text-gray-400">Bank Passbook</Label>
+                    <p className="text-base text-gray-900 dark:text-white mt-1">
+                      {selectedLead.bank_passbook || "-"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Notes */}
+              <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Notes</h3>
+                <div className="space-y-3">
+                  <div>
+                    <Label className="text-sm text-gray-600 dark:text-gray-400">Telecaller Notes</Label>
+                    <p className="text-base text-gray-900 dark:text-white mt-1 whitespace-pre-wrap">
+                      {selectedLead.telecaller_notes || "No notes added yet"}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-sm text-gray-600 dark:text-gray-400">General Notes</Label>
+                    <p className="text-base text-gray-900 dark:text-white mt-1 whitespace-pre-wrap">
+                      {selectedLead.notes || "No notes added yet"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-end gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setProfileDialogOpen(false);
+                    handleCallLead(selectedLead);
+                  }}
+                >
+                  <PhoneCall className="w-4 h-4 mr-2" />
+                  Call Now
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setProfileDialogOpen(false);
+                    handleWhatsAppLead(selectedLead);
+                  }}
+                >
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  WhatsApp
+                </Button>
+                <Button
+                  onClick={() => {
+                    setProfileDialogOpen(false);
+                    handleLeadClick(selectedLead);
+                  }}
+                >
+                  <Edit className="w-4 h-4 mr-2" />
+                  Update Status
+                </Button>
+                <Button variant="outline" onClick={() => setProfileDialogOpen(false)}>
+                  Close
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
