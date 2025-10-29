@@ -1092,11 +1092,11 @@ async def import_leads(
         
         # Check for duplicates by normalized phone number
         if leads:
-            # Get all existing phone numbers from database
+            # Get all existing phone numbers from database (no limit)
             all_existing_leads = await db.driver_leads.find(
                 {},
                 {"_id": 0, "phone_number": 1, "name": 1, "id": 1, "status": 1}
-            ).to_list(10000)
+            ).to_list(length=None)
             
             # Create a map of normalized phone -> existing lead
             existing_phone_map = {}
