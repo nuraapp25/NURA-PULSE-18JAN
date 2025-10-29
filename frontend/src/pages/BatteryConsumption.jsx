@@ -309,8 +309,8 @@ const BatteryConsumption = () => {
       
       processedData.push({
         time: hourKey,
-        battery: currentBattery > 0 ? currentBattery : null, // Set to null if 0 to avoid showing 0 on chart
-        distance: cumulativeDistance > 0 ? cumulativeDistance : null, // Set to null if 0
+        battery: currentBattery > 0 ? currentBattery : null, // Set to null only if truly 0 (missing data)
+        distance: cumulativeDistance >= 0 ? cumulativeDistance : null, // Always show distance (including 0)
         chargeDrop: chargeDrop.toFixed(2),
         distanceTraveled: distanceTraveled.toFixed(2),
         batteryChange: batteryChange, // Add this for summary calculation
