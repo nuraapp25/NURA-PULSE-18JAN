@@ -839,6 +839,18 @@ frontend:
           agent: "testing"
           comment: "✅ RCA LOCALITY FIX AND STATS TESTING COMPLETE: Successfully tested all critical fixes as requested in review. SUCCESS RATE: 100% (12/12 tests passed). KEY FINDINGS: 1) STATS ENDPOINT FIX VERIFIED - GET /api/ride-deck/stats now returns correct rides_count: 790 (not 0), proper response structure with customers_count: 389, ride_status_distribution working correctly. Duplicate endpoint issue resolved. 2) LOCALITY FORMATS DOCUMENTED - Before fix: rides showed duplicate localities like 'Old Tirumangalam, Anna Nagar' and 'Pallavan Nagar, Koyambedu'. 3) FIX-LOCALITIES ENDPOINT WORKING - POST /api/ride-deck/fix-localities successfully processed 777/790 rides, Master Admin role restriction enforced (403 for non-master-admin), proper response format with success, message, total_rides, updated_count. 4) LOCALITY FIX VERIFICATION - After fix: localities now show single names - Pickup: 'Anna Nagar', Drop: 'Koyambedu'. Before/after comparison confirmed: 'Old Tirumangalam, Anna Nagar' → 'Anna Nagar'. 5) DRIVER NOT FOUND RIDES ALSO FIXED - GET /api/ride-deck/rca/driver-not-found shows 106 rides with fixed localities (single names without duplication). 6) AUTHENTICATION VERIFIED - All endpoints properly require Bearer token. The locality extraction fix successfully removes duplicate locality patterns and shows clean single locality names as requested. All RCA endpoints operational and ready for production use."
 
+  - task: "Driver Onboarding - Document Management Full Rollout (All Document Types)"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/DriverOnboardingPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "✅ IMPLEMENTATION COMPLETE: Extended document management functionality to ALL document types in Driver Onboarding lead details window. Previously only DL (Driver License) had View/Download/Delete buttons. Now implemented for: (1) Aadhar Card - Added View, Download, and Delete buttons (in edit mode only for Delete, View/Download in both modes). (2) PAN Card - Added View, Download, and Delete buttons with same behavior. (3) Gas Bill - Added View, Download, and Delete buttons with same behavior. (4) Bank Passbook - Added View, Download, and Delete buttons with same behavior. All document types now have consistent UI: View and Download buttons visible when document is uploaded (in both view and edit modes), Delete button only visible in edit mode, Upload button only visible in edit mode when document is not uploaded, Scan button visible in edit mode when document is uploaded. Backend handlers (handleViewDocument, handleDownloadDocument, handleDeleteDocument) are generic and work with any document type parameter. All document sections now follow the same pattern as DL section for consistent UX. Ready for frontend testing."
+
   - task: "Driver Onboarding - Manual Status Updates with Apply Changes Button"
     implemented: true
     working: "NA"
