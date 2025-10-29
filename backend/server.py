@@ -1297,8 +1297,8 @@ async def get_status_summary(
 async def sync_leads_to_sheets(current_user: User = Depends(get_current_user)):
     """Sync all leads to Google Sheets with batch processing to avoid timeouts"""
     try:
-        # Get all leads from database
-        leads = await db.driver_leads.find({}, {"_id": 0}).to_list(20000)
+        # Get all leads from database (no limit)
+        leads = await db.driver_leads.find({}, {"_id": 0}).to_list(length=None)
         
         if not leads:
             return {"message": "No leads to sync", "count": 0}
