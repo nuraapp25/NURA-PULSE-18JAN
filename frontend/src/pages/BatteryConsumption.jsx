@@ -278,21 +278,51 @@ const BatteryConsumption = () => {
       let distanceTraveled = 0;
       let batteryChange = 0;
       
+      // Log data for debugging (first hour only)
+      if (index === 0) {
+        console.log("First hour data:", {
+          distanceColumn,
+          absoluteDistance,
+          hasDistanceColumn: !!distanceColumn,
+          distanceValue: lastReading[distanceColumn]
+        });
+      }
+      
       // Calculate distance increment (always positive or zero)
-      if (distanceColumn && absoluteDistance > 0) {
+      if (distanceColumn) {
         if (index === 0) {
           // First data point of the day - set as baseline, cumulative starts at 0
           firstOdometerReading = absoluteDistance;
           lastAbsoluteDistance = absoluteDistance;
           cumulativeDistance = 0; // Day starts at 0 km traveled
-        } else if (lastAbsoluteDistance !== null && absoluteDistance >= lastAbsoluteDistance) {
+          console.log("Set baseline odometer:", absoluteDistance);
+        } else if (absoluteDistance > 0 && lastAbsoluteDistance !== null && absoluteDistance >= lastAbsoluteDistance) {
           // Normal case: accumulate distance traveled since last reading
           distanceTraveled = absoluteDistance - lastAbsoluteDistance;
           cumulativeDistance += distanceTraveled;
           lastAbsoluteDistance = absoluteDistance;
-        } else if (absoluteDistance < lastAbsoluteDistance) {
+          
+          if (index === 1) {
+            console.log("Second hour calculation:", {
+              absoluteDistance,
+              lastAbsoluteDistance: firstOdometerReading,
+              distanceTraveled,
+              cumulativeDistance
+            });
+          }
+        } else if (absoluteDistance > 0 && absoluteDistance < lastAbsoluteDistance) {
           // Odometer decreased - likely data error or vehicle swap, keep cumulative as is
           // Don't update lastAbsoluteDistance to avoid negative increments
+          console.log("Warning: Odometer decreased", { from: lastAbsoluteDistance, to: absoluteDistance });
+        } else if (absoluteDistance === 0) {
+          // No distance data for this hour - skip
+        } else if (absoluteDistance === lastAbsoluteDistance) {
+          // Vehicle didn't move this hour - this is normal
+          distanceTraveled = 0;
+        }
+      } else {
+        if (index === 0) {
+          console.warn("No distance column found! Available columns:", Object.keys(lastReading));
         }
       }
       
