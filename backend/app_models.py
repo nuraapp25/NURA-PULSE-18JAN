@@ -295,6 +295,18 @@ class LeadAssignment(BaseModel):
     telecaller_id: str
 
 
+class LeadReassignment(BaseModel):
+    """Model for reassigning leads from one telecaller to another"""
+    lead_ids: List[str]
+    from_telecaller_id: Optional[str] = None  # If None, reassign from any telecaller
+    to_telecaller_id: str
+
+
+class LeadDeassignment(BaseModel):
+    """Model for removing telecaller assignment from leads"""
+    lead_ids: List[str]
+
+
 class BulkAssignFromSheets(BaseModel):
     """Model for bulk assignment from Google Sheets Column H"""
     pass  # No params needed, will read from sheets
