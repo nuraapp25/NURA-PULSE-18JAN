@@ -219,17 +219,6 @@ const BatteryConsumption = () => {
       }
     }
     
-    // First pass: get all distance/odometer values
-    const odometerValues = rawData.map(row => {
-      const val = distanceColumn ? parseFloat(row[distanceColumn] || 0) : 0;
-      return val;
-    }).filter(val => val > 0);
-    
-    console.log("Distance values found:", odometerValues.length, "Sample:", odometerValues.slice(0, 5));
-    
-    // Find starting odometer value (minimum)
-    const startingOdometer = odometerValues.length > 0 ? Math.min(...odometerValues) : 0;
-    
     // Group data by hour first
     const hourlyData = {};
     
@@ -261,69 +250,50 @@ const BatteryConsumption = () => {
     const processedData = [];
     const hourKeys = Object.keys(hourlyData).filter(k => k !== "N/A");
     
-    // Track cumulative distance (always increasing)
-    let cumulativeDistance = 0;
-    let lastAbsoluteDistance = null;
-    let firstOdometerReading = null; // Track the very first odometer reading of the day
+    // Track previous hour's odometer for calculating distance per hour
+    let previousOdometer = null;
     
     hourKeys.forEach((hourKey, index) => {
       const hourReadings = hourlyData[hourKey];
       const lastReading = hourReadings[hourReadings.length - 1];
       
-      // Get distance with fallback
-      const absoluteDistance = distanceColumn ? parseFloat(lastReading[distanceColumn] || 0) : 0;
+      // Get odometer reading - handle "-" or missing values
+      let currentOdometer = null;
+      if (distanceColumn) {
+        const odometerValue = lastReading[distanceColumn];
+        // Check if value is valid (not "-", not empty, not null)
+        if (odometerValue && odometerValue !== "-" && odometerValue.toString().trim() !== "") {
+          currentOdometer = parseFloat(odometerValue);
+        }
+      }
+      
       const currentBattery = parseFloat(lastReading['Battery Soc(%)'] || lastReading['Battery SOC(%)'] || 0);
       
       let chargeDrop = 0;
       let distanceTraveled = 0;
       let batteryChange = 0;
       
-      // Log data for debugging (first hour only)
+      // Calculate distance traveled in THIS hour
       if (index === 0) {
-        console.log("First hour data:", {
-          distanceColumn,
-          absoluteDistance,
-          hasDistanceColumn: !!distanceColumn,
-          distanceValue: lastReading[distanceColumn]
-        });
-      }
-      
-      // Calculate distance increment (always positive or zero)
-      if (distanceColumn) {
-        if (index === 0) {
-          // First data point of the day - set as baseline, cumulative starts at 0
-          firstOdometerReading = absoluteDistance;
-          lastAbsoluteDistance = absoluteDistance;
-          cumulativeDistance = 0; // Day starts at 0 km traveled
-          console.log("Set baseline odometer:", absoluteDistance);
-        } else if (absoluteDistance > 0 && lastAbsoluteDistance !== null && absoluteDistance >= lastAbsoluteDistance) {
-          // Normal case: accumulate distance traveled since last reading
-          distanceTraveled = absoluteDistance - lastAbsoluteDistance;
-          cumulativeDistance += distanceTraveled;
-          lastAbsoluteDistance = absoluteDistance;
-          
-          if (index === 1) {
-            console.log("Second hour calculation:", {
-              absoluteDistance,
-              lastAbsoluteDistance: firstOdometerReading,
-              distanceTraveled,
-              cumulativeDistance
-            });
-          }
-        } else if (absoluteDistance > 0 && absoluteDistance < lastAbsoluteDistance) {
-          // Odometer decreased - likely data error or vehicle swap, keep cumulative as is
-          // Don't update lastAbsoluteDistance to avoid negative increments
-          console.log("Warning: Odometer decreased", { from: lastAbsoluteDistance, to: absoluteDistance });
-        } else if (absoluteDistance === 0) {
-          // No distance data for this hour - skip
-        } else if (absoluteDistance === lastAbsoluteDistance) {
-          // Vehicle didn't move this hour - this is normal
+        // First hour - no distance traveled yet (baseline)
+        distanceTraveled = 0;
+        previousOdometer = currentOdometer;
+        console.log("First hour baseline odometer:", currentOdometer);
+      } else if (currentOdometer !== null && previousOdometer !== null) {
+        // Calculate distance traveled this hour = current - previous
+        if (currentOdometer >= previousOdometer) {
+          distanceTraveled = currentOdometer - previousOdometer;
+          console.log(`Hour ${index}: Odometer ${currentOdometer} - ${previousOdometer} = ${distanceTraveled} km`);
+        } else {
+          // Odometer decreased - data error, skip this hour's distance
+          console.warn(`Hour ${index}: Odometer decreased from ${previousOdometer} to ${currentOdometer}, ignoring`);
           distanceTraveled = 0;
         }
-      } else {
-        if (index === 0) {
-          console.warn("No distance column found! Available columns:", Object.keys(lastReading));
-        }
+        previousOdometer = currentOdometer;
+      } else if (currentOdometer === null) {
+        // No valid odometer reading this hour (was "-"), distance = 0
+        distanceTraveled = 0;
+        console.log(`Hour ${index}: No valid odometer reading, distance = 0`);
       }
       
       // Compare with previous hour for battery changes
@@ -344,16 +314,21 @@ const BatteryConsumption = () => {
       
       processedData.push({
         time: hourKey,
-        battery: currentBattery > 0 ? currentBattery : null, // Set to null only if truly 0 (missing data)
-        distance: cumulativeDistance >= 0 ? cumulativeDistance : null, // Always show distance (including 0)
+        battery: currentBattery > 0 ? currentBattery : null,
+        distance: distanceTraveled >= 0 ? distanceTraveled : null, // Distance traveled THIS hour
         chargeDrop: chargeDrop.toFixed(2),
         distanceTraveled: distanceTraveled.toFixed(2),
-        batteryChange: batteryChange, // Add this for summary calculation
+        batteryChange: batteryChange,
         rawIndex: index
       });
     });
     
-    console.log("Processed data points:", processedData.length, "Sample:", processedData.slice(0, 3));
+    console.log("Processed data points:", processedData.length);
+    console.log("First 5 hours:", processedData.slice(0, 5).map(d => ({ 
+      time: d.time, 
+      distance: d.distance, 
+      battery: d.battery 
+    })));
     
     return processedData;
   };
