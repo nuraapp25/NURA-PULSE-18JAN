@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Phone, RefreshCw, FileText, Save, MessageCircle, Edit, PhoneCall, Eye, Download, Trash2, Upload } from "lucide-react";
+import LeadDetailsDialog from "@/components/LeadDetailsDialog";
 
 // Status options grouped by stage
 const STAGES = [
