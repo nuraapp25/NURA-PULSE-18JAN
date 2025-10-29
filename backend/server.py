@@ -1853,7 +1853,7 @@ async def get_my_assigned_leads(current_user: User = Depends(get_current_user)):
     leads = await db.driver_leads.find(
         {"assigned_telecaller": user_email},
         {"_id": 0}
-    ).to_list(10000)
+    ).to_list(length=None)
     
     return leads
 
