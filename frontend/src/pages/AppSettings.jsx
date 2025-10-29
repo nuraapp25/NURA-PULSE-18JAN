@@ -11,9 +11,20 @@ import { useNavigate } from 'react-router-dom';
 
 const AppSettings = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+
+  // Hidden apps list
+  const hiddenApps = [
+    { 
+      name: "Ride Pay Extract v2", 
+      icon: Zap, 
+      path: "/dashboard/ride-pay-extract-v2",
+      description: "Advanced payment reconciliation with AI-powered data extraction"
+    }
+  ];
 
   useEffect(() => {
     fetchSettings();
