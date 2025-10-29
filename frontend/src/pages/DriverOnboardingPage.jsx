@@ -256,7 +256,9 @@ const DriverOnboardingPage = () => {
     const progressInterval = setInterval(() => {
       setLoadingProgress(prev => {
         if (prev >= 90) return prev; // Cap at 90% until actual load completes
-        return prev + Math.random() * 15; // Random increment for realistic feel
+        const increment = Math.random() * 15; // Random increment for realistic feel
+        const newProgress = prev + increment;
+        return Math.min(newProgress, 90); // Ensure we never exceed 90% during loading
       });
     }, 200);
     
@@ -278,7 +280,7 @@ const DriverOnboardingPage = () => {
       // Fetch status summary
       await fetchStatusSummary();
       
-      // Complete progress
+      // Complete progress - cap at exactly 100%
       setLoadingProgress(100);
     } catch (error) {
       toast.error("Failed to fetch leads");
