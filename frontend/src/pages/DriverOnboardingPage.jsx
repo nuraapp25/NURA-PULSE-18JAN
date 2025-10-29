@@ -341,6 +341,21 @@ const DriverOnboardingPage = () => {
     fetchTelecallers();
   }, []);
   
+  // Refresh telecallers when page becomes visible (handles tab switching)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchTelecallers();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+  
   // Refetch summary when date or source filter changes
   useEffect(() => {
     if (leads.length > 0) {
