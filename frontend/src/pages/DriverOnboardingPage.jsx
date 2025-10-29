@@ -4256,7 +4256,13 @@ const DriverOnboardingPage = () => {
                 <strong>📋 Format Requirements:</strong><br />
                 • Excel file must contain an 'id' column for lead identification<br />
                 • All other columns will be imported as-is<br />
-                • Use exported file as template for correct format
+                • Use exported file as template for correct format<br />
+                <br />
+                <strong>📞 Telecaller Assignments (Column V):</strong><br />
+                • Add telecaller names in 'assigned_telecaller' column (Column V)<br />
+                • System will automatically assign leads to matching telecallers<br />
+                • Telecaller names must match existing telecallers in the database<br />
+                • Assignments will be reflected everywhere in the app
               </p>
             </div>
 
