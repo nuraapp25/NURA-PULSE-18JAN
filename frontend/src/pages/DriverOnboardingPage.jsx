@@ -2034,6 +2034,19 @@ const DriverOnboardingPage = () => {
                 </PopoverTrigger>
                 <PopoverContent className="w-56 dark:bg-gray-800 dark:border-gray-700">
                   <div className="space-y-1">
+                    <div className="flex items-center justify-between px-2 pb-2 border-b border-gray-200 dark:border-gray-700">
+                      <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Telecallers</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={fetchTelecallers}
+                        className="h-6 px-2 text-xs"
+                        title="Refresh telecaller list"
+                      >
+                        <RefreshCw className="w-3 h-3" />
+                      </Button>
+                    </div>
                     <Button
                       variant="ghost"
                       className="w-full justify-start text-sm"
@@ -2051,6 +2064,11 @@ const DriverOnboardingPage = () => {
                         {telecaller.name}
                       </Button>
                     ))}
+                    {telecallers.length === 0 && (
+                      <div className="px-2 py-4 text-xs text-gray-500 text-center">
+                        No telecallers found
+                      </div>
+                    )}
                   </div>
                 </PopoverContent>
               </Popover>
