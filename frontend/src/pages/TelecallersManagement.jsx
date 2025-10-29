@@ -31,6 +31,7 @@ const TelecallersManagement = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
+  const [isReassignDialogOpen, setIsReassignDialogOpen] = useState(false);
   const [selectedTelecaller, setSelectedTelecaller] = useState(null);
   
   // Form state
