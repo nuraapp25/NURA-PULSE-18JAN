@@ -2782,7 +2782,21 @@ const DriverOnboardingPage = () => {
                   </div>
 
                   <div>
-                    <Label className="text-sm text-gray-600 dark:text-gray-400">Assigned Telecaller</Label>
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm text-gray-600 dark:text-gray-400">Assigned Telecaller</Label>
+                      {isEditMode && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={fetchTelecallers}
+                          className="h-6 px-2 text-xs"
+                          title="Refresh telecaller list"
+                        >
+                          <RefreshCw className="w-3 h-3" />
+                        </Button>
+                      )}
+                    </div>
                     {isEditMode ? (
                       <Select
                         value={editedLead.assigned_telecaller && editedLead.assigned_telecaller.trim() !== "" ? editedLead.assigned_telecaller : "none"}
@@ -2798,6 +2812,11 @@ const DriverOnboardingPage = () => {
                               {telecaller.name} ({telecaller.email})
                             </SelectItem>
                           ))}
+                          {telecallers.length === 0 && (
+                            <div className="px-2 py-4 text-sm text-gray-500 text-center">
+                              No telecallers found
+                            </div>
+                          )}
                         </SelectContent>
                       </Select>
                     ) : (
