@@ -352,16 +352,22 @@ const PaymentReconciliation = () => {
       
       // Update status messages based on parallel processing (ALL AT ONCE!)
       const totalFiles = uploadedFiles.length;
+      
+      // Calculate expected processing time: ~9-12 seconds per file
+      const estimatedTimeSeconds = totalFiles * 10; // Average 10 seconds per file
+      const progressUpdateInterval = 500; // Update every 500ms
+      const totalUpdates = (estimatedTimeSeconds * 1000) / progressUpdateInterval;
+      const incrementPerUpdate = 90 / totalUpdates; // Progress to 90% over estimated time
+      
       const progressInterval = setInterval(() => {
         setProcessingProgress(prev => {
           if (prev < 90) {
-            // Progress to 90% while processing
-            const increment = Math.random() * 15;
-            return Math.min(prev + increment, 90);
+            // Slow, steady progress from 0-90% synced with estimated processing time
+            return Math.min(prev + incrementPerUpdate, 90);
           }
           return prev;
         });
-      }, 800);
+      }, progressUpdateInterval);
       
       // Status messages for simultaneous processing
       setTimeout(() => setProcessingStatus(`🚀 TURBO MODE: Processing all ${totalFiles} files simultaneously...`), 500);
