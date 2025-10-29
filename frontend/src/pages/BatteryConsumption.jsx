@@ -211,7 +211,6 @@ const BatteryConsumption = () => {
     
     if (!distanceColumn) {
       console.warn("No distance column found in data. Available columns:", Object.keys(rawData[0] || {}));
-      // Try to find any column with 'km' or 'distance' in the name (case insensitive)
       const allColumns = Object.keys(rawData[0] || {});
       distanceColumn = allColumns.find(col => 
         col.toLowerCase().includes('km') || col.toLowerCase().includes('distance')
@@ -252,7 +251,8 @@ const BatteryConsumption = () => {
     const processedData = [];
     const hourKeys = Object.keys(hourlyData).filter(k => k !== "N/A");
     
-    // Track previous hour's odometer for calculating distance per hour
+    // Track cumulative distance (always increasing)
+    let cumulativeDistance = 0;
     let previousOdometer = null;
     
     hourKeys.forEach((hourKey, index) => {
@@ -275,27 +275,29 @@ const BatteryConsumption = () => {
       let distanceTraveled = 0;
       let batteryChange = 0;
       
-      // Calculate distance traveled in THIS hour
+      // Calculate distance traveled in THIS hour and add to cumulative
       if (index === 0) {
-        // First hour - no distance traveled yet (baseline)
+        // First hour - baseline, cumulative starts at 0
+        cumulativeDistance = 0;
         distanceTraveled = 0;
         previousOdometer = currentOdometer;
-        console.log("First hour baseline odometer:", currentOdometer);
+        console.log("Hour 0 baseline - Odometer:", currentOdometer, "Cumulative:", cumulativeDistance);
       } else if (currentOdometer !== null && previousOdometer !== null) {
         // Calculate distance traveled this hour = current - previous
         if (currentOdometer >= previousOdometer) {
           distanceTraveled = currentOdometer - previousOdometer;
-          console.log(`Hour ${index}: Odometer ${currentOdometer} - ${previousOdometer} = ${distanceTraveled} km`);
+          cumulativeDistance += distanceTraveled; // ADD to cumulative total
+          console.log(`Hour ${index}: Odometer ${currentOdometer} - ${previousOdometer} = ${distanceTraveled} km, Cumulative: ${cumulativeDistance} km`);
         } else {
-          // Odometer decreased - data error, skip this hour's distance
+          // Odometer decreased - data error, don't add to cumulative
           console.warn(`Hour ${index}: Odometer decreased from ${previousOdometer} to ${currentOdometer}, ignoring`);
           distanceTraveled = 0;
         }
         previousOdometer = currentOdometer;
-      } else if (currentOdometer === null) {
-        // No valid odometer reading this hour (was "-"), distance = 0
+      } else if (currentOdometer === null && previousOdometer !== null) {
+        // No valid odometer reading this hour (was "-"), distance = 0, keep cumulative
         distanceTraveled = 0;
-        console.log(`Hour ${index}: No valid odometer reading, distance = 0`);
+        console.log(`Hour ${index}: No valid odometer, keeping cumulative at ${cumulativeDistance} km`);
       }
       
       // Compare with previous hour for battery changes
@@ -317,7 +319,7 @@ const BatteryConsumption = () => {
       processedData.push({
         time: hourKey,
         battery: currentBattery > 0 ? currentBattery : null,
-        distance: distanceTraveled >= 0 ? distanceTraveled : null, // Distance traveled THIS hour
+        distance: cumulativeDistance >= 0 ? cumulativeDistance : null, // CUMULATIVE distance - always increasing
         chargeDrop: chargeDrop.toFixed(2),
         distanceTraveled: distanceTraveled.toFixed(2),
         batteryChange: batteryChange,
