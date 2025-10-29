@@ -1478,9 +1478,6 @@ async def bulk_import_leads(
                 "telecallers_updated": updated_telecallers
             }
         }
-            "inserted_count": inserted_count,
-            "total_leads_now": inserted_count
-        }
         
     except HTTPException:
         raise
