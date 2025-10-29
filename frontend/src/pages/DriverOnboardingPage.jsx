@@ -178,9 +178,14 @@ const DriverOnboardingPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [leadsPerPage, setLeadsPerPage] = useState(20);
   
-  // Source filter - Extract unique sources and sort alphabetically
+  // Source filter - Extract unique sources (case-insensitive), sort alphabetically
   const [sourceFilter, setSourceFilter] = useState(null);
-  const uniqueSources = [...new Set(leads.map(l => l.source?.trim()).filter(Boolean))].sort();
+  const uniqueSources = [...new Set(
+    leads
+      .map(l => l.source?.trim())
+      .filter(Boolean)
+      .map(s => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()) // Normalize to title case
+  )].sort();
   
   // Telecallers for assignment
   const [telecallers, setTelecallers] = useState([]);
