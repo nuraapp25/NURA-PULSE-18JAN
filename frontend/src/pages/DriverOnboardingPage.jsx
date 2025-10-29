@@ -1513,6 +1513,37 @@ const DriverOnboardingPage = () => {
             <span className="sm:hidden">Stages</span>
           </Button>
           <Button
+            onClick={handleBulkExport}
+            variant="outline"
+            className="border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 text-sm"
+            size="sm"
+            disabled={bulkExporting}
+          >
+            <DownloadCloud size={16} className="mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">{bulkExporting ? "Exporting..." : "Bulk Export"}</span>
+            <span className="sm:hidden">{bulkExporting ? "Exp..." : "Export"}</span>
+          </Button>
+          <Button
+            onClick={() => setBulkImportDialogOpen(true)}
+            variant="outline"
+            className="border-orange-600 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20 text-sm"
+            size="sm"
+          >
+            <UploadCloud size={16} className="mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Bulk Import</span>
+            <span className="sm:hidden">Import</span>
+          </Button>
+          <Button
+            onClick={openBackupLibrary}
+            variant="outline"
+            className="border-indigo-600 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 text-sm"
+            size="sm"
+          >
+            <Archive size={16} className="mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Backup Library</span>
+            <span className="sm:hidden">Backups</span>
+          </Button>
+          <Button
             onClick={() => setImportDialogOpen(true)}
             className="bg-blue-600 hover:bg-blue-700 text-sm"
             data-testid="import-leads-button"
