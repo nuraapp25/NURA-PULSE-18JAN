@@ -353,9 +353,12 @@ const DriverOnboardingPage = () => {
       filtered = filtered.filter(lead => lead.status === activeSubStatus);
     }
     
-    // Source filter
+    // Source filter - normalize for case-insensitive comparison
     if (sourceFilter) {
-      filtered = filtered.filter(lead => lead.source === sourceFilter);
+      const normalizedFilter = sourceFilter.toLowerCase();
+      filtered = filtered.filter(lead => 
+        lead.source && lead.source.toLowerCase() === normalizedFilter
+      );
     }
     
     // Telecaller filter
