@@ -2873,37 +2873,78 @@ const DriverOnboardingPage = () => {
                         )}
                       </div>
                       {isEditMode && (
-                        <div className="flex gap-2">
-                          <label className="flex-1">
-                            <Input
-                              type="file"
-                              accept="image/*,.pdf"
-                              onChange={(e) => handleDocumentUpload('dl', e.target.files[0])}
-                              className="hidden"
-                              id="dl-upload"
-                            />
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              className="w-full"
-                              disabled={uploadingDoc === 'dl'}
-                              onClick={() => document.getElementById('dl-upload').click()}
-                            >
-                              {uploadingDoc === 'dl' ? 'Uploading...' : uploadedDocs.dl ? '✓ Uploaded' : 'Upload'}
-                            </Button>
-                          </label>
-                          {uploadedDocs.dl && (
-                            <Button
-                              type="button"
-                              variant="default"
-                              size="sm"
-                              onClick={() => handleDocumentScan('dl')}
-                              disabled={scanningDoc === 'dl'}
-                              className="bg-blue-600 hover:bg-blue-700"
-                            >
-                              {scanningDoc === 'dl' ? 'Scanning...' : 'Scan'}
-                            </Button>
+                        <div className="flex flex-col gap-2">
+                          {!uploadedDocs.dl ? (
+                            <label className="flex-1">
+                              <Input
+                                type="file"
+                                accept="image/*,.pdf"
+                                onChange={(e) => handleDocumentUpload('dl', e.target.files[0])}
+                                className="hidden"
+                                id="dl-upload"
+                              />
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="w-full"
+                                disabled={uploadingDoc === 'dl'}
+                                onClick={() => document.getElementById('dl-upload').click()}
+                              >
+                                <Upload className="w-3 h-3 mr-2" />
+                                {uploadingDoc === 'dl' ? 'Uploading...' : 'Upload'}
+                              </Button>
+                            </label>
+                          ) : (
+                            <>
+                              <div className="flex gap-1">
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleViewDocument('dl')}
+                                  className="flex-1"
+                                  title="View document"
+                                >
+                                  <Eye className="w-3 h-3 mr-1" />
+                                  View
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleDownloadDocument('dl')}
+                                  className="flex-1"
+                                  title="Download document"
+                                >
+                                  <Download className="w-3 h-3 mr-1" />
+                                  Download
+                                </Button>
+                              </div>
+                              <div className="flex gap-1">
+                                <Button
+                                  type="button"
+                                  variant="default"
+                                  size="sm"
+                                  onClick={() => handleDocumentScan('dl')}
+                                  disabled={scanningDoc === 'dl'}
+                                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                                >
+                                  {scanningDoc === 'dl' ? 'Scanning...' : 'Scan'}
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => handleDeleteDocument('dl')}
+                                  className="flex-1"
+                                  title="Delete document"
+                                >
+                                  <Trash2 className="w-3 h-3 mr-1" />
+                                  Delete
+                                </Button>
+                              </div>
+                            </>
                           )}
                         </div>
                       )}
