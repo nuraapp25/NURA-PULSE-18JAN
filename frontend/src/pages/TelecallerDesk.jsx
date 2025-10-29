@@ -285,13 +285,35 @@ const TelecallerDesk = () => {
                         {lead.last_modified ? new Date(lead.last_modified).toLocaleDateString() : "-"}
                       </td>
                       <td className="py-3 px-4 text-sm">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleLeadClick(lead)}
-                        >
-                          Update
-                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                            >
+                              <MoreVertical className="w-4 h-4" />
+                              Actions
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuItem onClick={() => handleCallLead(lead)}>
+                              <PhoneCall className="w-4 h-4 mr-2" />
+                              Call
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleWhatsAppLead(lead)}>
+                              <MessageCircle className="w-4 h-4 mr-2" />
+                              WhatsApp
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleLeadClick(lead)}>
+                              <Edit className="w-4 h-4 mr-2" />
+                              Update Status
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleViewProfile(lead)}>
+                              <FileText className="w-4 h-4 mr-2" />
+                              Edit Lead Profile
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </td>
                     </tr>
                   ))}
