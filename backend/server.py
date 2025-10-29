@@ -1396,11 +1396,11 @@ async def bulk_update_lead_status(bulk_data: BulkLeadStatusUpdate, current_user:
     
     print(f"MongoDB update result: matched={result.matched_count}, modified={result.modified_count}")
     
-    # Get all updated leads for syncing to Google Sheets
+    # Get all updated leads for syncing to Google Sheets (no limit on bulk update size)
     updated_leads = await db.driver_leads.find(
         {"id": {"$in": bulk_data.lead_ids}},
         {"_id": 0}
-    ).to_list(1000)
+    ).to_list(length=None)
     
     print(f"Found {len(updated_leads)} leads to sync")
     
