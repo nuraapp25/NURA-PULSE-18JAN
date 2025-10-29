@@ -183,13 +183,52 @@ const BatteryConsumption = () => {
   };
 
   const processChartData = (rawData) => {
-    // First pass: get all odometer values
-    const odometerValues = rawData.map(row => 
-      parseFloat(row['Odometer (km)'] || 0)
-    ).filter(val => val > 0);
+    console.log("Processing chart data, sample row:", rawData[0]);
+    
+    // Check for different possible distance column names
+    const possibleDistanceColumns = [
+      'Odometer (km)',
+      'Odometer(km)',
+      'Odometer',
+      'Distance (km)',
+      'Distance(km)',
+      'Distance',
+      'Total Distance (km)',
+      'Total Distance'
+    ];
+    
+    // Find which distance column exists in the data
+    let distanceColumn = null;
+    for (const col of possibleDistanceColumns) {
+      if (rawData[0] && rawData[0][col] !== undefined) {
+        distanceColumn = col;
+        console.log("Found distance column:", col);
+        break;
+      }
+    }
+    
+    if (!distanceColumn) {
+      console.warn("No distance column found in data. Available columns:", Object.keys(rawData[0] || {}));
+      // Try to find any column with 'km' or 'distance' in the name (case insensitive)
+      const allColumns = Object.keys(rawData[0] || {});
+      distanceColumn = allColumns.find(col => 
+        col.toLowerCase().includes('km') || col.toLowerCase().includes('distance')
+      );
+      if (distanceColumn) {
+        console.log("Found distance column by search:", distanceColumn);
+      }
+    }
+    
+    // First pass: get all distance/odometer values
+    const odometerValues = rawData.map(row => {
+      const val = distanceColumn ? parseFloat(row[distanceColumn] || 0) : 0;
+      return val;
+    }).filter(val => val > 0);
+    
+    console.log("Distance values found:", odometerValues.length, "Sample:", odometerValues.slice(0, 5));
     
     // Find starting odometer value (minimum)
-    const startingOdometer = Math.min(...odometerValues);
+    const startingOdometer = odometerValues.length > 0 ? Math.min(...odometerValues) : 0;
     
     // Group data by hour first
     const hourlyData = {};
@@ -230,7 +269,8 @@ const BatteryConsumption = () => {
       const hourReadings = hourlyData[hourKey];
       const lastReading = hourReadings[hourReadings.length - 1];
       
-      const absoluteDistance = parseFloat(lastReading['Odometer (km)'] || 0);
+      // Get distance with fallback
+      const absoluteDistance = distanceColumn ? parseFloat(lastReading[distanceColumn] || 0) : 0;
       const currentBattery = parseFloat(lastReading['Battery Soc(%)'] || lastReading['Battery SOC(%)'] || 0);
       
       let chargeDrop = 0;
@@ -238,16 +278,18 @@ const BatteryConsumption = () => {
       let batteryChange = 0;
       
       // Calculate distance increment (always positive or zero)
-      if (lastAbsoluteDistance !== null && absoluteDistance >= lastAbsoluteDistance) {
-        distanceTraveled = absoluteDistance - lastAbsoluteDistance;
-        cumulativeDistance += distanceTraveled;
-      } else if (lastAbsoluteDistance === null) {
-        // First data point - use normalized distance from start
-        cumulativeDistance = absoluteDistance - startingOdometer;
+      if (distanceColumn && absoluteDistance > 0) {
+        if (lastAbsoluteDistance !== null && absoluteDistance >= lastAbsoluteDistance) {
+          distanceTraveled = absoluteDistance - lastAbsoluteDistance;
+          cumulativeDistance += distanceTraveled;
+        } else if (lastAbsoluteDistance === null) {
+          // First data point - use normalized distance from start
+          cumulativeDistance = absoluteDistance - startingOdometer;
+        }
+        // If absoluteDistance < lastAbsoluteDistance, it's likely an error/reset, so keep cumulative as is
+        
+        lastAbsoluteDistance = absoluteDistance;
       }
-      // If absoluteDistance < lastAbsoluteDistance, it's likely an error/reset, so keep cumulative as is
-      
-      lastAbsoluteDistance = absoluteDistance;
       
       // Compare with previous hour for battery changes
       if (index > 0) {
@@ -267,14 +309,16 @@ const BatteryConsumption = () => {
       
       processedData.push({
         time: hourKey,
-        battery: currentBattery,
-        distance: cumulativeDistance, // Use cumulative distance (always increasing)
+        battery: currentBattery > 0 ? currentBattery : null, // Set to null if 0 to avoid showing 0 on chart
+        distance: cumulativeDistance > 0 ? cumulativeDistance : null, // Set to null if 0
         chargeDrop: chargeDrop.toFixed(2),
         distanceTraveled: distanceTraveled.toFixed(2),
         batteryChange: batteryChange, // Add this for summary calculation
         rawIndex: index
       });
     });
+    
+    console.log("Processed data points:", processedData.length, "Sample:", processedData.slice(0, 3));
     
     return processedData;
   };
