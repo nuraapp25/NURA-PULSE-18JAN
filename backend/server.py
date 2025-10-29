@@ -1418,6 +1418,93 @@ async def bulk_update_lead_status(bulk_data: BulkLeadStatusUpdate, current_user:
     # Return success message
     count = len(updated_leads)
     return {
+
+
+@api_router.patch("/driver-onboarding/bulk-assign")
+async def bulk_assign_telecaller(
+    assignment_data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Bulk assign telecaller to multiple leads"""
+    lead_ids = assignment_data.get("lead_ids", [])
+    telecaller_email = assignment_data.get("telecaller_email", "")
+    
+    if not lead_ids or len(lead_ids) == 0:
+        raise HTTPException(status_code=400, detail="No leads selected for assignment")
+    
+    if not telecaller_email:
+        raise HTTPException(status_code=400, detail="No telecaller selected")
+    
+    # Verify telecaller exists
+    telecaller = await db.telecaller_profiles.find_one({"email": telecaller_email})
+    if not telecaller:
+        raise HTTPException(status_code=404, detail="Telecaller not found")
+    
+    # Update all matching leads
+    result = await db.driver_leads.update_many(
+        {"id": {"$in": lead_ids}},
+        {"$set": {"assigned_telecaller": telecaller_email}}
+    )
+    
+    # Get updated leads for sync
+    updated_leads = await db.driver_leads.find(
+        {"id": {"$in": lead_ids}},
+        {"_id": 0}
+    ).to_list(length=None)
+    
+    # Sync to Google Sheets
+    try:
+        sync_all_records('leads', updated_leads)
+    except Exception as e:
+        logger.error(f"Failed to sync to Google Sheets: {str(e)}")
+    
+    return {
+        "success": True,
+        "message": f"Successfully assigned {result.modified_count} lead(s) to {telecaller['name']}",
+        "modified_count": result.modified_count
+    }
+
+
+@api_router.patch("/driver-onboarding/leads/bulk-update-status")
+async def bulk_update_lead_status(bulk_data: BulkLeadStatusUpdate, current_user: User = Depends(get_current_user)):
+    """Bulk update lead status for multiple leads"""
+    print("=== BULK UPDATE CALLED ===")
+    print(f"Lead IDs count: {len(bulk_data.lead_ids) if bulk_data.lead_ids else 0}")
+    print(f"Status: {bulk_data.status}")
+    
+    if not bulk_data.lead_ids or len(bulk_data.lead_ids) == 0:
+        raise HTTPException(status_code=400, detail="No leads selected for update")
+    
+    # Update all matching leads
+    result = await db.driver_leads.update_many(
+        {"id": {"$in": bulk_data.lead_ids}},
+        {"$set": {"status": bulk_data.status}}
+    )
+    
+    print(f"MongoDB update result: matched={result.matched_count}, modified={result.modified_count}")
+    
+    # Get all updated leads for syncing to Google Sheets (no limit on bulk update size)
+    updated_leads = await db.driver_leads.find(
+        {"id": {"$in": bulk_data.lead_ids}},
+        {"_id": 0}
+    ).to_list(length=None)
+    
+    print(f"Found {len(updated_leads)} leads to sync")
+    
+    if not updated_leads or len(updated_leads) == 0:
+        print("ERROR: No leads found - raising 404")
+        raise HTTPException(status_code=404, detail="Could not find any leads with the provided IDs")
+    
+    # Sync all to Google Sheets
+    try:
+        sync_all_records('leads', updated_leads)
+    except Exception as e:
+        logger.error(f"Failed to sync to Google Sheets: {str(e)}")
+        # Don't fail the whole operation if sheets sync fails
+    
+    # Return success message
+    count = len(updated_leads)
+    return {
         "message": f"Successfully updated status for {count} lead(s) to '{bulk_data.status}'",
         "updated_count": count
     }
