@@ -63,7 +63,7 @@ function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [theme, setTheme] = useState(() => {
-    return localStorage.getItem("theme") || "dark"; // Changed default from "light" to "dark"
+    return localStorage.getItem("theme") || "light"; // Default light mode
   });
 
   useEffect(() => {
