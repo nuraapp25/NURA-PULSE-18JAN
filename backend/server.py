@@ -599,6 +599,8 @@ async def approve_user(approval: UserApproval, current_user: User = Depends(get_
 @api_router.post("/users/reject")
 async def reject_user(approval: UserApproval, current_user: User = Depends(get_current_user)):
     """Reject a pending user (master admin only)"""
+    from datetime import datetime, timezone
+    
     if current_user.account_type != "master_admin":
         raise HTTPException(status_code=403, detail="Not authorized")
     
@@ -614,6 +616,17 @@ async def reject_user(approval: UserApproval, current_user: User = Depends(get_c
         {"id": approval.user_id},
         {"$set": {"status": "rejected"}}
     )
+    
+    # If user is a telecaller, also reject their telecaller profile
+    if user.get('account_type') == 'telecaller':
+        await db.telecaller_profiles.update_one(
+            {"email": user['email']},
+            {"$set": {
+                "status": "inactive",
+                "notes": "Rejected by admin",
+                "last_modified": datetime.now(timezone.utc).isoformat()
+            }}
+        )
     
     # Sync to Google Sheets
     user['status'] = 'rejected'
