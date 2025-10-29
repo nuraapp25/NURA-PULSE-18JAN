@@ -316,10 +316,12 @@ def optimize_hotspots(df: pd.DataFrame, N: int = 5, h3_res: int = 9,
     for rank, (k, idxs) in enumerate(zip(chosen_ids, cover_sets), start=1):
         lat, lon = cand[k]
         covered_weight = float(weights[idxs].sum()) if len(idxs) else 0.0
+        locality = get_locality_name(lat, lon)
         hotspots.append({
             "rank": rank,
             "lat": float(lat),
             "lon": float(lon),
+            "locality": locality,
             "covered_count": int(len(idxs)),
             "covered_weight": covered_weight
         })
