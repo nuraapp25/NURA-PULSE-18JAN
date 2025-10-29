@@ -1881,6 +1881,123 @@ async def assign_leads_to_telecaller(
     }
 
 
+@api_router.post("/telecallers/reassign-leads")
+async def reassign_leads_to_telecaller(
+    reassignment: LeadReassignment,
+    current_user: User = Depends(get_current_user)
+):
+    """Reassign leads from one telecaller to another"""
+    from datetime import datetime, timezone
+    
+    if current_user.account_type not in ["admin", "master_admin"]:
+        raise HTTPException(status_code=403, detail="Only admins can reassign leads")
+    
+    # Verify new telecaller exists
+    to_telecaller = await db.telecaller_profiles.find_one({"id": reassignment.to_telecaller_id})
+    if not to_telecaller:
+        raise HTTPException(status_code=404, detail="Target telecaller not found")
+    
+    # Get current assignments to update stats
+    leads_to_reassign = await db.driver_leads.find(
+        {"id": {"$in": reassignment.lead_ids}},
+        {"_id": 0, "id": 1, "assigned_telecaller": 1}
+    ).to_list(length=None)
+    
+    # Count leads by current telecaller
+    from_telecaller_counts = {}
+    for lead in leads_to_reassign:
+        current_telecaller_email = lead.get("assigned_telecaller")
+        if current_telecaller_email:
+            from_telecaller_counts[current_telecaller_email] = from_telecaller_counts.get(current_telecaller_email, 0) + 1
+    
+    # Update leads with new telecaller
+    result = await db.driver_leads.update_many(
+        {"id": {"$in": reassignment.lead_ids}},
+        {"$set": {
+            "assigned_telecaller": to_telecaller['email'],
+            "last_modified": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    # Update stats: decrease from old telecallers
+    for telecaller_email, count in from_telecaller_counts.items():
+        await db.telecaller_profiles.update_one(
+            {"email": telecaller_email},
+            {"$inc": {"total_assigned_leads": -count}}
+        )
+    
+    # Update stats: increase for new telecaller
+    await db.telecaller_profiles.update_one(
+        {"id": reassignment.to_telecaller_id},
+        {"$inc": {"total_assigned_leads": result.modified_count}}
+    )
+    
+    # Sync updated leads to Google Sheets
+    for lead_id in reassignment.lead_ids:
+        lead = await db.driver_leads.find_one({"id": lead_id}, {"_id": 0})
+        if lead:
+            sync_single_record('leads', lead)
+    
+    return {
+        "success": True,
+        "message": f"Successfully reassigned {result.modified_count} leads to {to_telecaller['name']}",
+        "reassigned_count": result.modified_count
+    }
+
+
+@api_router.post("/telecallers/deassign-leads")
+async def deassign_leads_from_telecaller(
+    deassignment: LeadDeassignment,
+    current_user: User = Depends(get_current_user)
+):
+    """Remove telecaller assignment from leads"""
+    from datetime import datetime, timezone
+    
+    if current_user.account_type not in ["admin", "master_admin"]:
+        raise HTTPException(status_code=403, detail="Only admins can deassign leads")
+    
+    # Get current assignments to update stats
+    leads_to_deassign = await db.driver_leads.find(
+        {"id": {"$in": deassignment.lead_ids}},
+        {"_id": 0, "id": 1, "assigned_telecaller": 1}
+    ).to_list(length=None)
+    
+    # Count leads by current telecaller
+    telecaller_counts = {}
+    for lead in leads_to_deassign:
+        current_telecaller_email = lead.get("assigned_telecaller")
+        if current_telecaller_email:
+            telecaller_counts[current_telecaller_email] = telecaller_counts.get(current_telecaller_email, 0) + 1
+    
+    # Remove telecaller assignment from leads
+    result = await db.driver_leads.update_many(
+        {"id": {"$in": deassignment.lead_ids}},
+        {"$set": {
+            "assigned_telecaller": None,
+            "last_modified": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    # Update telecaller stats: decrease counts
+    for telecaller_email, count in telecaller_counts.items():
+        await db.telecaller_profiles.update_one(
+            {"email": telecaller_email},
+            {"$inc": {"total_assigned_leads": -count}}
+        )
+    
+    # Sync updated leads to Google Sheets
+    for lead_id in deassignment.lead_ids:
+        lead = await db.driver_leads.find_one({"id": lead_id}, {"_id": 0})
+        if lead:
+            sync_single_record('leads', lead)
+    
+    return {
+        "success": True,
+        "message": f"Successfully deassigned {result.modified_count} leads",
+        "deassigned_count": result.modified_count
+    }
+
+
 @api_router.post("/telecallers/sync-from-sheets")
 async def sync_assignments_from_sheets(current_user: User = Depends(get_current_user)):
     """Read Column H from Google Sheets and assign leads to telecallers"""
