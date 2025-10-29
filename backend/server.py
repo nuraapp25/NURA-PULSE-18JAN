@@ -19,6 +19,11 @@ import base64
 import googlemaps
 import requests
 import asyncio
+import pandas as pd
+import numpy as np
+
+# Import hotspot optimizer
+from hotspot_optimizer import optimize_hotspots, TIME_SLOTS
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
