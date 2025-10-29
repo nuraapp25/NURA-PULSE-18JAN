@@ -222,29 +222,42 @@ const BatteryConsumption = () => {
     const processedData = [];
     const hourKeys = Object.keys(hourlyData).filter(k => k !== "N/A");
     
+    // Track cumulative distance (always increasing)
+    let cumulativeDistance = 0;
+    let lastAbsoluteDistance = null;
+    
     hourKeys.forEach((hourKey, index) => {
       const hourReadings = hourlyData[hourKey];
       const lastReading = hourReadings[hourReadings.length - 1];
       
       const absoluteDistance = parseFloat(lastReading['Odometer (km)'] || 0);
-      const normalizedDistance = absoluteDistance - startingOdometer;
       const currentBattery = parseFloat(lastReading['Battery Soc(%)'] || lastReading['Battery SOC(%)'] || 0);
       
       let chargeDrop = 0;
       let distanceTraveled = 0;
       let batteryChange = 0;
       
-      // Compare with previous hour
+      // Calculate distance increment (always positive or zero)
+      if (lastAbsoluteDistance !== null && absoluteDistance >= lastAbsoluteDistance) {
+        distanceTraveled = absoluteDistance - lastAbsoluteDistance;
+        cumulativeDistance += distanceTraveled;
+      } else if (lastAbsoluteDistance === null) {
+        // First data point - use normalized distance from start
+        cumulativeDistance = absoluteDistance - startingOdometer;
+      }
+      // If absoluteDistance < lastAbsoluteDistance, it's likely an error/reset, so keep cumulative as is
+      
+      lastAbsoluteDistance = absoluteDistance;
+      
+      // Compare with previous hour for battery changes
       if (index > 0) {
         const prevHourKey = hourKeys[index - 1];
         const prevHourReadings = hourlyData[prevHourKey];
         const prevLastReading = prevHourReadings[prevHourReadings.length - 1];
         
         const prevBattery = parseFloat(prevLastReading['Battery Soc(%)'] || prevLastReading['Battery SOC(%)'] || 0);
-        const prevAbsoluteDistance = parseFloat(prevLastReading['Odometer (km)'] || 0);
         
         batteryChange = currentBattery - prevBattery;
-        distanceTraveled = absoluteDistance - prevAbsoluteDistance;
         
         // Charge drop when battery decreases
         if (batteryChange < 0) {
@@ -255,7 +268,7 @@ const BatteryConsumption = () => {
       processedData.push({
         time: hourKey,
         battery: currentBattery,
-        distance: normalizedDistance,
+        distance: cumulativeDistance, // Use cumulative distance (always increasing)
         chargeDrop: chargeDrop.toFixed(2),
         distanceTraveled: distanceTraveled.toFixed(2),
         batteryChange: batteryChange, // Add this for summary calculation
