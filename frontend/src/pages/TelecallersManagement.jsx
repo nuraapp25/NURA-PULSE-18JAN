@@ -108,7 +108,10 @@ const TelecallersManagement = () => {
       resetForm();
     } catch (error) {
       console.error("Create telecaller error:", error);
-      toast.error(error.response?.data?.detail || "Failed to create telecaller");
+      // Only show error if the telecaller was NOT created
+      if (error.response?.status !== 200) {
+        toast.error(error.response?.data?.detail || "Failed to create telecaller profile");
+      }
     }
   };
 
