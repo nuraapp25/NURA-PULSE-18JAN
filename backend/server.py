@@ -1794,11 +1794,11 @@ async def sync_assignments_from_sheets(current_user: User = Depends(get_current_
         raise HTTPException(status_code=403, detail="Only admins can sync assignments")
     
     try:
-        # Get all leads from database
-        all_leads = await db.driver_leads.find({}, {"_id": 0}).to_list(10000)
+        # Get all leads from database (no limit)
+        all_leads = await db.driver_leads.find({}, {"_id": 0}).to_list(length=None)
         
-        # Get all telecallers
-        all_telecallers = await db.telecaller_profiles.find({}, {"_id": 0}).to_list(1000)
+        # Get all telecallers (reasonable limit)
+        all_telecallers = await db.telecaller_profiles.find({}, {"_id": 0}).to_list(length=None)
         telecaller_map = {t['email']: t for t in all_telecallers}
         telecaller_map_by_name = {t['name'].lower(): t for t in all_telecallers}
         
