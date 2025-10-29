@@ -173,6 +173,51 @@ const AppSettings = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Hidden Apps Section */}
+      <Card className="dark:bg-gray-800 dark:border-gray-700 mt-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <EyeOff className="h-5 w-5" />
+            Hidden Apps
+          </CardTitle>
+          <CardDescription className="dark:text-gray-400">
+            Apps that are not displayed in the sidebar but can still be accessed directly
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {hiddenApps.map((app) => {
+            const IconComponent = app.icon;
+            return (
+              <div 
+                key={app.path}
+                className="flex items-center justify-between p-4 border rounded-lg dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                    <IconComponent className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-base font-semibold dark:text-white cursor-pointer">
+                      {app.name}
+                    </Label>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {app.description}
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={() => navigate(app.path)}
+                  className="dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+                >
+                  Open App
+                </Button>
+              </div>
+            );
+          })}
+        </CardContent>
+      </Card>
     </div>
   );
 };
