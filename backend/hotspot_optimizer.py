@@ -15,6 +15,8 @@ import pandas as pd
 from sklearn.neighbors import BallTree
 from typing import List, Tuple, Optional
 import logging
+import os
+import requests
 
 logger = logging.getLogger(__name__)
 
