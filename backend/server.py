@@ -7938,9 +7938,14 @@ async def scan_driver_document(
         
         prompt = prompts.get(document_type, "Extract relevant information from this document.")
         
-        # Use OpenAI GPT-4o Vision for OCR
-        from openai import OpenAI
-        client = OpenAI(api_key=api_key)
+        # Use emergentintegrations for OpenAI GPT-4o Vision OCR with EMERGENT_LLM_KEY
+        try:
+            from emergentintegrations.openai import OpenAI as EmergentOpenAI
+            client = EmergentOpenAI(api_key=api_key)
+        except ImportError:
+            # Fallback to regular OpenAI if emergentintegrations not available
+            from openai import OpenAI
+            client = OpenAI(api_key=api_key)
         
         response = client.chat.completions.create(
             model="gpt-4o",
