@@ -67,6 +67,7 @@ const TelecallerDesk = () => {
   const [loading, setLoading] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [updatingLead, setUpdatingLead] = useState(false);
   
   // Form state
