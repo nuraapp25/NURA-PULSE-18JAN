@@ -859,12 +859,16 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Driver Onboarding - Manual Status Update with Apply/Cancel"
+    - "Hotspot Analysis - Recent Enhancements Testing (locality names, bigger map points, uncovered pickups, hover tooltips)"
+    - "Driver Onboarding - Document Management Full Rollout (All Document Types)"
+    - "Driver Onboarding - Scan Document Feature Fix"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
 agent_communication:
+    - agent: "main"
+      message: "STARTING NEW SESSION: User confirmed to proceed with planned tasks. Focus areas: (1) Test recently implemented Hotspot Analysis enhancements (locality names, bigger map points, uncovered pickups, hover tooltips), (2) Implement document management for ALL document types in Driver Onboarding (currently only DL has view/download/delete), (3) Fix Scan Document feature with Emergent LLM key, (4) Debug date filter issues if any. Will start with Hotspot Analysis backend testing, then move to Driver Onboarding enhancements."
     - agent: "main"
       message: "PAYMENT DATA EXTRACTOR PERFORMANCE OPTIMIZATION COMPLETE: Fixed timeout issue with 10 screenshot processing. Changes implemented: 1) Added image optimization - automatically resizes images larger than 2048px and compresses to JPEG with 85% quality (reduces file size by up to 70%). 2) Increased batch size from 3 to 5 files - processes more images in parallel for faster completion. 3) Added per-image timeout (90 seconds) to prevent one slow image from blocking entire batch. 4) Reduced inter-batch delay from 0.5s to 0.3s for faster processing. 5) Enhanced error handling with detailed logging - tracks file sizes, optimization results, timeout errors. 6) Better temp file cleanup with finally block. Expected results: 10 files should now complete in ~120-150 seconds instead of timing out after 3 minutes. Handles complex images (ride history screenshots) better with timeout protection. Ready for backend testing with 10 varied screenshot files."
     - agent: "testing"
