@@ -723,6 +723,50 @@ const TelecallersManagement = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Reassign Dialog */}
+      <Dialog open={isReassignDialogOpen} onOpenChange={setIsReassignDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Reassign Leads to Another Telecaller</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Select New Telecaller</Label>
+              <Select
+                value={selectedTelecaller?.id}
+                onValueChange={(value) => {
+                  const telecaller = telecallers.find(t => t.id === value);
+                  setSelectedTelecaller(telecaller);
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose telecaller" />
+                </SelectTrigger>
+                <SelectContent>
+                  {telecallers.filter(t => t.status === "active").map((telecaller) => (
+                    <SelectItem key={telecaller.id} value={telecaller.id}>
+                      {telecaller.name} ({telecaller.total_assigned_leads} leads)
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="text-sm text-gray-600">
+              {selectedLeads.length} lead(s) selected for reassignment
+            </div>
+            <div className="text-xs text-amber-600 bg-amber-50 p-3 rounded">
+              ⚠️ This will move leads from their current telecaller to the selected telecaller
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsReassignDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleReassignLeads}>Reassign Leads</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
