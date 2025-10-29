@@ -386,7 +386,7 @@ const BatteryConsumption = () => {
             Battery: {data.battery !== null && data.battery !== undefined ? data.battery.toFixed(1) + '%' : 'N/A'}
           </p>
           <p className="text-blue-400 text-sm">
-            Distance This Hour: {data.distance !== null && data.distance !== undefined ? data.distance.toFixed(2) + ' km' : 'N/A'}
+            Total Distance: {data.distance !== null && data.distance !== undefined ? data.distance.toFixed(2) + ' km' : 'N/A'}
           </p>
           <div className="border-t border-gray-600 mt-2 pt-2">
             <p className="text-xs text-gray-400 mb-1">{hourRangeText}</p>
