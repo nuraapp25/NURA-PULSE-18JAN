@@ -697,7 +697,7 @@ const BatteryConsumption = () => {
                         yAxisId="right"
                         orientation="right"
                         stroke="#3B82F6"
-                        label={{ value: 'Distance (km)', angle: 90, position: 'insideRight' }}
+                        label={{ value: 'Distance/Hour (km)', angle: 90, position: 'insideRight' }}
                       />
                       <Tooltip content={<CustomTooltip />} />
                       <Legend />
