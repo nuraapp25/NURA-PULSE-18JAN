@@ -1901,8 +1901,8 @@ async def test_bulk_endpoint(current_user: User = Depends(get_current_user)):
 async def get_performance_tracking(current_user: User = Depends(get_current_user)):
     """Get telecaller performance metrics"""
     try:
-        # Get all leads
-        all_leads = await db.driver_leads.find({}, {"_id": 0}).to_list(10000)
+        # Get all leads (no limit)
+        all_leads = await db.driver_leads.find({}, {"_id": 0}).to_list(length=None)
         
         # Group by telecaller
         telecaller_stats = {}
