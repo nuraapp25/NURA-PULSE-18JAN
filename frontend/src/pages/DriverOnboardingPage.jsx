@@ -178,6 +178,16 @@ const DriverOnboardingPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [leadsPerPage, setLeadsPerPage] = useState(20);
   
+  // Bulk Export/Import and Backup Library states
+  const [bulkExporting, setBulkExporting] = useState(false);
+  const [bulkImporting, setBulkImporting] = useState(false);
+  const [bulkImportFile, setBulkImportFile] = useState(null);
+  const [bulkImportDialogOpen, setBulkImportDialogOpen] = useState(false);
+  const [backupLibraryOpen, setBackupLibraryOpen] = useState(false);
+  const [backups, setBackups] = useState([]);
+  const [loadingBackups, setLoadingBackups] = useState(false);
+  const [rollingBack, setRollingBack] = useState(false);
+  
   // Source filter - Extract unique sources (case-insensitive), sort alphabetically
   const [sourceFilter, setSourceFilter] = useState(null);
   const uniqueSources = [...new Set(
