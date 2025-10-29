@@ -1250,6 +1250,7 @@ const DriverOnboardingPage = () => {
     if (!window.confirm(
       "⚠️ WARNING: This will REPLACE ALL current leads with the data from your Excel file.\n\n" +
       "A backup will be created automatically before import.\n\n" +
+      "Telecaller assignments in Column V (assigned_telecaller) will be processed.\n\n" +
       "Are you sure you want to proceed?"
     )) {
       return;
@@ -1275,16 +1276,28 @@ const DriverOnboardingPage = () => {
         }
       );
       
-      const { backup_created, deleted_count, inserted_count, total_leads_now } = response.data;
+      const { 
+        backup_created, 
+        deleted_count, 
+        inserted_count, 
+        total_leads_now,
+        telecaller_assignments 
+      } = response.data;
       
-      toast.success(
-        `✅ Bulk import completed!\n\n` +
+      // Show detailed success message
+      let successMessage = `✅ Bulk import completed!\n\n` +
         `Backup: ${backup_created || 'N/A'}\n` +
         `Deleted: ${deleted_count} leads\n` +
         `Imported: ${inserted_count} leads\n` +
-        `Total leads now: ${total_leads_now}`,
-        { duration: 8000 }
-      );
+        `Total leads now: ${total_leads_now}`;
+      
+      if (telecaller_assignments && telecaller_assignments.leads_assigned > 0) {
+        successMessage += `\n\n📞 Telecaller Assignments:\n` +
+          `Leads assigned: ${telecaller_assignments.leads_assigned}\n` +
+          `Telecallers updated: ${telecaller_assignments.telecallers_updated}`;
+      }
+      
+      toast.success(successMessage, { duration: 10000 });
       
       // Reset and refresh
       setBulkImportFile(null);
