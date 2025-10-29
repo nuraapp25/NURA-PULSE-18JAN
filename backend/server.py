@@ -8000,6 +8000,143 @@ async def scan_driver_document(
         raise HTTPException(status_code=500, detail=f"Failed to scan document: {str(e)}")
 
 
+@api_router.get("/driver-onboarding/document/{lead_id}/{document_type}")
+async def get_driver_document(
+    lead_id: str,
+    document_type: str,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get/Download a driver document
+    """
+    try:
+        # Validate document type
+        valid_types = ['dl', 'aadhar', 'pan', 'gas_bill', 'bank_passbook']
+        if document_type not in valid_types:
+            raise HTTPException(status_code=400, detail=f"Invalid document type")
+        
+        # Get the document path from database
+        leads_collection = db['driver_leads']
+        lead = await leads_collection.find_one({'id': lead_id})
+        
+        if not lead:
+            raise HTTPException(status_code=404, detail="Lead not found")
+        
+        field_name = f"{document_type}_document_path"
+        file_path = lead.get(field_name)
+        
+        if not file_path or not os.path.exists(file_path):
+            raise HTTPException(status_code=404, detail=f"No {document_type} document found")
+        
+        # Return the file
+        return FileResponse(
+            path=file_path,
+            filename=os.path.basename(file_path),
+            media_type='application/octet-stream'
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get document: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get document: {str(e)}")
+
+
+@api_router.delete("/driver-onboarding/document/{lead_id}/{document_type}")
+async def delete_driver_document(
+    lead_id: str,
+    document_type: str,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Delete a driver document
+    """
+    try:
+        # Validate document type
+        valid_types = ['dl', 'aadhar', 'pan', 'gas_bill', 'bank_passbook']
+        if document_type not in valid_types:
+            raise HTTPException(status_code=400, detail=f"Invalid document type")
+        
+        # Get the document path from database
+        leads_collection = db['driver_leads']
+        lead = await leads_collection.find_one({'id': lead_id})
+        
+        if not lead:
+            raise HTTPException(status_code=404, detail="Lead not found")
+        
+        field_name = f"{document_type}_document_path"
+        file_path = lead.get(field_name)
+        
+        if file_path and os.path.exists(file_path):
+            # Delete the physical file
+            os.remove(file_path)
+        
+        # Remove document path from database
+        await leads_collection.update_one(
+            {'id': lead_id},
+            {'$unset': {
+                field_name: "",
+                f"{document_type}_document_uploaded_at": ""
+            }}
+        )
+        
+        return {
+            "success": True,
+            "message": f"{document_type.upper()} document deleted successfully",
+            "document_type": document_type
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to delete document: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete document: {str(e)}")
+
+
+@api_router.get("/driver-onboarding/documents/status/{lead_id}")
+async def get_documents_status(
+    lead_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get status of all documents for a lead (uploaded or not)
+    """
+    try:
+        leads_collection = db['driver_leads']
+        lead = await leads_collection.find_one({'id': lead_id})
+        
+        if not lead:
+            raise HTTPException(status_code=404, detail="Lead not found")
+        
+        document_types = ['dl', 'aadhar', 'pan', 'gas_bill', 'bank_passbook']
+        documents_status = {}
+        
+        for doc_type in document_types:
+            field_name = f"{doc_type}_document_path"
+            file_path = lead.get(field_name)
+            uploaded_at = lead.get(f"{doc_type}_document_uploaded_at")
+            
+            documents_status[doc_type] = {
+                "uploaded": bool(file_path and os.path.exists(file_path)),
+                "file_path": file_path if file_path and os.path.exists(file_path) else None,
+                "uploaded_at": uploaded_at,
+                "filename": os.path.basename(file_path) if file_path else None
+            }
+        
+        return {
+            "success": True,
+            "lead_id": lead_id,
+            "documents": documents_status
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get documents status: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get documents status: {str(e)}")
+
+
+
 # ==================== RIDE PAY EXTRACT V2 - UPLOAD FIRST, PROCESS IN BACKGROUND ====================
 
 # Storage folder for uploaded images
