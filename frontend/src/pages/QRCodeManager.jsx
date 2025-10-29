@@ -303,10 +303,16 @@ export default function QRCodeManager() {
         </div>
         <div className="flex gap-2">
           {selectedQRs.length > 0 && (
-            <Button onClick={handleBatchDownload} variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50">
-              <Download className="w-4 h-4 mr-2" />
-              Download Selected ({selectedQRs.length})
-            </Button>
+            <>
+              <Button onClick={handleBatchDownload} variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50">
+                <Download className="w-4 h-4 mr-2" />
+                Download Selected ({selectedQRs.length})
+              </Button>
+              <Button onClick={handleBatchDelete} variant="outline" className="border-red-600 text-red-600 hover:bg-red-50">
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete Selected ({selectedQRs.length})
+              </Button>
+            </>
           )}
           <Button onClick={() => setIsCreateDialogOpen(true)} className="bg-blue-600 hover:bg-blue-700">
             <Plus className="w-4 h-4 mr-2" />
