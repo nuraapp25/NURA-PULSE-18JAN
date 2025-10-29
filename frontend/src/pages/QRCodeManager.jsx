@@ -392,8 +392,34 @@ export default function QRCodeManager() {
               )}
             </div>
           )}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {qrCodes.map((qr) => (
+          
+          {/* Group QR codes by campaign */}
+          {(() => {
+            // Group QR codes by campaign_name
+            const grouped = qrCodes.reduce((acc, qr) => {
+              const campaign = qr.campaign_name || 'Uncategorized';
+              if (!acc[campaign]) {
+                acc[campaign] = [];
+              }
+              acc[campaign].push(qr);
+              return acc;
+            }, {});
+
+            // Sort campaigns: Uncategorized last
+            const sortedCampaigns = Object.keys(grouped).sort((a, b) => {
+              if (a === 'Uncategorized') return 1;
+              if (b === 'Uncategorized') return -1;
+              return a.localeCompare(b);
+            });
+
+            return sortedCampaigns.map((campaign) => (
+              <div key={campaign} className="mb-8">
+                <div className="flex items-center gap-2 mb-4">
+                  <h3 className="text-xl font-bold text-gray-900">{campaign}</h3>
+                  <span className="text-sm text-gray-500">({grouped[campaign].length} QR code{grouped[campaign].length !== 1 ? 's' : ''})</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {grouped[campaign].map((qr) => (
               <Card 
                 key={qr.id} 
                 className={`hover:shadow-lg transition-shadow ${
