@@ -478,15 +478,35 @@ const TelecallersManagement = () => {
                     className="w-64"
                   />
                   {selectedLeads.length > 0 && (
-                    <Button onClick={() => {
-                      const telecaller = telecallers[0];
-                      if (telecaller) {
-                        setSelectedTelecaller(telecaller);
-                        setIsAssignDialogOpen(true);
-                      }
-                    }}>
-                      Assign Selected ({selectedLeads.length})
-                    </Button>
+                    <>
+                      <Button onClick={() => {
+                        const telecaller = telecallers[0];
+                        if (telecaller) {
+                          setSelectedTelecaller(telecaller);
+                          setIsAssignDialogOpen(true);
+                        }
+                      }}>
+                        Assign Selected ({selectedLeads.length})
+                      </Button>
+                      <Button 
+                        onClick={() => {
+                          const telecaller = telecallers[0];
+                          if (telecaller) {
+                            setSelectedTelecaller(telecaller);
+                            setIsReassignDialogOpen(true);
+                          }
+                        }}
+                        variant="outline"
+                      >
+                        Reassign ({selectedLeads.length})
+                      </Button>
+                      <Button 
+                        onClick={handleDeassignLeads}
+                        variant="destructive"
+                      >
+                        Deassign ({selectedLeads.length})
+                      </Button>
+                    </>
                   )}
                 </div>
               </div>
