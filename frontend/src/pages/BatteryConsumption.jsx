@@ -722,7 +722,7 @@ const BatteryConsumption = () => {
                         dataKey="distance" 
                         stroke="#3B82F6" 
                         strokeWidth={3}
-                        name="Distance/Hour (km)"
+                        name="Total Distance (km)"
                         dot={false}
                         activeDot={false}
                         connectNulls={true}
