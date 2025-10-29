@@ -3061,8 +3061,62 @@ const DriverOnboardingPage = () => {
                           </p>
                         )}
                       </div>
-                      {isEditMode && (
-                        <div className="flex gap-2">
+                      {/* Show document actions in both view and edit mode */}
+                      {uploadedDocs.pan && (
+                        <div className="flex flex-col gap-2">
+                          <div className="flex gap-1">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleViewDocument('pan')}
+                              className="flex-1"
+                              title="View document"
+                            >
+                              <Eye className="w-3 h-3 mr-1" />
+                              View
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDownloadDocument('pan')}
+                              className="flex-1"
+                              title="Download document"
+                            >
+                              <Download className="w-3 h-3 mr-1" />
+                              Download
+                            </Button>
+                          </div>
+                          {isEditMode && (
+                            <div className="flex gap-1">
+                              <Button
+                                type="button"
+                                variant="default"
+                                size="sm"
+                                onClick={() => handleDocumentScan('pan')}
+                                disabled={scanningDoc === 'pan'}
+                                className="flex-1 bg-blue-600 hover:bg-blue-700"
+                              >
+                                {scanningDoc === 'pan' ? 'Scanning...' : 'Scan'}
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleDeleteDocument('pan')}
+                                className="flex-1"
+                                title="Delete document"
+                              >
+                                <Trash2 className="w-3 h-3 mr-1" />
+                                Delete
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {isEditMode && !uploadedDocs.pan && (
+                        <div className="flex flex-col gap-2">
                           <label className="flex-1">
                             <Input
                               type="file"
@@ -3079,21 +3133,10 @@ const DriverOnboardingPage = () => {
                               disabled={uploadingDoc === 'pan'}
                               onClick={() => document.getElementById('pan-upload').click()}
                             >
-                              {uploadingDoc === 'pan' ? 'Uploading...' : uploadedDocs.pan ? '✓ Uploaded' : 'Upload'}
+                              <Upload className="w-3 h-3 mr-2" />
+                              {uploadingDoc === 'pan' ? 'Uploading...' : 'Upload'}
                             </Button>
                           </label>
-                          {uploadedDocs.pan && (
-                            <Button
-                              type="button"
-                              variant="default"
-                              size="sm"
-                              onClick={() => handleDocumentScan('pan')}
-                              disabled={scanningDoc === 'pan'}
-                              className="bg-blue-600 hover:bg-blue-700"
-                            >
-                              {scanningDoc === 'pan' ? 'Scanning...' : 'Scan'}
-                            </Button>
-                          )}
                         </div>
                       )}
                     </div>
