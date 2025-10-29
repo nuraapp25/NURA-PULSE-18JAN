@@ -187,6 +187,67 @@ const TelecallersManagement = () => {
     }
   };
 
+  const handleReassignLeads = async () => {
+    if (selectedLeads.length === 0) {
+      toast.error("Please select at least one lead");
+      return;
+    }
+
+    if (!selectedTelecaller) {
+      toast.error("Please select a telecaller");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.post(
+        `${API}/telecallers/reassign-leads`,
+        {
+          lead_ids: selectedLeads,
+          to_telecaller_id: selectedTelecaller.id
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      toast.success(`Reassigned ${selectedLeads.length} leads to ${selectedTelecaller.name}!`);
+      setIsReassignDialogOpen(false);
+      setSelectedLeads([]);
+      fetchTelecallers();
+      fetchAllLeads();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to reassign leads");
+    }
+  };
+
+  const handleDeassignLeads = async () => {
+    if (selectedLeads.length === 0) {
+      toast.error("Please select at least one lead");
+      return;
+    }
+
+    if (!confirm(`Are you sure you want to deassign ${selectedLeads.length} lead(s)? This will remove telecaller assignments.`)) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.post(
+        `${API}/telecallers/deassign-leads`,
+        {
+          lead_ids: selectedLeads
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      toast.success(`Deassigned ${selectedLeads.length} leads successfully!`);
+      setSelectedLeads([]);
+      fetchTelecallers();
+      fetchAllLeads();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to deassign leads");
+    }
+  };
+
   const handleSyncFromSheets = async () => {
     setLoading(true);
     try {
