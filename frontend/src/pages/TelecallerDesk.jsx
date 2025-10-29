@@ -60,9 +60,14 @@ const TelecallerDesk = () => {
   const [myLeads, setMyLeads] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null);
+  const [editedLead, setEditedLead] = useState(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
   const [updatingLead, setUpdatingLead] = useState(false);
+  const [uploadingDoc, setUploadingDoc] = useState(null);
+  const [scanningDoc, setScanningDoc] = useState(null);
+  const [uploadedDocs, setUploadedDocs] = useState({});
   
   // Form state
   const [formData, setFormData] = useState({
