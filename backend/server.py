@@ -254,6 +254,8 @@ async def initialize_master_admin():
 
 @api_router.post("/auth/register")
 async def register(user_data: UserCreate):
+    from datetime import datetime, timezone
+    
     # Check if user already exists
     existing_user = await db.users.find_one({"email": user_data.email})
     if existing_user:
@@ -286,6 +288,32 @@ async def register(user_data: UserCreate):
     
     # Sync to Google Sheets
     sync_user_to_sheets(user_dict)
+    
+    # If registering as telecaller, automatically create telecaller profile
+    if user_data.account_type == "telecaller":
+        # Check if telecaller profile already exists
+        existing_profile = await db.telecaller_profiles.find_one({"email": user_data.email})
+        
+        if not existing_profile:
+            telecaller_profile = {
+                "id": str(uuid.uuid4()),
+                "name": f"{user_data.first_name} {user_data.last_name}",
+                "phone_number": "",  # Can be updated later
+                "email": user_data.email,
+                "status": "pending",  # Match user status - will become active when admin approves
+                "notes": "Auto-created from user registration",
+                "aadhar_card": "",
+                "pan_card": "",
+                "address_proof": "",
+                "total_assigned_leads": 0,
+                "active_leads": 0,
+                "converted_leads": 0,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "last_modified": datetime.now(timezone.utc).isoformat(),
+                "created_by": user_dict['id']  # Self-created
+            }
+            
+            await db.telecaller_profiles.insert_one(telecaller_profile)
     
     return {
         "message": "Registration successful! Your account is pending approval. Please wait for admin to approve.",
