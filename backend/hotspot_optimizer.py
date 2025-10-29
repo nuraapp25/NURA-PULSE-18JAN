@@ -35,6 +35,38 @@ TIME_SLOTS = [
 ]
 
 
+def get_locality_name(lat: float, lon: float) -> str:
+    """Get locality name from coordinates using Google Maps Geocoding API."""
+    try:
+        api_key = os.environ.get('GOOGLE_MAPS_API_KEY')
+        if not api_key:
+            return "Unknown"
+        
+        url = f"https://maps.googleapis.com/maps/api/geocode/json?latlng={lat},{lon}&key={api_key}"
+        response = requests.get(url, timeout=5)
+        
+        if response.status_code == 200:
+            data = response.json()
+            if data.get('status') == 'OK' and data.get('results'):
+                # Try to find locality/sublocality from address components
+                for result in data['results']:
+                    for component in result.get('address_components', []):
+                        if 'sublocality' in component.get('types', []):
+                            return component.get('long_name', 'Unknown')
+                        elif 'locality' in component.get('types', []):
+                            return component.get('long_name', 'Unknown')
+                
+                # Fallback to formatted address (first part)
+                formatted = data['results'][0].get('formatted_address', 'Unknown')
+                # Get first part before comma
+                return formatted.split(',')[0] if ',' in formatted else formatted
+        
+        return "Unknown"
+    except Exception as e:
+        logger.error(f"Geocoding error: {e}")
+        return "Unknown"
+
+
 def generate_candidates_h3(pts: np.ndarray, res: int = 9) -> np.ndarray:
     """Generate H3 hex centroids as candidate locations."""
     try:
