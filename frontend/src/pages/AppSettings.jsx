@@ -6,7 +6,8 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
-import { Settings, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { Settings, Loader2, CheckCircle, AlertCircle, Zap, EyeOff } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const AppSettings = () => {
   const { user } = useAuth();
