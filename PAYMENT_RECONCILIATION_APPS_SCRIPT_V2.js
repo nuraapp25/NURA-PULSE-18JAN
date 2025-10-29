@@ -10,7 +10,7 @@
 
 const CONFIG = {
   SHEET_ID: '1CLhARhllhqZuDzkzNRqFcOGqjrSDzPgmC6gd3-AWOTs',
-  BACKEND_URL: 'https://telecaller-hub-2.preview.emergentagent.com/api'
+  BACKEND_URL: 'https://nurapulse-2.preview.emergentagent.com/api'
 };
 
 // Column mapping for payment records
