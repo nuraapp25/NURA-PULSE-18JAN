@@ -178,9 +178,9 @@ const DriverOnboardingPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [leadsPerPage, setLeadsPerPage] = useState(20);
   
-  // Source filter
+  // Source filter - Extract unique sources and sort alphabetically
   const [sourceFilter, setSourceFilter] = useState(null);
-  const uniqueSources = [...new Set(leads.map(l => l.source).filter(Boolean))];
+  const uniqueSources = [...new Set(leads.map(l => l.source?.trim()).filter(Boolean))].sort();
   
   // Telecallers for assignment
   const [telecallers, setTelecallers] = useState([]);
