@@ -668,6 +668,8 @@ async def generate_temp_password_for_user(user_id: str, current_user: User = Dep
 @api_router.delete("/users/{user_id}")
 async def delete_user(user_id: str, current_user: User = Depends(get_current_user)):
     """Delete a user (master admin only) - permanently removes from database"""
+    from datetime import datetime, timezone
+    
     if current_user.account_type != "master_admin":
         raise HTTPException(status_code=403, detail="Not authorized")
     
@@ -678,6 +680,17 @@ async def delete_user(user_id: str, current_user: User = Depends(get_current_use
     
     if user_to_delete.get('account_type') == "master_admin":
         raise HTTPException(status_code=400, detail="Cannot delete master admin")
+    
+    # If user is a telecaller, deactivate their telecaller profile
+    if user_to_delete.get('account_type') == 'telecaller':
+        await db.telecaller_profiles.update_one(
+            {"email": user_to_delete['email']},
+            {"$set": {
+                "status": "inactive",
+                "notes": "User account deleted",
+                "last_modified": datetime.now(timezone.utc).isoformat()
+            }}
+        )
     
     # Permanently delete the user
     await db.users.delete_one({"id": user_id})
