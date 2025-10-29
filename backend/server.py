@@ -8013,6 +8013,11 @@ async def scan_driver_document(
         }
         mime_type = mime_types.get(file_ext, 'image/jpeg')
         
+        # Normalize document_type (support both 'pan' and 'pan_card')
+        doc_type_normalized = document_type
+        if document_type == 'pan_card':
+            doc_type_normalized = 'pan'
+        
         # Create extraction prompt based on document type
         prompts = {
             'dl': "Extract the Driver License Number from this image. Return ONLY the license number, nothing else.",
@@ -8022,7 +8027,7 @@ async def scan_driver_document(
             'bank_passbook': "Extract the Bank Account Number from this bank passbook image. Return ONLY the account number, nothing else."
         }
         
-        prompt = prompts.get(document_type, "Extract relevant information from this document.")
+        prompt = prompts.get(doc_type_normalized, "Extract relevant information from this document.")
         
         # Use emergentintegrations for OpenAI GPT-4o Vision OCR with EMERGENT_LLM_KEY
         try:
@@ -8054,11 +8059,12 @@ async def scan_driver_document(
         
         extracted_text = response.choices[0].message.content.strip()
         
-        # Map document type to field name
+        # Map document type to field name (support both formats)
         field_mappings = {
             'dl': 'dl_no',
             'aadhar': 'aadhar_card',
             'pan': 'pan_card',
+            'pan_card': 'pan_card',
             'gas_bill': 'gas_bill',
             'bank_passbook': 'bank_passbook'
         }
