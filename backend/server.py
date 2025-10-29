@@ -561,6 +561,8 @@ async def create_user(user_data: UserCreate, current_user: User = Depends(get_cu
 @api_router.post("/users/approve")
 async def approve_user(approval: UserApproval, current_user: User = Depends(get_current_user)):
     """Approve a pending user (master admin only)"""
+    from datetime import datetime, timezone
+    
     if current_user.account_type != "master_admin":
         raise HTTPException(status_code=403, detail="Not authorized")
     
@@ -576,6 +578,16 @@ async def approve_user(approval: UserApproval, current_user: User = Depends(get_
         {"id": approval.user_id},
         {"$set": {"status": "active"}}
     )
+    
+    # If user is a telecaller, also activate their telecaller profile
+    if user.get('account_type') == 'telecaller':
+        await db.telecaller_profiles.update_one(
+            {"email": user['email']},
+            {"$set": {
+                "status": "active",
+                "last_modified": datetime.now(timezone.utc).isoformat()
+            }}
+        )
     
     # Sync to Google Sheets
     user['status'] = 'active'
