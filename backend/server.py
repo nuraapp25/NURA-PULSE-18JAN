@@ -4920,7 +4920,10 @@ async def analyze_hotspot_placement(
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_user)
 ):
-    """Analyze ride data and recommend optimal placement locations per time slot"""
+    """
+    Analyze ride data and find optimal hotspot locations using CELF greedy + 1-swap algorithm.
+    Groups trips into 6 time slots and finds top 5 hotspots per slot.
+    """
     try:
         import pandas as pd
         import numpy as np
