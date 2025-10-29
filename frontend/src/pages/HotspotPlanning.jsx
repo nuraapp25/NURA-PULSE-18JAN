@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Upload, MapPin, Clock, TrendingUp, Users, Download, Library, Copy } from 'lucide-react';
 import { MapContainer, TileLayer, CircleMarker, Circle, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 
 const API = process.env.REACT_APP_BACKEND_URL || '';
 
