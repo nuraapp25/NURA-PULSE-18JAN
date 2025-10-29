@@ -978,23 +978,7 @@ const DriverOnboardingPage = () => {
     setActiveSubStatus(null);
   };
 
-  // Bulk lead selection functions
-  const toggleLeadSelection = (leadId) => {
-    setSelectedLeadIds(prev =>
-      prev.includes(leadId)
-        ? prev.filter(id => id !== leadId)
-        : [...prev, leadId]
-    );
-  };
-
-  const toggleSelectAllLeads = () => {
-    if (selectedLeadIds.length === paginatedLeads.length) {
-      setSelectedLeadIds([]);
-    } else {
-      setSelectedLeadIds(paginatedLeads.map(lead => lead.id));
-    }
-  };
-
+  // Bulk lead assignment
   const handleBulkAssignLeads = async () => {
     if (!selectedTelecallerForAssignment) {
       toast.error("Please select a telecaller");
