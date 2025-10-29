@@ -3389,6 +3389,59 @@ const DriverOnboardingPage = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Assign Leads Dialog */}
+      <Dialog open={isAssignDialogOpen} onOpenChange={setIsAssignDialogOpen}>
+        <DialogContent className="dark:bg-gray-800">
+          <DialogHeader>
+            <DialogTitle className="dark:text-white">Assign Leads to Telecaller</DialogTitle>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Assign {selectedLeadIds.length} selected lead(s) to a telecaller
+            </p>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <Label htmlFor="telecaller-select" className="dark:text-gray-300">
+                Select Telecaller
+              </Label>
+              <Select
+                value={selectedTelecallerForAssignment}
+                onValueChange={setSelectedTelecallerForAssignment}
+              >
+                <SelectTrigger id="telecaller-select" className="dark:bg-gray-700 dark:border-gray-600 mt-2">
+                  <SelectValue placeholder="Choose a telecaller..." />
+                </SelectTrigger>
+                <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                  {telecallers.filter(t => t.status === "active").map((telecaller) => (
+                    <SelectItem key={telecaller.id} value={telecaller.email}>
+                      {telecaller.name} ({telecaller.email})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsAssignDialogOpen(false);
+                setSelectedTelecallerForAssignment("");
+              }}
+              className="dark:border-gray-600"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleBulkAssignLeads}
+              disabled={!selectedTelecallerForAssignment}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              Assign {selectedLeadIds.length} Lead(s)
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
