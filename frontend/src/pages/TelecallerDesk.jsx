@@ -111,6 +111,30 @@ const TelecallerDesk = () => {
     setDetailDialogOpen(true);
   };
 
+  const handleCallLead = (lead) => {
+    if (lead.phone_number) {
+      window.location.href = `tel:${lead.phone_number}`;
+    } else {
+      toast.error("No phone number available");
+    }
+  };
+
+  const handleWhatsAppLead = (lead) => {
+    if (lead.phone_number) {
+      // Remove any non-digit characters except +
+      const cleanNumber = lead.phone_number.replace(/[^\d+]/g, '');
+      // Open WhatsApp with the number
+      window.open(`https://wa.me/${cleanNumber}`, '_blank');
+    } else {
+      toast.error("No phone number available");
+    }
+  };
+
+  const handleViewProfile = (lead) => {
+    setSelectedLead(lead);
+    setProfileDialogOpen(true);
+  };
+
   const handleUpdateLead = async () => {
     if (!selectedLead) return;
 
