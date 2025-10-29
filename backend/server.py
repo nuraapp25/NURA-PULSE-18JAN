@@ -7973,7 +7973,7 @@ async def delete_driver_document(
 @api_router.post("/driver-onboarding/scan-document/{lead_id}")
 async def scan_driver_document(
     lead_id: str,
-    document_type: str,
+    document_type: str = Query(..., description="Document type to scan"),
     current_user: User = Depends(get_current_user)
 ):
     """
