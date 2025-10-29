@@ -1199,12 +1199,12 @@ const DriverOnboardingPage = () => {
             <div className="space-y-2">
               <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
                 <span>Progress</span>
-                <span className="font-semibold text-blue-600">{Math.round(loadingProgress)}%</span>
+                <span className="font-semibold text-blue-600">{Math.min(Math.round(loadingProgress), 100)}%</span>
               </div>
               <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
                 <div 
                   className="bg-gradient-to-r from-blue-500 to-purple-600 h-full rounded-full transition-all duration-300 ease-out relative overflow-hidden"
-                  style={{ width: `${loadingProgress}%` }}
+                  style={{ width: `${Math.min(loadingProgress, 100)}%` }}
                 >
                   {/* Shimmer effect */}
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
