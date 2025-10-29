@@ -654,12 +654,127 @@ const DriverOnboardingPage = () => {
       if (response.data.success) {
         toast.success(`${documentType.toUpperCase()} uploaded successfully!`);
         setUploadedDocs(prev => ({ ...prev, [documentType]: true }));
+        // Refresh document status
+        await fetchDocumentsStatus();
       }
     } catch (error) {
       toast.error(error.response?.data?.detail || `Failed to upload ${documentType}`);
     } finally {
       setUploadingDoc(null);
     }
+  };
+  
+  // Fetch documents status for a lead
+  const fetchDocumentsStatus = async () => {
+    if (!selectedLead?.id) return;
+    
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        `${API}/driver-onboarding/documents/status/${selectedLead.id}`,
+        {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }
+      );
+      
+      if (response.data.success) {
+        const docsStatus = {};
+        Object.keys(response.data.documents).forEach(docType => {
+          docsStatus[docType] = response.data.documents[docType].uploaded;
+        });
+        setUploadedDocs(docsStatus);
+      }
+    } catch (error) {
+      console.error("Failed to fetch documents status:", error);
+    }
+  };
+  
+  // View document
+  const handleViewDocument = async (documentType) => {
+    try {
+      const token = localStorage.getItem("token");
+      const url = `${API}/driver-onboarding/document/${selectedLead.id}/${documentType}`;
+      
+      const response = await axios.get(url, {
+        headers: { 'Authorization': `Bearer ${token}` },
+        responseType: 'blob'
+      });
+      
+      // Create a blob URL and open in new tab
+      const blob = new Blob([response.data]);
+      const blobUrl = window.URL.createObjectURL(blob);
+      window.open(blobUrl, '_blank');
+      
+      // Clean up the blob URL after a delay
+      setTimeout(() => window.URL.revokeObjectURL(blobUrl), 1000);
+      
+    } catch (error) {
+      toast.error(error.response?.data?.detail || `Failed to view ${documentType}`);
+    }
+  };
+  
+  // Download document
+  const handleDownloadDocument = async (documentType) => {
+    try {
+      const token = localStorage.getItem("token");
+      const url = `${API}/driver-onboarding/document/${selectedLead.id}/${documentType}`;
+      
+      const response = await axios.get(url, {
+        headers: { 'Authorization': `Bearer ${token}` },
+        responseType: 'blob'
+      });
+      
+      // Create download link
+      const blob = new Blob([response.data]);
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = `${selectedLead.name || 'lead'}_${documentType}.${getFileExtension(response)}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+      
+      toast.success(`${documentType.toUpperCase()} downloaded successfully!`);
+      
+    } catch (error) {
+      toast.error(error.response?.data?.detail || `Failed to download ${documentType}`);
+    }
+  };
+  
+  // Delete document
+  const handleDeleteDocument = async (documentType) => {
+    if (!confirm(`Are you sure you want to delete the ${documentType.toUpperCase()} document?`)) {
+      return;
+    }
+    
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.delete(
+        `${API}/driver-onboarding/document/${selectedLead.id}/${documentType}`,
+        {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }
+      );
+      
+      if (response.data.success) {
+        toast.success(`${documentType.toUpperCase()} deleted successfully!`);
+        setUploadedDocs(prev => ({ ...prev, [documentType]: false }));
+        // Refresh document status
+        await fetchDocumentsStatus();
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.detail || `Failed to delete ${documentType}`);
+    }
+  };
+  
+  // Helper to get file extension from response
+  const getFileExtension = (response) => {
+    const contentType = response.headers['content-type'];
+    if (contentType?.includes('pdf')) return 'pdf';
+    if (contentType?.includes('png')) return 'png';
+    if (contentType?.includes('jpeg') || contentType?.includes('jpg')) return 'jpg';
+    return 'file';
   };
 
   // Handle document scan (OCR)
