@@ -285,35 +285,44 @@ const TelecallerDesk = () => {
                         {lead.last_modified ? new Date(lead.last_modified).toLocaleDateString() : "-"}
                       </td>
                       <td className="py-3 px-4 text-sm">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                            >
-                              <MoreVertical className="w-4 h-4" />
-                              Actions
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-48">
-                            <DropdownMenuItem onClick={() => handleCallLead(lead)}>
-                              <PhoneCall className="w-4 h-4 mr-2" />
-                              Call
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleWhatsAppLead(lead)}>
-                              <MessageCircle className="w-4 h-4 mr-2" />
-                              WhatsApp
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleLeadClick(lead)}>
-                              <Edit className="w-4 h-4 mr-2" />
-                              Update Status
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleViewProfile(lead)}>
-                              <FileText className="w-4 h-4 mr-2" />
-                              Edit Lead Profile
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleCallLead(lead)}
+                            title="Call"
+                            className="h-8 w-8 p-0"
+                          >
+                            <PhoneCall className="w-4 h-4 text-green-600" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleWhatsAppLead(lead)}
+                            title="WhatsApp"
+                            className="h-8 w-8 p-0"
+                          >
+                            <MessageCircle className="w-4 h-4 text-green-600" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleLeadClick(lead)}
+                            title="Update Status"
+                            className="h-8 w-8 p-0"
+                          >
+                            <Edit className="w-4 h-4 text-blue-600" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleViewProfile(lead)}
+                            title="View Profile"
+                            className="h-8 w-8 p-0"
+                          >
+                            <FileText className="w-4 h-4 text-purple-600" />
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))}
