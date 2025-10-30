@@ -1003,7 +1003,7 @@ async def import_leads(
         
         def determine_stage_from_status(status):
             """Determine which stage a status belongs to"""
-            s1_statuses = ["New", "Not Interested", "Interested, No DL", "Highly Interested", 
+            s1_statuses = ["New", "Not Interested", "Interested, No DL", "Interested, No Badge", "Highly Interested", 
                           "Call back 1D", "Call back 1W", "Call back 2W", "Call back 1M", 
                           "Interested", "Not Reachable", "Wrong Number", "Duplicate", "Junk"]
             s2_statuses = ["Docs Upload Pending", "Verification Pending", "Duplicate License", 
