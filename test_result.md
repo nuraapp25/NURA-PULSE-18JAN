@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Debug and fix remarks functionality in Driver Onboarding. User reported unable to add remarks. Also verify status dropdown single-click fix, shift-click selection, 'Select all leads in this page' button, and clickable stage headings (S2, S3, S4)."
+user_problem_statement: "Test the new QR Code Manager system with complete functionality including single QR creation, batch QR creation, campaign management, QR code scanning simulation, and analytics dashboard."
 
 backend:
   - task: "Driver Onboarding - Status Mapping Bug Fix"
