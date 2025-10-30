@@ -4094,18 +4094,18 @@ async def get_battery_charge_audit(current_user: User = Depends(get_current_user
                     battery = float(record.get("Battery Soc(%)") or record.get("Battery SOC(%)") or 0)
                     odometer = float(record.get("Odometer (km)") or 0)
                     
-                    # Get closest reading to 6 AM (within 30 min window)
-                    if dt_time(5, 30) <= record_time <= dt_time(6, 30) and charge_6am is None:
+                    # Get closest reading to 6 AM (within 2 hour window: 5 AM - 7 AM)
+                    if dt_time(5, 0) <= record_time <= dt_time(7, 0) and charge_6am is None:
                         charge_6am = battery
                         odometer_6am = odometer
                     
-                    # Get closest reading to 12 PM (within 30 min window)
-                    if dt_time(11, 30) <= record_time <= dt_time(12, 30) and charge_12pm is None:
+                    # Get closest reading to 12 PM (within 2 hour window: 11 AM - 1 PM)
+                    if dt_time(11, 0) <= record_time <= dt_time(13, 0) and charge_12pm is None:
                         charge_12pm = battery
                         odometer_12pm = odometer
                     
-                    # Get closest reading to 5 PM (within 30 min window)
-                    if dt_time(16, 30) <= record_time <= dt_time(17, 30) and charge_5pm is None:
+                    # Get closest reading to 5 PM (within 2 hour window: 4 PM - 6 PM)
+                    if dt_time(16, 0) <= record_time <= dt_time(18, 0) and charge_5pm is None:
                         charge_5pm = battery
                         odometer_5pm = odometer
                         
