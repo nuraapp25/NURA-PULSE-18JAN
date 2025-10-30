@@ -385,6 +385,20 @@ const DriverOnboardingPage = () => {
     };
   }, []);
   
+  // Debounce search query (500ms delay)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+  
+  // Fetch leads when debounced search changes
+  useEffect(() => {
+    fetchLeads();
+  }, [debouncedSearchQuery]);
+  
   // Refetch summary when date or source filter changes
   useEffect(() => {
     if (leads.length > 0) {
