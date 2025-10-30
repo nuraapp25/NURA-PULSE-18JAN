@@ -1266,6 +1266,36 @@ const DriverOnboardingPage = () => {
     }
   };
 
+  // Bulk lead unassignment
+  const handleUnassignLeads = async () => {
+    if (selectedLeadIds.length === 0) {
+      toast.error("Please select at least one lead");
+      return;
+    }
+
+    if (!confirm(`Are you sure you want to unassign ${selectedLeadIds.length} lead(s) from their telecallers?`)) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      await axios.post(
+        `${API}/telecallers/deassign-leads`,
+        {
+          lead_ids: selectedLeadIds
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      toast.success(`Successfully unassigned ${selectedLeadIds.length} lead(s) from telecallers`);
+      setSelectedLeadIds([]);
+      setIsUnassignDialogOpen(false);
+      fetchLeads(); // Refresh leads
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to unassign leads");
+    }
+  };
+
   // ==================== BULK EXPORT/IMPORT & BACKUP LIBRARY HANDLERS ====================
   
   // Handle Bulk Export
