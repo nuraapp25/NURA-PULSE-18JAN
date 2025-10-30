@@ -2701,7 +2701,7 @@ const DriverOnboardingPage = () => {
                       <td className="py-2 sm:py-3 px-2 sm:px-4" onClick={(e) => e.stopPropagation()}>
                         <Checkbox
                           checked={selectedLeadIds.includes(lead.id)}
-                          onCheckedChange={() => handleLeadCheckboxChange(lead.id)}
+                          onCheckedChange={(checked, event) => handleLeadCheckboxChange(lead.id, index, event?.nativeEvent)}
                         />
                       </td>
                       <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm text-gray-900 dark:text-white hidden sm:table-cell">{startIndex + index + 1}</td>
