@@ -9873,7 +9873,11 @@ async def create_batch_qr_codes(
         
         # Save all to database
         if qr_codes:
-            await db.qr_codes.insert_many(qr_codes)
+            result = await db.qr_codes.insert_many(qr_codes)
+            # Remove MongoDB _id from response
+            for qr in qr_codes:
+                if '_id' in qr:
+                    del qr['_id']
         
         return {
             "success": True,
