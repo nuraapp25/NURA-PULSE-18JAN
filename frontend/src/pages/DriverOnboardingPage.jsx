@@ -3062,14 +3062,24 @@ const DriverOnboardingPage = () => {
           <DialogHeader>
             <DialogTitle className="dark:text-white flex items-center justify-between">
               Lead Details
-              <Button
-                onClick={() => setIsEditMode(!isEditMode)}
-                variant="outline"
-                size="sm"
-                className="ml-4"
-              >
-                {isEditMode ? "Cancel Edit" : "Edit Details"}
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => setIsEditMode(!isEditMode)}
+                  variant="outline"
+                  size="sm"
+                >
+                  {isEditMode ? "Cancel Edit" : "Edit Details"}
+                </Button>
+                {isEditMode && (
+                  <Button
+                    onClick={handleSaveLeadDetails}
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    Save Changes
+                  </Button>
+                )}
+              </div>
             </DialogTitle>
             <DialogDescription className="dark:text-gray-400">
               {isEditMode ? "Edit lead information" : "View and update lead information"}
