@@ -371,8 +371,31 @@ const TelecallerDeskMobile = () => {
       {/* Lead Details Dialog */}
       <LeadDetailsDialog
         open={detailsDialogOpen}
-        onOpenChange={setDetailsDialogOpen}
+        onOpenChange={(open) => {
+          setDetailsDialogOpen(open);
+          if (!open) {
+            setIsEditMode(false);
+          }
+        }}
         lead={selectedLead}
+        editedLead={editedLead}
+        isEditMode={isEditMode}
+        setIsEditMode={setIsEditMode}
+        onFieldChange={handleFieldChange}
+        onSave={handleSaveLeadDetails}
+        onStageSync={() => {}}
+        uploadedDocs={{}}
+        onDocumentUpload={() => {}}
+        onViewDocument={() => {}}
+        onDownloadDocument={() => {}}
+        onDeleteDocument={() => {}}
+        onDocumentScan={() => {}}
+        uploadingDoc={null}
+        scanningDoc={null}
+        updating={updating}
+        showDeleteButton={false}
+        onDelete={() => {}}
+        hasUnsavedChanges={false}
         onLeadUpdate={fetchLeads}
       />
     </div>
