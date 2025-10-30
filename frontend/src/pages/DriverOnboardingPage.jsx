@@ -1911,7 +1911,13 @@ const DriverOnboardingPage = () => {
               {/* S3 - Training */}
               <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gradient-to-br from-purple-50 to-white dark:from-purple-900/10 dark:to-gray-800">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-semibold text-purple-700 dark:text-purple-400">S3 - Training</h3>
+                  <h3 
+                    className="font-semibold text-purple-700 dark:text-purple-400 cursor-pointer hover:text-purple-800 dark:hover:text-purple-300 transition-colors"
+                    onClick={() => handleStageHeadingClick("S3")}
+                    title="Click to show all S3 leads"
+                  >
+                    S3 - Training
+                  </h3>
                   <span className="text-xs font-bold bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 px-2 py-1 rounded">
                     {statusSummary.stage_totals.S3}
                   </span>
