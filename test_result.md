@@ -1222,13 +1222,8 @@ metadata:
 
 test_plan:
   current_focus:
-    - "QR Code Manager - Access and Navigation"
-    - "QR Code Manager - Create Single QR Code"
-    - "QR Code Manager - Create Batch QR Codes"
-    - "QR Code Manager - View Campaign QR Codes"
-    - "QR Code Manager - QR Code Scanning Simulation"
-    - "QR Code Manager - Analytics Dashboard"
-    - "QR Code Manager - Backend APIs"
+    - "Driver Onboarding - Assigned Telecaller Column"
+    - "User Management - Admin Approval Rights"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -1238,6 +1233,10 @@ agent_communication:
       message: "🔍 QR CODE MANAGER TESTING SESSION STARTED: Beginning comprehensive testing of the new QR Code Manager system as requested in review. Will test all 7 key scenarios: 1) Access QR Code Manager with master admin credentials (admin@nurapulse.com / Nura@1234$), verify page loads with title 'QR Code Manager' and action buttons. 2) Create Single QR Code - test dialog, form fields, and QR creation with 'Test Campaign 2025' example. 3) Create Batch QR Codes - test batch dialog with 'Auto Fleet Campaign' example (5 QR codes with vehicle numbers). 4) View Campaign QR Codes - test campaign folder navigation and QR code grid display with download/copy functionality. 5) QR Code Scanning Simulation - test tracking URLs and redirection. 6) Analytics Dashboard - test filters, stats cards, charts, and CSV export. 7) Visual verification with screenshots. Using frontend URL from .env: https://nura-operations.preview.emergentagent.com. Will test both QRCodeManagerNew.jsx (main implementation) and QRAnalyticsDashboard.jsx components."
     - agent: "testing"
       message: "✅ QR CODE MANAGER TESTING COMPLETE: Comprehensive testing of QR Code Manager system completed with mixed results. SUCCESS RATE: 57.1% (4/7 tasks working). WORKING FEATURES: (1) ✅ Access & Navigation - QR Code Manager loads correctly with proper title, buttons, and sidebar navigation. (2) ✅ Create Single QR Code - Dialog works perfectly, creates QR codes successfully, generates tracking URLs. (3) ✅ QR Code Scanning - Tracking URLs redirect correctly to landing pages (tested: https://nura-operations.preview.emergentagent.com/api/qr/9c40353d → https://example.com/app). (4) ✅ Visual Design - Clean modern UI with teal/yellow colors as specified. CRITICAL ISSUES: (1) ❌ Batch QR Creation - Backend ObjectId serialization error prevents batch creation. (2) ❌ Campaign View - GET /qr-codes/campaigns returns 404 instead of campaign list, blocks campaign folders display. (3) ❌ Analytics Dashboard - API returns 404, routing issues, blank dashboard display. AUTHENTICATION: Fixed login credentials (admin/Nura@1234$ not admin@nurapulse.com/Nura@1234$). RECOMMENDATION: Main agent should use websearch tool to fix backend API routing conflicts and ObjectId serialization issues."
+    - agent: "testing"
+      message: "🔍 DRIVER ONBOARDING & USER MANAGEMENT TESTING STARTED: Testing new changes as requested in review: (1) Driver Onboarding - Assigned Telecaller Column: Verify table headers include new 'Assigned Telecaller' column in correct position (6th column), check column displays telecaller name/email if assigned or '-' if not assigned. (2) User Management - Admin Approval Rights: Verify admin users (arun/sandhiya) can access User Management page and approve pending users without 403 errors. Testing with master admin (admin/Nura@1234$) first, then admin users. Using frontend URL: https://nura-operations.preview.emergentagent.com."
+    - agent: "testing"
+      message: "✅ DRIVER ONBOARDING & USER MANAGEMENT TESTING COMPLETE: Mixed results with one success and one critical issue identified. SUCCESS RATE: 50% (1/2 features working). DRIVER ONBOARDING - ASSIGNED TELECALLER COLUMN: ✅ WORKING PERFECTLY - Column successfully implemented and visible in table headers at correct 6th position. Table structure shows expected 8 columns: Checkbox, S.No., Leads ID, Name, Phone Number, Assigned Telecaller, Status, Import Date. Column displays telecaller information correctly (shows '-' for unassigned leads as expected). USER MANAGEMENT - ADMIN APPROVAL RIGHTS: ❌ CRITICAL ISSUE IDENTIFIED - Route restriction prevents admin users from accessing User Management page. PROBLEM: App.js line 132-134 restricts User Management route to master_admin only: {user?.account_type === 'master_admin' && <Route path='users' element={<UserManagement />} />}. Console error: 'No routes matched location /dashboard/users' when non-master-admin tries to access. SOLUTION NEEDED: Update App.js route condition to: {(user?.account_type === 'master_admin' || user?.account_type === 'admin') && <Route path='users' element={<UserManagement />} />}. Master admin can access User Management with full approval functionality, but admin users cannot access the page at all due to route restriction."
     - agent: "main"
       message: "Added three new UI features for testing: 1) Telecallers Management Unassign Leads button with proper enable/disable logic, 2) Driver Onboarding Show All Leads button repositioned to header, 3) Driver Onboarding Edit/Add Remarks button with conditional text and proper dialog routing. All features implemented and ready for comprehensive frontend testing."
     - agent: "testing"
