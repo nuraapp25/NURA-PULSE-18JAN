@@ -75,7 +75,7 @@ const TelecallerDeskMobile = () => {
       const response = await axios.get(`${API}/driver-onboarding/leads?telecaller=${user.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setLeads(response.data.leads || []);
+      setLeads(response.data || []);
     } catch (error) {
       console.error("Error fetching leads:", error);
       toast.error("Failed to load leads");
