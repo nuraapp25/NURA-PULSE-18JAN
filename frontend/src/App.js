@@ -11,7 +11,6 @@ import UserManagement from "@/pages/UserManagement";
 import PaymentReconciliation from "@/pages/PaymentReconciliation";
 import DriverOnboarding from "@/pages/DriverOnboardingPage";
 import TelecallerQueue from "@/pages/TelecallerQueue";
-import TelecallersManagement from "@/pages/TelecallersManagement";
 import TelecallerDesk from "@/pages/TelecallerDesk";
 import TelecallerDeskMobile from "@/pages/TelecallerDeskMobile";
 import MontraVehicle from "@/pages/MontraVehicle";
