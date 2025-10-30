@@ -266,7 +266,7 @@ const DriverOnboardingPage = () => {
     }
   };
 
-  const fetchLeads = async () => {
+  const fetchLeads = async (pageNum = currentPage) => {
     setLoading(true);
     setLoadingProgress(0);
     
@@ -283,8 +283,10 @@ const DriverOnboardingPage = () => {
     try {
       const token = localStorage.getItem("token");
       
-      // Build query params with search if available
+      // Build query params with pagination and search
       const params = new URLSearchParams();
+      params.append('page', pageNum);
+      params.append('limit', leadsPerPage);
       if (debouncedSearchQuery && debouncedSearchQuery.trim()) {
         params.append('search', debouncedSearchQuery.trim());
       }
@@ -296,8 +298,12 @@ const DriverOnboardingPage = () => {
       // Jump to 95% when data is received
       setLoadingProgress(95);
       
-      setLeads(response.data);
-      setFilteredLeads(response.data);
+      // Handle paginated response
+      const { leads: fetchedLeads, total, total_pages } = response.data;
+      setLeads(fetchedLeads);
+      setFilteredLeads(fetchedLeads);
+      setTotalLeads(total);
+      setTotalPages(total_pages);
       
       // Fetch last sync time after fetching leads
       await fetchLastSyncTime();
