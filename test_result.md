@@ -694,6 +694,42 @@ frontend:
           agent: "testing"
           comment: "✅ COMPREHENSIVE FRONTEND TESTING COMPLETE: Loading Progress Bar successfully tested and verified working. Key findings: 1) LOADING OVERLAY: Fixed overlay with proper backdrop blur and z-index positioning covers entire screen during loading. 2) VISUAL ELEMENTS: Loading title 'Loading Driver Leads' clearly visible with proper typography and styling. 3) PROGRESS BAR: Gradient progress bar with smooth animation from 0-100%, includes shimmer effect for enhanced visual feedback. 4) PERCENTAGE DISPLAY: Progress percentage properly displayed and updates in real-time, caps at exactly 100% as required. 5) STATUS MESSAGES: Dynamic status messages show loading phases ('Connecting to database...', 'Fetching lead records...', 'Processing data...', 'Almost there...', 'Complete!'). 6) SMOOTH ANIMATION: Progress bar has smooth transition animations with proper easing, realistic incremental progress updates. 7) COMPLETION HANDLING: Loading overlay disappears cleanly when data loading completes, no visual glitches or timing issues. 8) RESPONSIVE DESIGN: Loading animation works properly on all screen sizes. Loading progress bar functionality is fully implemented and provides excellent user experience during data fetching operations."
 
+  - task: "Telecallers Management - Unassign Leads Button"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/TelecallersManagement.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "NEW UI FEATURE: Added 'Unassign Leads' button (orange color, Users icon) between 'Assign' and 'Edit' buttons in telecaller profiles table. Button is disabled when telecaller has 0 assigned leads, enabled when telecaller has assigned leads (total_assigned_leads > 0). Clicking button shows confirmation dialog asking to unassign all leads, then calls handleUnassignAllLeads function which fetches assigned leads and deassigns them all. Success toast shows number of unassigned leads. Ready for frontend testing."
+
+  - task: "Driver Onboarding - Show All Leads Button Position"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/DriverOnboardingPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "NEW UI FEATURE: Moved 'Show All Leads' button to TOP of page, next to 'Refresh' button in Status Summary Dashboard header (line 1731-1739). Button is purple colored with RefreshCw icon. Button is NOT in selection controls area below table. Clicking button calls handleShowAllLeads() which clears all filters (date, stage, search, telecaller) and shows all leads with success toast. Ready for frontend testing."
+
+  - task: "Driver Onboarding - Edit Remarks Button"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/DriverOnboardingPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "NEW UI FEATURE: Enhanced remarks button functionality in leads table (line 2866). Button shows 'Add Remark' for leads without remarks (when lead.remarks is empty/null), shows 'Edit Remarks' for leads with existing remarks. Clicking 'Edit Remarks' opens remarks history dialog (handleViewRemarks), clicking 'Add Remark' opens add remark dialog (handleOpenAddRemark). Dialog can be closed without entering text (no validation error). Ready for frontend testing."
+
   - task: "Document Management UI - Driver Onboarding"
     implemented: true
     working: true
