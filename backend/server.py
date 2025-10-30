@@ -1769,33 +1769,55 @@ async def get_leads(
             leads = await db.driver_leads.find(query, {"_id": 0}).skip(skip).limit(limit).to_list(length=limit)
         
         # Populate telecaller names for leads with assigned telecallers
+        # Batch fetch all unique telecallers for efficiency
+        telecaller_identifiers = set()
         for lead in leads:
             if lead.get('assigned_telecaller'):
-                telecaller_identifier = lead['assigned_telecaller']
-                
-                # Try to find telecaller by ID first, then by email
-                if '@' in telecaller_identifier:
-                    # It's an email
-                    telecaller = await db.users.find_one({"email": telecaller_identifier}, {"_id": 0, "first_name": 1, "last_name": 1, "email": 1})
-                else:
-                    # It's a user ID
-                    telecaller = await db.users.find_one({"id": telecaller_identifier}, {"_id": 0, "first_name": 1, "last_name": 1, "email": 1})
-                
-                if telecaller:
-                    telecaller_name = f"{telecaller.get('first_name', '')} {telecaller.get('last_name', '')}".strip()
-                    if not telecaller_name:
-                        telecaller_name = telecaller.get('email', '').split('@')[0]
+                telecaller_identifiers.add(lead['assigned_telecaller'])
+        
+        # Fetch all telecallers in one query
+        telecaller_map = {}
+        if telecaller_identifiers:
+            telecallers = await db.users.find(
+                {"$or": [
+                    {"id": {"$in": list(telecaller_identifiers)}},
+                    {"email": {"$in": list(telecaller_identifiers)}}
+                ]},
+                {"_id": 0, "id": 1, "email": 1, "first_name": 1, "last_name": 1}
+            ).to_list(None)
+            
+            # Build map for quick lookup
+            for tc in telecallers:
+                name = f"{tc.get('first_name', '')} {tc.get('last_name', '')}".strip()
+                if not name:
+                    name = tc.get('email', '').split('@')[0]
+                # Map by both ID and email
+                if tc.get('id'):
+                    telecaller_map[tc['id']] = name
+                if tc.get('email'):
+                    telecaller_map[tc['email']] = name
+        
+        # Assign telecaller names to leads
+        for lead in leads:
+            if lead.get('assigned_telecaller'):
+                telecaller_name = telecaller_map.get(lead['assigned_telecaller'])
+                if telecaller_name:
                     lead['assigned_telecaller_name'] = telecaller_name
-                    lead['assigned_telecaller_email'] = telecaller.get('email', '')
         
         # Return with pagination metadata
-        return {
-            "leads": leads,
-            "total": total_count,
-            "page": page,
-            "limit": limit,
-            "total_pages": (total_count + limit - 1) // limit if not skip_pagination else 1
-        }
+        if skip_pagination:
+            return {
+                "leads": leads,
+                "total": len(leads)
+            }
+        else:
+            return {
+                "leads": leads,
+                "total": total_count,
+                "page": page,
+                "limit": limit,
+                "total_pages": (total_count + limit - 1) // limit
+            }
         
     except Exception as e:
         logger.error(f"Error fetching leads with search: {str(e)}")
