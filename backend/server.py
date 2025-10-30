@@ -10025,6 +10025,11 @@ async def get_campaign_qr_codes(
     try:
         qr_codes = await db.qr_codes.find({"campaign_name": campaign_name}).to_list(None)
         
+        # Remove MongoDB _id from response
+        for qr in qr_codes:
+            if '_id' in qr:
+                del qr['_id']
+        
         return {
             "success": True,
             "qr_codes": qr_codes,
