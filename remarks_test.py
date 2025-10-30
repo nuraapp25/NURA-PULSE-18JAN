@@ -11,7 +11,7 @@ from datetime import datetime
 
 # Configuration
 BASE_URL = "https://nura-operations.preview.emergentagent.com/api"
-MASTER_ADMIN_EMAIL = "admin@nurapulse.com"
+MASTER_ADMIN_EMAIL = "admin"
 MASTER_ADMIN_PASSWORD = "Nura@1234$"
 
 class RemarksSystemTester:
