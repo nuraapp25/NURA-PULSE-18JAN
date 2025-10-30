@@ -13,6 +13,7 @@ import DriverOnboarding from "@/pages/DriverOnboardingPage";
 import TelecallerQueue from "@/pages/TelecallerQueue";
 import TelecallersManagement from "@/pages/TelecallersManagement";
 import TelecallerDesk from "@/pages/TelecallerDesk";
+import TelecallerDeskMobile from "@/pages/TelecallerDeskMobile";
 import MontraVehicle from "@/pages/MontraVehicle";
 import Files from "@/pages/Files";
 import PaymentScreenshots from "@/pages/PaymentScreenshots";
