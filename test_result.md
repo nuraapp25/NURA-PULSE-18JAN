@@ -603,6 +603,45 @@ backend:
           agent: "testing"
           comment: "✅ COMPREHENSIVE FRONTEND TESTING COMPLETE: Scan Document (OCR) UI features successfully tested and verified working. Key findings: 1) SCAN BUTTONS PRESENT: OCR Scan buttons found and accessible in document management sections for all document types (Driver License, Aadhar Card, PAN Card, Gas Bill, Bank Passbook). 2) SCAN FUNCTIONALITY: Scan buttons are clickable and properly trigger OCR processing when activated. 3) USER FEEDBACK: OCR processing feedback visible when scan is initiated, providing users with clear indication that processing is in progress. 4) INTEGRATION READY: Frontend properly integrated with backend OCR endpoints, ready to extract text from uploaded documents. 5) DOCUMENT TYPE SUPPORT: Scan functionality available for all supported document types as requested in the review. 6) SUCCESS FEEDBACK: System provides success feedback when OCR extraction completes successfully. 7) ERROR HANDLING: Proper error handling in place for OCR processing failures. 8) USER EXPERIENCE: Smooth workflow from document upload to OCR scanning with clear visual feedback. Frontend OCR scanning features are fully functional and provide excellent user experience. The UI properly handles the complete OCR workflow from scan initiation to results display."
 
+  - task: "Remarks System - Driver Onboarding"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "IMPLEMENTED: Remarks system with Add/View/Edit/Delete functionality. Backend: POST /driver-onboarding/{lead_id}/remarks (add remark with remark_text in body), GET /driver-onboarding/{lead_id}/remarks (fetch all remarks for a lead). Frontend: Remarks column in table showing latest remark, 'Add Remark' button in lead details dialog, Remarks History dialog showing all remarks with audit trail (user, timestamp). User reported unable to add remarks - needs backend testing to verify API endpoints are working correctly."
+        - working: "NA"
+          agent: "user"
+          comment: "User reported unable to add remarks - functionality not working"
+
+  - task: "Status Dropdown Single-Click Fix"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/DriverOnboardingPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "IMPLEMENTED: Fixed status dropdown to open on single click by adding e.stopPropagation() in the status cell's onClick handler. This prevents the row's onClick (which opens full lead details dialog) from triggering when clicking the status badge. Status dropdown should now open immediately on first click."
+
+  - task: "Shift-Click Selection & Advanced Selection Features"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/DriverOnboardingPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "IMPLEMENTED: Multiple selection features added: (1) Shift-click selection: Hold shift and click checkbox to select range of leads. (2) 'Select All In This Page' button to select all visible leads on current page. (3) 'Show All Leads' button to clear stage filters. (4) Clickable stage headings (S1, S2, S3, S4) to filter by stage. All features need frontend testing to verify functionality."
+
   - task: "Telecaller Management New Features"
     implemented: true
     working: true
