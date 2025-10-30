@@ -72,10 +72,12 @@ const TelecallerDeskMobile = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      const response = await axios.get(`${API}/driver-onboarding/leads?telecaller=${user.id}`, {
+      const response = await axios.get(`${API}/driver-onboarding/leads?telecaller=${user.id}&skip_pagination=true`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setLeads(response.data || []);
+      // Handle both response formats
+      const leadsData = response.data.leads || response.data || [];
+      setLeads(leadsData);
     } catch (error) {
       console.error("Error fetching leads:", error);
       toast.error("Failed to load leads");
