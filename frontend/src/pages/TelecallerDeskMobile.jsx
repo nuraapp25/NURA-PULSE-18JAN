@@ -129,7 +129,57 @@ const TelecallerDeskMobile = () => {
 
   const openLeadDetails = (lead) => {
     setSelectedLead(lead);
+    setEditedLead({...lead});
+    setIsEditMode(false);
     setDetailsDialogOpen(true);
+  };
+  
+  const handleFieldChange = (fieldName, value) => {
+    setEditedLead(prev => ({
+      ...prev,
+      [fieldName]: value
+    }));
+  };
+  
+  const handleSaveLeadDetails = async () => {
+    if (!editedLead) return;
+    
+    setUpdating(true);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.patch(
+        `${API}/driver-onboarding/leads/${editedLead.id}`,
+        {
+          name: editedLead.name,
+          phone_number: editedLead.phone_number,
+          vehicle: editedLead.vehicle,
+          driving_license: editedLead.driving_license,
+          experience: editedLead.experience,
+          interested_ev: editedLead.interested_ev,
+          monthly_salary: editedLead.monthly_salary,
+          current_location: editedLead.current_location,
+          status: editedLead.status,
+          stage: editedLead.stage,
+          remarks: editedLead.remarks,
+          dl_no: editedLead.dl_no,
+          badge_no: editedLead.badge_no,
+          aadhar_card: editedLead.aadhar_card,
+          pan_card: editedLead.pan_card,
+          gas_bill: editedLead.gas_bill,
+          bank_passbook: editedLead.bank_passbook
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      toast.success("Lead details updated successfully!");
+      setIsEditMode(false);
+      fetchLeads(); // Refresh leads list
+      setDetailsDialogOpen(false);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to update lead");
+    } finally {
+      setUpdating(false);
+    }
   };
 
   const isHighPriority = (lead) => {
