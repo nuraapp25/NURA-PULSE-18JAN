@@ -717,15 +717,18 @@ frontend:
 
   - task: "QR Code Manager - Create Batch QR Codes"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/frontend/src/pages/QRCodeManagerNew.jsx"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Batch QR code creation dialog implemented with fields for Campaign Name, Number of QR Codes, QR Code Names (comma-separated), Landing Page Type, Landing Page URL, and Auto-fill UTM option. Need to test batch creation functionality."
+        - working: false
+          agent: "testing"
+          comment: "❌ CRITICAL ISSUE: Batch QR code creation has backend serialization error. Frontend dialog works correctly with all fields: Campaign Name ('Auto Fleet Campaign'), Number of QR Codes (5), QR Code Names ('TN55S7283, TN55S8122, TN55T3321, TN55S9876, TN55T1234'), Landing Page Type (Single URL), Landing Page URL ('https://example.com/download'), Auto-fill UTM checkbox. However, backend API POST /qr-codes/create-batch returns 'Internal Server Error' with ObjectId serialization error: ValueError: [TypeError(\"'ObjectId' object is not iterable\"), TypeError('vars() argument must have __dict__ attribute')]. Frontend UI is complete and functional, but backend needs ObjectId serialization fix."
 
   - task: "QR Code Manager - View Campaign QR Codes"
     implemented: true
