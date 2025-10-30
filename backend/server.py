@@ -1679,10 +1679,48 @@ async def rollback_to_backup(
 
 
 @api_router.get("/driver-onboarding/leads")
-async def get_leads(current_user: User = Depends(get_current_user)):
-    """Get all driver leads"""
-    leads = await db.driver_leads.find({}, {"_id": 0}).to_list(length=None)
-    return leads
+async def get_leads(
+    current_user: User = Depends(get_current_user),
+    search: Optional[str] = None
+):
+    """
+    Get all driver leads with optional search
+    
+    Search supports:
+    - Single or multiple names (comma-separated): e.g., "Alexander" or "Alexander, Antony"
+    - Single or multiple phone numbers (comma-separated): e.g., "9898933220" or "9898933220, 8787811221"
+    - Partial matching for names, exact matching for phone numbers
+    """
+    try:
+        query = {}
+        
+        # Handle search parameter
+        if search and search.strip():
+            search_values = [s.strip() for s in search.split(',') if s.strip()]
+            
+            if search_values:
+                # Build OR conditions for name and phone
+                or_conditions = []
+                
+                for value in search_values:
+                    # Check if it looks like a phone number (digits only)
+                    if value.isdigit():
+                        # Exact phone match
+                        or_conditions.append({"phone_number": value})
+                    else:
+                        # Partial name match (case-insensitive)
+                        or_conditions.append({"name": {"$regex": value, "$options": "i"}})
+                
+                if or_conditions:
+                    query["$or"] = or_conditions
+        
+        # Fetch leads with search filter
+        leads = await db.driver_leads.find(query, {"_id": 0}).to_list(length=None)
+        return leads
+        
+    except Exception as e:
+        logger.error(f"Error fetching leads with search: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch leads: {str(e)}")
 
 
 @api_router.get("/driver-onboarding/status-summary")
