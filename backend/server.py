@@ -1742,7 +1742,16 @@ async def get_leads(
         # Populate telecaller names for leads with assigned telecallers
         for lead in leads:
             if lead.get('assigned_telecaller'):
-                telecaller = await db.users.find_one({"id": lead['assigned_telecaller']}, {"_id": 0, "first_name": 1, "last_name": 1, "email": 1})
+                telecaller_identifier = lead['assigned_telecaller']
+                
+                # Try to find telecaller by ID first, then by email
+                if '@' in telecaller_identifier:
+                    # It's an email
+                    telecaller = await db.users.find_one({"email": telecaller_identifier}, {"_id": 0, "first_name": 1, "last_name": 1, "email": 1})
+                else:
+                    # It's a user ID
+                    telecaller = await db.users.find_one({"id": telecaller_identifier}, {"_id": 0, "first_name": 1, "last_name": 1, "email": 1})
+                
                 if telecaller:
                     telecaller_name = f"{telecaller.get('first_name', '')} {telecaller.get('last_name', '')}".strip()
                     if not telecaller_name:
