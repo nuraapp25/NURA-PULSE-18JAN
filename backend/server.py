@@ -9710,6 +9710,393 @@ async def update_ride_rca(
         raise HTTPException(status_code=500, detail=f"Failed to update ride RCA: {str(e)}")
 
 
+# ==================== QR CODE MANAGER ====================
+
+import qrcode
+import io
+import base64
+from PIL import Image
+from user_agents import parse
+import secrets
+import string
+
+# QR Code Models
+class QRCodeCreate(BaseModel):
+    campaign_name: str
+    landing_page_type: str = "single"  # "single" or "multiple"
+    ios_url: Optional[str] = None
+    android_url: Optional[str] = None
+    web_url: Optional[str] = None
+    single_url: Optional[str] = None
+    utm_source: Optional[str] = None
+    utm_medium: str = "qrscan"
+    utm_campaign: Optional[str] = None
+    utm_term: Optional[str] = None
+    utm_content: Optional[str] = None
+
+class QRCodeBatchCreate(BaseModel):
+    campaign_name: str
+    landing_page_type: str = "single"
+    ios_url: Optional[str] = None
+    android_url: Optional[str] = None
+    web_url: Optional[str] = None
+    single_url: Optional[str] = None
+    qr_count: int = Field(ge=1, le=100)
+    qr_names: Optional[List[str]] = None
+    auto_fill_utm: bool = True
+    utm_medium: str = "qrscan"
+    utm_campaign: Optional[str] = None
+
+def generate_short_code(length: int = 8) -> str:
+    """Generate a random short code for QR tracking"""
+    characters = string.ascii_letters + string.digits
+    return ''.join(secrets.choice(characters) for _ in range(length))
+
+def generate_qr_code_image(data: str) -> str:
+    """Generate QR code image and return as base64"""
+    qr = qrcode.QRCode(version=1, box_size=10, border=4)
+    qr.add_data(data)
+    qr.make(fit=True)
+    
+    img = qr.make_image(fill_color="black", back_color="white")
+    
+    # Convert to base64
+    buffer = io.BytesIO()
+    img.save(buffer, format='PNG')
+    buffer.seek(0)
+    img_base64 = base64.b64encode(buffer.getvalue()).decode()
+    
+    return f"data:image/png;base64,{img_base64}"
+
+@api_router.post("/qr-codes/create")
+async def create_qr_code(
+    qr_data: QRCodeCreate,
+    current_user: User = Depends(get_current_user)
+):
+    """Create a single QR code"""
+    try:
+        # Generate short code for tracking
+        short_code = generate_short_code()
+        
+        # Create tracking URL
+        tracking_url = f"{os.environ.get('REACT_APP_BACKEND_URL', 'http://localhost:8001')}/api/qr-codes/scan/{short_code}"
+        
+        # Generate QR code image
+        qr_image = generate_qr_code_image(tracking_url)
+        
+        # Prepare QR code document
+        qr_code = {
+            "id": str(uuid.uuid4()),
+            "short_code": short_code,
+            "tracking_url": tracking_url,
+            "campaign_name": qr_data.campaign_name,
+            "landing_page_type": qr_data.landing_page_type,
+            "ios_url": qr_data.ios_url,
+            "android_url": qr_data.android_url,
+            "web_url": qr_data.web_url,
+            "single_url": qr_data.single_url,
+            "utm_source": qr_data.utm_source or qr_data.campaign_name,
+            "utm_medium": qr_data.utm_medium,
+            "utm_campaign": qr_data.utm_campaign or qr_data.campaign_name,
+            "utm_term": qr_data.utm_term,
+            "utm_content": qr_data.utm_content,
+            "qr_image": qr_image,
+            "created_by": current_user.id,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "scan_count": 0,
+            "status": "active"
+        }
+        
+        # Save to database
+        await db.qr_codes.insert_one(qr_code)
+        
+        return {
+            "success": True,
+            "message": "QR code created successfully",
+            "qr_code": qr_code
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to create QR code: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to create QR code: {str(e)}")
+
+@api_router.post("/qr-codes/create-batch")
+async def create_batch_qr_codes(
+    batch_data: QRCodeBatchCreate,
+    current_user: User = Depends(get_current_user)
+):
+    """Create multiple QR codes in a batch"""
+    try:
+        qr_codes = []
+        qr_names = batch_data.qr_names or [f"QR{i+1}" for i in range(batch_data.qr_count)]
+        
+        # Limit to specified count
+        qr_names = qr_names[:batch_data.qr_count]
+        
+        for i, qr_name in enumerate(qr_names):
+            # Generate short code for tracking
+            short_code = generate_short_code()
+            
+            # Create tracking URL
+            tracking_url = f"{os.environ.get('REACT_APP_BACKEND_URL', 'http://localhost:8001')}/api/qr-codes/scan/{short_code}"
+            
+            # Generate QR code image
+            qr_image = generate_qr_code_image(tracking_url)
+            
+            # UTM parameters
+            utm_source = qr_name if batch_data.auto_fill_utm else batch_data.utm_campaign
+            
+            # Prepare QR code document
+            qr_code = {
+                "id": str(uuid.uuid4()),
+                "short_code": short_code,
+                "tracking_url": tracking_url,
+                "qr_name": qr_name,
+                "campaign_name": batch_data.campaign_name,
+                "landing_page_type": batch_data.landing_page_type,
+                "ios_url": batch_data.ios_url,
+                "android_url": batch_data.android_url,
+                "web_url": batch_data.web_url,
+                "single_url": batch_data.single_url,
+                "utm_source": utm_source,
+                "utm_medium": batch_data.utm_medium,
+                "utm_campaign": batch_data.utm_campaign or batch_data.campaign_name,
+                "qr_image": qr_image,
+                "created_by": current_user.id,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "scan_count": 0,
+                "status": "active",
+                "batch_id": f"{batch_data.campaign_name}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
+            }
+            
+            qr_codes.append(qr_code)
+        
+        # Save all to database
+        if qr_codes:
+            await db.qr_codes.insert_many(qr_codes)
+        
+        return {
+            "success": True,
+            "message": f"Created {len(qr_codes)} QR codes successfully",
+            "qr_codes": qr_codes,
+            "count": len(qr_codes)
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to create batch QR codes: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to create batch QR codes: {str(e)}")
+
+@api_router.get("/qr-codes/scan/{short_code}")
+async def scan_qr_code(
+    short_code: str,
+    request: Request
+):
+    """Handle QR code scan and redirect based on device"""
+    try:
+        # Get QR code from database
+        qr_code = await db.qr_codes.find_one({"short_code": short_code})
+        
+        if not qr_code:
+            raise HTTPException(status_code=404, detail="QR code not found")
+        
+        # Parse user agent
+        user_agent_string = request.headers.get("user-agent", "")
+        user_agent = parse(user_agent_string)
+        
+        # Detect platform
+        if user_agent.is_mobile:
+            if user_agent.os.family == "iOS":
+                platform = "ios"
+            elif user_agent.os.family == "Android":
+                platform = "android"
+            else:
+                platform = "mobile_other"
+        else:
+            platform = "desktop"
+        
+        # Get client IP
+        client_ip = request.client.host
+        
+        # Build UTM parameters
+        utm_params = f"?utm_source={qr_code.get('utm_source', '')}&utm_medium={qr_code.get('utm_medium', 'qrscan')}&utm_campaign={qr_code.get('utm_campaign', '')}"
+        if qr_code.get('utm_term'):
+            utm_params += f"&utm_term={qr_code.get('utm_term')}"
+        if qr_code.get('utm_content'):
+            utm_params += f"&utm_content={qr_code.get('utm_content')}"
+        
+        # Determine redirect URL
+        if qr_code.get('landing_page_type') == 'single':
+            redirect_url = qr_code.get('single_url', '') + utm_params
+        else:
+            if platform == "ios" and qr_code.get('ios_url'):
+                redirect_url = qr_code.get('ios_url') + utm_params
+            elif platform == "android" and qr_code.get('android_url'):
+                redirect_url = qr_code.get('android_url') + utm_params
+            elif qr_code.get('web_url'):
+                redirect_url = qr_code.get('web_url') + utm_params
+            else:
+                redirect_url = qr_code.get('single_url', '') + utm_params
+        
+        # Log analytics
+        scan_data = {
+            "id": str(uuid.uuid4()),
+            "qr_code_id": qr_code["id"],
+            "short_code": short_code,
+            "qr_name": qr_code.get("qr_name", qr_code.get("utm_source", "Unknown")),
+            "campaign_name": qr_code.get("campaign_name"),
+            "scanned_at": datetime.now(timezone.utc).isoformat(),
+            "platform": platform,
+            "os_family": user_agent.os.family,
+            "os_version": user_agent.os.version_string,
+            "browser": user_agent.browser.family,
+            "browser_version": user_agent.browser.version_string,
+            "device": user_agent.device.family,
+            "user_agent": user_agent_string,
+            "ip_address": client_ip,
+            "redirect_url": redirect_url
+        }
+        
+        await db.qr_scans.insert_one(scan_data)
+        
+        # Increment scan count
+        await db.qr_codes.update_one(
+            {"short_code": short_code},
+            {"$inc": {"scan_count": 1}}
+        )
+        
+        # Redirect
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(url=redirect_url)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to process QR scan: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to process QR scan: {str(e)}")
+
+@api_router.get("/qr-codes/campaigns")
+async def get_campaigns(current_user: User = Depends(get_current_user)):
+    """Get all campaigns with QR code counts"""
+    try:
+        # Aggregate campaigns
+        pipeline = [
+            {"$group": {
+                "_id": "$campaign_name",
+                "qr_count": {"$sum": 1},
+                "total_scans": {"$sum": "$scan_count"},
+                "created_at": {"$first": "$created_at"}
+            }},
+            {"$sort": {"created_at": -1}}
+        ]
+        
+        campaigns = await db.qr_codes.aggregate(pipeline).to_list(None)
+        
+        # Format response
+        formatted_campaigns = [
+            {
+                "campaign_name": c["_id"],
+                "qr_count": c["qr_count"],
+                "total_scans": c["total_scans"],
+                "created_at": c["created_at"]
+            }
+            for c in campaigns
+        ]
+        
+        return {
+            "success": True,
+            "campaigns": formatted_campaigns,
+            "count": len(formatted_campaigns)
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get campaigns: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get campaigns: {str(e)}")
+
+@api_router.get("/qr-codes/campaign/{campaign_name}")
+async def get_campaign_qr_codes(
+    campaign_name: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get all QR codes for a campaign"""
+    try:
+        qr_codes = await db.qr_codes.find({"campaign_name": campaign_name}).to_list(None)
+        
+        return {
+            "success": True,
+            "qr_codes": qr_codes,
+            "count": len(qr_codes)
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get campaign QR codes: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get campaign QR codes: {str(e)}")
+
+@api_router.get("/qr-codes/analytics")
+async def get_qr_analytics(
+    campaign_name: Optional[str] = None,
+    qr_name: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Get QR code scan analytics with filters"""
+    try:
+        # Build query
+        query = {}
+        if campaign_name:
+            query["campaign_name"] = campaign_name
+        if qr_name:
+            query["qr_name"] = qr_name
+        if start_date and end_date:
+            query["scanned_at"] = {
+                "$gte": start_date,
+                "$lte": end_date
+            }
+        
+        # Get scan data
+        scans = await db.qr_scans.find(query).sort("scanned_at", -1).to_list(None)
+        
+        # Get summary stats
+        total_scans = len(scans)
+        platform_breakdown = {}
+        for scan in scans:
+            platform = scan.get("platform", "unknown")
+            platform_breakdown[platform] = platform_breakdown.get(platform, 0) + 1
+        
+        return {
+            "success": True,
+            "scans": scans,
+            "total_scans": total_scans,
+            "platform_breakdown": platform_breakdown
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get QR analytics: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get QR analytics: {str(e)}")
+
+@api_router.delete("/qr-codes/{qr_code_id}")
+async def delete_qr_code(
+    qr_code_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Delete a QR code"""
+    try:
+        result = await db.qr_codes.delete_one({"id": qr_code_id})
+        
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="QR code not found")
+        
+        return {
+            "success": True,
+            "message": "QR code deleted successfully"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to delete QR code: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete QR code: {str(e)}")
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
