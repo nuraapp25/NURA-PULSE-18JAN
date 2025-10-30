@@ -2617,6 +2617,18 @@ const DriverOnboardingPage = () => {
               <table className="w-full min-w-[600px]">
                 <thead className="border-b border-gray-200 dark:border-gray-700">
                   <tr>
+                    <th className="text-left py-2 sm:py-3 px-2 sm:px-4 w-8 sm:w-12">
+                      <Checkbox
+                        checked={selectedLeadIds.length === filteredLeads.length && filteredLeads.length > 0}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            handleSelectAll();
+                          } else {
+                            handleClearSelection();
+                          }
+                        }}
+                      />
+                    </th>
                     <th className="text-left py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300">S. No.</th>
                     <th className="text-left py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300">Leads ID</th>
                     <th className="text-left py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300">Name</th>
