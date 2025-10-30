@@ -1743,7 +1743,7 @@ async def add_remark(
             "text": remark_text,
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "user_id": current_user.id,
-            "user_name": current_user.name or current_user.email,
+            "user_name": f"{current_user.first_name} {current_user.last_name or ''}".strip() or current_user.email,
             "user_email": current_user.email
         }
         
