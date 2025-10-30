@@ -68,6 +68,11 @@ const TelecallerDeskMobile = () => {
   const [editedLead, setEditedLead] = useState(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [updating, setUpdating] = useState(false);
+  
+  // Document management state
+  const [uploadedDocs, setUploadedDocs] = useState({});
+  const [uploadingDoc, setUploadingDoc] = useState(null);
+  const [scanningDoc, setScanningDoc] = useState(null);
 
   useEffect(() => {
     fetchLeads();
