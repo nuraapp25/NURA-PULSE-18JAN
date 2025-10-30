@@ -243,10 +243,21 @@ const QRCodeManagerNew = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">QR Code Manager</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Create and manage QR codes with analytics</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <QrCode className="w-8 h-8 text-teal-600" />
+            QR Code Manager
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Create and manage QR codes with smart device detection</p>
         </div>
         <div className="flex gap-3">
+          <Button 
+            onClick={() => navigate('/qr-analytics-dashboard')}
+            variant="outline"
+            className="border-teal-600 text-teal-600 hover:bg-teal-50"
+          >
+            <BarChart3 className="w-4 h-4 mr-2" />
+            View Analytics
+          </Button>
           <Button 
             onClick={() => setCreateDialogOpen(true)}
             className="bg-teal-600 hover:bg-teal-700"
