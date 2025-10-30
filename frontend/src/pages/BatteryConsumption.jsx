@@ -376,30 +376,6 @@ const BatteryConsumption = () => {
     
     return null;
   };
-      }
-      
-      return (
-        <div className="bg-gray-800 border border-gray-700 p-3 rounded-lg shadow-lg">
-          <p className="text-gray-300 font-semibold mb-2">{label}</p>
-          <p className="text-green-400 text-sm">
-            Battery: {data.battery !== null && data.battery !== undefined ? data.battery.toFixed(1) + '%' : 'N/A'}
-          </p>
-          <p className="text-blue-400 text-sm">
-            Total Distance: {data.distance !== null && data.distance !== undefined ? data.distance.toFixed(2) + ' km' : 'N/A'}
-          </p>
-          <div className="border-t border-gray-600 mt-2 pt-2">
-            <p className="text-xs text-gray-400 mb-1">{hourRangeText}</p>
-            <p className="text-red-400 text-sm">Charge Drop: {data.chargeDrop}%</p>
-            <p className="text-blue-300 text-sm">Distance Travelled: {data.distanceTraveled} km</p>
-            <p className="text-yellow-400 text-sm font-semibold">
-              Efficiency: {efficiencyDisplay}
-            </p>
-          </div>
-        </div>
-      );
-    }
-    return null;
-  };
 
   const handleViewRawData = async (dayData) => {
     try {
