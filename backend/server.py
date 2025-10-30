@@ -9810,6 +9810,10 @@ async def create_qr_code(
         # Save to database
         await db.qr_codes.insert_one(qr_code)
         
+        # Remove MongoDB _id from response
+        if '_id' in qr_code:
+            del qr_code['_id']
+        
         return {
             "success": True,
             "message": "QR code created successfully",
