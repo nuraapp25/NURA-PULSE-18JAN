@@ -1525,8 +1525,10 @@ const DriverOnboardingPage = () => {
   
   // Add remark
   const handleAddRemark = async () => {
+    // Allow closing without adding text
     if (!remarkText.trim()) {
-      toast.error("Please enter a remark");
+      setRemarkDialogOpen(false);
+      setRemarkText("");
       return;
     }
     
