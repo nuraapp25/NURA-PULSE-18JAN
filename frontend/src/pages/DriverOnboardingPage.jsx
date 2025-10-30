@@ -1725,6 +1725,16 @@ const DriverOnboardingPage = () => {
                 <RefreshCw className={`h-3 w-3 mr-1 ${summaryLoading ? 'animate-spin' : ''}`} />
                 Refresh
               </Button>
+              {/* Show All Leads Button */}
+              <Button
+                onClick={handleShowAllLeads}
+                variant="outline"
+                size="sm"
+                className="text-xs border-purple-500 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20"
+              >
+                <RefreshCw className="h-3 w-3 mr-1" />
+                Show All Leads
+              </Button>
             </div>
             
             {/* Date Filter and Source Filter for Summary */}
