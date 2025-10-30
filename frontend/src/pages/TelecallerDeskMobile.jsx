@@ -108,7 +108,7 @@ const TelecallerDeskMobile = () => {
 
     try {
       const token = localStorage.getItem("token");
-      await axios.put(
+      await axios.patch(
         `${API}/driver-onboarding/leads/${selectedLead.id}`,
         { status: selectedStatus },
         { headers: { Authorization: `Bearer ${token}` } }
