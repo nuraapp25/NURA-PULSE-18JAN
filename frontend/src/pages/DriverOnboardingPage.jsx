@@ -2703,6 +2703,13 @@ const DriverOnboardingPage = () => {
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setInlineEditingId(lead.id);
+                                // Automatically trigger dropdown opening after state update
+                                setTimeout(() => {
+                                  const selectTrigger = document.querySelector(`[data-lead-select="${lead.id}"]`);
+                                  if (selectTrigger) {
+                                    selectTrigger.click();
+                                  }
+                                }, 50);
                               }}
                               className={`group flex items-center gap-1 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 rounded px-2 py-1 transition-colors w-full ${
                                 pendingStatusChanges[lead.id] ? 'ring-2 ring-yellow-400 ring-opacity-50' : ''
