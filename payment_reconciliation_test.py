@@ -13,7 +13,7 @@ from datetime import datetime
 from PIL import Image
 
 # Configuration
-BASE_URL = "https://nura-operations.preview.emergentagent.com/api"
+BASE_URL = "https://leadtracker-39.preview.emergentagent.com/api"
 MASTER_ADMIN_EMAIL = "admin"
 MASTER_ADMIN_PASSWORD = "Nura@1234$"
 

@@ -76,7 +76,7 @@ Column L: Last Modified         → lead.last_modified (formatted as DD-MM-YYYY)
 4. Paste into the script editor (replace any existing code)
 5. Update configuration:
    ```javascript
-   var API_BASE_URL = "https://nura-operations.preview.emergentagent.com/api";
+   var API_BASE_URL = "https://leadtracker-39.preview.emergentagent.com/api";
    var BEARER_TOKEN = "YOUR_ACTUAL_TOKEN_HERE"; // Get from app login
    var LEADS_SHEET_NAME = "Driver Leads";
    ```

@@ -13,7 +13,7 @@ from tabulate import tabulate
 load_dotenv()
 
 # Configuration
-BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', 'https://nura-operations.preview.emergentagent.com/api')
+BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', 'https://leadtracker-39.preview.emergentagent.com/api')
 LOGIN_EMAIL = os.getenv('ADMIN_EMAIL', 'admin')
 LOGIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'Nura@1234$')
 

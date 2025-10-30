@@ -18,7 +18,7 @@
  */
 
 // ========== CONFIGURATION ==========
-var API_BASE_URL = "https://nura-operations.preview.emergentagent.com/api";
+var API_BASE_URL = "https://leadtracker-39.preview.emergentagent.com/api";
 var BEARER_TOKEN = "YOUR_TOKEN_HERE"; // Update this with valid token
 var LEADS_SHEET_NAME = "Driver Leads";
 
