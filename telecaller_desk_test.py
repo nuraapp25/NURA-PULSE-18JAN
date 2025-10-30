@@ -368,7 +368,7 @@ class TelecallerDeskTester:
                     
                     # Log current document status
                     uploaded_docs = [doc_type for doc_type in expected_doc_types 
-                                   if doc_status.get(doc_type, {}).get("uploaded", False)]
+                                   if documents.get(doc_type, {}).get("uploaded", False)]
                     self.log_test("Document Status - Current status", True, 
                                 f"Currently uploaded documents: {uploaded_docs if uploaded_docs else 'None'}")
                     success_count += 1
