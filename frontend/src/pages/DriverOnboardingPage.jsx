@@ -2311,6 +2311,43 @@ const DriverOnboardingPage = () => {
         </Card>
       </div>
 
+      {/* Search Bar - Moved above selection controls */}
+      <Card className="dark:bg-gray-800 dark:border-gray-700 mb-4">
+        <CardContent className="pt-6">
+          <div className="flex items-center gap-3">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                placeholder="Search by name or phone (e.g., Alexander or 9898933220, 8787811221)"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full px-4 py-2 pl-10 border border-gray-300 dark:border-gray-600 rounded-lg
+                         bg-white dark:bg-gray-700 text-gray-900 dark:text-white
+                         focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                         placeholder-gray-400 dark:placeholder-gray-500"
+              />
+              <svg
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </div>
+          </div>
+          <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-2 flex items-start gap-1">
+            <span>💡</span>
+            <span>Tip: Enter multiple values separated by commas. Names support partial matching, phone numbers require full match.</span>
+          </p>
+        </CardContent>
+      </Card>
+
       {/* Selection Controls */}
       {filteredLeads.length > 0 && (
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
@@ -2353,8 +2390,18 @@ const DriverOnboardingPage = () => {
                 className="border-green-500 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 text-sm"
               >
                 <Users size={14} className="mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Assign Leads ({selectedLeadIds.length})</span>
+                <span className="hidden sm:inline">Assign Leads to Telecaller ({selectedLeadIds.length})</span>
                 <span className="sm:hidden">Assign ({selectedLeadIds.length})</span>
+              </Button>
+              <Button
+                onClick={() => setIsUnassignDialogOpen(true)}
+                variant="outline"
+                size="sm"
+                className="border-orange-500 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20 text-sm"
+              >
+                <XCircle size={14} className="mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Unassign Telecaller ({selectedLeadIds.length})</span>
+                <span className="sm:hidden">Unassign ({selectedLeadIds.length})</span>
               </Button>
             </>
           )}
