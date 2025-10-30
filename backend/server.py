@@ -1749,10 +1749,21 @@ async def get_leads(
         
         # Fetch leads with pagination
         if skip_pagination:
-            # For exports or special cases, return all
-            leads = await db.driver_leads.find(query, {"_id": 0}).to_list(length=None)
+            # For showing all leads, optimize by fetching only essential display fields first
+            # This reduces data transfer size significantly
+            projection = {
+                "_id": 0,
+                "id": 1,
+                "name": 1,
+                "phone_number": 1,
+                "status": 1,
+                "stage": 1,
+                "assigned_telecaller": 1,
+                "import_date": 1
+            }
+            leads = await db.driver_leads.find(query, projection).to_list(length=None)
         else:
-            # Limit maximum items per page
+            # For paginated requests, return full documents
             limit = min(limit, 100)
             skip = (page - 1) * limit
             leads = await db.driver_leads.find(query, {"_id": 0}).skip(skip).limit(limit).to_list(length=limit)
