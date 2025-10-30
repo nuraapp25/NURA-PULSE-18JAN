@@ -466,6 +466,15 @@ const TelecallersManagement = () => {
                                 <UserPlus className="w-4 h-4" />
                               </Button>
                               <Button
+                                onClick={() => handleUnassignAllLeads(telecaller)}
+                                variant="outline"
+                                size="sm"
+                                className="text-orange-600 border-orange-500 hover:bg-orange-50"
+                                disabled={telecaller.total_assigned_leads === 0}
+                              >
+                                <Users className="w-4 h-4" />
+                              </Button>
+                              <Button
                                 onClick={() => openEditDialog(telecaller)}
                                 variant="outline"
                                 size="sm"
