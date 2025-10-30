@@ -209,8 +209,7 @@ const DriverOnboardingPage = () => {
   const [telecallers, setTelecallers] = useState([]);
   const [telecallerFilter, setTelecallerFilter] = useState(null);
   
-  // Search functionality
-  const [searchQuery, setSearchQuery] = useState("");
+  // Debounced search
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   
   // Remarks functionality
