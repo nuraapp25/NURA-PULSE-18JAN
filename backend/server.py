@@ -560,10 +560,10 @@ async def create_user(user_data: UserCreate, current_user: User = Depends(get_cu
 
 @api_router.post("/users/approve")
 async def approve_user(approval: UserApproval, current_user: User = Depends(get_current_user)):
-    """Approve a pending user (master admin only)"""
+    """Approve a pending user (master admin and admin only)"""
     from datetime import datetime, timezone
     
-    if current_user.account_type != "master_admin":
+    if current_user.account_type not in ["master_admin", "admin"]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     user = await db.users.find_one({"id": approval.user_id})
