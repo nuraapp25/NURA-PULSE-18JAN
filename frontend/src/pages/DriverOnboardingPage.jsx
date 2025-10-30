@@ -1077,19 +1077,44 @@ const DriverOnboardingPage = () => {
   const handleSelectAll = () => {
     setSelectedLeadIds(filteredLeads.map(lead => lead.id));
   };
+  
+  // NEW: Select all leads in current page only
+  const handleSelectAllInPage = () => {
+    setSelectedLeadIds(paginatedLeads.map(lead => lead.id));
+  };
 
   const handleClearSelection = () => {
     setSelectedLeadIds([]);
+    setLastSelectedIndex(null);
   };
 
-  const handleLeadCheckboxChange = (leadId) => {
-    setSelectedLeadIds(prev => {
-      if (prev.includes(leadId)) {
-        return prev.filter(id => id !== leadId);
-      } else {
-        return [...prev, leadId];
-      }
-    });
+  const handleLeadCheckboxChange = (leadId, index, event) => {
+    // Check if shift key is pressed for range selection
+    if (event?.shiftKey && lastSelectedIndex !== null) {
+      // Range selection
+      const currentIndex = index;
+      const start = Math.min(lastSelectedIndex, currentIndex);
+      const end = Math.max(lastSelectedIndex, currentIndex);
+      
+      // Get IDs of leads in range
+      const leadsInRange = paginatedLeads.slice(start, end + 1).map(lead => lead.id);
+      
+      // Add all leads in range to selection
+      setSelectedLeadIds(prev => {
+        const newSelection = new Set([...prev, ...leadsInRange]);
+        return Array.from(newSelection);
+      });
+    } else {
+      // Normal single selection
+      setSelectedLeadIds(prev => {
+        if (prev.includes(leadId)) {
+          return prev.filter(id => id !== leadId);
+        } else {
+          return [...prev, leadId];
+        }
+      });
+      setLastSelectedIndex(index);
+    }
   };
 
   const handleBulkStatusUpdate = async () => {
