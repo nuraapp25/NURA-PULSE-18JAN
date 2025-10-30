@@ -1507,62 +1507,6 @@ const DriverOnboardingPage = () => {
     fetchBackupLibrary();
   };
   
-  // ==================== REMARKS HANDLERS ====================
-  
-  // Open add remark dialog
-  const handleOpenAddRemark = (lead) => {
-    setSelectedLeadForRemark(lead);
-    setRemarkText("");
-    setRemarkDialogOpen(true);
-  };
-  
-  // Add remark
-  const handleAddRemark = async () => {
-    // Allow closing without adding text
-    if (!remarkText.trim()) {
-      setRemarkDialogOpen(false);
-      setRemarkText("");
-      return;
-    }
-    
-    try {
-      const token = localStorage.getItem("token");
-      await axios.post(
-        `${API}/driver-onboarding/${selectedLeadForRemark.id}/remarks`,
-        { remark_text: remarkText },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      
-      toast.success("Remark added successfully");
-      setRemarkDialogOpen(false);
-      setRemarkText("");
-      fetchLeads(); // Refresh to show new remark
-    } catch (error) {
-      toast.error(error.response?.data?.detail || "Failed to add remark");
-    }
-  };
-  
-  // View remarks history
-  const handleViewRemarks = async (lead) => {
-    setSelectedLeadForRemark(lead);
-    setLoadingRemarks(true);
-    setRemarksHistoryDialogOpen(true);
-    
-    try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get(
-        `${API}/driver-onboarding/${lead.id}/remarks`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      
-      setSelectedLeadRemarks(response.data.remarks || []);
-    } catch (error) {
-      toast.error("Failed to fetch remarks");
-      setSelectedLeadRemarks([]);
-    } finally {
-      setLoadingRemarks(false);
-    }
-  };
 
   const getStatusColor = (status) => {
     const statusOption = STATUS_OPTIONS.find(opt => opt.value === status);
