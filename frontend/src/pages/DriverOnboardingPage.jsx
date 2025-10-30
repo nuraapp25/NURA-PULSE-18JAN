@@ -4577,6 +4577,111 @@ const DriverOnboardingPage = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Add Remark Dialog */}
+      <Dialog open={remarkDialogOpen} onOpenChange={setRemarkDialogOpen}>
+        <DialogContent className="dark:bg-gray-800">
+          <DialogHeader>
+            <DialogTitle className="dark:text-white">Add Remark</DialogTitle>
+            <DialogDescription className="dark:text-gray-400">
+              Add a remark for {selectedLeadForRemark?.name}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label className="dark:text-gray-300">Remark</Label>
+              <textarea
+                value={remarkText}
+                onChange={(e) => setRemarkText(e.target.value)}
+                placeholder="Enter your remark here..."
+                rows={4}
+                className="w-full mt-2 p-3 border border-gray-300 dark:border-gray-600 rounded-lg
+                         bg-white dark:bg-gray-700 text-gray-900 dark:text-white
+                         focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                         placeholder-gray-400 dark:placeholder-gray-500"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setRemarkDialogOpen(false);
+                  setRemarkText("");
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleAddRemark}
+                className="bg-blue-600 hover:bg-blue-700"
+                disabled={!remarkText.trim()}
+              >
+                Add Remark
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Remarks History Dialog */}
+      <Dialog open={remarksHistoryDialogOpen} onOpenChange={setRemarksHistoryDialogOpen}>
+        <DialogContent className="dark:bg-gray-800 max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="dark:text-white">Remarks History</DialogTitle>
+            <DialogDescription className="dark:text-gray-400">
+              All remarks for {selectedLeadForRemark?.name}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex-1 overflow-y-auto">
+            {loadingRemarks ? (
+              <div className="flex items-center justify-center py-8">
+                <RefreshCw className="w-6 h-6 text-blue-600 animate-spin" />
+              </div>
+            ) : selectedLeadRemarks.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-500 dark:text-gray-400">No remarks yet</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {selectedLeadRemarks.map((remark, index) => (
+                  <div
+                    key={index}
+                    className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg
+                             bg-gray-50 dark:bg-gray-900/30"
+                  >
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">
+                          {remark.user_name}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {remark.user_email}
+                        </p>
+                      </div>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        {new Date(remark.timestamp).toLocaleString()}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                      {remark.text}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end pt-4 border-t border-gray-200 dark:border-gray-700">
+            <Button
+              variant="outline"
+              onClick={() => setRemarksHistoryDialogOpen(false)}
+            >
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
