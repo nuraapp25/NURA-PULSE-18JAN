@@ -530,6 +530,7 @@ const TelecallerDeskMobile = () => {
           setDetailsDialogOpen(open);
           if (!open) {
             setIsEditMode(false);
+            setUploadedDocs({});
           }
         }}
         lead={selectedLead}
@@ -539,14 +540,14 @@ const TelecallerDeskMobile = () => {
         onFieldChange={handleFieldChange}
         onSave={handleSaveLeadDetails}
         onStageSync={() => {}}
-        uploadedDocs={{}}
-        onDocumentUpload={() => {}}
-        onViewDocument={() => {}}
-        onDownloadDocument={() => {}}
-        onDeleteDocument={() => {}}
-        onDocumentScan={() => {}}
-        uploadingDoc={null}
-        scanningDoc={null}
+        uploadedDocs={uploadedDocs}
+        onDocumentUpload={handleDocumentUpload}
+        onViewDocument={handleViewDocument}
+        onDownloadDocument={handleDownloadDocument}
+        onDeleteDocument={handleDeleteDocument}
+        onDocumentScan={null}
+        uploadingDoc={uploadingDoc}
+        scanningDoc={scanningDoc}
         updating={updating}
         showDeleteButton={false}
         onDelete={() => {}}
