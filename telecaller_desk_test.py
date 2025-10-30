@@ -170,7 +170,9 @@ class TelecallerDeskTester:
         
         if response and response.status_code == 200:
             try:
-                all_leads = response.json()
+                response_data = response.json()
+                all_leads = response_data.get("leads", [])
+                
                 if isinstance(all_leads, list) and all_leads:
                     # Use first lead for testing if we don't have one yet
                     if not self.test_lead_id:
