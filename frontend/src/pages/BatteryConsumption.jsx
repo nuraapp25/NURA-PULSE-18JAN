@@ -337,68 +337,6 @@ const BatteryConsumption = () => {
     
     return processedData;
   };
-      
-      let chargeDrop = 0;
-      let distanceTraveled = 0;
-      let batteryChange = 0;
-      
-      // Calculate distance traveled in THIS hour and add to cumulative
-      if (index === 0) {
-        // First hour with valid data - baseline, cumulative starts at 0
-        cumulativeDistance = 0;
-        distanceTraveled = 0;
-        previousOdometer = currentOdometer;
-        console.log(`Hour 0 (${hourKey}) - Baseline Odometer: ${currentOdometer} km, Cumulative: 0 km`);
-      } else {
-        // Calculate distance traveled this hour = current - previous
-        if (currentOdometer >= previousOdometer) {
-          distanceTraveled = currentOdometer - previousOdometer;
-          cumulativeDistance += distanceTraveled; // ADD to cumulative total
-          console.log(`Hour ${index} (${hourKey}): Odometer ${currentOdometer} - ${previousOdometer} = ${distanceTraveled} km, Cumulative: ${cumulativeDistance} km`);
-        } else {
-          // Odometer decreased - data error, don't add to cumulative
-          console.warn(`Hour ${index} (${hourKey}): Odometer decreased from ${previousOdometer} to ${currentOdometer}, ignoring this increment`);
-          distanceTraveled = 0;
-        }
-        previousOdometer = currentOdometer;
-      }
-      
-      // Compare with previous hour for battery changes
-      if (index > 0) {
-        const prevHourKey = hourKeys[index - 1];
-        const prevHourReadings = hourlyData[prevHourKey];
-        const prevLastReading = prevHourReadings[prevHourReadings.length - 1];
-        
-        const prevBattery = parseFloat(prevLastReading['Battery Soc(%)'] || prevLastReading['Battery SOC(%)'] || 0);
-        
-        batteryChange = currentBattery - prevBattery;
-        
-        // Charge drop when battery decreases
-        if (batteryChange < 0) {
-          chargeDrop = Math.abs(batteryChange);
-        }
-      }
-      
-      processedData.push({
-        time: hourKey,
-        battery: currentBattery > 0 ? currentBattery : null,
-        distance: cumulativeDistance >= 0 ? cumulativeDistance : null, // CUMULATIVE distance - always increasing
-        chargeDrop: chargeDrop.toFixed(2),
-        distanceTraveled: distanceTraveled.toFixed(2),
-        batteryChange: batteryChange,
-        rawIndex: index
-      });
-    });
-    
-    console.log(`✅ Processed ${processedData.length} data points successfully`);
-    console.log("Sample data (first 3 hours):", processedData.slice(0, 3).map(d => ({ 
-      time: d.time, 
-      distance: d.distance, 
-      battery: d.battery 
-    })));
-    
-    return processedData;
-  };
 
   // Custom tooltip component
   const CustomTooltip = ({ active, payload, label }) => {
