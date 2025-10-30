@@ -167,10 +167,14 @@ const BatteryConsumption = () => {
     const minBattery = Math.min(...batteryValues.map(v => v.battery));
     const maxBattery = Math.max(...batteryValues.map(v => v.battery));
     
-    // Total distance = final cumulative value (last data point)
+    // Total distance = final cumulative value from last data point WITH valid distance
     let totalDistance = 0;
-    if (data.length > 0 && data[data.length - 1].distance !== null) {
-      totalDistance = data[data.length - 1].distance;
+    // Find the last data point that has a valid distance value
+    for (let i = data.length - 1; i >= 0; i--) {
+      if (data[i].distance !== null && data[i].distance !== undefined) {
+        totalDistance = data[i].distance;
+        break;
+      }
     }
 
     return {
