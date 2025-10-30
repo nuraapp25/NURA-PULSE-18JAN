@@ -209,6 +209,18 @@ const DriverOnboardingPage = () => {
   const [telecallers, setTelecallers] = useState([]);
   const [telecallerFilter, setTelecallerFilter] = useState(null);
   
+  // Search functionality
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+  
+  // Remarks functionality
+  const [remarkDialogOpen, setRemarkDialogOpen] = useState(false);
+  const [remarkText, setRemarkText] = useState("");
+  const [selectedLeadForRemark, setSelectedLeadForRemark] = useState(null);
+  const [remarksHistoryDialogOpen, setRemarksHistoryDialogOpen] = useState(false);
+  const [selectedLeadRemarks, setSelectedLeadRemarks] = useState([]);
+  const [loadingRemarks, setLoadingRemarks] = useState(false);
+  
   // Status filter state
   const [statusFilter, setStatusFilter] = useState(null);
   
