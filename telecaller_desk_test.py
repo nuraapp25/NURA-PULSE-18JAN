@@ -406,7 +406,7 @@ class TelecallerDeskTester:
         for doc_type in document_types:
             # Test POST /api/driver-onboarding/upload-document/{lead_id}?document_type={doc_type}
             files = {
-                'document': (f'test_{doc_type}.png', test_image_content, 'image/png')
+                'file': (f'test_{doc_type}.png', test_image_content, 'image/png')
             }
             
             response = self.make_request("POST", f"/driver-onboarding/upload-document/{self.test_lead_id}?document_type={doc_type}", 
