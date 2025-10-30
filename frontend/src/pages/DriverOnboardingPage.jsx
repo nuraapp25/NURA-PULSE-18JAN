@@ -1513,6 +1513,15 @@ const DriverOnboardingPage = () => {
     return statusOption ? statusOption.color : "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400";
   };
 
+  // Copy to clipboard function
+  const handleCopyToClipboard = (text, label) => {
+    navigator.clipboard.writeText(text).then(() => {
+      toast.success(`${label} copied to clipboard!`);
+    }).catch(() => {
+      toast.error("Failed to copy to clipboard");
+    });
+  };
+
   return (
     <div className="space-y-6" data-testid="driver-onboarding-page">
       {/* Loading Animation Overlay */}
