@@ -732,15 +732,18 @@ frontend:
 
   - task: "QR Code Manager - View Campaign QR Codes"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/frontend/src/pages/QRCodeManagerNew.jsx"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Campaign QR codes grid view implemented showing QR code images, names, scan counts, and action buttons (Download, Copy). Need to test campaign folder navigation and QR code display."
+        - working: false
+          agent: "testing"
+          comment: "❌ CRITICAL ISSUE: Campaign QR codes view not working due to backend API error. Frontend shows 'Failed to load campaigns' error message. Backend endpoint GET /api/qr-codes/campaigns returns 404 'QR code not found' instead of empty campaigns list or proper campaign data. This prevents campaign folders from displaying and blocks access to QR codes grid view. Frontend implementation appears correct with campaign cards, QR code grid layout, download/copy buttons, but cannot function without working campaigns API. Backend routing or endpoint implementation needs investigation."
 
   - task: "QR Code Manager - QR Code Scanning Simulation"
     implemented: true
