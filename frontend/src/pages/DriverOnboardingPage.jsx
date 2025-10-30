@@ -219,6 +219,7 @@ const DriverOnboardingPage = () => {
   
   // Bulk lead assignment dialog
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
+  const [isUnassignDialogOpen, setIsUnassignDialogOpen] = useState(false);
   const [selectedTelecallerForAssignment, setSelectedTelecallerForAssignment] = useState("");
   
   // Loading progress state
