@@ -342,7 +342,8 @@ class TelecallerDeskTester:
                 expected_doc_types = ["dl", "aadhar", "pan", "gas_bill", "bank_passbook"]
                 
                 # Check if response includes document status for all types
-                all_types_present = all(doc_type in doc_status for doc_type in expected_doc_types)
+                documents = doc_status.get("documents", {})
+                all_types_present = all(doc_type in documents for doc_type in expected_doc_types)
                 
                 if all_types_present:
                     self.log_test("Document Status - All document types present", True, 
