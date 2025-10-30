@@ -24,6 +24,7 @@ import ExpenseTracker from "@/pages/ExpenseTracker";
 import Analytics from "@/pages/Analytics";
 import HotspotPlanning from "@/pages/HotspotPlanning";
 import QRCodeManager from "@/pages/QRCodeManager";
+import QRCodeManagerNew from "@/pages/QRCodeManagerNew";
 import QRAnalytics from "@/pages/QRAnalytics";
 import RideDeckAnalysis from "@/pages/RideDeckAnalysisEnhanced";
 import RCAManagement from "@/pages/RCAManagement";
