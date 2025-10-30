@@ -2721,9 +2721,40 @@ const DriverOnboardingPage = () => {
                           )}
                         </div>
                       </td>
+                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm text-gray-600 dark:text-gray-400 hidden md:table-cell">
+                        {lead.remarks && lead.remarks.length > 0 ? (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleViewRemarks(lead);
+                            }}
+                            className="text-blue-600 dark:text-blue-400 hover:underline truncate max-w-[150px] block"
+                          >
+                            {lead.remarks[lead.remarks.length - 1].text.substring(0, 30)}
+                            {lead.remarks[lead.remarks.length - 1].text.length > 30 ? '...' : ''}
+                            {lead.remarks.length > 1 && ` (+${lead.remarks.length - 1})`}
+                          </button>
+                        ) : (
+                          <span className="text-gray-400 dark:text-gray-500 italic">No remarks</span>
+                        )}
+                      </td>
                       <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm text-gray-600 dark:text-gray-400 hidden md:table-cell">{lead.current_location || '-'}</td>
                       <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs text-gray-500 dark:text-gray-500 hidden lg:table-cell">
                         {lead.import_date ? new Date(lead.import_date).toLocaleDateString() : '-'}
+                      </td>
+                      <td className="py-2 sm:py-3 px-2 sm:px-4" onClick={(e) => e.stopPropagation()}>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenAddRemark(lead);
+                          }}
+                          className="text-xs h-7 border-blue-600 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                        >
+                          <Plus size={14} className="mr-1" />
+                          Add Remark
+                        </Button>
                       </td>
                     </tr>
                   ))}
