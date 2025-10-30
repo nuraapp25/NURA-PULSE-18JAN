@@ -4214,7 +4214,16 @@ async def get_morning_charge_audit(current_user: User = Depends(get_current_user
                 }
             vehicle_date_groups[key]["records"].append(record)
         
-        logger.info(f"Grouped into {len(vehicle_date_groups)} vehicle-date combinations")
+        # Check if we have any data
+        if record_count == 0:
+            return {
+                "success": True,
+                "audit_results": [],
+                "count": 0,
+                "message": "No Montra feed data found. Please import vehicle data first."
+            }
+        
+        logger.info(f"Processed {record_count} records, grouped into {len(vehicle_date_groups)} vehicle-date combinations")
         
         audit_results = []
         
