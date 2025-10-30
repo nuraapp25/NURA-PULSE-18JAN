@@ -137,7 +137,7 @@ function App() {
                 <Route path="driver-onboarding" element={<DriverOnboarding />} />
                 <Route path="telecaller-queue" element={<TelecallerQueue />} />
                 <Route path="telecallers-management" element={<TelecallersManagement />} />
-                <Route path="telecaller-desk" element={<TelecallerDesk />} />
+                <Route path="telecaller-desk" element={<TelecallerDeskMobile />} />
                 <Route path="montra-vehicle" element={<MontraVehicle />} />
                 <Route path="montra-vehicle/battery-consumption" element={<BatteryConsumption />} />
                 <Route path="montra-vehicle/battery-milestones" element={<BatteryMilestones />} />
