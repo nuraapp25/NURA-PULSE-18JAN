@@ -1723,6 +1723,82 @@ async def get_leads(
         raise HTTPException(status_code=500, detail=f"Failed to fetch leads: {str(e)}")
 
 
+@api_router.post("/driver-onboarding/{lead_id}/remarks")
+async def add_remark(
+    lead_id: str,
+    remark_text: str = Body(..., embed=True),
+    current_user: User = Depends(get_current_user)
+):
+    """Add a remark to a driver lead"""
+    try:
+        from datetime import datetime, timezone
+        
+        # Get lead
+        lead = await db.driver_leads.find_one({"id": lead_id})
+        if not lead:
+            raise HTTPException(status_code=404, detail="Lead not found")
+        
+        # Create remark object
+        new_remark = {
+            "text": remark_text,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "user_id": current_user.id,
+            "user_name": current_user.name or current_user.email,
+            "user_email": current_user.email
+        }
+        
+        # Add remark to lead (push to remarks array)
+        await db.driver_leads.update_one(
+            {"id": lead_id},
+            {"$push": {"remarks": new_remark}}
+        )
+        
+        logger.info(f"Added remark to lead {lead_id} by {current_user.email}")
+        
+        return {
+            "success": True,
+            "message": "Remark added successfully",
+            "remark": new_remark
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error adding remark: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to add remark: {str(e)}")
+
+
+@api_router.get("/driver-onboarding/{lead_id}/remarks")
+async def get_remarks(
+    lead_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get all remarks for a driver lead"""
+    try:
+        # Get lead with remarks
+        lead = await db.driver_leads.find_one({"id": lead_id}, {"remarks": 1})
+        
+        if not lead:
+            raise HTTPException(status_code=404, detail="Lead not found")
+        
+        remarks = lead.get("remarks", [])
+        
+        # Sort by timestamp (newest first)
+        remarks_sorted = sorted(remarks, key=lambda x: x.get("timestamp", ""), reverse=True)
+        
+        return {
+            "success": True,
+            "remarks": remarks_sorted,
+            "count": len(remarks_sorted)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching remarks: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch remarks: {str(e)}")
+
+
 @api_router.get("/driver-onboarding/status-summary")
 async def get_status_summary(
     start_date: Optional[str] = None,
