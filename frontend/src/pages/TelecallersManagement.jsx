@@ -248,6 +248,42 @@ const TelecallersManagement = () => {
     }
   };
 
+  const handleUnassignAllLeads = async (telecaller) => {
+    if (telecaller.total_assigned_leads === 0) {
+      toast.error("This telecaller has no assigned leads");
+      return;
+    }
+
+    if (!confirm(`Are you sure you want to unassign all ${telecaller.total_assigned_leads} leads from ${telecaller.name}? This will remove all lead assignments.`)) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      // First, get all leads assigned to this telecaller
+      const leadsResponse = await axios.get(`${API}/driver-onboarding/leads?telecaller=${telecaller.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const assignedLeadIds = leadsResponse.data.map(lead => lead.id);
+      
+      // Then deassign them all
+      await axios.post(
+        `${API}/telecallers/deassign-leads`,
+        {
+          lead_ids: assignedLeadIds
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      toast.success(`Unassigned all ${assignedLeadIds.length} leads from ${telecaller.name}!`);
+      fetchTelecallers();
+      fetchAllLeads();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to unassign leads");
+    }
+  };
+
   const handleSyncFromSheets = async () => {
     setLoading(true);
     try {
