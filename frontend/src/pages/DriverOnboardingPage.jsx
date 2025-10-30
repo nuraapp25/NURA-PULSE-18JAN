@@ -2627,7 +2627,10 @@ const DriverOnboardingPage = () => {
                                 value={lead.status || "New"}
                                 onValueChange={(value) => handleInlineStatusChange(lead.id, value)}
                               >
-                                <SelectTrigger className="w-full h-8 text-xs">
+                                <SelectTrigger 
+                                  data-lead-select={lead.id}
+                                  className="w-full h-8 text-xs"
+                                >
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent className="dark:bg-gray-800 max-h-[300px]">
