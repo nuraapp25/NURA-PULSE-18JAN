@@ -956,6 +956,8 @@ async def import_leads(
                 matched_status = "Highly Interested"
             elif "interested, no dl" in file_status_lower or "interest no dl" in file_status_lower:
                 matched_status = "Interested, No DL"
+            elif "interested, no badge" in file_status_lower or "interest no badge" in file_status_lower or "no badge" in file_status_lower:
+                matched_status = "Interested, No Badge"
             elif "call back 1d" in file_status_lower:
                 matched_status = "Call back 1D"
             elif "call back 1w" in file_status_lower:
