@@ -353,7 +353,7 @@ class TelecallerDeskTester:
                     # Check if uploaded status is boolean for each document type
                     boolean_status_correct = True
                     for doc_type in expected_doc_types:
-                        uploaded_status = doc_status.get(doc_type, {}).get("uploaded")
+                        uploaded_status = documents.get(doc_type, {}).get("uploaded")
                         if not isinstance(uploaded_status, bool):
                             boolean_status_correct = False
                             break
