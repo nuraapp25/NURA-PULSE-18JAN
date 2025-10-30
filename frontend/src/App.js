@@ -129,7 +129,7 @@ function App() {
               <Route path="/forgot-password" element={!user ? <ForgotPasswordPage /> : <Navigate to="/dashboard" />} />
               <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/login" />}>
                 <Route index element={<HomePage />} />
-                {user?.account_type === "master_admin" && (
+                {(user?.account_type === "master_admin" || user?.account_type === "admin") && (
                   <Route path="users" element={<UserManagement />} />
                 )}
                 <Route path="payment-reconciliation" element={<PaymentReconciliation />} />
