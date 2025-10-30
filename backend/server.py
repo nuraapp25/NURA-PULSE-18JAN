@@ -10065,6 +10065,11 @@ async def get_qr_analytics(
         # Get scan data
         scans = await db.qr_scans.find(query).sort("scanned_at", -1).to_list(None)
         
+        # Remove MongoDB _id from response
+        for scan in scans:
+            if '_id' in scan:
+                del scan['_id']
+        
         # Get summary stats
         total_scans = len(scans)
         platform_breakdown = {}
