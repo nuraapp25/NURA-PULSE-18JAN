@@ -9982,44 +9982,6 @@ async def scan_qr_code(
         logger.error(f"Failed to process QR scan: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to process QR scan: {str(e)}")
 
-@api_router.get("/qr-codes/campaigns")
-async def get_campaigns(current_user: User = Depends(get_current_user)):
-    """Get all campaigns with QR code counts"""
-    try:
-        # Aggregate campaigns
-        pipeline = [
-            {"$group": {
-                "_id": "$campaign_name",
-                "qr_count": {"$sum": 1},
-                "total_scans": {"$sum": "$scan_count"},
-                "created_at": {"$first": "$created_at"}
-            }},
-            {"$sort": {"created_at": -1}}
-        ]
-        
-        campaigns = await db.qr_codes.aggregate(pipeline).to_list(None)
-        
-        # Format response
-        formatted_campaigns = [
-            {
-                "campaign_name": c["_id"],
-                "qr_count": c["qr_count"],
-                "total_scans": c["total_scans"],
-                "created_at": c["created_at"]
-            }
-            for c in campaigns
-        ]
-        
-        return {
-            "success": True,
-            "campaigns": formatted_campaigns,
-            "count": len(formatted_campaigns)
-        }
-        
-    except Exception as e:
-        logger.error(f"Failed to get campaigns: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to get campaigns: {str(e)}")
-
 @api_router.get("/qr-codes/campaign/{campaign_name}")
 async def get_campaign_qr_codes(
     campaign_name: str,
