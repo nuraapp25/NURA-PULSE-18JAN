@@ -663,7 +663,8 @@ const DriverOnboardingPage = () => {
           customer_readiness: editedLead.customer_readiness,
           assigned_telecaller: editedLead.assigned_telecaller,
           telecaller_notes: editedLead.telecaller_notes,
-          notes: editedLead.notes
+          notes: editedLead.notes,
+          remarks: editedLead.remarks
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
