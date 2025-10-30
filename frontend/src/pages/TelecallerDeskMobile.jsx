@@ -132,11 +132,13 @@ const TelecallerDeskMobile = () => {
     }
   };
 
-  const openLeadDetails = (lead) => {
+  const openLeadDetails = async (lead) => {
     setSelectedLead(lead);
     setEditedLead({...lead});
     setIsEditMode(false);
     setDetailsDialogOpen(true);
+    // Fetch document status for the lead
+    await fetchDocumentsStatus(lead.id);
   };
   
   const handleFieldChange = (fieldName, value) => {
