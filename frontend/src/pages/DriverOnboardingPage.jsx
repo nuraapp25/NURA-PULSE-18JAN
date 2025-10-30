@@ -267,27 +267,26 @@ const DriverOnboardingPage = () => {
     }
   };
 
-  const fetchLeads = async (pageNum = currentPage) => {
+  const fetchLeads = async (pageNum = 1) => {
     setLoading(true);
     setLoadingProgress(0);
     
     // Simulate progress bar animation
     const progressInterval = setInterval(() => {
       setLoadingProgress(prev => {
-        if (prev >= 90) return prev; // Cap at 90% until actual load completes
-        const increment = Math.random() * 15; // Random increment for realistic feel
+        if (prev >= 90) return prev;
+        const increment = Math.random() * 15;
         const newProgress = prev + increment;
-        return Math.min(newProgress, 90); // Ensure we never exceed 90% during loading
+        return Math.min(newProgress, 90);
       });
     }, 200);
     
     try {
       const token = localStorage.getItem("token");
       
-      // Build query params with pagination and search
+      // Build query params - fetch ALL leads without pagination
       const params = new URLSearchParams();
-      params.append('page', pageNum);
-      params.append('limit', leadsPerPage);
+      params.append('skip_pagination', 'true'); // Get all leads
       if (debouncedSearchQuery && debouncedSearchQuery.trim()) {
         params.append('search', debouncedSearchQuery.trim());
       }
@@ -299,12 +298,15 @@ const DriverOnboardingPage = () => {
       // Jump to 95% when data is received
       setLoadingProgress(95);
       
-      // Handle paginated response
-      const { leads: fetchedLeads, total, total_pages } = response.data;
+      // Handle response (all leads)
+      const fetchedLeads = response.data.leads || response.data;
       setLeads(fetchedLeads);
       setFilteredLeads(fetchedLeads);
-      setTotalLeads(total);
-      setTotalPages(total_pages);
+      setTotalLeads(fetchedLeads.length);
+      
+      // Calculate total pages for client-side pagination
+      const calculatedTotalPages = Math.ceil(fetchedLeads.length / leadsPerPage);
+      setTotalPages(calculatedTotalPages);
       
       // Fetch last sync time after fetching leads
       await fetchLastSyncTime();
