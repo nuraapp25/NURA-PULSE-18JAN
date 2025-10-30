@@ -777,15 +777,18 @@ frontend:
 
   - task: "QR Code Manager - Backend APIs"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/backend/server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Complete QR Code backend API system implemented including: POST /qr-codes/create (single QR), POST /qr-codes/create-batch (batch QR), GET /qr-codes/campaigns (campaign list), GET /qr-codes/campaign/{name} (campaign QR codes), GET /qr-codes/analytics (analytics data), QR tracking and redirection endpoints. Need to test all API endpoints."
+        - working: false
+          agent: "testing"
+          comment: "❌ CRITICAL BACKEND API ISSUES: Mixed results on QR Code backend APIs. SUCCESS: (1) POST /qr-codes/create works perfectly - creates QR codes with proper response structure, generates unique codes, tracking URLs, QR images. (2) QR tracking/redirection working - GET /api/qr/{code} properly redirects to landing pages. FAILURES: (1) GET /qr-codes/campaigns returns 404 'QR code not found' instead of campaign list. (2) GET /qr-codes/analytics returns 404 'QR code not found' instead of analytics data. (3) POST /qr-codes/create-batch has ObjectId serialization error causing Internal Server Error. Root issues: Backend routing conflicts or endpoint implementation problems for campaigns/analytics endpoints, MongoDB ObjectId serialization issues in batch creation. Core QR creation and tracking work, but campaign management and analytics APIs need fixes."
 
   - task: "Driver Onboarding - Loading Progress Bar"
     implemented: true
