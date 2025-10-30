@@ -1698,9 +1698,23 @@ async def get_leads(
     try:
         query = {}
         
-        # Handle telecaller filter
+        # Handle telecaller filter - support both user ID and email
         if telecaller:
-            query["assigned_telecaller"] = telecaller
+            # Check if it's an email (contains @) or a user ID
+            if '@' in telecaller:
+                # It's an email, use it directly
+                query["assigned_telecaller"] = telecaller
+            else:
+                # It's a user ID, need to check if leads are stored with email or ID
+                # Support both formats: try ID first, if no results, get user's email and try that
+                query["$or"] = [
+                    {"assigned_telecaller": telecaller},  # Try as user ID
+                ]
+                
+                # Also try to find by user email if ID was provided
+                user = await db.users.find_one({"id": telecaller}, {"_id": 0, "email": 1})
+                if user and user.get('email'):
+                    query["$or"].append({"assigned_telecaller": user['email']})
         
         # Handle search parameter
         if search and search.strip():
