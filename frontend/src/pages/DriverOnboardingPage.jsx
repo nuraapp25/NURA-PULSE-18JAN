@@ -152,6 +152,7 @@ const DriverOnboardingPage = () => {
   // Bulk selection states
   const [selectedLeadIds, setSelectedLeadIds] = useState([]);
   const [bulkStatus, setBulkStatus] = useState("");
+  const [lastSelectedIndex, setLastSelectedIndex] = useState(null); // For shift-click range selection
   
   // Date filter states
   const [startDate, setStartDate] = useState(null);
