@@ -263,11 +263,13 @@ const TelecallersManagement = () => {
     try {
       const token = localStorage.getItem("token");
       // First, get all leads assigned to this telecaller
-      const leadsResponse = await axios.get(`${API}/driver-onboarding/leads?telecaller=${telecaller.id}`, {
+      const leadsResponse = await axios.get(`${API}/driver-onboarding/leads?telecaller=${telecaller.id}&skip_pagination=true`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      const assignedLeadIds = leadsResponse.data.map(lead => lead.id);
+      // Handle both response formats
+      const leadsData = leadsResponse.data.leads || leadsResponse.data || [];
+      const assignedLeadIds = leadsData.map(lead => lead.id);
       
       // Then deassign them all
       await axios.post(
