@@ -63,6 +63,11 @@ const TelecallerDeskMobile = () => {
   const [selectedLead, setSelectedLead] = useState(null);
   const [selectedStatus, setSelectedStatus] = useState("");
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  
+  // State for LeadDetailsDialog
+  const [editedLead, setEditedLead] = useState(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
     fetchLeads();
