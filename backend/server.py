@@ -4020,22 +4020,18 @@ async def get_battery_charge_audit(current_user: User = Depends(get_current_user
     try:
         from datetime import datetime, time as dt_time
         
-        # Get all Montra feed data
-        all_records = await db.montra_feed_data.find({}).to_list(500000)
+        # Get all Montra feed data using cursor (memory efficient)
+        logger.info("Starting battery audit - fetching data with cursor")
         
-        if not all_records:
-            return {
-                "success": True,
-                "audit_results": [],
-                "count": 0,
-                "message": "No Montra feed data found. Please import vehicle data first."
-            }
+        # Use cursor instead of loading all at once
+        cursor = db.montra_feed_data.find({})
         
-        logger.info(f"Processing {len(all_records)} records for battery audit")
-        
-        # Group records by vehicle and date
+        # Group records by vehicle and date (process in chunks)
         vehicle_date_groups = {}
-        for record in all_records:
+        record_count = 0
+        
+        async for record in cursor:
+            record_count += 1
             vehicle_id = record.get("vehicle_id")
             registration = record.get("registration_number")
             date = record.get("date")
