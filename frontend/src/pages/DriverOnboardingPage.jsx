@@ -2632,18 +2632,69 @@ const DriverOnboardingPage = () => {
                       onClick={(e) => handleLeadClick(lead, e)}
                       className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors"
                     >
-                      <td className="py-2 sm:py-3 px-2 sm:px-4" onClick={(e) => e.stopPropagation()}>
-                        <Checkbox
-                          checked={selectedLeadIds.includes(lead.id)}
-                          onCheckedChange={(checked, event) => handleLeadCheckboxChange(lead.id, index, event?.nativeEvent)}
-                        />
+                      {/* S. No. */}
+                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm text-gray-900 dark:text-white">
+                        {startIndex + index + 1}
                       </td>
-                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm text-gray-900 dark:text-white hidden sm:table-cell">{startIndex + index + 1}</td>
+                      
+                      {/* Leads ID with Copy Button */}
+                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono">{lead.id?.substring(0, 8) || '-'}</span>
+                          {lead.id && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleCopyToClipboard(lead.id, 'Leads ID');
+                              }}
+                              className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+                              title="Copy Leads ID"
+                            >
+                              <Copy size={14} />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                      
+                      {/* Name with Copy Button */}
                       <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm text-gray-900 dark:text-white font-medium">
-                        <div className="sm:hidden text-xs text-gray-500 dark:text-gray-400">#{startIndex + index + 1}</div>
-                        {lead.name}
+                        <div className="flex items-center gap-2">
+                          <span>{lead.name}</span>
+                          {lead.name && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleCopyToClipboard(lead.name, 'Name');
+                              }}
+                              className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+                              title="Copy Name"
+                            >
+                              <Copy size={14} />
+                            </button>
+                          )}
+                        </div>
                       </td>
-                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm text-gray-600 dark:text-gray-400">{lead.phone_number}</td>
+                      
+                      {/* Phone Number with Copy Button */}
+                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                        <div className="flex items-center gap-2">
+                          <span>{lead.phone_number}</span>
+                          {lead.phone_number && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleCopyToClipboard(lead.phone_number, 'Phone Number');
+                              }}
+                              className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+                              title="Copy Phone Number"
+                            >
+                              <Copy size={14} />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                      
+                      {/* Status */}
                       <td 
                         className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm"
                         onClick={(e) => e.stopPropagation()}
@@ -2759,8 +2810,9 @@ const DriverOnboardingPage = () => {
                           )}
                         </div>
                       </td>
-                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm text-gray-600 dark:text-gray-400 hidden md:table-cell">{lead.current_location || '-'}</td>
-                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs text-gray-500 dark:text-gray-500 hidden lg:table-cell">
+                      
+                      {/* Import Date */}
+                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs text-gray-500 dark:text-gray-500">
                         {lead.import_date ? new Date(lead.import_date).toLocaleDateString() : '-'}
                       </td>
                     </tr>
