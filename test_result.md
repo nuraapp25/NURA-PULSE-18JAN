@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Test the new QR Code Manager system with complete functionality including single QR creation, batch QR creation, campaign management, QR code scanning simulation, and analytics dashboard."
+user_problem_statement: "Fix Telecaller's Desk issues (Status Update and Lead Details Dialog), create Nov 2025 Payment Data Extractor folder, and verify all apps functionality."
 
 backend:
   - task: "Driver Onboarding - Status Mapping Bug Fix"
