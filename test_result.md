@@ -474,6 +474,30 @@ backend:
           agent: "testing"
           comment: "FRONTEND TASK: This is a frontend UI component that requires frontend testing. Backend APIs for expense update (POST /expenses/update) and delete (POST /expenses/delete) have been tested and are working correctly with proper role-based permissions. Frontend testing needed to verify edit dialog, delete confirmation, and role-based UI restrictions."
 
+  - task: "Driver Onboarding - Assigned Telecaller Column"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/DriverOnboardingPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ COMPREHENSIVE TESTING COMPLETE: Driver Onboarding Assigned Telecaller Column successfully implemented and working perfectly. Key findings: 1) COLUMN IMPLEMENTATION: Successfully added 'Assigned Telecaller' column to Driver Onboarding table at correct 6th position. 2) TABLE STRUCTURE: Table now shows expected 8 columns in correct order: Checkbox, S.No., Leads ID, Name, Phone Number, Assigned Telecaller, Status, Import Date. 3) COLUMN HEADER: 'Assigned Telecaller' header visible and properly aligned. 4) DATA DISPLAY: Column correctly shows telecaller name/email if assigned, or '-' if not assigned (expected behavior for unassigned leads). 5) VISUAL VERIFICATION: Screenshots confirm column is properly positioned and visible. 6) RESPONSIVE DESIGN: Column displays correctly in desktop view. The new column meets all requirements from review request - positioned correctly as 6th column, displays telecaller information appropriately, and maintains table layout integrity. Feature is ready for production use."
+
+  - task: "User Management - Admin Approval Rights"
+    implemented: false
+    working: false
+    file: "/app/frontend/src/App.js"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "❌ CRITICAL ISSUE IDENTIFIED: Admin users cannot access User Management page due to route restriction in App.js. PROBLEM: Line 132-134 in App.js restricts User Management route to master_admin only: {user?.account_type === 'master_admin' && <Route path='users' element={<UserManagement />} />}. When admin users try to access /dashboard/users, they get console error 'No routes matched location /dashboard/users' and are redirected to login page. TESTING RESULTS: Master admin (admin/Nura@1234$) can successfully access User Management page with full approval functionality visible (approve buttons, pending sections, bulk operations). Admin users cannot access the page at all. SOLUTION REQUIRED: Update App.js route condition to allow both master_admin and admin users: {(user?.account_type === 'master_admin' || user?.account_type === 'admin') && <Route path='users' element={<UserManagement />} />}. Backend APIs support admin approval rights, but frontend route blocks access. This is a simple one-line fix in App.js to enable admin approval rights as requested."
+
   - task: "Expense Tracker Backend APIs"
     implemented: true
     working: true
