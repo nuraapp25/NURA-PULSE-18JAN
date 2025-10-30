@@ -1066,7 +1066,6 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Remarks System - Driver Onboarding (IMPLEMENTED - NEEDS BACKEND TESTING)"
     - "Status Dropdown Single-Click Fix (IMPLEMENTED - NEEDS FRONTEND VERIFICATION)"
     - "Shift-Click Selection & Advanced Selection Features (IMPLEMENTED - NEEDS FRONTEND VERIFICATION)"
   stuck_tasks: []
