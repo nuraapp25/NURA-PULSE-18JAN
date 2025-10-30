@@ -7684,6 +7684,7 @@ Case Test 6,9876540006,interested"""
         
         # Run priority tests from review request
         priority_tests = [
+            self.test_qr_code_campaigns_endpoint,  # PRIORITY: QR Code Manager campaigns endpoint
             self.test_document_management_apis,
             self.test_hotspot_analysis_enhancements,
             self.test_scan_document_feature,
