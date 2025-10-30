@@ -525,9 +525,10 @@ class TelecallerDeskTester:
                 doc_status = verify_response.json()
                 
                 # Check if deleted documents show as not uploaded
+                documents = doc_status.get("documents", {})
                 deleted_docs_updated = True
                 for doc_type in document_types:
-                    if doc_status.get(doc_type, {}).get("uploaded", True):  # Should be False after deletion
+                    if documents.get(doc_type, {}).get("uploaded", True):  # Should be False after deletion
                         deleted_docs_updated = False
                         break
                 
