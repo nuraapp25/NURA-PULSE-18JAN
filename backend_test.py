@@ -7526,6 +7526,152 @@ Case Test 6,9876540006,interested"""
         
         return success_count >= 3  # At least 3 out of 4 tests should pass
 
+    def test_qr_code_campaigns_endpoint(self):
+        """Test QR Code Manager campaigns endpoint as requested in review"""
+        print("\n=== Testing QR Code Manager Campaigns Endpoint ===")
+        
+        success_count = 0
+        
+        # Test 1: Authentication requirement
+        print("\n--- Testing Authentication Requirement ---")
+        try:
+            import requests
+            url = f"{self.base_url}/qr-codes/campaigns"
+            response = requests.get(url, timeout=10)  # No Authorization header
+            
+            if response.status_code in [401, 403]:
+                self.log_test("QR Campaigns - Authentication Required", True, 
+                            f"Correctly requires authentication ({response.status_code} without token)")
+                success_count += 1
+            else:
+                self.log_test("QR Campaigns - Authentication Required", False, 
+                            f"Expected 401/403, got {response.status_code}")
+        except Exception as e:
+            self.log_test("QR Campaigns - Authentication Required", False, 
+                        f"Network error during authentication test: {e}")
+        
+        # Test 2: Valid request with authentication (main test)
+        print("\n--- Testing GET /api/qr-codes/campaigns Endpoint ---")
+        response = self.make_request("GET", "/qr-codes/campaigns")
+        
+        if response is not None and response.status_code == 200:
+            try:
+                data = response.json()
+                
+                # Check required response structure
+                required_fields = ["success", "campaigns", "count"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if not missing_fields:
+                    self.log_test("QR Campaigns - Response Structure", True, 
+                                "Response contains all required fields: success, campaigns, count")
+                    success_count += 1
+                    
+                    # Check if success is True
+                    if data.get("success") == True:
+                        self.log_test("QR Campaigns - Success Status", True, 
+                                    "Response success field is True")
+                        success_count += 1
+                    else:
+                        self.log_test("QR Campaigns - Success Status", False, 
+                                    f"Expected success=True, got success={data.get('success')}")
+                    
+                    # Check campaigns is an array
+                    campaigns = data.get("campaigns", [])
+                    if isinstance(campaigns, list):
+                        self.log_test("QR Campaigns - Campaigns Array", True, 
+                                    f"campaigns is an array with {len(campaigns)} items")
+                        success_count += 1
+                        
+                        # Check count matches campaigns length
+                        count = data.get("count", -1)
+                        if count == len(campaigns):
+                            self.log_test("QR Campaigns - Count Consistency", True, 
+                                        f"count ({count}) matches campaigns array length ({len(campaigns)})")
+                            success_count += 1
+                        else:
+                            self.log_test("QR Campaigns - Count Consistency", False, 
+                                        f"count ({count}) doesn't match campaigns array length ({len(campaigns)})")
+                        
+                        # If there are campaigns, validate their structure
+                        if len(campaigns) > 0:
+                            sample_campaign = campaigns[0]
+                            expected_campaign_fields = ["campaign_name", "qr_count", "total_scans", "created_at"]
+                            missing_campaign_fields = [field for field in expected_campaign_fields if field not in sample_campaign]
+                            
+                            if not missing_campaign_fields:
+                                self.log_test("QR Campaigns - Campaign Structure", True, 
+                                            "Campaign contains all required fields: campaign_name, qr_count, total_scans, created_at")
+                                success_count += 1
+                            else:
+                                self.log_test("QR Campaigns - Campaign Structure", False, 
+                                            f"Campaign missing fields: {missing_campaign_fields}")
+                        else:
+                            # Empty campaigns is fine - endpoint should return empty array if no campaigns exist
+                            self.log_test("QR Campaigns - Empty Campaigns Handling", True, 
+                                        "Correctly returns empty campaigns array when no campaigns exist")
+                            success_count += 1
+                        
+                        # Check for ObjectId serialization issues (should not have any _id fields or ObjectId references)
+                        has_objectid_issues = False
+                        for campaign in campaigns:
+                            if "_id" in campaign or any("ObjectId" in str(value) for value in campaign.values()):
+                                has_objectid_issues = True
+                                break
+                        
+                        if not has_objectid_issues:
+                            self.log_test("QR Campaigns - ObjectId Serialization", True, 
+                                        "No ObjectId serialization issues found in response")
+                            success_count += 1
+                        else:
+                            self.log_test("QR Campaigns - ObjectId Serialization", False, 
+                                        "ObjectId serialization issues detected in response")
+                    else:
+                        self.log_test("QR Campaigns - Campaigns Array", False, 
+                                    f"campaigns is not an array, got: {type(campaigns)}")
+                else:
+                    self.log_test("QR Campaigns - Response Structure", False, 
+                                f"Response missing required fields: {missing_fields}")
+                
+            except json.JSONDecodeError:
+                self.log_test("QR Campaigns - Valid Request", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("QR Campaigns - Valid Request", False, error_msg, 
+                        response.text if response else None)
+        
+        # Test 3: Check backend logs for errors
+        print("\n--- Checking Backend Logs for Errors ---")
+        try:
+            import subprocess
+            result = subprocess.run(['tail', '-n', '50', '/var/log/supervisor/backend.err.log'], 
+                                  capture_output=True, text=True, timeout=5)
+            
+            if result.returncode == 0:
+                log_content = result.stdout
+                # Look for recent errors related to QR codes or campaigns
+                error_lines = [line for line in log_content.split('\n') 
+                             if any(keyword in line.lower() for keyword in ['error', 'exception', 'traceback', 'qr', 'campaign'])]
+                
+                if error_lines:
+                    self.log_test("QR Campaigns - Backend Logs Check", False, 
+                                f"Found {len(error_lines)} potential error lines in backend logs")
+                    for line in error_lines[-3:]:  # Show last 3 error lines
+                        print(f"   LOG: {line}")
+                else:
+                    self.log_test("QR Campaigns - Backend Logs Check", True, 
+                                "No recent errors found in backend logs")
+                    success_count += 1
+            else:
+                self.log_test("QR Campaigns - Backend Logs Check", False, 
+                            "Could not access backend logs")
+        except Exception as e:
+            self.log_test("QR Campaigns - Backend Logs Check", False, 
+                        f"Error checking backend logs: {e}")
+        
+        return success_count >= 5  # At least 5 out of 8 tests should pass
+
     def run_all_tests(self):
         """Run all backend tests"""
         print("🚀 Starting Comprehensive Backend Testing for Nura Pulse Application")
