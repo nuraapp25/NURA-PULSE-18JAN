@@ -1267,11 +1267,29 @@ const DriverOnboardingPage = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      toast.success(`Successfully assigned ${selectedLeadIds.length} lead(s) to telecaller`);
+      // Get telecaller name
+      const telecaller = telecallers.find(t => t.email === selectedTelecallerForAssignment);
+      const telecallerName = telecaller ? `${telecaller.first_name} ${telecaller.last_name}`.trim() : selectedTelecallerForAssignment.split('@')[0];
+
+      // Update leads in memory instead of refetching all
+      const updatedLeads = leads.map(lead => {
+        if (selectedLeadIds.includes(lead.id)) {
+          return {
+            ...lead,
+            assigned_telecaller: selectedTelecallerForAssignment,
+            assigned_telecaller_name: telecallerName
+          };
+        }
+        return lead;
+      });
+      
+      setLeads(updatedLeads);
+      setFilteredLeads(updatedLeads);
+      
+      toast.success(`Successfully assigned ${selectedLeadIds.length} lead(s) to ${telecallerName}`);
       setSelectedLeadIds([]);
       setIsAssignDialogOpen(false);
       setSelectedTelecallerForAssignment("");
-      fetchLeads(); // Refresh leads
     } catch (error) {
       toast.error(error.response?.data?.detail || "Failed to assign leads");
     }
