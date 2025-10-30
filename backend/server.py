@@ -1777,7 +1777,14 @@ async def get_leads(
                     lead['assigned_telecaller_name'] = telecaller_name
                     lead['assigned_telecaller_email'] = telecaller.get('email', '')
         
-        return leads
+        # Return with pagination metadata
+        return {
+            "leads": leads,
+            "total": total_count,
+            "page": page,
+            "limit": limit,
+            "total_pages": (total_count + limit - 1) // limit if not skip_pagination else 1
+        }
         
     except Exception as e:
         logger.error(f"Error fetching leads with search: {str(e)}")
