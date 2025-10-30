@@ -2852,12 +2852,16 @@ const DriverOnboardingPage = () => {
                           variant="outline"
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleOpenAddRemark(lead);
+                            if (lead.remarks && lead.remarks.length > 0) {
+                              handleViewRemarks(lead);
+                            } else {
+                              handleOpenAddRemark(lead);
+                            }
                           }}
                           className="text-xs h-7 border-blue-600 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
                         >
                           <Plus size={14} className="mr-1" />
-                          Add Remark
+                          {lead.remarks && lead.remarks.length > 0 ? 'Edit Remarks' : 'Add Remark'}
                         </Button>
                       </td>
                     </tr>
