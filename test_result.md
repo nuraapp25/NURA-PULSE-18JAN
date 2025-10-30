@@ -645,6 +645,18 @@ backend:
           agent: "testing"
           comment: "✅ COMPREHENSIVE FRONTEND TESTING COMPLETE: Scan Document (OCR) UI features successfully tested and verified working. Key findings: 1) SCAN BUTTONS PRESENT: OCR Scan buttons found and accessible in document management sections for all document types (Driver License, Aadhar Card, PAN Card, Gas Bill, Bank Passbook). 2) SCAN FUNCTIONALITY: Scan buttons are clickable and properly trigger OCR processing when activated. 3) USER FEEDBACK: OCR processing feedback visible when scan is initiated, providing users with clear indication that processing is in progress. 4) INTEGRATION READY: Frontend properly integrated with backend OCR endpoints, ready to extract text from uploaded documents. 5) DOCUMENT TYPE SUPPORT: Scan functionality available for all supported document types as requested in the review. 6) SUCCESS FEEDBACK: System provides success feedback when OCR extraction completes successfully. 7) ERROR HANDLING: Proper error handling in place for OCR processing failures. 8) USER EXPERIENCE: Smooth workflow from document upload to OCR scanning with clear visual feedback. Frontend OCR scanning features are fully functional and provide excellent user experience. The UI properly handles the complete OCR workflow from scan initiation to results display."
 
+  - task: "Telecaller Leads Filter - Genelia Assignment Issue"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "❌ CRITICAL ISSUE IDENTIFIED: Telecaller Leads Filter has assignment mismatch preventing Genelia from seeing her assigned leads. ROOT CAUSE ANALYSIS: 1) GENELIA USER FOUND: Successfully identified Genelia (ID: e25f3297-1252-48b1-8b20-36db996c52e0, Email: praylovemusic@gmail.com) in user management system. 2) ASSIGNMENT MISMATCH: Genelia has 5 leads assigned using her EMAIL ADDRESS (praylovemusic@gmail.com) but telecaller filter expects USER ID (e25f3297-1252-48b1-8b20-36db996c52e0). 3) FILTER TESTING RESULTS: Filter with email returns 5 leads correctly, filter with user ID returns 0 leads. 4) TELECALLER_NAME FIELD ISSUE: All 5 assigned leads have assigned_telecaller_name showing 'None' instead of 'Genelia' because backend lookup by user ID fails when assignments use email. 5) BACKEND CODE ANALYSIS: Lines 1731-1737 in server.py attempt to populate telecaller names by looking up users by ID, but assignments use emails. SOLUTION REQUIRED: Backend needs to support both email and user ID lookup in telecaller filter, or standardize all assignments to use user IDs. Success rate: 60% (3/5 tests passed) - filter works with email but fails with user ID as expected by frontend."
+
   - task: "Remarks System - Driver Onboarding"
     implemented: true
     working: "NA"
