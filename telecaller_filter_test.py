@@ -15,7 +15,7 @@ from datetime import datetime
 
 # Configuration
 BASE_URL = "https://nura-operations.preview.emergentagent.com/api"
-ADMIN_EMAIL = "admin@nurapulse.com"
+ADMIN_EMAIL = "admin"
 ADMIN_PASSWORD = "Nura@1234$"
 
 class TelecallerFilterTester:
