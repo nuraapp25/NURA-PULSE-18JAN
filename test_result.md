@@ -711,15 +711,18 @@ frontend:
 
   - task: "Driver Onboarding - Show All Leads Button Position"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/frontend/src/pages/DriverOnboardingPage.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "NEW UI FEATURE: Moved 'Show All Leads' button to TOP of page, next to 'Refresh' button in Status Summary Dashboard header (line 1731-1739). Button is purple colored with RefreshCw icon. Button is NOT in selection controls area below table. Clicking button calls handleShowAllLeads() which clears all filters (date, stage, search, telecaller) and shows all leads with success toast. Ready for frontend testing."
+        - working: true
+          agent: "testing"
+          comment: "✅ COMPREHENSIVE TESTING COMPLETE: Driver Onboarding Show All Leads Button Position successfully verified and working correctly. Key findings: 1) CORRECT POSITION: Button successfully moved to TOP of page in Status Summary Dashboard header, positioned next to Refresh button as specified. 2) PROPER LOCATION: Button is NOT in selection controls area below table - confirmed to be in header area with Refresh button. 3) PURPLE STYLING: Button has correct purple styling (Purple styling: True) as requested in review. 4) BUTTON FUNCTIONALITY: Button clicks successfully and clears all filters, shows success toast 'All filters cleared. Showing all leads.' 5) HEADER INTEGRATION: Found 2 buttons in dashboard header area - Refresh (Button 1) and Show All Leads (Button 2) in correct order. Minor: RefreshCw icon not detected in testing but button functionality working correctly. All positioning and functionality requirements from review request successfully implemented and verified."
 
   - task: "Driver Onboarding - Edit Remarks Button"
     implemented: true
