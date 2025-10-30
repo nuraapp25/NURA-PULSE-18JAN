@@ -1681,18 +1681,26 @@ async def rollback_to_backup(
 @api_router.get("/driver-onboarding/leads")
 async def get_leads(
     current_user: User = Depends(get_current_user),
-    search: Optional[str] = None
+    search: Optional[str] = None,
+    telecaller: Optional[str] = None
 ):
     """
-    Get all driver leads with optional search
+    Get all driver leads with optional search and telecaller filter
     
     Search supports:
     - Single or multiple names (comma-separated): e.g., "Alexander" or "Alexander, Antony"
     - Single or multiple phone numbers (comma-separated): e.g., "9898933220" or "9898933220, 8787811221"
     - Partial matching for names, exact matching for phone numbers
+    
+    Telecaller filter:
+    - Filter leads assigned to a specific telecaller by their user ID
     """
     try:
         query = {}
+        
+        # Handle telecaller filter
+        if telecaller:
+            query["assigned_telecaller"] = telecaller
         
         # Handle search parameter
         if search and search.strip():
