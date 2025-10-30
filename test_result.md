@@ -1197,7 +1197,14 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "QR Code Manager - Access and Navigation"
+    - "QR Code Manager - Create Single QR Code"
+    - "QR Code Manager - Create Batch QR Codes"
+    - "QR Code Manager - View Campaign QR Codes"
+    - "QR Code Manager - QR Code Scanning Simulation"
+    - "QR Code Manager - Analytics Dashboard"
+    - "QR Code Manager - Backend APIs"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
