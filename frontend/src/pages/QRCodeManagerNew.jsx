@@ -15,6 +15,7 @@ import { QrCode, Plus, FolderOpen, Download, Trash2, BarChart3, Upload, Copy, Ey
 
 const QRCodeManagerNew = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   
   // State management
   const [campaigns, setCampaigns] = useState([]);
