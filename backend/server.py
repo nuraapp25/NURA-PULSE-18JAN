@@ -1682,10 +1682,18 @@ async def rollback_to_backup(
 async def get_leads(
     current_user: User = Depends(get_current_user),
     search: Optional[str] = None,
-    telecaller: Optional[str] = None
+    telecaller: Optional[str] = None,
+    page: int = 1,
+    limit: int = 50,
+    skip_pagination: bool = False
 ):
     """
-    Get all driver leads with optional search and telecaller filter
+    Get driver leads with pagination, search and telecaller filter
+    
+    Pagination:
+    - page: Page number (default: 1)
+    - limit: Items per page (default: 50, max: 100)
+    - skip_pagination: Return all results without pagination (for exports)
     
     Search supports:
     - Single or multiple names (comma-separated): e.g., "Alexander" or "Alexander, Antony"
