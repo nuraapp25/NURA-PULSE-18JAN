@@ -180,6 +180,8 @@ const DriverOnboardingPage = () => {
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [leadsPerPage, setLeadsPerPage] = useState(20);
+  const [totalLeads, setTotalLeads] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   
   // Bulk Export/Import and Backup Library states
   const [bulkExporting, setBulkExporting] = useState(false);
