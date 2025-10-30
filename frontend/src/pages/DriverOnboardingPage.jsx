@@ -1316,10 +1316,24 @@ const DriverOnboardingPage = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
+      // Update leads in memory instead of refetching all
+      const updatedLeads = leads.map(lead => {
+        if (selectedLeadIds.includes(lead.id)) {
+          return {
+            ...lead,
+            assigned_telecaller: null,
+            assigned_telecaller_name: null
+          };
+        }
+        return lead;
+      });
+      
+      setLeads(updatedLeads);
+      setFilteredLeads(updatedLeads);
+
       toast.success(`Successfully unassigned ${selectedLeadIds.length} lead(s) from telecallers`);
       setSelectedLeadIds([]);
       setIsUnassignDialogOpen(false);
-      fetchLeads(); // Refresh leads
     } catch (error) {
       toast.error(error.response?.data?.detail || "Failed to unassign leads");
     }
