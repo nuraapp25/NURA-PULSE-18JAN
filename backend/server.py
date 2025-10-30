@@ -988,8 +988,6 @@ async def import_leads(
                 matched_status = "Interested"  # They're interested but have distance constraints
             elif "health" in file_status_lower or "medical" in file_status_lower:
                 matched_status = "Interested"  # Health issue but potentially interested
-            elif "no badge" in file_status_lower:
-                matched_status = "Highly Interested"  # "no badge Highly Interested" should be "Highly Interested"
             
             # If matched, return with stage
             if matched_status:
