@@ -26,6 +26,7 @@ import HotspotPlanning from "@/pages/HotspotPlanning";
 import QRCodeManager from "@/pages/QRCodeManager";
 import QRCodeManagerNew from "@/pages/QRCodeManagerNew";
 import QRAnalytics from "@/pages/QRAnalytics";
+import QRAnalyticsDashboard from "@/pages/QRAnalyticsDashboard";
 import RideDeckAnalysis from "@/pages/RideDeckAnalysisEnhanced";
 import RCAManagement from "@/pages/RCAManagement";
 import AnalyticsDashboards from "@/pages/AnalyticsDashboards";
