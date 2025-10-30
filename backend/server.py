@@ -1920,8 +1920,16 @@ async def get_status_summary(
         if date_filter:
             query['import_date'] = date_filter
     
-    # Get all leads matching the filters (no limit)
-    leads = await db.driver_leads.find(query, {"_id": 0, "stage": 1, "status": 1}).to_list(length=None)
+    # Use MongoDB aggregation for efficient counting
+    pipeline = [
+        {"$match": query},
+        {"$group": {
+            "_id": {"stage": "$stage", "status": "$status"},
+            "count": {"$sum": 1}
+        }}
+    ]
+    
+    aggregated_results = await db.driver_leads.aggregate(pipeline).to_list(None)
     
     # Define stage and status structure (for dashboard summary display)
     stages = {
@@ -1942,13 +1950,16 @@ async def get_status_summary(
         for status in statuses:
             summary[stage_key][status] = 0
     
-    # Count leads by stage and status
-    for lead in leads:
-        stage = lead.get('stage', 'S1')
-        status = lead.get('status', 'New')
+    # Populate counts from aggregation results
+    total_leads = 0
+    for result in aggregated_results:
+        stage = result['_id'].get('stage', 'S1')
+        status = result['_id'].get('status', 'New')
+        count = result['count']
         
         if stage in summary and status in summary[stage]:
-            summary[stage][status] += 1
+            summary[stage][status] = count
+            total_leads += count
     
     # Calculate totals
     stage_totals = {}
@@ -1959,7 +1970,7 @@ async def get_status_summary(
         "success": True,
         "summary": summary,
         "stage_totals": stage_totals,
-        "total_leads": len(leads),
+        "total_leads": total_leads,
         "date_filter": {
             "start_date": start_date,
             "end_date": end_date
