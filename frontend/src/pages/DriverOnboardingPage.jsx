@@ -2715,6 +2715,11 @@ const DriverOnboardingPage = () => {
                         </div>
                       </td>
                       
+                      {/* Assigned Telecaller */}
+                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs text-gray-600 dark:text-gray-400">
+                        {lead.assigned_telecaller_name || lead.assigned_telecaller || '-'}
+                      </td>
+                      
                       {/* Status */}
                       <td 
                         className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm"
