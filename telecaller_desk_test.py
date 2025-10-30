@@ -126,7 +126,9 @@ class TelecallerDeskTester:
         
         if response and response.status_code == 200:
             try:
-                leads = response.json()
+                response_data = response.json()
+                leads = response_data.get("leads", [])
+                
                 if isinstance(leads, list):
                     self.log_test("Lead Fetching - GET with telecaller filter", True, 
                                 f"Successfully retrieved {len(leads)} leads for telecaller {self.user_id}")
@@ -154,7 +156,7 @@ class TelecallerDeskTester:
                                         f"Leads missing required fields: {missing_fields}")
                 else:
                     self.log_test("Lead Fetching - GET with telecaller filter", False, 
-                                f"Expected array of leads, got: {type(leads)}")
+                                f"Expected array of leads in 'leads' key, got: {type(leads)}")
             except json.JSONDecodeError:
                 self.log_test("Lead Fetching - GET with telecaller filter", False, 
                             "Invalid JSON response", response.text)
