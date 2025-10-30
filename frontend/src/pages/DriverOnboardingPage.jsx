@@ -2710,7 +2710,10 @@ const DriverOnboardingPage = () => {
                         {lead.name}
                       </td>
                       <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm text-gray-600 dark:text-gray-400">{lead.phone_number}</td>
-                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm">
+                      <td 
+                        className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <div className="flex items-center gap-2">
                           {inlineEditingId === lead.id ? (
                             <div className="flex items-center gap-1 w-full">
