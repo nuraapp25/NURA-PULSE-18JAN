@@ -11,7 +11,7 @@ from datetime import datetime
 import os
 
 # Configuration
-BASE_URL = "https://telemanager-2.preview.emergentagent.com/api"
+BASE_URL = "https://nura-operations.preview.emergentagent.com/api"
 MASTER_ADMIN_EMAIL = "admin"
 MASTER_ADMIN_PASSWORD = "Nura@1234$"
 CSV_FILE_PATH = "/tmp/Book2.csv"
