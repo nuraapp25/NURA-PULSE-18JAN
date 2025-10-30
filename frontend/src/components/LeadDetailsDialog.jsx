@@ -291,6 +291,21 @@ const LeadDetailsDialog = ({
               </Select>
             </div>
 
+            {/* Remarks Field */}
+            <div>
+              <Label className="text-xs text-gray-600 dark:text-gray-400 mb-2 block">Remarks</Label>
+              <Textarea
+                value={editedLead.remarks || ''}
+                onChange={(e) => onFieldChange('remarks', e.target.value)}
+                placeholder="Enter remarks about this lead..."
+                className="w-full min-h-[80px] dark:bg-gray-700 dark:border-gray-600 text-sm"
+                disabled={updating}
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Optional: Add any notes or remarks about this lead
+              </p>
+            </div>
+
             {lead.stage && lead.status === getCompletionStatus(lead.stage) && lead.stage !== "S4" && (
               <div className="text-xs text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20 p-2 rounded">
                 ✓ Completion status reached! Click "SYNC to Next Stage" to auto-progress.
