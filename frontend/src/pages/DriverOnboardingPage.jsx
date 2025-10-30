@@ -4485,6 +4485,43 @@ const DriverOnboardingPage = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Unassign Telecaller Dialog */}
+      <Dialog open={isUnassignDialogOpen} onOpenChange={setIsUnassignDialogOpen}>
+        <DialogContent className="dark:bg-gray-800">
+          <DialogHeader>
+            <DialogTitle className="dark:text-white">Unassign Telecaller</DialogTitle>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Remove telecaller assignment from {selectedLeadIds.length} selected lead(s)
+            </p>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mb-4">
+              <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                ⚠️ This will remove the telecaller assignment from the selected leads. The leads will become unassigned and available for reassignment.
+              </p>
+            </div>
+            <p className="text-sm text-gray-700 dark:text-gray-300">
+              Are you sure you want to unassign {selectedLeadIds.length} lead(s)?
+            </p>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsUnassignDialogOpen(false)}
+              className="dark:border-gray-600"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleUnassignLeads}
+              className="bg-orange-600 hover:bg-orange-700"
+            >
+              Unassign {selectedLeadIds.length} Lead(s)
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Bulk Import Dialog */}
       <Dialog open={bulkImportDialogOpen} onOpenChange={setBulkImportDialogOpen}>
         <DialogContent className="dark:bg-gray-800 max-w-lg">
