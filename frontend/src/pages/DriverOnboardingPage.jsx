@@ -2644,6 +2644,14 @@ const DriverOnboardingPage = () => {
                       onClick={(e) => handleLeadClick(lead, e)}
                       className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors"
                     >
+                      {/* Checkbox */}
+                      <td className="py-2 sm:py-3 px-2 sm:px-4" onClick={(e) => e.stopPropagation()}>
+                        <Checkbox
+                          checked={selectedLeadIds.includes(lead.id)}
+                          onCheckedChange={(checked, event) => handleLeadCheckboxChange(lead.id, index, event?.nativeEvent)}
+                        />
+                      </td>
+                      
                       {/* S. No. */}
                       <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm text-gray-900 dark:text-white">
                         {startIndex + index + 1}
