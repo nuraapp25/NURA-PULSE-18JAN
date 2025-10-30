@@ -1724,6 +1724,18 @@ async def get_leads(
         
         # Fetch leads with search filter
         leads = await db.driver_leads.find(query, {"_id": 0}).to_list(length=None)
+        
+        # Populate telecaller names for leads with assigned telecallers
+        for lead in leads:
+            if lead.get('assigned_telecaller'):
+                telecaller = await db.users.find_one({"id": lead['assigned_telecaller']}, {"_id": 0, "first_name": 1, "last_name": 1, "email": 1})
+                if telecaller:
+                    telecaller_name = f"{telecaller.get('first_name', '')} {telecaller.get('last_name', '')}".strip()
+                    if not telecaller_name:
+                        telecaller_name = telecaller.get('email', '').split('@')[0]
+                    lead['assigned_telecaller_name'] = telecaller_name
+                    lead['assigned_telecaller_email'] = telecaller.get('email', '')
+        
         return leads
         
     except Exception as e:
