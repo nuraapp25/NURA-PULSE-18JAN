@@ -1945,7 +1945,13 @@ const DriverOnboardingPage = () => {
               {/* S4 - Customer Readiness */}
               <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gradient-to-br from-orange-50 to-white dark:from-orange-900/10 dark:to-gray-800">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-semibold text-orange-700 dark:text-orange-400">S4 - Customer Readiness</h3>
+                  <h3 
+                    className="font-semibold text-orange-700 dark:text-orange-400 cursor-pointer hover:text-orange-800 dark:hover:text-orange-300 transition-colors"
+                    onClick={() => handleStageHeadingClick("S4")}
+                    title="Click to show all S4 leads"
+                  >
+                    S4 - Customer Readiness
+                  </h3>
                   <span className="text-xs font-bold bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 px-2 py-1 rounded">
                     {statusSummary.stage_totals.S4}
                   </span>
