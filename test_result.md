@@ -1051,16 +1051,16 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Document Management APIs - Driver Onboarding (IMPLEMENTED - NEEDS TESTING)"
-    - "Hotspot Analysis Enhancements - Locality Names (VERIFIED - ALREADY WORKING)"
-    - "Scan Document Feature - OCR Integration (FIXED - NEEDS TESTING)"
+    - "Remarks System - Driver Onboarding (IMPLEMENTED - NEEDS BACKEND TESTING)"
+    - "Status Dropdown Single-Click Fix (IMPLEMENTED - NEEDS FRONTEND VERIFICATION)"
+    - "Shift-Click Selection & Advanced Selection Features (IMPLEMENTED - NEEDS FRONTEND VERIFICATION)"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
 agent_communication:
     - agent: "main"
-      message: "STARTING NEW SESSION: User confirmed to proceed with planned tasks. Focus areas: (1) Test recently implemented Hotspot Analysis enhancements (locality names, bigger map points, uncovered pickups, hover tooltips), (2) Implement document management for ALL document types in Driver Onboarding (currently only DL has view/download/delete), (3) Fix Scan Document feature with Emergent LLM key, (4) Debug date filter issues if any. Will start with Hotspot Analysis backend testing, then move to Driver Onboarding enhancements."
+      message: "NEW SESSION STARTED - DEBUGGING REMARKS & VERIFYING UX IMPROVEMENTS: User reported issues with remarks functionality and confirmed to proceed with testing. FOCUS AREAS: (1) Debug and fix remarks system - user unable to add remarks. Backend has POST /driver-onboarding/{lead_id}/remarks and GET /driver-onboarding/{lead_id}/remarks endpoints. Frontend sends correct payload {remark_text: remarkText}. Backend logs show no errors. Need to test endpoints directly to identify root cause. (2) Verify status dropdown single-click fix - added e.stopPropagation() to status cell onClick handler. (3) Verify shift-click selection functionality for multiple lead selection. (4) Verify 'Select All In This Page' button. (5) Verify clickable stage headings (S2, S3, S4) for filtering. Will start with backend testing of remarks endpoints to debug the issue, then proceed with frontend verification of all UX improvements."
     - agent: "main"
       message: "INITIAL VISUAL VERIFICATION COMPLETE: Performed initial screenshot testing of application. FINDINGS: (1) Login page working correctly. (2) Dashboard loading successfully with Master Admin. (3) Driver Onboarding page showing 16,725 total leads with S1-S4 stage system. (4) Lead Details dialog opening correctly with Stage & Status Management section. (5) Document Management sections visible in Edit mode: Driver License shows View/Download/Scan/Delete buttons (document exists). Aadhar Card, PAN Card, Gas Bill, Bank Passbook show Upload buttons (no documents uploaded yet). Implementation appears correct - buttons adapt based on document existence. (6) Hotspot Planning page loading with View Library button and upload interface. (7) Telecaller's Desk shows 'No leads assigned yet' for master admin (expected). NEXT STEPS: Will conduct comprehensive backend testing of critical features, then proceed with detailed frontend testing to verify LeadDetailsDialog integration, document management with uploaded documents, Scan Document feature, and Hotspot Analysis enhancements."
     - agent: "main"
