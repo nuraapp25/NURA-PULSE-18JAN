@@ -286,7 +286,14 @@ const DriverOnboardingPage = () => {
     
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get(`${API}/driver-onboarding/leads`, {
+      
+      // Build query params with search if available
+      const params = new URLSearchParams();
+      if (debouncedSearchQuery && debouncedSearchQuery.trim()) {
+        params.append('search', debouncedSearchQuery.trim());
+      }
+      
+      const response = await axios.get(`${API}/driver-onboarding/leads?${params.toString()}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
