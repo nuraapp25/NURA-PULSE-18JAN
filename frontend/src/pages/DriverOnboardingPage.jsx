@@ -1843,7 +1843,13 @@ const DriverOnboardingPage = () => {
               {/* S1 - Filtering */}
               <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gradient-to-br from-blue-50 to-white dark:from-blue-900/10 dark:to-gray-800">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-semibold text-blue-700 dark:text-blue-400">S1 - Filtering</h3>
+                  <h3 
+                    className="font-semibold text-blue-700 dark:text-blue-400 cursor-pointer hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
+                    onClick={() => handleStageHeadingClick("S1")}
+                    title="Click to show all S1 leads"
+                  >
+                    S1 - Filtering
+                  </h3>
                   <span className="text-xs font-bold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-1 rounded">
                     {statusSummary.stage_totals.S1}
                   </span>
