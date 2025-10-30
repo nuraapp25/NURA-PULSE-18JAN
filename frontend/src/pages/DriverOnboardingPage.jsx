@@ -2363,8 +2363,28 @@ const DriverOnboardingPage = () => {
             className="border-blue-500 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-sm"
           >
             <CheckSquare size={14} className="mr-1 sm:mr-2" />
-            <span className="hidden sm:inline">Select All</span>
+            <span className="hidden sm:inline">Select All ({filteredLeads.length})</span>
             <span className="sm:hidden">All</span>
+          </Button>
+          <Button
+            onClick={handleSelectAllInPage}
+            variant="outline"
+            size="sm"
+            className="border-green-500 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 text-sm"
+          >
+            <CheckSquare size={14} className="mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Select All in This Page ({paginatedLeads.length})</span>
+            <span className="sm:hidden">Page</span>
+          </Button>
+          <Button
+            onClick={handleShowAllLeads}
+            variant="outline"
+            size="sm"
+            className="border-purple-500 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 text-sm"
+          >
+            <RefreshCw size={14} className="mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Show All Leads</span>
+            <span className="sm:hidden">Show All</span>
           </Button>
           {selectedLeadIds.length > 0 && (
             <>
