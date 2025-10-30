@@ -38,6 +38,7 @@ const S1_STATUSES = [
   { value: "New", label: "New", color: "bg-yellow-100 text-yellow-700" },
   { value: "Not Interested", label: "Not Interested", color: "bg-gray-100 text-gray-700" },
   { value: "Interested, No DL", label: "Interested, No DL", color: "bg-gray-100 text-gray-700" },
+  { value: "Interested, No Badge", label: "Interested, No Badge", color: "bg-gray-100 text-gray-700" },
   { value: "Highly Interested", label: "Highly Interested", color: "bg-green-100 text-green-700" },  // Green = completion
   { value: "Call back 1D", label: "Call back 1D", color: "bg-blue-100 text-blue-700" },
   { value: "Call back 1W", label: "Call back 1W", color: "bg-blue-100 text-blue-700" },
