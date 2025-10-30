@@ -343,41 +343,39 @@ const BatteryConsumption = () => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       
-      // Calculate efficiency for display (km / charge drop %)
-      let efficiencyDisplay = "N/A";
-      if (data.chargeDrop && parseFloat(data.chargeDrop) > 0) {
-        const eff = parseFloat(data.distanceTraveled) / parseFloat(data.chargeDrop);
-        efficiencyDisplay = eff.toFixed(2);
+      // Check if this hour has data
+      if (!data.hasData) {
+        return (
+          <div className="bg-white dark:bg-gray-800 p-3 border border-gray-200 dark:border-gray-700 rounded shadow-lg">
+            <p className="text-sm font-semibold text-gray-900 dark:text-white mb-1">{label}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">No data available</p>
+          </div>
+        );
       }
       
-      // Calculate the hour range (previous hour to current hour)
-      // If label is "11 AM", the range should be "10 AM - 11 AM"
-      let hourRangeText = "This Hour:";
-      if (label) {
-        try {
-          const match = label.match(/(\d+)\s+(AM|PM)/);
-          if (match) {
-            let hour = parseInt(match[1]);
-            const ampm = match[2];
-            
-            // Calculate previous hour
-            let prevHour = hour - 1;
-            let prevAmPm = ampm;
-            
-            if (prevHour === 0) {
-              prevHour = 12;
-              prevAmPm = ampm === "AM" ? "PM" : "AM";
-            } else if (prevHour === 11 && ampm === "PM") {
-              prevAmPm = "AM";
-            } else if (prevHour === 12 && ampm === "AM") {
-              prevAmPm = "PM";
-            }
-            
-            hourRangeText = `${prevHour} ${prevAmPm} - ${hour} ${ampm}:`;
-          }
-        } catch (e) {
-          // If parsing fails, use default text
-        }
+      return (
+        <div className="bg-white dark:bg-gray-800 p-3 border border-gray-200 dark:border-gray-700 rounded shadow-lg">
+          <p className="text-sm font-semibold text-gray-900 dark:text-white mb-2">{label}</p>
+          <div className="space-y-1">
+            <p className="text-xs">
+              <span className="text-blue-600 dark:text-blue-400">Battery: </span>
+              <span className="text-gray-900 dark:text-white font-medium">
+                {data.battery !== null ? `${data.battery.toFixed(1)}%` : 'N/A'}
+              </span>
+            </p>
+            <p className="text-xs">
+              <span className="text-green-600 dark:text-green-400">Distance: </span>
+              <span className="text-gray-900 dark:text-white font-medium">
+                {data.distance !== null ? `${data.distance.toFixed(2)} km` : 'N/A'}
+              </span>
+            </p>
+          </div>
+        </div>
+      );
+    }
+    
+    return null;
+  };
       }
       
       return (
