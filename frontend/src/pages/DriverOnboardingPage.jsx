@@ -228,10 +228,10 @@ const DriverOnboardingPage = () => {
   // Loading progress state
   const [loadingProgress, setLoadingProgress] = useState(0);
   
-  // Calculate pagination (now handled by backend, but keep for client-side filtered views)
+  // Calculate pagination (client-side slicing of all leads)
   const startIndex = (currentPage - 1) * leadsPerPage;
   const endIndex = startIndex + leadsPerPage;
-  const paginatedLeads = filteredLeads; // Already paginated from backend
+  const paginatedLeads = filteredLeads.slice(startIndex, endIndex);
   const [scanningDoc, setScanningDoc] = useState(null); // Which doc is being scanned
   const [uploadedDocs, setUploadedDocs] = useState({
     dl: false,
