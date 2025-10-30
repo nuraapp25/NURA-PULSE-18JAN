@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Fix Driver Onboarding status mapping bug: 'NOT INTERESTED' status from imported Excel sheets not showing in dashboard summary. Also fix 'Edit Details' error when clicking on lead details. Ensure all features from previous forks work perfectly."
+user_problem_statement: "Debug and fix remarks functionality in Driver Onboarding. User reported unable to add remarks. Also verify status dropdown single-click fix, shift-click selection, 'Select all leads in this page' button, and clickable stage headings (S2, S3, S4)."
 
 backend:
   - task: "Driver Onboarding - Status Mapping Bug Fix"
