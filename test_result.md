@@ -702,15 +702,18 @@ frontend:
 
   - task: "QR Code Manager - Create Single QR Code"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/frontend/src/pages/QRCodeManagerNew.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Single QR code creation dialog implemented with form fields for QR Code Name, Landing Page Type (Single URL/Multiple URLs), Landing Page URL, and UTM parameters. Need to test dialog functionality and QR code creation process."
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTED: Single QR code creation working correctly. Create QR Code dialog opens with all required fields: QR Code Name (filled with 'Test Campaign 2025'), Landing Page Type selector (Single URL/Multiple URLs), Landing Page URL field (filled with 'https://example.com/app'), and UTM Parameters section (Source, Medium, Campaign, Term, Content). Form validation working, dialog responsive. Backend API POST /qr-codes/create successfully creates QR codes with proper response including QR ID, unique code, tracking URL, and QR image filename. Created test QR code with tracking URL: https://nura-operations.preview.emergentagent.com/api/qr/9c40353d which correctly redirects to landing page."
 
   - task: "QR Code Manager - Create Batch QR Codes"
     implemented: true
