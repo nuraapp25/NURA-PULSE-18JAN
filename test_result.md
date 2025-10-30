@@ -1210,6 +1210,8 @@ test_plan:
   test_priority: "high_first"
 
 agent_communication:
+    - agent: "testing"
+      message: "🔍 QR CODE MANAGER TESTING SESSION STARTED: Beginning comprehensive testing of the new QR Code Manager system as requested in review. Will test all 7 key scenarios: 1) Access QR Code Manager with master admin credentials (admin@nurapulse.com / Nura@1234$), verify page loads with title 'QR Code Manager' and action buttons. 2) Create Single QR Code - test dialog, form fields, and QR creation with 'Test Campaign 2025' example. 3) Create Batch QR Codes - test batch dialog with 'Auto Fleet Campaign' example (5 QR codes with vehicle numbers). 4) View Campaign QR Codes - test campaign folder navigation and QR code grid display with download/copy functionality. 5) QR Code Scanning Simulation - test tracking URLs and redirection. 6) Analytics Dashboard - test filters, stats cards, charts, and CSV export. 7) Visual verification with screenshots. Using frontend URL from .env: https://nura-operations.preview.emergentagent.com. Will test both QRCodeManagerNew.jsx (main implementation) and QRAnalyticsDashboard.jsx components."
     - agent: "main"
       message: "Added three new UI features for testing: 1) Telecallers Management Unassign Leads button with proper enable/disable logic, 2) Driver Onboarding Show All Leads button repositioned to header, 3) Driver Onboarding Edit/Add Remarks button with conditional text and proper dialog routing. All features implemented and ready for comprehensive frontend testing."
     - agent: "testing"
