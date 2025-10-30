@@ -1222,6 +1222,27 @@ const DriverOnboardingPage = () => {
     setActiveStageFilter("all");
     setActiveSubStatus(null);
   };
+  
+  // NEW: Show all leads - clears ALL filters including search
+  const handleShowAllLeads = () => {
+    setStartDate(null);
+    setEndDate(null);
+    setActiveStageFilter("all");
+    setActiveSubStatus(null);
+    setSearchQuery("");
+    setDebouncedSearchQuery("");
+    setTelecallerFilter(null);
+    setCurrentPage(1);
+    toast.success("All filters cleared. Showing all leads.");
+  };
+  
+  // NEW: Click stage heading to show all leads in that stage
+  const handleStageHeadingClick = (stage) => {
+    setActiveStageFilter(stage);
+    setActiveSubStatus(null); // Clear sub-status to show ALL statuses in stage
+    setCurrentPage(1);
+    toast.success(`Showing all leads in ${stage}`);
+  };
 
   // Bulk lead assignment
   const handleBulkAssignLeads = async () => {
