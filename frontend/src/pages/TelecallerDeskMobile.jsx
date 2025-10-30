@@ -188,6 +188,154 @@ const TelecallerDeskMobile = () => {
       setUpdating(false);
     }
   };
+  
+  // Fetch documents status for a lead
+  const fetchDocumentsStatus = async (leadId = null) => {
+    const idToUse = leadId || selectedLead?.id;
+    if (!idToUse) return;
+    
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        `${API}/driver-onboarding/documents/status/${idToUse}`,
+        {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }
+      );
+      
+      if (response.data.success) {
+        const docsStatus = {};
+        Object.keys(response.data.documents).forEach(docType => {
+          docsStatus[docType] = response.data.documents[docType].uploaded;
+        });
+        setUploadedDocs(docsStatus);
+      }
+    } catch (error) {
+      console.error("Failed to fetch documents status:", error);
+    }
+  };
+  
+  // Handle document upload
+  const handleDocumentUpload = async (documentType, file) => {
+    if (!file) return;
+    
+    setUploadingDoc(documentType);
+    try {
+      const token = localStorage.getItem("token");
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await axios.post(
+        `${API}/driver-onboarding/upload-document/${selectedLead.id}?document_type=${documentType}`,
+        formData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+      
+      if (response.data.success) {
+        toast.success(`${documentType.toUpperCase()} uploaded successfully!`);
+        setUploadedDocs(prev => ({ ...prev, [documentType]: true }));
+        // Refresh document status
+        await fetchDocumentsStatus();
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.detail || `Failed to upload ${documentType}`);
+    } finally {
+      setUploadingDoc(null);
+    }
+  };
+  
+  // View document
+  const handleViewDocument = async (documentType) => {
+    try {
+      const token = localStorage.getItem("token");
+      const url = `${API}/driver-onboarding/document/${selectedLead.id}/${documentType}`;
+      
+      const response = await axios.get(url, {
+        headers: { 'Authorization': `Bearer ${token}` },
+        responseType: 'blob'
+      });
+      
+      // Create a blob URL and open in new tab
+      const blob = new Blob([response.data]);
+      const blobUrl = window.URL.createObjectURL(blob);
+      window.open(blobUrl, '_blank');
+      
+      // Clean up the blob URL after a delay
+      setTimeout(() => window.URL.revokeObjectURL(blobUrl), 1000);
+      
+    } catch (error) {
+      toast.error(error.response?.data?.detail || `Failed to view ${documentType}`);
+    }
+  };
+  
+  // Download document
+  const handleDownloadDocument = async (documentType) => {
+    try {
+      const token = localStorage.getItem("token");
+      const url = `${API}/driver-onboarding/document/${selectedLead.id}/${documentType}`;
+      
+      const response = await axios.get(url, {
+        headers: { 'Authorization': `Bearer ${token}` },
+        responseType: 'blob'
+      });
+      
+      // Create download link
+      const blob = new Blob([response.data]);
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = `${selectedLead.name || 'lead'}_${documentType}.${getFileExtension(response)}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+      
+      toast.success(`${documentType.toUpperCase()} downloaded successfully!`);
+      
+    } catch (error) {
+      toast.error(error.response?.data?.detail || `Failed to download ${documentType}`);
+    }
+  };
+  
+  // Delete document
+  const handleDeleteDocument = async (documentType) => {
+    if (!window.confirm(`Are you sure you want to delete the ${documentType.toUpperCase()} document?`)) {
+      return;
+    }
+    
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.delete(
+        `${API}/driver-onboarding/document/${selectedLead.id}/${documentType}`,
+        {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }
+      );
+      
+      if (response.data.success) {
+        toast.success(`${documentType.toUpperCase()} deleted successfully!`);
+        setUploadedDocs(prev => ({ ...prev, [documentType]: false }));
+        // Refresh document status
+        await fetchDocumentsStatus();
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.detail || `Failed to delete ${documentType}`);
+    }
+  };
+  
+  // Helper to get file extension from response
+  const getFileExtension = (response) => {
+    const contentType = response.headers['content-type'];
+    if (contentType?.includes('pdf')) return 'pdf';
+    if (contentType?.includes('png')) return 'png';
+    if (contentType?.includes('jpeg') || contentType?.includes('jpg')) return 'jpg';
+    return 'file';
+  };
 
   const isHighPriority = (lead) => {
     return lead.status === "Highly Interested" || lead.status === "Call back 1D";
