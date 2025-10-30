@@ -79,11 +79,13 @@ const TelecallersManagement = () => {
   const fetchAllLeads = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get(`${API}/driver-onboarding/leads`, {
+      const response = await axios.get(`${API}/driver-onboarding/leads?skip_pagination=true`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setAllLeads(response.data);
-      setFilteredLeads(response.data);
+      // Handle both response formats
+      const leadsData = response.data.leads || response.data || [];
+      setAllLeads(leadsData);
+      setFilteredLeads(leadsData);
     } catch (error) {
       toast.error("Failed to fetch leads");
     }
