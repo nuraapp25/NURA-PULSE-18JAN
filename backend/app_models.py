@@ -210,6 +210,7 @@ class DriverLeadUpdate(BaseModel):
     assigned_telecaller: Optional[str] = None
     telecaller_notes: Optional[str] = None
     notes: Optional[str] = None
+    remarks: Optional[str] = None
     dl_no: Optional[str] = None
     badge_no: Optional[str] = None
     aadhar_card: Optional[str] = None
