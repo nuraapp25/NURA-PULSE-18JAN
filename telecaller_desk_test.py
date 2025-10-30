@@ -274,7 +274,8 @@ class TelecallerDeskTester:
                     
                     if verify_response and verify_response.status_code == 200:
                         try:
-                            all_leads = verify_response.json()
+                            response_data = verify_response.json()
+                            all_leads = response_data.get("leads", [])
                             updated_lead = None
                             
                             for lead in all_leads:
