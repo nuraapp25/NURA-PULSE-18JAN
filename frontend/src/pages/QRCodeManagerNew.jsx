@@ -1519,25 +1519,41 @@ const QRCodeManagerNew = () => {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                   <Card>
                     <CardContent className="p-4">
-                      <div className="text-2xl font-bold">{analyticsData.reduce((sum, item) => sum + item.total_scans, 0)}</div>
+                      <div className="text-2xl font-bold">
+                        {Array.isArray(analyticsData) 
+                          ? analyticsData.reduce((sum, item) => sum + (item.total_scans || 0), 0)
+                          : analyticsData.total_scans || 0}
+                      </div>
                       <p className="text-xs text-muted-foreground">Total Scans</p>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="p-4">
-                      <div className="text-2xl font-bold">{analyticsData.reduce((sum, item) => sum + item.ios_scans, 0)}</div>
+                      <div className="text-2xl font-bold">
+                        {Array.isArray(analyticsData) 
+                          ? analyticsData.reduce((sum, item) => sum + (item.ios_scans || 0), 0)
+                          : analyticsData.ios_scans || 0}
+                      </div>
                       <p className="text-xs text-muted-foreground">iOS Scans</p>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="p-4">
-                      <div className="text-2xl font-bold">{analyticsData.reduce((sum, item) => sum + item.android_scans, 0)}</div>
+                      <div className="text-2xl font-bold">
+                        {Array.isArray(analyticsData) 
+                          ? analyticsData.reduce((sum, item) => sum + (item.android_scans || 0), 0)
+                          : analyticsData.android_scans || 0}
+                      </div>
                       <p className="text-xs text-muted-foreground">Android Scans</p>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="p-4">
-                      <div className="text-2xl font-bold">{analyticsData.reduce((sum, item) => sum + item.web_scans, 0)}</div>
+                      <div className="text-2xl font-bold">
+                        {Array.isArray(analyticsData) 
+                          ? analyticsData.reduce((sum, item) => sum + (item.web_scans || 0), 0)
+                          : analyticsData.web_scans || 0}
+                      </div>
                       <p className="text-xs text-muted-foreground">Web Scans</p>
                     </CardContent>
                   </Card>
