@@ -196,13 +196,21 @@ const DriverOnboardingPage = () => {
   const [loadingBackups, setLoadingBackups] = useState(false);
   const [rollingBack, setRollingBack] = useState(false);
   
-  // Source filter - Extract unique sources (case-insensitive), sort alphabetically
+  // Source filter - Extract unique stages (since 'source' field doesn't exist, use 'stage')
   const [sourceFilter, setSourceFilter] = useState(null);
   const uniqueSources = [...new Set(
     leads
-      .map(l => l.source?.trim())
+      .map(l => l.stage?.trim())
       .filter(Boolean)
-      .map(s => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()) // Normalize to title case
+      .map(s => s.toUpperCase()) // Keep stage format like S1, S2
+  )].sort();
+  
+  // If no stages available, try to use status instead
+  const sourceOptions = uniqueSources.length > 0 ? uniqueSources : [...new Set(
+    leads
+      .map(l => l.status?.trim())
+      .filter(Boolean)
+      .map(s => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase())
   )].sort();
   
   // Extract unique statuses from all leads
