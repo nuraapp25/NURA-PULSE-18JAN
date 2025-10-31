@@ -483,11 +483,12 @@ const DriverOnboardingPage = () => {
       filtered = filtered.filter(lead => lead.status === activeSubStatus);
     }
     
-    // Source filter - normalize for case-insensitive comparison
+    // Source filter (using stage since 'source' field doesn't exist)
     if (sourceFilter) {
-      const normalizedFilter = sourceFilter.toLowerCase();
+      const normalizedFilter = sourceFilter.toUpperCase(); // For stage comparison
       filtered = filtered.filter(lead => 
-        lead.source && lead.source.toLowerCase() === normalizedFilter
+        (lead.stage && lead.stage.toUpperCase() === normalizedFilter) || 
+        (lead.status && lead.status.toUpperCase().includes(normalizedFilter))
       );
     }
     
