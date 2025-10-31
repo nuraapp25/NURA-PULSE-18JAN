@@ -10175,15 +10175,19 @@ async def scan_qr_code(
             else:
                 redirect_url = qr_code.get('single_url', '') + utm_params
         
-        # Check if this IP has scanned this QR recently to prevent duplicates
+        # Create a unique scan identifier based on IP + User Agent + QR code + timestamp (rounded to minute)
+        import hashlib
+        current_minute = datetime.now(timezone.utc).replace(second=0, microsecond=0).isoformat()
+        scan_identifier = hashlib.md5(f"{client_ip}_{user_agent_string}_{qr_code['id']}_{current_minute}".encode()).hexdigest()
+        
+        # Check if this exact scan combination has been recorded in the last 5 minutes
         recent_scan = await db.qr_scans.find_one({
-            "qr_code_id": qr_code["id"],
-            "ip_address": client_ip,
-            "scanned_at": {"$gte": (datetime.now(timezone.utc) - timedelta(seconds=30)).isoformat()}
+            "scan_identifier": scan_identifier
         })
         
         if recent_scan:
-            # This is likely a duplicate scan, just redirect without logging
+            # This is a duplicate scan, just redirect without logging
+            logger.info(f"Duplicate scan prevented for QR {short_code} from IP {client_ip}")
             return RedirectResponse(url=redirect_url, status_code=307)
         
         # Get location data from IP (basic city/region detection)
