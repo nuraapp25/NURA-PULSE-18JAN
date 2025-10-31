@@ -10052,8 +10052,10 @@ async def create_batch_qr_codes(
             backend_url = os.environ.get('BACKEND_URL') or os.environ.get('REACT_APP_BACKEND_URL', 'https://nura-pulse-app.preview.emergentagent.com/api')
             tracking_url = f"{backend_url}/qr-codes/scan/{short_code}"
             
-            # Generate QR code image with tracking URL (always use tracking)
-            qr_image = generate_qr_code_image(tracking_url)
+            # Generate QR code image with color parameters
+            foreground_color = batch_data.qr_foreground_color if batch_data.use_color_qr else "black"
+            background_color = batch_data.qr_background_color if batch_data.use_color_qr else "white"
+            qr_image = generate_qr_code_image(tracking_url, foreground_color, background_color)
             
             # Create proper UTM parameters (Campaign-VehicleNumber format)
             utm_source = f"{batch_data.campaign_name}-{qr_name}" if batch_data.auto_fill_utm else batch_data.utm_campaign
