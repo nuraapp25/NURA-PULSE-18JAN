@@ -3100,7 +3100,39 @@ const DriverOnboardingPage = () => {
       </Dialog>
 
       {/* Lead Detail Dialog */}
-      <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
+      <LeadDetailsDialog
+        open={detailDialogOpen}
+        onOpenChange={(open) => {
+          setDetailDialogOpen(open);
+          if (!open) {
+            setIsEditMode(false);
+            setHasUnsavedChanges(false);
+            setUploadedDocs({});
+          }
+        }}
+        lead={selectedLead}
+        editedLead={editedLead}
+        isEditMode={isEditMode}
+        setIsEditMode={setIsEditMode}
+        onFieldChange={handleFieldChange}
+        onSave={handleSaveChanges}
+        onStageSync={() => {}}
+        uploadedDocs={uploadedDocs}
+        onDocumentUpload={handleDocumentUpload}
+        onViewDocument={handleViewDocument}
+        onDownloadDocument={handleDownloadDocument}
+        onDeleteDocument={handleDeleteDocument}
+        onDocumentScan={null}
+        uploadingDoc={uploadingDoc}
+        scanningDoc={null}
+        updating={updatingStatus}
+        showDeleteButton={false}
+        onDelete={() => {}}
+        hasUnsavedChanges={hasUnsavedChanges}
+        onLeadUpdate={fetchLeads}
+      />
+
+      {/* Bulk Status Update Dialog */}
         <DialogContent className="dark:bg-gray-800 max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="dark:text-white flex items-center justify-between">
