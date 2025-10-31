@@ -245,62 +245,80 @@ const LeadDetailsDialog = ({
 
             <div>
               <Label className="text-xs text-gray-600 dark:text-gray-400 mb-2 block">Current Stage</Label>
-              <Select
-                value={lead.stage && lead.stage.trim() !== "" ? lead.stage : "S1"}
-                onValueChange={(value) => {
-                  onFieldChange('stage', value);
-                  const newStatuses = getStatusesForStage(value);
-                  if (newStatuses.length > 0) {
-                    onFieldChange('status', newStatuses[0].value);
-                  }
-                }}
-                disabled={updating}
-              >
-                <SelectTrigger className="w-full dark:bg-gray-700 dark:border-gray-600">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
-                  {STAGES.map((stage) => (
-                    <SelectItem key={stage.value} value={stage.value}>
-                      {stage.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {isEditMode ? (
+                <Select
+                  value={editedLead.stage && editedLead.stage.trim() !== "" ? editedLead.stage : "S1"}
+                  onValueChange={(value) => {
+                    onFieldChange('stage', value);
+                    const newStatuses = getStatusesForStage(value);
+                    if (newStatuses.length > 0) {
+                      onFieldChange('status', newStatuses[0].value);
+                    }
+                  }}
+                  disabled={updating}
+                >
+                  <SelectTrigger className="w-full dark:bg-gray-700 dark:border-gray-600">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                    {STAGES.map((stage) => (
+                      <SelectItem key={stage.value} value={stage.value}>
+                        {stage.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <p className="text-base font-medium text-gray-900 dark:text-white mt-1">
+                  {STAGES.find(s => s.value === lead.stage)?.label || lead.stage || "S1 - Filtering"}
+                </p>
+              )}
             </div>
 
             <div>
               <Label className="text-xs text-gray-600 dark:text-gray-400 mb-2 block">Status within Stage</Label>
-              <Select
-                value={lead.status && lead.status.trim() !== "" ? lead.status : "New"}
-                onValueChange={(value) => onFieldChange('status', value)}
-                disabled={updating}
-              >
-                <SelectTrigger className="w-full dark:bg-gray-700 dark:border-gray-600">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="dark:bg-gray-800 dark:border-gray-700 max-h-[300px]">
-                  {getStatusesForStage(lead.stage && lead.stage.trim() !== "" ? lead.stage : "S1").map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      <span className={`px-2 py-1 rounded text-xs ${option.color}`}>
-                        {option.label}
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {isEditMode ? (
+                <Select
+                  value={editedLead.status && editedLead.status.trim() !== "" ? editedLead.status : "New"}
+                  onValueChange={(value) => onFieldChange('status', value)}
+                  disabled={updating}
+                >
+                  <SelectTrigger className="w-full dark:bg-gray-700 dark:border-gray-600">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700 max-h-[300px]">
+                    {getStatusesForStage(editedLead.stage && editedLead.stage.trim() !== "" ? editedLead.stage : "S1").map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        <span className={`px-2 py-1 rounded text-xs ${option.color}`}>
+                          {option.label}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <p className="text-base font-medium text-gray-900 dark:text-white mt-1">
+                  {lead.status || "New"}
+                </p>
+              )}
             </div>
 
             {/* Remarks Field */}
             <div>
               <Label className="text-xs text-gray-600 dark:text-gray-400 mb-2 block">Remarks</Label>
-              <Textarea
-                value={editedLead.remarks || ''}
-                onChange={(e) => onFieldChange('remarks', e.target.value)}
-                placeholder="Enter remarks about this lead..."
-                className="w-full min-h-[80px] dark:bg-gray-700 dark:border-gray-600 text-sm"
-                disabled={updating}
-              />
+              {isEditMode ? (
+                <Textarea
+                  value={editedLead.remarks || ''}
+                  onChange={(e) => onFieldChange('remarks', e.target.value)}
+                  placeholder="Enter remarks about this lead..."
+                  className="w-full min-h-[80px] dark:bg-gray-700 dark:border-gray-600 text-sm"
+                  disabled={updating}
+                />
+              ) : (
+                <p className="text-base text-gray-900 dark:text-white mt-1 whitespace-pre-wrap min-h-[80px] p-2 border border-gray-200 dark:border-gray-700 rounded">
+                  {lead.remarks || 'No remarks'}
+                </p>
+              )}
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 Optional: Add any notes or remarks about this lead
               </p>
