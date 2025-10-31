@@ -2584,7 +2584,7 @@ const DriverOnboardingPage = () => {
                     className="text-xs"
                   >
                     <Filter className="w-3 h-3 mr-1" />
-                    Filter by Stage/Status
+                    Filter by Import Source
                     {sourceFilter && ` (${sourceFilter})`}
                   </Button>
                 </PopoverTrigger>
@@ -2595,7 +2595,7 @@ const DriverOnboardingPage = () => {
                       className="w-full justify-start text-sm"
                       onClick={() => setSourceFilter(null)}
                     >
-                      All Stages/Statuses
+                      All Import Sources
                     </Button>
                     {sourceOptions.map((source) => (
                       <Button
