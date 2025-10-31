@@ -691,11 +691,20 @@ const DriverOnboardingPage = () => {
       
       // Update local state immediately
       const updatedLead = response.data.lead;
+      
+      // Update main leads array
       const updatedLeads = leads.map(lead => 
         lead.id === editedLead.id ? updatedLead : lead
       );
       setLeads(updatedLeads);
-      setFilteredLeads(updatedLeads); // Also update filtered leads
+      
+      // Update filtered leads array
+      const updatedFilteredLeads = filteredLeads.map(lead => 
+        lead.id === editedLead.id ? updatedLead : lead
+      );
+      setFilteredLeads(updatedFilteredLeads);
+      
+      // Update selected and edited lead states
       setSelectedLead(updatedLead); // Update the selected lead with fresh data
       setEditedLead({...updatedLead}); // Update edited lead copy
       setIsEditMode(false);
