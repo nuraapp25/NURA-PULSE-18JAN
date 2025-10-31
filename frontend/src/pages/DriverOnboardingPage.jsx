@@ -661,21 +661,26 @@ const DriverOnboardingPage = () => {
         {
           name: editedLead.name,
           phone_number: editedLead.phone_number,
+          email: editedLead.email,
           vehicle: editedLead.vehicle,
           driving_license: editedLead.driving_license,
           experience: editedLead.experience,
           interested_ev: editedLead.interested_ev,
           monthly_salary: editedLead.monthly_salary,
           current_location: editedLead.current_location,
-          lead_stage: editedLead.lead_stage,
+          preferred_shift: editedLead.preferred_shift,
+          stage: editedLead.stage,
           status: editedLead.status,
-          driver_readiness: editedLead.driver_readiness,
-          docs_collection: editedLead.docs_collection,
-          customer_readiness: editedLead.customer_readiness,
           assigned_telecaller: editedLead.assigned_telecaller,
           telecaller_notes: editedLead.telecaller_notes,
           notes: editedLead.notes,
-          remarks: editedLead.remarks
+          remarks: editedLead.remarks,
+          dl_no: editedLead.dl_no,
+          badge_no: editedLead.badge_no,
+          aadhar_card: editedLead.aadhar_card,
+          pan_card: editedLead.pan_card,
+          gas_bill: editedLead.gas_bill,
+          bank_passbook: editedLead.bank_passbook
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -688,8 +693,12 @@ const DriverOnboardingPage = () => {
       );
       setLeads(updatedLeads);
       setSelectedLead(response.data.lead);
+      setEditedLead({...response.data.lead});
       setIsEditMode(false);
       setHasUnsavedChanges(false);
+      
+      // Refetch leads to update summary
+      await fetchLeads();
       
       // Update last sync time after edit
       await fetchLastSyncTime();
