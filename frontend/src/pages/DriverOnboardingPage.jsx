@@ -294,6 +294,14 @@ const DriverOnboardingPage = () => {
         params.append('search', debouncedSearchQuery.trim());
       }
       
+      // Add date filter parameters
+      if (startDate) {
+        params.append('start_date', format(startDate, 'yyyy-MM-dd'));
+      }
+      if (endDate) {
+        params.append('end_date', format(endDate, 'yyyy-MM-dd'));
+      }
+      
       const response = await axios.get(`${API}/driver-onboarding/leads?${params.toString()}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
