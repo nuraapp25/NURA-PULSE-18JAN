@@ -1831,7 +1831,7 @@ const DriverOnboardingPage = () => {
                     className="text-xs dark:bg-gray-700 dark:border-gray-600"
                   >
                     <Filter className="mr-2 h-3 w-3" />
-                    {summarySourceFilter ? `Source: ${summarySourceFilter}` : "All Sources"}
+                    {summarySourceFilter ? `Source: ${summarySourceFilter}` : "All Import Sources"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-56 dark:bg-gray-800 dark:border-gray-700">
@@ -1841,7 +1841,7 @@ const DriverOnboardingPage = () => {
                       className="w-full justify-start text-sm"
                       onClick={() => setSummarySourceFilter(null)}
                     >
-                      All Sources
+                      All Import Sources
                     </Button>
                     {uniqueSources.map((source) => (
                       <Button
