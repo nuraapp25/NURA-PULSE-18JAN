@@ -824,6 +824,7 @@ const QRCodeManagerNew = () => {
                       size="sm"
                       variant="destructive"
                       onClick={handleDeleteSelectedQRCodes}
+                      disabled={selectedCampaignData?.published}
                     >
                       <Trash2 className="w-4 h-4 mr-2" />
                       Delete Selected ({selectedQRCodes.length})
