@@ -857,22 +857,6 @@ const QRCodeManagerNew = () => {
               <Label htmlFor="autoFillUtm">Auto-fill UTM from Campaign Name</Label>
             </div>
             
-            <div>
-              <Label>QR Code Content Type *</Label>
-              <Select value={batchQrMode} onValueChange={setBatchQrMode}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="simple">Simple Text (Just show vehicle number when scanned)</SelectItem>
-                  <SelectItem value="tracking">Smart Redirect (Analytics + device detection)</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-gray-500 mt-1">
-                {batchQrMode === "simple" ? "QR codes will show the vehicle number directly when scanned" : "QR codes will redirect to landing pages with analytics tracking"}
-              </p>
-            </div>
-            
             {/* Same URL fields as single QR code */}
             <div>
               <Label>Landing Page Type *</Label>
