@@ -10526,22 +10526,30 @@ async def get_campaign_analytics(
             # Create proper filename format: Campaign-VehicleNumber
             qr_filename = f"{campaign_name}-{qr_code.get('qr_name', qr_code.get('utm_source', 'Unknown'))}"
             
-            # Generate UTM URL for this QR code
+            # Generate UTM URLs for all platforms
             utm_value = qr_code.get('utm_source', f"{campaign_name}-{qr_code.get('qr_name', 'Unknown')}")
             utm_params = f"?utm={utm_value}"
             
-            # Determine the final URL with UTM
+            # Determine URLs for all platforms with UTM
             if qr_code.get('landing_page_type') == 'single':
-                utm_url = qr_code.get('single_url', '') + utm_params
+                utm_url_web = qr_code.get('single_url', '') + utm_params
+                utm_url_ios = utm_url_web  # Same URL for single mode
+                utm_url_android = utm_url_web  # Same URL for single mode
             else:
-                utm_url = qr_code.get('web_url', qr_code.get('single_url', '')) + utm_params
+                # Different URLs for each platform
+                utm_url_ios = qr_code.get('ios_url', '') + utm_params
+                utm_url_android = qr_code.get('android_url', '') + utm_params
+                utm_url_web = qr_code.get('web_url', qr_code.get('single_url', '')) + utm_params
             
             analytics.append({
                 "qr_code_id": qr_id,
                 "qr_name": qr_code.get("qr_name", qr_code.get("utm_source")),
                 "qr_filename": qr_filename,
                 "utm_source": qr_code.get("utm_source"),
-                "utm_url": utm_url,
+                "utm_url_web": utm_url_web,
+                "utm_url_ios": utm_url_ios,
+                "utm_url_android": utm_url_android,
+                "landing_page_type": qr_code.get("landing_page_type", "single"),
                 "total_scans": len(scans),
                 "ios_scans": ios_scans,
                 "android_scans": android_scans,
