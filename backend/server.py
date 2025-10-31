@@ -9950,13 +9950,13 @@ def generate_short_code(length: int = 8) -> str:
     characters = string.ascii_letters + string.digits
     return ''.join(secrets.choice(characters) for _ in range(length))
 
-def generate_qr_code_image(data: str) -> str:
+def generate_qr_code_image(data: str, foreground_color: str = "black", background_color: str = "white") -> str:
     """Generate QR code image and return as base64"""
     qr = qrcode.QRCode(version=1, box_size=10, border=4)
     qr.add_data(data)
     qr.make(fit=True)
     
-    img = qr.make_image(fill_color="black", back_color="white")
+    img = qr.make_image(fill_color=foreground_color, back_color=background_color)
     
     # Convert to base64
     buffer = io.BytesIO()
