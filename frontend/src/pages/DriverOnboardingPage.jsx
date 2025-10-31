@@ -689,21 +689,23 @@ const DriverOnboardingPage = () => {
 
       toast.success("Lead details updated successfully!");
       
-      // Update local state
+      // Update local state immediately
+      const updatedLead = response.data.lead;
       const updatedLeads = leads.map(lead => 
-        lead.id === editedLead.id ? response.data.lead : lead
+        lead.id === editedLead.id ? updatedLead : lead
       );
       setLeads(updatedLeads);
-      setSelectedLead(response.data.lead);
-      setEditedLead({...response.data.lead});
+      setFilteredLeads(updatedLeads); // Also update filtered leads
+      setSelectedLead(updatedLead); // Update the selected lead with fresh data
+      setEditedLead({...updatedLead}); // Update edited lead copy
       setIsEditMode(false);
       setHasUnsavedChanges(false);
       
-      // Refetch leads to update summary
-      await fetchLeads();
+      // Refetch leads to update summary (do this in background)
+      fetchLeads().catch(err => console.error("Failed to refresh leads:", err));
       
       // Update last sync time after edit
-      await fetchLastSyncTime();
+      fetchLastSyncTime().catch(err => console.error("Failed to fetch sync time:", err));
       
     } catch (error) {
       toast.error(error.response?.data?.detail || "Failed to update lead");
