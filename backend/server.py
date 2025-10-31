@@ -10253,6 +10253,36 @@ async def delete_qr_code(
         logger.error(f"Failed to delete QR code: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to delete QR code: {str(e)}")
 
+@api_router.delete("/qr-codes/campaigns/{campaign_name}")
+async def delete_campaign(
+    campaign_name: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Delete all QR codes in a campaign"""
+    try:
+        # Find all QR codes in the campaign
+        qr_codes = await db.qr_codes.find({"campaign_name": campaign_name}).to_list(None)
+        
+        if not qr_codes:
+            raise HTTPException(status_code=404, detail="Campaign not found")
+        
+        # Delete all QR codes in the campaign
+        result = await db.qr_codes.delete_many({"campaign_name": campaign_name})
+        
+        # Also delete associated scan data
+        await db.qr_scans.delete_many({"campaign_name": campaign_name})
+        
+        return {
+            "success": True,
+            "message": f"Campaign '{campaign_name}' and {result.deleted_count} QR codes deleted successfully"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to delete campaign: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete campaign: {str(e)}")
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
