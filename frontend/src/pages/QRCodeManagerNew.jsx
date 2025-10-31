@@ -162,11 +162,24 @@ const QRCodeManagerNew = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
+      
+      // Fetch QR codes
       const response = await axios.get(`${API}/qr-codes/campaign/${encodeURIComponent(campaignName)}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setCampaignQRCodes(response.data.qr_codes || []);
       setSelectedCampaign(campaignName);
+      
+      // Fetch campaign metadata
+      try {
+        const campaignResponse = await axios.get(`${API}/qr-codes/campaigns/${encodeURIComponent(campaignName)}/details`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setSelectedCampaignData(campaignResponse.data);
+      } catch (metaError) {
+        // If campaign details endpoint doesn't exist, set default data
+        setSelectedCampaignData({ published: false });
+      }
     } catch (error) {
       console.error("Error fetching campaign QR codes:", error);
       toast.error("Failed to load QR codes");
