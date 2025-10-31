@@ -32,7 +32,6 @@ const QRCodeManagerNew = () => {
   const [selectAllCampaigns, setSelectAllCampaigns] = useState(false);
   const [selectAllQRCodes, setSelectAllQRCodes] = useState(false);
   const [selectedCampaignData, setSelectedCampaignData] = useState(null);
-  const [analyticsDialogOpen, setAnalyticsDialogOpen] = useState(false);
   const [analyticsData, setAnalyticsData] = useState([]);
   
   // Dialog states
