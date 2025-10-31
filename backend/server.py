@@ -10303,6 +10303,131 @@ async def delete_campaign(
         logger.error(f"Failed to delete campaign: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to delete campaign: {str(e)}")
 
+@api_router.post("/qr-codes/campaigns/{campaign_name}/publish")
+async def publish_campaign(
+    campaign_name: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Publish a campaign - disables deletion"""
+    try:
+        # Find all QR codes in the campaign
+        qr_codes = await db.qr_codes.find({"campaign_name": campaign_name}).to_list(None)
+        
+        if not qr_codes:
+            raise HTTPException(status_code=404, detail="Campaign not found")
+        
+        # Update all QR codes in the campaign to published status
+        result = await db.qr_codes.update_many(
+            {"campaign_name": campaign_name},
+            {"$set": {"published": True, "published_at": datetime.now(timezone.utc).isoformat()}}
+        )
+        
+        return {
+            "success": True,
+            "message": f"Campaign '{campaign_name}' published successfully",
+            "qr_codes_updated": result.modified_count
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to publish campaign: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to publish campaign: {str(e)}")
+
+@api_router.get("/qr-codes/campaigns/{campaign_name}/details")
+async def get_campaign_details(
+    campaign_name: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get campaign metadata including publish status"""
+    try:
+        # Find a sample QR code to get campaign info
+        sample_qr = await db.qr_codes.find_one({"campaign_name": campaign_name})
+        
+        if not sample_qr:
+            raise HTTPException(status_code=404, detail="Campaign not found")
+        
+        return {
+            "campaign_name": campaign_name,
+            "published": sample_qr.get("published", False),
+            "published_at": sample_qr.get("published_at"),
+            "created_at": sample_qr.get("created_at")
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get campaign details: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get campaign details: {str(e)}")
+
+@api_router.get("/qr-codes/campaigns/{campaign_name}/analytics")
+async def get_campaign_analytics(
+    campaign_name: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get detailed analytics for all QR codes in a campaign"""
+    try:
+        # Get all QR codes in the campaign
+        qr_codes = await db.qr_codes.find({"campaign_name": campaign_name}).to_list(None)
+        
+        if not qr_codes:
+            raise HTTPException(status_code=404, detail="Campaign not found")
+        
+        analytics = []
+        
+        for qr_code in qr_codes:
+            qr_id = qr_code["id"]
+            
+            # Get scan analytics for this QR code
+            scans = await db.qr_scans.find({"qr_code_id": qr_id}).to_list(None)
+            
+            # Calculate platform breakdown
+            ios_scans = len([s for s in scans if s.get("platform") == "ios"])
+            android_scans = len([s for s in scans if s.get("platform") == "android"])
+            web_scans = len([s for s in scans if s.get("platform") in ["desktop", "mobile_other"]])
+            
+            # Get last scan time
+            last_scan = None
+            if scans:
+                last_scan = max([s.get("scanned_at") for s in scans if s.get("scanned_at")])
+            
+            analytics.append({
+                "qr_code_id": qr_id,
+                "qr_name": qr_code.get("qr_name", qr_code.get("utm_source")),
+                "utm_source": qr_code.get("utm_source"),
+                "total_scans": len(scans),
+                "ios_scans": ios_scans,
+                "android_scans": android_scans,
+                "web_scans": web_scans,
+                "last_scan": last_scan,
+                "scan_details": [
+                    {
+                        "scanned_at": scan.get("scanned_at"),
+                        "platform": scan.get("platform"),
+                        "os_family": scan.get("os_family"),
+                        "browser": scan.get("browser"),
+                        "device": scan.get("device"),
+                        "ip_address": scan.get("ip_address"),
+                        "user_agent": scan.get("user_agent")
+                    }
+                    for scan in scans
+                ]
+            })
+        
+        return {
+            "success": True,
+            "campaign_name": campaign_name,
+            "analytics": analytics,
+            "total_qr_codes": len(qr_codes),
+            "total_scans": sum([item["total_scans"] for item in analytics])
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get campaign analytics: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get campaign analytics: {str(e)}")
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
