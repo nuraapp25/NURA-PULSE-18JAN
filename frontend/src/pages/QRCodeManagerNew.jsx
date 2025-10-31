@@ -65,6 +65,7 @@ const QRCodeManagerNew = () => {
   const [batchFile, setBatchFile] = useState(null);
   const [autoFillUtm, setAutoFillUtm] = useState(true);
   const [batchLandingPageType, setBatchLandingPageType] = useState("single");
+  const [batchUseDefaultLinks, setBatchUseDefaultLinks] = useState(true);
   
   useEffect(() => {
     fetchCampaigns();
