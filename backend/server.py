@@ -10230,7 +10230,7 @@ async def scan_qr_code(
             "location_region": location_info.get("region", "Unknown"),
             "location_country": location_info.get("country", "Unknown"),
             "redirect_url": redirect_url,
-            "utm_params": utm_params
+            "utm_params": f"utm={utm_value}"
         }
         
         await db.qr_scans.insert_one(scan_data)
