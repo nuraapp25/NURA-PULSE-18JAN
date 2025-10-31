@@ -1321,6 +1321,7 @@ const DriverOnboardingPage = () => {
       return;
     }
 
+    setUnassigning(true);
     try {
       const token = localStorage.getItem("token");
       await axios.post(
@@ -1351,6 +1352,8 @@ const DriverOnboardingPage = () => {
       setIsUnassignDialogOpen(false);
     } catch (error) {
       toast.error(error.response?.data?.detail || "Failed to unassign leads");
+    } finally {
+      setUnassigning(false);
     }
   };
 
