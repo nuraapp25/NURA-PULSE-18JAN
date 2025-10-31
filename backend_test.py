@@ -7959,6 +7959,12 @@ Case Test 6,9876540006,interested"""
             print("\n❌ Authentication failed - cannot proceed with other tests")
             return False
         
+        # Run CRITICAL tests from review request FIRST
+        critical_tests = [
+            self.test_remarks_persistence_comprehensive,  # CRITICAL: Remarks not persisting issue
+            self.test_export_database_functionality,      # CRITICAL: Export Database not working
+        ]
+        
         # Run priority tests from review request
         priority_tests = [
             self.test_qr_code_campaigns_endpoint,  # PRIORITY: QR Code Manager campaigns endpoint
