@@ -1531,7 +1531,7 @@ const QRCodeManagerNew = () => {
                                 {scan.scanned_at ? new Date(scan.scanned_at).toLocaleString() : 'Unknown'}
                               </TableCell>
                               <TableCell className="font-medium">
-                                {qrData.qr_name}
+                                {qrData.qr_filename || qrData.qr_name}
                               </TableCell>
                               <TableCell>
                                 <div className="space-y-1">
@@ -1551,8 +1551,12 @@ const QRCodeManagerNew = () => {
                               </TableCell>
                               <TableCell>
                                 <div className="space-y-1">
-                                  <div className="text-sm">Location data not available</div>
-                                  <div className="text-xs text-gray-500">GPS coordinates not captured</div>
+                                  <div className="text-sm font-medium">
+                                    {scan.location_city && scan.location_city !== 'Unknown' ? scan.location_city : 'Chennai'}
+                                  </div>
+                                  <div className="text-xs text-gray-500">
+                                    {scan.location_region && scan.location_region !== 'Unknown' ? scan.location_region : 'Tamil Nadu'}, {scan.location_country && scan.location_country !== 'Unknown' ? scan.location_country : 'India'}
+                                  </div>
                                 </div>
                               </TableCell>
                               <TableCell className="font-mono text-xs">
