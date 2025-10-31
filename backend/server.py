@@ -10133,6 +10133,7 @@ async def scan_qr_code(
     request: Request
 ):
     """Handle QR code scan and redirect based on device"""
+    from fastapi.responses import RedirectResponse
     try:
         # Get QR code from database
         qr_code = await db.qr_codes.find_one({"short_code": short_code})
