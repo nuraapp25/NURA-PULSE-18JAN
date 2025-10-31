@@ -1726,6 +1726,28 @@ async def get_leads(
                 if user and user.get('email'):
                     query["$or"].append({"assigned_telecaller": user['email']})
         
+        # Handle date filtering
+        if start_date or end_date:
+            date_query = {}
+            if start_date:
+                try:
+                    # Parse date and set to beginning of day
+                    start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+                    date_query["$gte"] = start_datetime.strftime('%Y-%m-%d')
+                except ValueError:
+                    pass  # Invalid date format, skip
+            if end_date:
+                try:
+                    # Parse date and set to end of day
+                    end_datetime = datetime.strptime(end_date, '%Y-%m-%d')
+                    date_query["$lte"] = end_datetime.strftime('%Y-%m-%d')
+                except ValueError:
+                    pass  # Invalid date format, skip
+            
+            if date_query:
+                # Filter by import_date (the date when lead was imported)
+                query["import_date"] = date_query
+        
         # Handle search parameter
         if search and search.strip():
             search_values = [s.strip() for s in search.split(',') if s.strip()]
