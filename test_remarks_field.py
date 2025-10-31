@@ -56,7 +56,8 @@ def main():
         return False
 
     try:
-        leads = response.json()
+        response_data = response.json()
+        leads = response_data.get("leads", [])
     except json.JSONDecodeError:
         print(f"❌ Invalid JSON response: {response.text}")
         return False
