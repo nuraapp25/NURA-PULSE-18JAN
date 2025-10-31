@@ -2277,6 +2277,21 @@ async def get_lead(lead_id: str, current_user: User = Depends(get_current_user))
         if not lead:
             raise HTTPException(status_code=404, detail="Lead not found")
         
+        # Ensure remarks is always a string (handle legacy data)
+        if lead.get("remarks"):
+            if isinstance(lead["remarks"], list) and len(lead["remarks"]) > 0:
+                # Convert array of remark objects to string
+                lead["remarks"] = "\n".join([
+                    remark.get("text", str(remark)) if isinstance(remark, dict) else str(remark)
+                    for remark in lead["remarks"]
+                ])
+            elif isinstance(lead["remarks"], dict):
+                # Convert single remark object to string
+                lead["remarks"] = lead["remarks"].get("text", str(lead["remarks"]))
+            elif not isinstance(lead["remarks"], str):
+                # Convert any other type to string
+                lead["remarks"] = str(lead["remarks"])
+        
         return lead
         
     except Exception as e:
