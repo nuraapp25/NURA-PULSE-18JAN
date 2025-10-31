@@ -10426,6 +10426,37 @@ async def unpublish_campaign(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Failed to unpublish campaign: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to unpublish campaign: {str(e)}")
+
+@api_router.post("/qr-codes/campaigns/{campaign_name}/unpublish")
+async def unpublish_campaign(
+    campaign_name: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Unpublish a campaign - enables deletion"""
+    try:
+        # Find all QR codes in the campaign
+        qr_codes = await db.qr_codes.find({"campaign_name": campaign_name}).to_list(None)
+        
+        if not qr_codes:
+            raise HTTPException(status_code=404, detail="Campaign not found")
+        
+        # Update all QR codes in the campaign to unpublished status
+        result = await db.qr_codes.update_many(
+            {"campaign_name": campaign_name},
+            {"$set": {"published": False}, "$unset": {"published_at": ""}}
+        )
+        
+        return {
+            "success": True,
+            "message": f"Campaign '{campaign_name}' unpublished successfully",
+            "qr_codes_updated": result.modified_count
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
         logger.error(f"Failed to publish campaign: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to publish campaign: {str(e)}")
 
