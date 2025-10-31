@@ -133,8 +133,23 @@ const TelecallerDeskMobile = () => {
   };
 
   const openLeadDetails = async (lead) => {
-    setSelectedLead(lead);
-    setEditedLead({...lead});
+    try {
+      // Always fetch fresh lead data to ensure we have latest remarks
+      const token = localStorage.getItem("token");
+      const response = await axios.get(`${API}/driver-onboarding/leads/${lead.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const freshLead = response.data;
+      setSelectedLead(freshLead);
+      setEditedLead({...freshLead}); // Create a copy for editing with fresh data
+    } catch (error) {
+      // If fetch fails, use the lead from array as fallback
+      console.error("Failed to fetch fresh lead data:", error);
+      setSelectedLead(lead);
+      setEditedLead({...lead});
+    }
+    
     setIsEditMode(false);
     setDetailsDialogOpen(true);
     // Fetch document status for the lead
