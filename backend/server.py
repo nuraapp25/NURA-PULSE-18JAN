@@ -10196,6 +10196,7 @@ async def scan_qr_code(
         # Log analytics
         scan_data = {
             "id": str(uuid.uuid4()),
+            "scan_identifier": scan_identifier,
             "qr_code_id": qr_code["id"],
             "short_code": short_code,
             "qr_name": qr_code.get("qr_name", qr_code.get("utm_source", "Unknown")),
@@ -10212,7 +10213,8 @@ async def scan_qr_code(
             "location_city": location_info.get("city", "Unknown"),
             "location_region": location_info.get("region", "Unknown"),
             "location_country": location_info.get("country", "Unknown"),
-            "redirect_url": redirect_url
+            "redirect_url": redirect_url,
+            "utm_params": utm_params
         }
         
         await db.qr_scans.insert_one(scan_data)
