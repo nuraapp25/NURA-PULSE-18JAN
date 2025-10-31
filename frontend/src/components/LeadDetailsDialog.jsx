@@ -512,38 +512,15 @@ const LeadDetailsDialog = ({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-between items-center pt-4 border-t border-gray-200 dark:border-gray-700">
-            <div>
-              {showDeleteButton && onDelete && (
-                <Button
-                  variant="destructive"
-                  onClick={onDelete}
-                  size="sm"
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Delete Lead
-                </Button>
-              )}
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                className="dark:border-gray-600"
-              >
-                Close
-              </Button>
-              {isEditMode && hasUnsavedChanges && (
-                <Button
-                  onClick={onSave}
-                  className="bg-blue-600 hover:bg-blue-700 animate-pulse"
-                  disabled={updating}
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  Save Changes
-                </Button>
-              )}
-            </div>
+          <div className="flex justify-end items-center pt-4 border-t border-gray-200 dark:border-gray-700">
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              className="dark:border-gray-600"
+              disabled={updating}
+            >
+              Close
+            </Button>
           </div>
         </div>
       </DialogContent>
