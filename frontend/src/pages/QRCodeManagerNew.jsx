@@ -615,7 +615,15 @@ const QRCodeManagerNew = () => {
       });
       
       if (response.data.success) {
-        setAnalyticsData([response.data.analytics]); // Wrap in array for compatibility
+        // Format individual analytics data to match campaign analytics structure
+        const individualData = response.data.analytics;
+        const formattedData = [{
+          ...individualData,
+          // Ensure scan_details exists even if empty
+          scan_details: individualData.scan_details || []
+        }];
+        
+        setAnalyticsData(formattedData);
         setSelectedCampaign(`${qrCode.qr_name || qrCode.utm_source} (Individual)`);
         setAnalyticsDialogOpen(true);
       }
