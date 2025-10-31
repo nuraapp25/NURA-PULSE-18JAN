@@ -1563,6 +1563,34 @@ const QRCodeManagerNew = () => {
                               <TableCell className="font-mono text-xs">
                                 {scan.ip_address || 'Unknown'}
                               </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => window.open(qrData.utm_url, '_blank')}
+                                    className="text-xs h-6 px-2"
+                                  >
+                                    <Eye className="w-3 h-3 mr-1" />
+                                    View
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(qrData.utm_url);
+                                      toast.success('UTM URL copied to clipboard!');
+                                    }}
+                                    className="text-xs h-6 px-2"
+                                  >
+                                    <Copy className="w-3 h-3 mr-1" />
+                                    Copy
+                                  </Button>
+                                </div>
+                                <div className="text-xs text-gray-500 mt-1 max-w-xs truncate">
+                                  {qrData.utm_url}
+                                </div>
+                              </TableCell>
                             </TableRow>
                           ))
                         )}
