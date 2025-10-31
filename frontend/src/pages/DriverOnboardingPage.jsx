@@ -3115,7 +3115,7 @@ const DriverOnboardingPage = () => {
                 </Button>
                 {isEditMode && (
                   <Button
-                    onClick={handleSaveLeadDetails}
+                    onClick={handleSaveChanges}
                     size="sm"
                     className="bg-green-600 hover:bg-green-700 text-white"
                   >
