@@ -75,6 +75,11 @@ const QRCodeManagerNew = () => {
   const [batchLandingPageType, setBatchLandingPageType] = useState("single");
   const [batchUseDefaultLinks, setBatchUseDefaultLinks] = useState(true);
   
+  // Batch QR Code color options
+  const [batchUseColorQR, setBatchUseColorQR] = useState(false);
+  const [batchQrForegroundColor, setBatchQrForegroundColor] = useState("#000000");
+  const [batchQrBackgroundColor, setBatchQrBackgroundColor] = useState("#FFFFFF");
+  
   useEffect(() => {
     fetchCampaigns();
   }, []);
