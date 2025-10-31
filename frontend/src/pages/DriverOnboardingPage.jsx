@@ -2592,7 +2592,7 @@ const DriverOnboardingPage = () => {
                     className="text-xs"
                   >
                     <Filter className="w-3 h-3 mr-1" />
-                    Filter by Source
+                    Filter by Stage/Status
                     {sourceFilter && ` (${sourceFilter})`}
                   </Button>
                 </PopoverTrigger>
