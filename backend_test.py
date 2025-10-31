@@ -7989,7 +7989,7 @@ Case Test 6,9876540006,interested"""
             self.test_battery_charge_audit_endpoint
         ]
         
-        all_tests = priority_tests + additional_tests
+        all_tests = critical_tests + priority_tests + additional_tests
         
         passed_tests = 0
         total_tests = len(all_tests)
