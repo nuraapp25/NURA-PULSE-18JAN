@@ -1564,32 +1564,106 @@ const QRCodeManagerNew = () => {
                                 {scan.ip_address || 'Unknown'}
                               </TableCell>
                               <TableCell>
-                                <div className="flex items-center gap-2">
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => window.open(qrData.utm_url, '_blank')}
-                                    className="text-xs h-6 px-2"
-                                  >
-                                    <Eye className="w-3 h-3 mr-1" />
-                                    View
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => {
-                                      navigator.clipboard.writeText(qrData.utm_url);
-                                      toast.success('UTM URL copied to clipboard!');
-                                    }}
-                                    className="text-xs h-6 px-2"
-                                  >
-                                    <Copy className="w-3 h-3 mr-1" />
-                                    Copy
-                                  </Button>
-                                </div>
-                                <div className="text-xs text-gray-500 mt-1 max-w-xs truncate">
-                                  {qrData.utm_url}
-                                </div>
+                                {qrData.landing_page_type === 'single' ? (
+                                  <div className="flex items-center gap-2">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => window.open(qrData.utm_url_web, '_blank')}
+                                      className="text-xs h-6 px-2"
+                                    >
+                                      <Eye className="w-3 h-3 mr-1" />
+                                      View
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(qrData.utm_url_web);
+                                        toast.success('UTM URL copied to clipboard!');
+                                      }}
+                                      className="text-xs h-6 px-2"
+                                    >
+                                      <Copy className="w-3 h-3 mr-1" />
+                                      Copy
+                                    </Button>
+                                    <div className="text-xs text-gray-500 mt-1 max-w-xs truncate">
+                                      {qrData.utm_url_web}
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="space-y-2">
+                                    {/* iOS App Store URL */}
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs font-medium w-12">iOS:</span>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => window.open(qrData.utm_url_ios, '_blank')}
+                                        className="text-xs h-5 px-1"
+                                      >
+                                        <Eye className="w-2 h-2" />
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => {
+                                          navigator.clipboard.writeText(qrData.utm_url_ios);
+                                          toast.success('iOS UTM URL copied!');
+                                        }}
+                                        className="text-xs h-5 px-1"
+                                      >
+                                        <Copy className="w-2 h-2" />
+                                      </Button>
+                                    </div>
+                                    {/* Android Play Store URL */}
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs font-medium w-12">Android:</span>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => window.open(qrData.utm_url_android, '_blank')}
+                                        className="text-xs h-5 px-1"
+                                      >
+                                        <Eye className="w-2 h-2" />
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => {
+                                          navigator.clipboard.writeText(qrData.utm_url_android);
+                                          toast.success('Android UTM URL copied!');
+                                        }}
+                                        className="text-xs h-5 px-1"
+                                      >
+                                        <Copy className="w-2 h-2" />
+                                      </Button>
+                                    </div>
+                                    {/* Web URL */}
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs font-medium w-12">Web:</span>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => window.open(qrData.utm_url_web, '_blank')}
+                                        className="text-xs h-5 px-1"
+                                      >
+                                        <Eye className="w-2 h-2" />
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => {
+                                          navigator.clipboard.writeText(qrData.utm_url_web);
+                                          toast.success('Web UTM URL copied!');
+                                        }}
+                                        className="text-xs h-5 px-1"
+                                      >
+                                        <Copy className="w-2 h-2" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                )}
                               </TableCell>
                             </TableRow>
                           ))
