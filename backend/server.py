@@ -10060,7 +10060,7 @@ async def create_batch_qr_codes(
                 "ios_url": batch_data.ios_url,
                 "android_url": batch_data.android_url,
                 "web_url": batch_data.web_url,
-                "single_url": batch_data.single_url,
+                "single_url": batch_data.single_url or "https://nuraemobility.co.in/",  # Default URL
                 "utm_source": utm_source,
                 "utm_medium": batch_data.utm_medium,
                 "utm_campaign": batch_data.utm_campaign or batch_data.campaign_name,
