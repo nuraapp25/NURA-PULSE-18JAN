@@ -179,9 +179,16 @@ const TelecallerDeskMobile = () => {
       );
       
       toast.success("Lead details updated successfully!");
+      
+      // Update local state with fresh data
+      const updatedLead = response.data.lead;
+      setSelectedLead(updatedLead);
+      setEditedLead({...updatedLead});
       setIsEditMode(false);
-      fetchLeads(); // Refresh leads list
-      setDetailsDialogOpen(false);
+      
+      // Refresh leads list in background
+      fetchLeads();
+      
     } catch (error) {
       toast.error(error.response?.data?.detail || "Failed to update lead");
     } finally {
