@@ -10538,18 +10538,25 @@ async def get_campaign_analytics(
             
             # Generate UTM URLs for all platforms
             utm_value = qr_code.get('utm_source', f"{campaign_name}-{qr_code.get('qr_name', 'Unknown')}")
-            utm_params = f"?utm={utm_value}"
+            
+            # Helper function to add UTM parameter correctly
+            def add_utm_to_url(base_url, utm_param):
+                if not base_url:
+                    return base_url
+                separator = "&" if "?" in base_url else "?"
+                return f"{base_url}{separator}utm={utm_param}"
             
             # Determine URLs for all platforms with UTM
             if qr_code.get('landing_page_type') == 'single':
-                utm_url_web = qr_code.get('single_url', '') + utm_params
+                base_url = qr_code.get('single_url', '')
+                utm_url_web = add_utm_to_url(base_url, utm_value)
                 utm_url_ios = utm_url_web  # Same URL for single mode
                 utm_url_android = utm_url_web  # Same URL for single mode
             else:
                 # Different URLs for each platform
-                utm_url_ios = qr_code.get('ios_url', '') + utm_params
-                utm_url_android = qr_code.get('android_url', '') + utm_params
-                utm_url_web = qr_code.get('web_url', qr_code.get('single_url', '')) + utm_params
+                utm_url_ios = add_utm_to_url(qr_code.get('ios_url', ''), utm_value)
+                utm_url_android = add_utm_to_url(qr_code.get('android_url', ''), utm_value)
+                utm_url_web = add_utm_to_url(qr_code.get('web_url', qr_code.get('single_url', '')), utm_value)
             
             analytics.append({
                 "qr_code_id": qr_id,
