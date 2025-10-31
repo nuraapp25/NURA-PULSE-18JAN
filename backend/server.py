@@ -10242,7 +10242,7 @@ async def scan_qr_code(
         # Get location data from IP (basic city/region detection)
         location_info = get_location_from_ip(client_ip)
         
-        # Log analytics
+        # Log analytics with enhanced tracking
         scan_data = {
             "id": str(uuid.uuid4()),
             "scan_identifier": scan_identifier,
@@ -10263,7 +10263,10 @@ async def scan_qr_code(
             "location_region": location_info.get("region", "Unknown"),
             "location_country": location_info.get("country", "Unknown"),
             "redirect_url": redirect_url,
-            "utm_params": f"utm={utm_value}"
+            "utm_params": f"utm={utm_value}",
+            # Note: App download cannot be directly tracked via QR scan
+            # This only tracks the redirect to app store, not the actual download
+            "tracking_note": "Tracks store redirect only, not app installation"
         }
         
         await db.qr_scans.insert_one(scan_data)
