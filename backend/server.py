@@ -9975,24 +9975,41 @@ class QRCodeBatchCreate(BaseModel):
     qr_foreground_color: str = "#000000"
     qr_background_color: str = "#FFFFFF"
 
-def get_location_from_ip(ip_address: str) -> dict:
-    """Get location information from IP address"""
+def get_location_from_ip(ip_address: str, headers: dict = None) -> dict:
+    """Get location information from IP address with X-Forwarded-For support"""
     try:
-        # Skip for local/private IPs
-        if ip_address in ["127.0.0.1", "localhost"] or ip_address.startswith("192.168.") or ip_address.startswith("10."):
+        # Try to get real public IP from X-Forwarded-For header (for users behind proxies)
+        real_ip = ip_address
+        if headers:
+            forwarded_for = headers.get("x-forwarded-for", "")
+            if forwarded_for:
+                # X-Forwarded-For can have multiple IPs, get the first one (client's real IP)
+                real_ip = forwarded_for.split(",")[0].strip()
+                logger.info(f"Using X-Forwarded-For IP: {real_ip} instead of direct IP: {ip_address}")
+        
+        # Skip for localhost only, but try geolocation for private IPs (they might be X-Forwarded)
+        if real_ip in ["127.0.0.1", "localhost"]:
             return {"city": "Local", "region": "Local", "country": "Local"}
         
-        # Use a free IP geolocation service
-        response = requests.get(f"http://ip-api.com/json/{ip_address}", timeout=3)
+        # Use a free IP geolocation service (works for public IPs)
+        response = requests.get(f"http://ip-api.com/json/{real_ip}", timeout=5)
         if response.status_code == 200:
             data = response.json()
-            return {
-                "city": data.get("city", "Unknown"),
-                "region": data.get("regionName", "Unknown"), 
-                "country": data.get("country", "Unknown")
-            }
-    except:
-        pass
+            # Check if geolocation was successful
+            if data.get("status") == "success":
+                city = data.get("city", "Unknown")
+                region = data.get("regionName", "Unknown")
+                country = data.get("country", "Unknown")
+                logger.info(f"Geolocation success for IP {real_ip}: {city}, {region}, {country}")
+                return {
+                    "city": city,
+                    "region": region,
+                    "country": country
+                }
+            else:
+                logger.warning(f"Geolocation failed for IP {real_ip}: {data.get('message', 'Unknown error')}")
+    except Exception as e:
+        logger.error(f"Error getting location for IP {ip_address}: {str(e)}")
     
     # Default fallback locations for India (since this is Nura Mobility)
     return {"city": "Chennai", "region": "Tamil Nadu", "country": "India"}
