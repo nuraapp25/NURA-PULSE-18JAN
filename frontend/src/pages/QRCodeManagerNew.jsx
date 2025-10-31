@@ -1560,7 +1560,7 @@ const QRCodeManagerNew = () => {
                       </TableHeader>
                       <TableBody>
                         {analyticsData.flatMap(qrData => 
-                          qrData.scan_details.map((scan, index) => (
+                          (qrData.scan_details || []).map((scan, index) => (
                             <TableRow key={`${qrData.qr_code_id}-${index}`}>
                               <TableCell>
                                 {scan.scanned_at ? new Date(scan.scanned_at).toLocaleString() : 'Unknown'}
@@ -1701,6 +1701,13 @@ const QRCodeManagerNew = () => {
                               </TableCell>
                             </TableRow>
                           ))
+                        )}
+                        {analyticsData.every(qrData => !qrData.scan_details || qrData.scan_details.length === 0) && (
+                          <TableRow>
+                            <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                              No scan data available. QR code hasn't been scanned yet.
+                            </TableCell>
+                          </TableRow>
                         )}
                       </TableBody>
                     </Table>
