@@ -1140,6 +1140,79 @@ const QRCodeManagerNew = () => {
                 </div>
               </div>
             </div>
+            
+            {/* QR Code Color Options */}
+            <div>
+              <Label>QR Code Colors</Label>
+              <div className="space-y-3 mt-2">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="default-colors"
+                    name="qr-colors"
+                    checked={!useColorQR}
+                    onChange={() => setUseColorQR(false)}
+                    className="w-4 h-4"
+                  />
+                  <Label htmlFor="default-colors" className="text-sm">
+                    Default (Black & White)
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="custom-colors"
+                    name="qr-colors"
+                    checked={useColorQR}
+                    onChange={() => setUseColorQR(true)}
+                    className="w-4 h-4"
+                  />
+                  <Label htmlFor="custom-colors" className="text-sm">
+                    Custom Colors
+                  </Label>
+                </div>
+                {useColorQR && (
+                  <div className="ml-6 space-y-3">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-xs">Foreground Color</Label>
+                        <div className="flex items-center space-x-2 mt-1">
+                          <input
+                            type="color"
+                            value={qrForegroundColor}
+                            onChange={(e) => setQrForegroundColor(e.target.value)}
+                            className="w-8 h-8 rounded border"
+                          />
+                          <Input
+                            value={qrForegroundColor}
+                            onChange={(e) => setQrForegroundColor(e.target.value)}
+                            placeholder="#000000"
+                            className="text-xs font-mono"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-xs">Background Color</Label>
+                        <div className="flex items-center space-x-2 mt-1">
+                          <input
+                            type="color"
+                            value={qrBackgroundColor}
+                            onChange={(e) => setQrBackgroundColor(e.target.value)}
+                            className="w-8 h-8 rounded border"
+                          />
+                          <Input
+                            value={qrBackgroundColor}
+                            onChange={(e) => setQrBackgroundColor(e.target.value)}
+                            placeholder="#FFFFFF"
+                            className="text-xs font-mono"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
           
           <DialogFooter>
