@@ -636,6 +636,33 @@ const QRCodeManagerNew = () => {
     }
   };
 
+  const handleUnpublishCampaign = async () => {
+    if (!selectedCampaign) {
+      toast.error("No campaign selected");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.post(`${API}/qr-codes/campaigns/${encodeURIComponent(selectedCampaign)}/unpublish`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      toast.success("Campaign unpublished successfully!");
+      
+      // Update the selected campaign data
+      setSelectedCampaignData(prev => ({ ...prev, published: false }));
+      
+      // Refresh campaigns to update status
+      fetchCampaigns();
+      setUnpublishConfirmOpen(false);
+    } catch (error) {
+      console.error("Error unpublishing campaign:", error);
+      toast.error(error.response?.data?.detail || "Failed to unpublish campaign");
+      setUnpublishConfirmOpen(false);
+    }
+  };
+
   const handleViewAnalytics = async () => {
     if (!selectedCampaign) {
       toast.error("No campaign selected");
