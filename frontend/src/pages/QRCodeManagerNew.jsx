@@ -1073,6 +1073,28 @@ const QRCodeManagerNew = () => {
               </Select>
             </div>
             
+            <div>
+              <Label>URL Configuration</Label>
+              <div className="flex gap-2 mt-2">
+                <Button
+                  type="button"
+                  variant={batchUseDefaultLinks ? "default" : "outline"}
+                  size="sm"
+                  onClick={handleBatchUseDefaultLinks}
+                >
+                  Use Default Links
+                </Button>
+                <Button
+                  type="button"
+                  variant={!batchUseDefaultLinks ? "default" : "outline"}
+                  size="sm"
+                  onClick={handleBatchUseCustomLinks}
+                >
+                  Use Custom Links
+                </Button>
+              </div>
+            </div>
+            
             {batchLandingPageType === "single" ? (
               <div>
                 <Label>Landing Page URL *</Label>
