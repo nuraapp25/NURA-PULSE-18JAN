@@ -44,6 +44,14 @@ const QRCodeManagerNew = () => {
   const [iosUrl, setIosUrl] = useState("");
   const [androidUrl, setAndroidUrl] = useState("");
   const [webUrl, setWebUrl] = useState("");
+  const [useDefaultLinks, setUseDefaultLinks] = useState(true);
+  
+  // Default URLs
+  const defaultUrls = {
+    ios: "https://apps.apple.com/az/app/nura-mobility/id6749004862",
+    android: "https://play.google.com/store/apps/details?id=in.co.nuraemobility.nuraApplication&pli=1",
+    web: "https://nuraemobility.co.in/"
+  };
   const [utmSource, setUtmSource] = useState("");
   const [utmMedium, setUtmMedium] = useState("qrscan");
   const [utmCampaign, setUtmCampaign] = useState("");
