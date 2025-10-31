@@ -10160,20 +10160,26 @@ async def scan_qr_code(
         
         # Build UTM parameters in the format requested by user
         utm_value = qr_code.get('utm_source', f"{qr_code.get('campaign_name', '')}-{qr_code.get('qr_name', '')}")
-        utm_params = f"?utm={utm_value}"
+        
+        # Helper function to add UTM parameter correctly
+        def add_utm_to_url(base_url, utm_param):
+            if not base_url:
+                return base_url
+            separator = "&" if "?" in base_url else "?"
+            return f"{base_url}{separator}utm={utm_param}"
         
         # Determine redirect URL
         if qr_code.get('landing_page_type') == 'single':
-            redirect_url = qr_code.get('single_url', '') + utm_params
+            redirect_url = add_utm_to_url(qr_code.get('single_url', ''), utm_value)
         else:
             if platform == "ios" and qr_code.get('ios_url'):
-                redirect_url = qr_code.get('ios_url') + utm_params
+                redirect_url = add_utm_to_url(qr_code.get('ios_url'), utm_value)
             elif platform == "android" and qr_code.get('android_url'):
-                redirect_url = qr_code.get('android_url') + utm_params
+                redirect_url = add_utm_to_url(qr_code.get('android_url'), utm_value)
             elif qr_code.get('web_url'):
-                redirect_url = qr_code.get('web_url') + utm_params
+                redirect_url = add_utm_to_url(qr_code.get('web_url'), utm_value)
             else:
-                redirect_url = qr_code.get('single_url', '') + utm_params
+                redirect_url = add_utm_to_url(qr_code.get('single_url', ''), utm_value)
         
         # Create a more robust scan identifier to prevent duplicates
         # Use IP + User Agent + QR code + 5-minute window to prevent browser prefetch duplicates
