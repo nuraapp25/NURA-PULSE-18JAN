@@ -10093,12 +10093,9 @@ async def scan_qr_code(
         # Get client IP
         client_ip = request.client.host
         
-        # Build UTM parameters
-        utm_params = f"?utm_source={qr_code.get('utm_source', '')}&utm_medium={qr_code.get('utm_medium', 'qrscan')}&utm_campaign={qr_code.get('utm_campaign', '')}"
-        if qr_code.get('utm_term'):
-            utm_params += f"&utm_term={qr_code.get('utm_term')}"
-        if qr_code.get('utm_content'):
-            utm_params += f"&utm_content={qr_code.get('utm_content')}"
+        # Build UTM parameters in the format requested by user
+        utm_value = qr_code.get('utm_source', f"{qr_code.get('campaign_name', '')}-{qr_code.get('qr_name', '')}")
+        utm_params = f"?utm={utm_value}"
         
         # Determine redirect URL
         if qr_code.get('landing_page_type') == 'single':
