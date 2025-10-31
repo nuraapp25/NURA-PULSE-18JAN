@@ -335,7 +335,7 @@ const QRCodeManagerNew = () => {
       const token = localStorage.getItem("token");
       // Delete all campaigns
       for (const campaign of campaigns) {
-        await axios.delete(`${API}/qr-codes/campaign/${encodeURIComponent(campaign.campaign_name)}`, {
+        await axios.delete(`${API}/qr-codes/campaigns/${encodeURIComponent(campaign.campaign_name)}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
       }
