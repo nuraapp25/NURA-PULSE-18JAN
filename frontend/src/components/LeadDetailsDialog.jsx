@@ -208,17 +208,39 @@ const LeadDetailsDialog = ({
         <DialogHeader>
           <DialogTitle className="dark:text-white flex items-center justify-between">
             Lead Details
-            <Button
-              onClick={() => setIsEditMode(!isEditMode)}
-              variant="outline"
-              size="sm"
-              className="ml-4"
-            >
-              {isEditMode ? "Cancel Edit" : "Edit Details"}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => setIsEditMode(!isEditMode)}
+                variant="outline"
+                size="sm"
+                disabled={updating}
+              >
+                {isEditMode ? "Cancel Edit" : "Edit Details"}
+              </Button>
+              {isEditMode && (
+                <Button
+                  onClick={onSave}
+                  size="sm"
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                  disabled={updating}
+                >
+                  {updating ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4 mr-2" />
+                      Save Changes
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
           </DialogTitle>
           <DialogDescription className="dark:text-gray-400">
-            {isEditMode ? "Edit lead information" : "View and update lead information"}
+            {isEditMode ? "Edit lead information and click Save Changes" : "View lead information"}
           </DialogDescription>
         </DialogHeader>
 
