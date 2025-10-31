@@ -437,6 +437,32 @@ const QRCodeManagerNew = () => {
       toast.error("Failed to delete all QR codes");
     }
   };
+
+  const handleDeleteIndividualQRCode = async (qrCodeId) => {
+    if (!window.confirm("Are you sure you want to delete this QR code?")) {
+      return;
+    }
+
+    try {
+      await axios.delete(`${API}/qr-codes/${qrCodeId}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+      });
+      
+      toast.success("QR code deleted successfully");
+      
+      // Remove from local state
+      setCampaignQRCodes(prev => prev.filter(qr => qr.id !== qrCodeId));
+      
+      // Also remove from selected if it was selected
+      setSelectedQRCodes(prev => prev.filter(id => id !== qrCodeId));
+      
+      // Refresh campaigns list to update counts
+      fetchCampaigns();
+    } catch (error) {
+      console.error("Error deleting QR code:", error);
+      toast.error("Failed to delete QR code");
+    }
+  };
   
   return (
     <div className="space-y-6 p-6">
