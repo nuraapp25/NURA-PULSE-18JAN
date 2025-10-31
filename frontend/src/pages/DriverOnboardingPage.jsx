@@ -1268,6 +1268,7 @@ const DriverOnboardingPage = () => {
       return;
     }
 
+    setAssigning(true);
     try {
       const token = localStorage.getItem("token");
       await axios.patch(
@@ -1304,6 +1305,8 @@ const DriverOnboardingPage = () => {
       setSelectedTelecallerForAssignment("");
     } catch (error) {
       toast.error(error.response?.data?.detail || "Failed to assign leads");
+    } finally {
+      setAssigning(false);
     }
   };
 
