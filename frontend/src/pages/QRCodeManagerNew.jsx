@@ -705,10 +705,11 @@ const QRCodeManagerNew = () => {
               <div>
                 <Label>Landing Page URL *</Label>
                 <Input
-                  placeholder="https://example.com"
+                  placeholder="https://nuraemobility.co.in/"
                   value={singleUrl}
                   onChange={(e) => setSingleUrl(e.target.value)}
                 />
+                <p className="text-xs text-gray-500 mt-1">Default: https://nuraemobility.co.in/</p>
               </div>
             ) : (
               <>
