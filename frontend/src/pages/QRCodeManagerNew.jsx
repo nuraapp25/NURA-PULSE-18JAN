@@ -244,6 +244,199 @@ const QRCodeManagerNew = () => {
     toast.success("Copied to clipboard!");
   };
   
+  // Checkbox handlers for campaigns
+  const handleSelectAllCampaigns = () => {
+    if (selectAllCampaigns) {
+      setSelectedCampaigns([]);
+    } else {
+      setSelectedCampaigns(campaigns.map(c => c.campaign_name));
+    }
+    setSelectAllCampaigns(!selectAllCampaigns);
+  };
+  
+  const handleCampaignCheckbox = (campaignName) => {
+    if (selectedCampaigns.includes(campaignName)) {
+      setSelectedCampaigns(selectedCampaigns.filter(c => c !== campaignName));
+      setSelectAllCampaigns(false);
+    } else {
+      const newSelected = [...selectedCampaigns, campaignName];
+      setSelectedCampaigns(newSelected);
+      if (newSelected.length === campaigns.length) {
+        setSelectAllCampaigns(true);
+      }
+    }
+  };
+  
+  // Checkbox handlers for QR codes
+  const handleSelectAllQRCodes = () => {
+    if (selectAllQRCodes) {
+      setSelectedQRCodes([]);
+    } else {
+      setSelectedQRCodes(campaignQRCodes.map(qr => qr.id));
+    }
+    setSelectAllQRCodes(!selectAllQRCodes);
+  };
+  
+  const handleQRCodeCheckbox = (qrId) => {
+    if (selectedQRCodes.includes(qrId)) {
+      setSelectedQRCodes(selectedQRCodes.filter(id => id !== qrId));
+      setSelectAllQRCodes(false);
+    } else {
+      const newSelected = [...selectedQRCodes, qrId];
+      setSelectedQRCodes(newSelected);
+      if (newSelected.length === campaignQRCodes.length) {
+        setSelectAllQRCodes(true);
+      }
+    }
+  };
+  
+  // Bulk operations for campaigns
+  const handleDeleteSelectedCampaigns = async () => {
+    if (selectedCampaigns.length === 0) {
+      toast.error("No campaigns selected");
+      return;
+    }
+    
+    if (!window.confirm(`Are you sure you want to delete ${selectedCampaigns.length} campaign(s)?`)) {
+      return;
+    }
+    
+    try {
+      const token = localStorage.getItem("token");
+      // Delete each campaign
+      for (const campaignName of selectedCampaigns) {
+        await axios.delete(`${API}/qr-codes/campaign/${encodeURIComponent(campaignName)}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }
+      
+      toast.success(`Deleted ${selectedCampaigns.length} campaign(s)`);
+      setSelectedCampaigns([]);
+      setSelectAllCampaigns(false);
+      fetchCampaigns();
+    } catch (error) {
+      console.error("Error deleting campaigns:", error);
+      toast.error("Failed to delete campaigns");
+    }
+  };
+  
+  const handleDeleteAllCampaigns = async () => {
+    if (campaigns.length === 0) {
+      toast.error("No campaigns to delete");
+      return;
+    }
+    
+    if (!window.confirm(`Are you sure you want to delete ALL ${campaigns.length} campaigns?`)) {
+      return;
+    }
+    
+    try {
+      const token = localStorage.getItem("token");
+      // Delete all campaigns
+      for (const campaign of campaigns) {
+        await axios.delete(`${API}/qr-codes/campaign/${encodeURIComponent(campaign.campaign_name)}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }
+      
+      toast.success(`Deleted all ${campaigns.length} campaigns`);
+      setSelectedCampaigns([]);
+      setSelectAllCampaigns(false);
+      fetchCampaigns();
+    } catch (error) {
+      console.error("Error deleting all campaigns:", error);
+      toast.error("Failed to delete all campaigns");
+    }
+  };
+  
+  // Bulk operations for QR codes
+  const handleDeleteSelectedQRCodes = async () => {
+    if (selectedQRCodes.length === 0) {
+      toast.error("No QR codes selected");
+      return;
+    }
+    
+    if (!window.confirm(`Are you sure you want to delete ${selectedQRCodes.length} QR code(s)?`)) {
+      return;
+    }
+    
+    try {
+      const token = localStorage.getItem("token");
+      // Delete each QR code
+      for (const qrId of selectedQRCodes) {
+        await axios.delete(`${API}/qr-codes/${qrId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }
+      
+      toast.success(`Deleted ${selectedQRCodes.length} QR code(s)`);
+      setSelectedQRCodes([]);
+      setSelectAllQRCodes(false);
+      fetchCampaignQRCodes(selectedCampaign);
+    } catch (error) {
+      console.error("Error deleting QR codes:", error);
+      toast.error("Failed to delete QR codes");
+    }
+  };
+  
+  const handleDownloadSelectedQRCodes = () => {
+    if (selectedQRCodes.length === 0) {
+      toast.error("No QR codes selected");
+      return;
+    }
+    
+    selectedQRCodes.forEach(qrId => {
+      const qrCode = campaignQRCodes.find(qr => qr.id === qrId);
+      if (qrCode) {
+        downloadQRCode(qrCode);
+      }
+    });
+    
+    toast.success(`Downloading ${selectedQRCodes.length} QR code(s)`);
+  };
+  
+  const handleDownloadAllQRCodes = () => {
+    if (campaignQRCodes.length === 0) {
+      toast.error("No QR codes to download");
+      return;
+    }
+    
+    campaignQRCodes.forEach(qrCode => {
+      downloadQRCode(qrCode);
+    });
+    
+    toast.success(`Downloading all ${campaignQRCodes.length} QR codes`);
+  };
+  
+  const handleDeleteAllQRCodes = async () => {
+    if (campaignQRCodes.length === 0) {
+      toast.error("No QR codes to delete");
+      return;
+    }
+    
+    if (!window.confirm(`Are you sure you want to delete ALL ${campaignQRCodes.length} QR codes in this campaign?`)) {
+      return;
+    }
+    
+    try {
+      const token = localStorage.getItem("token");
+      // Delete all QR codes
+      for (const qrCode of campaignQRCodes) {
+        await axios.delete(`${API}/qr-codes/${qrCode.id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }
+      
+      toast.success(`Deleted all ${campaignQRCodes.length} QR codes`);
+      setSelectedQRCodes([]);
+      setSelectAllQRCodes(false);
+      fetchCampaignQRCodes(selectedCampaign);
+    } catch (error) {
+      console.error("Error deleting all QR codes:", error);
+      toast.error("Failed to delete all QR codes");
+    }
+  };
+  
   return (
     <div className="space-y-6 p-6">
       {/* Header */}
