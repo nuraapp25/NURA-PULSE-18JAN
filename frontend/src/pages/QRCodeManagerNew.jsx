@@ -597,6 +597,51 @@ const QRCodeManagerNew = () => {
       toast.error("Failed to delete QR code");
     }
   };
+
+  const handlePublishCampaign = async () => {
+    if (!selectedCampaign) {
+      toast.error("No campaign selected");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.post(`${API}/qr-codes/campaigns/${encodeURIComponent(selectedCampaign)}/publish`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      toast.success("Campaign published successfully!");
+      
+      // Update the selected campaign data
+      setSelectedCampaignData(prev => ({ ...prev, published: true }));
+      
+      // Refresh campaigns to update status
+      fetchCampaigns();
+    } catch (error) {
+      console.error("Error publishing campaign:", error);
+      toast.error(error.response?.data?.detail || "Failed to publish campaign");
+    }
+  };
+
+  const handleViewAnalytics = async () => {
+    if (!selectedCampaign) {
+      toast.error("No campaign selected");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(`${API}/qr-codes/campaigns/${encodeURIComponent(selectedCampaign)}/analytics`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setAnalyticsData(response.data.analytics || []);
+      setAnalyticsDialogOpen(true);
+    } catch (error) {
+      console.error("Error fetching analytics:", error);
+      toast.error("Failed to load analytics");
+    }
+  };
   
   return (
     <div className="space-y-6 p-6">
