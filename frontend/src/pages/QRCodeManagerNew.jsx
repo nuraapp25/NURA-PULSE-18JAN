@@ -567,18 +567,90 @@ const QRCodeManagerNew = () => {
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={() => setSelectedCampaign(null)}
+                onClick={() => {
+                  setSelectedCampaign(null);
+                  setSelectedQRCodes([]);
+                  setSelectAllQRCodes(false);
+                }}
               >
                 Close
               </Button>
             </CardTitle>
           </CardHeader>
           <CardContent>
+            {/* Bulk Actions for QR Codes */}
+            {campaignQRCodes.length > 0 && (
+              <div className="flex items-center gap-3 mb-4 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    checked={selectAllQRCodes}
+                    onCheckedChange={handleSelectAllQRCodes}
+                    id="select-all-qrcodes"
+                  />
+                  <Label htmlFor="select-all-qrcodes" className="text-sm">
+                    Select All ({campaignQRCodes.length})
+                  </Label>
+                </div>
+                {selectedQRCodes.length > 0 && (
+                  <>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleDownloadSelectedQRCodes}
+                      className="border-teal-500 text-teal-600 hover:bg-teal-50"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Download Selected ({selectedQRCodes.length})
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={handleDeleteSelectedQRCodes}
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Delete Selected ({selectedQRCodes.length})
+                    </Button>
+                  </>
+                )}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleDownloadAllQRCodes}
+                  className="border-teal-500 text-teal-600 hover:bg-teal-50"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download All
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleDeleteAllQRCodes}
+                  className="border-red-500 text-red-600 hover:bg-red-50"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete All
+                </Button>
+              </div>
+            )}
+            
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {campaignQRCodes.map((qrCode) => (
-                <Card key={qrCode.id} className="border-2">
+                <Card 
+                  key={qrCode.id} 
+                  className={`border-2 ${
+                    selectedQRCodes.includes(qrCode.id)
+                      ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/20'
+                      : ''
+                  }`}
+                >
                   <CardContent className="pt-6">
                     <div className="text-center">
+                      <div className="flex items-center justify-center mb-2">
+                        <Checkbox
+                          checked={selectedQRCodes.includes(qrCode.id)}
+                          onCheckedChange={() => handleQRCodeCheckbox(qrCode.id)}
+                        />
+                      </div>
                       <img src={qrCode.qr_image} alt="QR Code" className="w-48 h-48 mx-auto mb-4" />
                       <p className="font-semibold text-lg mb-2">{qrCode.qr_name || qrCode.utm_source}</p>
                       <p className="text-xs text-gray-500 mb-2">Scans: {qrCode.scan_count}</p>
