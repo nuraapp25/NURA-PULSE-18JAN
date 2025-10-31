@@ -338,7 +338,19 @@ const LeadDetailsDialog = ({
                 />
               ) : (
                 <p className="text-base text-gray-900 dark:text-white mt-1 whitespace-pre-wrap min-h-[80px] p-2 border border-gray-200 dark:border-gray-700 rounded">
-                  {typeof lead.remarks === 'string' ? lead.remarks : (lead.remarks ? JSON.stringify(lead.remarks) : 'No remarks')}
+                  {(() => {
+                    if (!lead.remarks) return 'No remarks';
+                    if (typeof lead.remarks === 'string') return lead.remarks;
+                    if (Array.isArray(lead.remarks) && lead.remarks.length > 0) {
+                      // Handle old format - array of remark objects
+                      return lead.remarks.map(remark => remark.text || remark).join('\n');
+                    }
+                    if (typeof lead.remarks === 'object') {
+                      // Handle single remark object
+                      return lead.remarks.text || 'Invalid remark format';
+                    }
+                    return 'No remarks';
+                  })()}
                 </p>
               )}
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
