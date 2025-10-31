@@ -3513,15 +3513,23 @@ const DriverOnboardingPage = () => {
                 setSelectedTelecallerForAssignment("");
               }}
               className="dark:border-gray-600"
+              disabled={assigning}
             >
               Cancel
             </Button>
             <Button
               onClick={handleBulkAssignLeads}
-              disabled={!selectedTelecallerForAssignment}
+              disabled={!selectedTelecallerForAssignment || assigning}
               className="bg-green-600 hover:bg-green-700"
             >
-              Assign {selectedLeadIds.length} Lead(s)
+              {assigning ? (
+                <>
+                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                  Assigning...
+                </>
+              ) : (
+                `Assign ${selectedLeadIds.length} Lead(s)`
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
