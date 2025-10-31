@@ -629,13 +629,29 @@ const DriverOnboardingPage = () => {
     window.open(sheetUrl, '_blank');
   };
 
-  const handleLeadClick = (lead, e) => {
+  const handleLeadClick = async (lead, e) => {
     // Don't open dialog if clicking on checkbox
     if (e.target.type === 'checkbox' || e.target.closest('label')) {
       return;
     }
-    setSelectedLead(lead);
-    setEditedLead({...lead}); // Create a copy for editing
+    
+    try {
+      // Always fetch fresh lead data to ensure we have latest remarks
+      const token = localStorage.getItem("token");
+      const response = await axios.get(`${API}/driver-onboarding/leads/${lead.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const freshLead = response.data;
+      setSelectedLead(freshLead);
+      setEditedLead({...freshLead}); // Create a copy for editing with fresh data
+    } catch (error) {
+      // If fetch fails, use the lead from array as fallback
+      console.error("Failed to fetch fresh lead data:", error);
+      setSelectedLead(lead);
+      setEditedLead({...lead});
+    }
+    
     setIsEditMode(false); // Start in view mode
     setDetailDialogOpen(true);
     // Fetch documents status for this lead
