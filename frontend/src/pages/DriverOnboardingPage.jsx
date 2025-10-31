@@ -415,6 +415,13 @@ const DriverOnboardingPage = () => {
     fetchLeads();
   }, [debouncedSearchQuery]);
   
+  // Refetch leads when date filters change
+  useEffect(() => {
+    if (startDate || endDate) {
+      fetchLeads();
+    }
+  }, [startDate, endDate]);
+  
   // Refetch summary when date or source filter changes
   useEffect(() => {
     if (leads.length > 0) {
