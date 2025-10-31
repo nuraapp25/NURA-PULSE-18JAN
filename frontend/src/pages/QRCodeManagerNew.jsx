@@ -373,6 +373,9 @@ const QRCodeManagerNew = () => {
     setAndroidUrl("");
     setWebUrl("");
     setUseDefaultLinks(true);
+    setUseColorQR(false);
+    setQrForegroundColor("#000000");
+    setQrBackgroundColor("#FFFFFF");
     setUtmSource("");
     setUtmMedium("qrscan");
     setUtmCampaign("");
@@ -388,6 +391,9 @@ const QRCodeManagerNew = () => {
     setAutoFillUtm(true);
     setBatchLandingPageType("single");
     setBatchUseDefaultLinks(true);
+    setBatchUseColorQR(false);
+    setBatchQrForegroundColor("#000000");
+    setBatchQrBackgroundColor("#FFFFFF");
   };
   
   const downloadQRCode = (qrCode) => {
