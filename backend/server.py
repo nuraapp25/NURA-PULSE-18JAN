@@ -10286,6 +10286,10 @@ async def delete_campaign(
         if not qr_codes:
             raise HTTPException(status_code=404, detail="Campaign not found")
         
+        # Check if any QR code in the campaign is published
+        if any(qr.get("published", False) for qr in qr_codes):
+            raise HTTPException(status_code=400, detail="Cannot delete published campaign")
+        
         # Delete all QR codes in the campaign
         result = await db.qr_codes.delete_many({"campaign_name": campaign_name})
         
