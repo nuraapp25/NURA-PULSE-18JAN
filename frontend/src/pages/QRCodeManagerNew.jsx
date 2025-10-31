@@ -1379,6 +1379,79 @@ const QRCodeManagerNew = () => {
                 </div>
               </>
             )}
+            
+            {/* Batch QR Code Color Options */}
+            <div>
+              <Label>QR Code Colors</Label>
+              <div className="space-y-3 mt-2">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="batch-default-colors"
+                    name="batch-qr-colors"
+                    checked={!batchUseColorQR}
+                    onChange={() => setBatchUseColorQR(false)}
+                    className="w-4 h-4"
+                  />
+                  <Label htmlFor="batch-default-colors" className="text-sm">
+                    Default (Black & White)
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="batch-custom-colors"
+                    name="batch-qr-colors"
+                    checked={batchUseColorQR}
+                    onChange={() => setBatchUseColorQR(true)}
+                    className="w-4 h-4"
+                  />
+                  <Label htmlFor="batch-custom-colors" className="text-sm">
+                    Custom Colors
+                  </Label>
+                </div>
+                {batchUseColorQR && (
+                  <div className="ml-6 space-y-3">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-xs">Foreground Color</Label>
+                        <div className="flex items-center space-x-2 mt-1">
+                          <input
+                            type="color"
+                            value={batchQrForegroundColor}
+                            onChange={(e) => setBatchQrForegroundColor(e.target.value)}
+                            className="w-8 h-8 rounded border"
+                          />
+                          <Input
+                            value={batchQrForegroundColor}
+                            onChange={(e) => setBatchQrForegroundColor(e.target.value)}
+                            placeholder="#000000"
+                            className="text-xs font-mono"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-xs">Background Color</Label>
+                        <div className="flex items-center space-x-2 mt-1">
+                          <input
+                            type="color"
+                            value={batchQrBackgroundColor}
+                            onChange={(e) => setBatchQrBackgroundColor(e.target.value)}
+                            className="w-8 h-8 rounded border"
+                          />
+                          <Input
+                            value={batchQrBackgroundColor}
+                            onChange={(e) => setBatchQrBackgroundColor(e.target.value)}
+                            placeholder="#FFFFFF"
+                            className="text-xs font-mono"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
           
           <DialogFooter>
