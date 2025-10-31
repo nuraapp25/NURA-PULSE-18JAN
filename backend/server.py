@@ -10175,18 +10175,28 @@ async def scan_qr_code(
             else:
                 redirect_url = qr_code.get('single_url', '') + utm_params
         
-        # Create a unique scan identifier based on IP + User Agent + QR code + timestamp (rounded to minute)
+        # Create a more robust scan identifier to prevent duplicates
+        # Use IP + User Agent + QR code + 5-minute window to prevent browser prefetch duplicates
         import hashlib
-        current_minute = datetime.now(timezone.utc).replace(second=0, microsecond=0).isoformat()
-        scan_identifier = hashlib.md5(f"{client_ip}_{user_agent_string}_{qr_code['id']}_{current_minute}".encode()).hexdigest()
+        current_5min = datetime.now(timezone.utc).replace(second=0, microsecond=0)
+        current_5min = current_5min.replace(minute=current_5min.minute // 5 * 5)
+        scan_identifier = hashlib.md5(f"{client_ip}_{user_agent_string[:100]}_{qr_code['id']}_{current_5min.isoformat()}".encode()).hexdigest()
         
-        # Check if this exact scan combination has been recorded in the last 5 minutes
+        # Check for recent scans with same identifier or IP+QR combination in last 2 minutes
+        cutoff_time = (datetime.now(timezone.utc) - timedelta(minutes=2)).isoformat()
         recent_scan = await db.qr_scans.find_one({
-            "scan_identifier": scan_identifier
+            "$or": [
+                {"scan_identifier": scan_identifier},
+                {
+                    "qr_code_id": qr_code["id"],
+                    "ip_address": client_ip,
+                    "scanned_at": {"$gte": cutoff_time}
+                }
+            ]
         })
         
         if recent_scan:
-            # This is a duplicate scan, just redirect without logging
+            # This is a duplicate scan (browser prefetch, double-click, etc.)
             logger.info(f"Duplicate scan prevented for QR {short_code} from IP {client_ip}")
             return RedirectResponse(url=redirect_url, status_code=307)
         
