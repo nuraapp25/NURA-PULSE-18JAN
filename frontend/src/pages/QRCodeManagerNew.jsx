@@ -887,37 +887,54 @@ const QRCodeManagerNew = () => {
               <div>
                 <Label>Landing Page URL *</Label>
                 <Input
-                  placeholder="https://nuraemobility.co.in/"
+                  placeholder={useDefaultLinks ? defaultUrls.web : "https://example.com"}
                   value={singleUrl}
                   onChange={(e) => setSingleUrl(e.target.value)}
+                  disabled={useDefaultLinks}
                 />
-                <p className="text-xs text-gray-500 mt-1">Default: https://nuraemobility.co.in/</p>
+                {useDefaultLinks ? (
+                  <p className="text-xs text-teal-600 mt-1">Using default: {defaultUrls.web}</p>
+                ) : (
+                  <p className="text-xs text-gray-500 mt-1">Enter your custom landing page URL</p>
+                )}
               </div>
             ) : (
               <>
                 <div>
                   <Label>iOS App Store URL *</Label>
                   <Input
-                    placeholder="https://apps.apple.com/..."
+                    placeholder={useDefaultLinks ? defaultUrls.ios : "https://apps.apple.com/..."}
                     value={iosUrl}
                     onChange={(e) => setIosUrl(e.target.value)}
+                    disabled={useDefaultLinks}
                   />
+                  {useDefaultLinks && (
+                    <p className="text-xs text-teal-600 mt-1">Using default: {defaultUrls.ios}</p>
+                  )}
                 </div>
                 <div>
                   <Label>Android Play Store URL *</Label>
                   <Input
-                    placeholder="https://play.google.com/..."
+                    placeholder={useDefaultLinks ? defaultUrls.android : "https://play.google.com/store/apps/..."}
                     value={androidUrl}
                     onChange={(e) => setAndroidUrl(e.target.value)}
+                    disabled={useDefaultLinks}
                   />
+                  {useDefaultLinks && (
+                    <p className="text-xs text-teal-600 mt-1">Using default: {defaultUrls.android}</p>
+                  )}
                 </div>
                 <div>
                   <Label>Web App URL *</Label>
                   <Input
-                    placeholder="https://example.com/download"
+                    placeholder={useDefaultLinks ? defaultUrls.web : "https://webapp.example.com"}
                     value={webUrl}
                     onChange={(e) => setWebUrl(e.target.value)}
+                    disabled={useDefaultLinks}
                   />
+                  {useDefaultLinks && (
+                    <p className="text-xs text-teal-600 mt-1">Using default: {defaultUrls.web}</p>
+                  )}
                 </div>
               </>
             )}
