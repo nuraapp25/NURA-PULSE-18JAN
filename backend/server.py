@@ -10014,6 +10014,8 @@ async def create_batch_qr_codes(
                 "id": str(uuid.uuid4()),
                 "short_code": short_code,
                 "tracking_url": tracking_url,
+                "qr_content": qr_content,  # The actual content encoded in QR
+                "qr_mode": batch_data.qr_mode,  # "simple" or "tracking"
                 "qr_name": qr_name,
                 "campaign_name": batch_data.campaign_name,
                 "landing_page_type": batch_data.landing_page_type,
