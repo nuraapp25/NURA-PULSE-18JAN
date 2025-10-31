@@ -1261,41 +1261,104 @@ const QRCodeManagerNew = () => {
 
       {/* Analytics Dialog */}
       <Dialog open={analyticsDialogOpen} onOpenChange={setAnalyticsDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Campaign Analytics - {selectedCampaign}</DialogTitle>
           </DialogHeader>
           
-          <div className="space-y-4">
+          <div className="space-y-6">
             {analyticsData.length > 0 ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>QR Code</TableHead>
-                    <TableHead>Total Scans</TableHead>
-                    <TableHead>iOS Scans</TableHead>
-                    <TableHead>Android Scans</TableHead>
-                    <TableHead>Web Scans</TableHead>
-                    <TableHead>Last Scan</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {analyticsData.map((item, index) => (
-                    <TableRow key={index}>
-                      <TableCell className="font-medium">{item.qr_name || item.utm_source}</TableCell>
-                      <TableCell>{item.total_scans}</TableCell>
-                      <TableCell>{item.ios_scans}</TableCell>
-                      <TableCell>{item.android_scans}</TableCell>
-                      <TableCell>{item.web_scans}</TableCell>
-                      <TableCell>{item.last_scan ? new Date(item.last_scan).toLocaleDateString() : 'Never'}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <>
+                {/* Summary Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="text-2xl font-bold">{analyticsData.reduce((sum, item) => sum + item.total_scans, 0)}</div>
+                      <p className="text-xs text-muted-foreground">Total Scans</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="text-2xl font-bold">{analyticsData.reduce((sum, item) => sum + item.ios_scans, 0)}</div>
+                      <p className="text-xs text-muted-foreground">iOS Scans</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="text-2xl font-bold">{analyticsData.reduce((sum, item) => sum + item.android_scans, 0)}</div>
+                      <p className="text-xs text-muted-foreground">Android Scans</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="text-2xl font-bold">{analyticsData.reduce((sum, item) => sum + item.web_scans, 0)}</div>
+                      <p className="text-xs text-muted-foreground">Web Scans</p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Detailed Scan Records */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Detailed Scan Records</h3>
+                  <div className="border rounded-lg overflow-hidden">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Date & Time</TableHead>
+                          <TableHead>QR Code</TableHead>
+                          <TableHead>Device & Browser</TableHead>
+                          <TableHead>Location</TableHead>
+                          <TableHead>IP Address</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {analyticsData.flatMap(qrData => 
+                          qrData.scan_details.map((scan, index) => (
+                            <TableRow key={`${qrData.qr_code_id}-${index}`}>
+                              <TableCell>
+                                {scan.scanned_at ? new Date(scan.scanned_at).toLocaleString() : 'Unknown'}
+                              </TableCell>
+                              <TableCell className="font-medium">
+                                {qrData.qr_name}
+                              </TableCell>
+                              <TableCell>
+                                <div className="space-y-1">
+                                  <div className="text-sm font-medium">
+                                    {scan.platform === 'ios' && '📱 iOS'} 
+                                    {scan.platform === 'android' && '🤖 Android'}
+                                    {scan.platform === 'desktop' && '💻 Desktop'}
+                                    {scan.platform === 'mobile_other' && '📱 Mobile'}
+                                  </div>
+                                  <div className="text-xs text-gray-500">
+                                    {scan.os_family} • {scan.browser}
+                                  </div>
+                                  <div className="text-xs text-gray-400">
+                                    {scan.device}
+                                  </div>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="space-y-1">
+                                  <div className="text-sm">Location data not available</div>
+                                  <div className="text-xs text-gray-500">GPS coordinates not captured</div>
+                                </div>
+                              </TableCell>
+                              <TableCell className="font-mono text-xs">
+                                {scan.ip_address || 'Unknown'}
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              </>
             ) : (
               <div className="text-center py-8">
                 <BarChart3 className="w-12 h-12 mx-auto text-gray-400 mb-4" />
                 <p className="text-gray-500">No analytics data available</p>
+                <p className="text-xs text-gray-400 mt-2">QR codes haven't been scanned yet</p>
               </div>
             )}
           </div>
