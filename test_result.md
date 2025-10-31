@@ -759,6 +759,36 @@ backend:
           agent: "testing"
           comment: "✅ EXCELLENT: Date Filtering features working perfectly across all endpoints. Testing findings: 1) GET /driver-onboarding/leads with date filtering: ✅ Successfully filters leads by date range (start_date=2025-01-01&end_date=2025-12-31) returning 16,725 leads. 2) GET /driver-onboarding/status-summary with date filtering: ✅ Date filtering works correctly, properly reflects date range in response (2025-01-01 to 2025-12-31), shows filtered count of 16,725 leads in specified range. 3) MULTIPLE DATE FORMATS: ✅ Supports both YYYY-MM-DD and DD-MM-YYYY date formats successfully. 4) RESPONSE STRUCTURE: Date filter information properly included in API responses for verification. All date filtering functionality is working as requested in the review. Success rate: 100% (4/4 tests passed) - perfect implementation."
 
+  - task: "Remarks Persistence Fix - Lead Details Dialog"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/TelecallerDeskMobile.jsx, /app/frontend/src/pages/DriverOnboardingPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "IMPLEMENTATION COMPLETE: Fixed remarks not persisting when Lead Details Dialog is reopened. ROOT CAUSE: In TelecallerDeskMobile.jsx, after saving, fetchLeads() was called but it's async and the leads array wasn't immediately updated when user clicked the same card again. The openLeadDetails function was setting selectedLead from the stale leads array. FIX APPLIED: Modified handleSaveLeadDetails in TelecallerDeskMobile.jsx to immediately update the leads array using setLeads with prevLeads.map() instead of calling fetchLeads() asynchronously. Now the leads array is updated synchronously with the fresh data from the API response, ensuring when the dialog is reopened, it shows the latest remarks. DriverOnboardingPage.jsx was already correctly implementing this pattern. Both files now properly update selectedLead, editedLead, and the leads array with fresh data from response.data.lead. Frontend restarted. Ready for backend testing to verify remarks are saving correctly to database and comprehensive frontend testing to verify persistence."
+        - working: false
+          agent: "user"
+          comment: "User reported remarks are still not saving and showing up again when reopened. Need to make it persistent and save to database centrally."
+
+  - task: "Export Database Fix - Manage DB"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/ManagePage.jsx, /app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+          agent: "user"
+          comment: "User reported Export Database functionality in Manage DB > Export Database is not working."
+        - working: "NA"
+          agent: "main"
+          comment: "INVESTIGATION: Backend endpoint GET /api/admin/database/export exists at line 9294 in server.py and looks correct. It exports all collections as JSON with proper master_admin permission check. Frontend ManagePage.jsx has correct implementation with proper error handling and blob download. Need to test the actual functionality to identify the issue. Ready for backend testing."
+
 frontend:
   - task: "QR Code Manager - Access and Navigation"
     implemented: true
