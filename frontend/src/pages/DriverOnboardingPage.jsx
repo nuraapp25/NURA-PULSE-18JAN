@@ -3216,7 +3216,7 @@ const DriverOnboardingPage = () => {
                       Remarks
                     </Label>
                     <Button
-                      onClick={handleSaveLeadDetails}
+                      onClick={handleSaveChanges}
                       size="sm"
                       variant="outline"
                       className="h-7 text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-300"
