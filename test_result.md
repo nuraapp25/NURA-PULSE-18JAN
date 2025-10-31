@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Fix Telecaller's Desk issues (Status Update and Lead Details Dialog), create Nov 2025 Payment Data Extractor folder, and verify all apps functionality."
+user_problem_statement: "Fix remarks persistence in Lead Details Dialog (not saving/showing when reopened in Driver Onboarding and Telecaller's Desk) and fix Export Database functionality in Manage DB page."
 
 backend:
   - task: "Telecaller's Desk - Status Update Fix"
