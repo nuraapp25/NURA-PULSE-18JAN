@@ -227,7 +227,10 @@ const QRCodeManagerNew = () => {
         utm_medium: utmMedium,
         utm_campaign: utmCampaign || campaignName,
         utm_term: utmTerm || null,
-        utm_content: utmContent || null
+        utm_content: utmContent || null,
+        use_color_qr: useColorQR,
+        qr_foreground_color: useColorQR ? qrForegroundColor : "#000000",
+        qr_background_color: useColorQR ? qrBackgroundColor : "#FFFFFF"
       };
       
       const response = await axios.post(`${API}/qr-codes/create`, payload, {
