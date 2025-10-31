@@ -112,6 +112,34 @@ const QRCodeManagerNew = () => {
     setAndroidUrl("");
     setWebUrl("");
   };
+
+  // Effect to set default URLs when landing page type changes
+  useEffect(() => {
+    if (useDefaultLinks) {
+      if (landingPageType === "single") {
+        setSingleUrl(defaultUrls.web);
+      } else {
+        setIosUrl(defaultUrls.ios);
+        setAndroidUrl(defaultUrls.android);
+        setWebUrl(defaultUrls.web);
+      }
+    }
+  }, [landingPageType, useDefaultLinks]);
+
+  // Effect for batch landing page type changes
+  useEffect(() => {
+    if (batchUseDefaultLinks) {
+      if (batchLandingPageType === "single") {
+        setSingleUrl(defaultUrls.web);
+      } else {
+        setIosUrl(defaultUrls.ios);
+        setAndroidUrl(defaultUrls.android);
+        setWebUrl(defaultUrls.web);
+      }
+    }
+  }, [batchLandingPageType, batchUseDefaultLinks]);
+
+  const fetchCampaigns = async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
