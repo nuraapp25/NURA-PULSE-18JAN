@@ -1414,6 +1414,37 @@ const QRCodeManagerNew = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Unpublish Confirmation Dialog */}
+      <Dialog open={unpublishConfirmOpen} onOpenChange={setUnpublishConfirmOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Unpublish Campaign</DialogTitle>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <p className="text-gray-700">
+              Are you sure you want to unpublish the campaign "{selectedCampaign}"?
+            </p>
+            <p className="text-sm text-gray-500 mt-2">
+              This will allow the campaign and its QR codes to be deleted again, but will not affect any existing scans or analytics data.
+            </p>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setUnpublishConfirmOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleUnpublishCampaign}
+              className="bg-orange-600 hover:bg-orange-700"
+            >
+              Unpublish Campaign
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
