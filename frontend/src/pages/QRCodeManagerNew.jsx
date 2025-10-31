@@ -855,28 +855,29 @@ const QRCodeManagerNew = () => {
                   Delete All
                 </Button>
               </div>
+            )}
               
-              {/* Campaign Action Buttons */}
-              <div className="flex items-center gap-3 mb-4 flex-wrap border-t pt-4">
-                <Button
-                  size="sm"
-                  variant={selectedCampaignData?.published ? "default" : "outline"}
-                  onClick={handlePublishCampaign}
-                  className={selectedCampaignData?.published ? "bg-green-600 hover:bg-green-700" : "border-green-500 text-green-600 hover:bg-green-50"}
-                  disabled={campaignQRCodes.length === 0}
-                >
-                  {selectedCampaignData?.published ? "PUBLISHED" : "PUBLISH"}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={handleViewAnalytics}
-                  className="border-blue-500 text-blue-600 hover:bg-blue-50"
-                >
-                  <BarChart3 className="w-4 h-4 mr-2" />
-                  VIEW ANALYTICS
-                </Button>
-              </div>
+            {/* Campaign Action Buttons */}
+            <div className="flex items-center gap-3 mb-4 flex-wrap border-t pt-4">
+              <Button
+                size="sm"
+                variant={selectedCampaignData?.published ? "default" : "outline"}
+                onClick={handlePublishCampaign}
+                className={selectedCampaignData?.published ? "bg-green-600 hover:bg-green-700" : "border-green-500 text-green-600 hover:bg-green-50"}
+                disabled={campaignQRCodes.length === 0}
+              >
+                {selectedCampaignData?.published ? "PUBLISHED" : "PUBLISH"}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleViewAnalytics}
+                className="border-blue-500 text-blue-600 hover:bg-blue-50"
+              >
+                <BarChart3 className="w-4 h-4 mr-2" />
+                VIEW ANALYTICS
+              </Button>
+            </div>
             )}
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
