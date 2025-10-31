@@ -861,6 +861,28 @@ const QRCodeManagerNew = () => {
               </Select>
             </div>
             
+            <div>
+              <Label>URL Configuration</Label>
+              <div className="flex gap-2 mt-2">
+                <Button
+                  type="button"
+                  variant={useDefaultLinks ? "default" : "outline"}
+                  size="sm"
+                  onClick={handleUseDefaultLinks}
+                >
+                  Use Default Links
+                </Button>
+                <Button
+                  type="button"
+                  variant={!useDefaultLinks ? "default" : "outline"}
+                  size="sm"
+                  onClick={handleUseCustomLinks}
+                >
+                  Use Custom Links
+                </Button>
+              </div>
+            </div>
+            
             {landingPageType === "single" ? (
               <div>
                 <Label>Landing Page URL *</Label>
