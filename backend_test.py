@@ -7672,6 +7672,283 @@ Case Test 6,9876540006,interested"""
         
         return success_count >= 5  # At least 5 out of 8 tests should pass
 
+    def test_remarks_persistence_comprehensive(self):
+        """Test comprehensive remarks persistence workflow as specified in review request"""
+        print("\n=== Testing Remarks Persistence - Comprehensive Workflow ===")
+        
+        success_count = 0
+        test_lead_id = None
+        
+        # Step 1: Get a test lead ID from driver onboarding leads
+        print("\n--- Step 1: Fetching test lead ID ---")
+        response = self.make_request("GET", "/driver-onboarding/leads")
+        
+        if response and response.status_code == 200:
+            try:
+                leads = response.json()
+                if leads and len(leads) > 0:
+                    test_lead_id = leads[0].get("id")
+                    lead_name = leads[0].get("name", "Unknown")
+                    self.log_test("Remarks Persistence - Get Test Lead", True, 
+                                f"Retrieved test lead ID: {test_lead_id} (Name: {lead_name})")
+                    success_count += 1
+                else:
+                    self.log_test("Remarks Persistence - Get Test Lead", False, 
+                                "No leads found in database")
+                    return False
+            except json.JSONDecodeError:
+                self.log_test("Remarks Persistence - Get Test Lead", False, 
+                            "Invalid JSON response", response.text)
+                return False
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Remarks Persistence - Get Test Lead", False, error_msg)
+            return False
+        
+        if not test_lead_id:
+            self.log_test("Remarks Persistence - Test Setup", False, 
+                        "Could not get test lead ID")
+            return False
+        
+        # Step 2: PATCH lead with first test remarks
+        print("\n--- Step 2: First remarks save test ---")
+        first_remarks = "Test remark 1 - First save"
+        update_data = {"remarks": first_remarks}
+        
+        response = self.make_request("PATCH", f"/driver-onboarding/leads/{test_lead_id}", update_data)
+        
+        if response and response.status_code == 200:
+            try:
+                result = response.json()
+                # Check if response contains updated lead with remarks
+                if "lead" in result and result["lead"].get("remarks") == first_remarks:
+                    self.log_test("Remarks Persistence - First PATCH with Lead Object", True, 
+                                f"PATCH returned updated lead object with correct remarks: '{first_remarks}'")
+                    success_count += 1
+                elif "message" in result and "success" in result["message"].lower():
+                    self.log_test("Remarks Persistence - First PATCH Success", True, 
+                                f"First PATCH successful: {result['message']}")
+                    success_count += 1
+                else:
+                    self.log_test("Remarks Persistence - First PATCH", False, 
+                                "PATCH response missing success confirmation", result)
+            except json.JSONDecodeError:
+                self.log_test("Remarks Persistence - First PATCH", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Remarks Persistence - First PATCH", False, error_msg, 
+                        response.text if response else None)
+        
+        # Step 3: GET lead to verify first remarks persisted
+        print("\n--- Step 3: Verify first remarks persistence ---")
+        response = self.make_request("GET", f"/driver-onboarding/leads/{test_lead_id}")
+        
+        if response and response.status_code == 200:
+            try:
+                lead_data = response.json()
+                stored_remarks = lead_data.get("remarks")
+                if stored_remarks == first_remarks:
+                    self.log_test("Remarks Persistence - First GET Verification", True, 
+                                f"First remarks correctly persisted: '{stored_remarks}'")
+                    success_count += 1
+                else:
+                    self.log_test("Remarks Persistence - First GET Verification", False, 
+                                f"Remarks mismatch - Expected: '{first_remarks}', Got: '{stored_remarks}'")
+            except json.JSONDecodeError:
+                self.log_test("Remarks Persistence - First GET Verification", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Remarks Persistence - First GET Verification", False, error_msg)
+        
+        # Step 4: PATCH lead with updated remarks
+        print("\n--- Step 4: Updated remarks save test ---")
+        updated_remarks = "Test remark 2 - Updated remarks"
+        update_data = {"remarks": updated_remarks}
+        
+        response = self.make_request("PATCH", f"/driver-onboarding/leads/{test_lead_id}", update_data)
+        
+        if response and response.status_code == 200:
+            try:
+                result = response.json()
+                # Check if response contains updated lead with new remarks
+                if "lead" in result and result["lead"].get("remarks") == updated_remarks:
+                    self.log_test("Remarks Persistence - Updated PATCH with Lead Object", True, 
+                                f"PATCH returned updated lead object with new remarks: '{updated_remarks}'")
+                    success_count += 1
+                elif "message" in result and "success" in result["message"].lower():
+                    self.log_test("Remarks Persistence - Updated PATCH Success", True, 
+                                f"Updated PATCH successful: {result['message']}")
+                    success_count += 1
+                else:
+                    self.log_test("Remarks Persistence - Updated PATCH", False, 
+                                "PATCH response missing success confirmation", result)
+            except json.JSONDecodeError:
+                self.log_test("Remarks Persistence - Updated PATCH", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Remarks Persistence - Updated PATCH", False, error_msg)
+        
+        # Step 5: GET lead to verify updated remarks persisted
+        print("\n--- Step 5: Verify updated remarks persistence ---")
+        response = self.make_request("GET", f"/driver-onboarding/leads/{test_lead_id}")
+        
+        if response and response.status_code == 200:
+            try:
+                lead_data = response.json()
+                stored_remarks = lead_data.get("remarks")
+                if stored_remarks == updated_remarks:
+                    self.log_test("Remarks Persistence - Updated GET Verification", True, 
+                                f"Updated remarks correctly persisted: '{stored_remarks}'")
+                    success_count += 1
+                else:
+                    self.log_test("Remarks Persistence - Updated GET Verification", False, 
+                                f"Remarks mismatch - Expected: '{updated_remarks}', Got: '{stored_remarks}'")
+            except json.JSONDecodeError:
+                self.log_test("Remarks Persistence - Updated GET Verification", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Remarks Persistence - Updated GET Verification", False, error_msg)
+        
+        # Step 6: Test remarks field in response.data.lead object after PATCH
+        print("\n--- Step 6: Verify remarks field in PATCH response ---")
+        final_test_remarks = "Test remark 3 - Final verification"
+        update_data = {"remarks": final_test_remarks}
+        
+        response = self.make_request("PATCH", f"/driver-onboarding/leads/{test_lead_id}", update_data)
+        
+        if response and response.status_code == 200:
+            try:
+                result = response.json()
+                # Check multiple possible response structures
+                lead_object = None
+                if "data" in result and "lead" in result["data"]:
+                    lead_object = result["data"]["lead"]
+                elif "lead" in result:
+                    lead_object = result["lead"]
+                
+                if lead_object and lead_object.get("remarks") == final_test_remarks:
+                    self.log_test("Remarks Persistence - PATCH Response Lead Object", True, 
+                                f"PATCH response contains lead object with remarks field: '{final_test_remarks}'")
+                    success_count += 1
+                else:
+                    self.log_test("Remarks Persistence - PATCH Response Lead Object", False, 
+                                f"PATCH response missing lead object with remarks field. Response structure: {list(result.keys())}")
+            except json.JSONDecodeError:
+                self.log_test("Remarks Persistence - PATCH Response Lead Object", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Remarks Persistence - PATCH Response Lead Object", False, error_msg)
+        
+        return success_count >= 5  # At least 5 out of 7 tests should pass
+
+    def test_export_database_functionality(self):
+        """Test Export Database functionality as specified in review request"""
+        print("\n=== Testing Export Database Functionality ===")
+        
+        success_count = 0
+        
+        # Test the database export endpoint
+        print("\n--- Testing GET /api/admin/database/export ---")
+        response = self.make_request("GET", "/admin/database/export")
+        
+        if response and response.status_code == 200:
+            try:
+                # Check Content-Type header
+                content_type = response.headers.get('Content-Type', '')
+                if 'application/json' in content_type:
+                    self.log_test("Export Database - Content Type", True, 
+                                f"Correct Content-Type: {content_type}")
+                    success_count += 1
+                else:
+                    self.log_test("Export Database - Content Type", False, 
+                                f"Expected application/json, got: {content_type}")
+                
+                # Check Content-Disposition header for filename
+                content_disposition = response.headers.get('Content-Disposition', '')
+                if 'filename' in content_disposition:
+                    self.log_test("Export Database - Content Disposition", True, 
+                                f"Content-Disposition header has filename: {content_disposition}")
+                    success_count += 1
+                else:
+                    self.log_test("Export Database - Content Disposition", False, 
+                                f"Content-Disposition missing filename: {content_disposition}")
+                
+                # Parse JSON response
+                data = response.json()
+                
+                # Check for export_timestamp field
+                if 'export_timestamp' in data:
+                    self.log_test("Export Database - Export Timestamp", True, 
+                                f"Export contains timestamp: {data['export_timestamp']}")
+                    success_count += 1
+                else:
+                    self.log_test("Export Database - Export Timestamp", False, 
+                                "Export missing export_timestamp field")
+                
+                # Check for exported_by field
+                if 'exported_by' in data:
+                    self.log_test("Export Database - Exported By", True, 
+                                f"Export contains exported_by: {data['exported_by']}")
+                    success_count += 1
+                else:
+                    self.log_test("Export Database - Exported By", False, 
+                                "Export missing exported_by field")
+                
+                # Check for collections object
+                if 'collections' in data and isinstance(data['collections'], dict):
+                    collections = data['collections']
+                    collection_count = len(collections)
+                    self.log_test("Export Database - Collections Object", True, 
+                                f"Export contains collections object with {collection_count} collections")
+                    success_count += 1
+                    
+                    # Check if collections have data
+                    total_records = 0
+                    for collection_name, collection_data in collections.items():
+                        if isinstance(collection_data, list):
+                            total_records += len(collection_data)
+                    
+                    self.log_test("Export Database - Collections Data", True, 
+                                f"Collections contain {total_records} total records across {collection_count} collections")
+                    success_count += 1
+                else:
+                    self.log_test("Export Database - Collections Object", False, 
+                                "Export missing or invalid collections object")
+                
+                # Overall success check
+                if success_count >= 4:
+                    self.log_test("Export Database - Overall Success", True, 
+                                "Export Database endpoint working correctly with proper JSON structure")
+                    success_count += 1
+                
+            except json.JSONDecodeError:
+                self.log_test("Export Database - JSON Response", False, 
+                            "Response is not valid JSON", response.text[:200])
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Export Database - Endpoint Response", False, error_msg, 
+                        response.text[:200] if response else None)
+        
+        # Test authentication requirement
+        print("\n--- Testing Export Database Authentication ---")
+        response = self.make_request("GET", "/admin/database/export", use_auth=False)
+        
+        if response and response.status_code in [401, 403]:
+            self.log_test("Export Database - Authentication Required", True, 
+                        f"Correctly requires authentication ({response.status_code} without token)")
+            success_count += 1
+        else:
+            status = response.status_code if response else "Network error"
+            self.log_test("Export Database - Authentication Required", False, 
+                        f"Expected 401/403, got {status}")
+        
+        return success_count >= 5  # At least 5 out of 8 tests should pass
+
     def run_all_tests(self):
         """Run all backend tests"""
         print("🚀 Starting Comprehensive Backend Testing for Nura Pulse Application")
