@@ -10,7 +10,7 @@
 
 const CONFIG = {
   SHEET_ID: '1CLhARhllhqZuDzkzNRqFcOGqjrSDzPgmC6gd3-AWOTs',
-  BACKEND_URL: 'https://leadtracker-39.preview.emergentagent.com/api'
+  BACKEND_URL: 'https://nura-pulse-app.preview.emergentagent.com/api'
 };
 
 // Column mapping for payment records
