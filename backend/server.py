@@ -10257,10 +10257,19 @@ async def delete_qr_code(
 ):
     """Delete a QR code"""
     try:
+        # Check if the QR code exists and is not published
+        qr_code = await db.qr_codes.find_one({"id": qr_code_id})
+        
+        if not qr_code:
+            raise HTTPException(status_code=404, detail="QR code not found")
+        
+        if qr_code.get("published", False):
+            raise HTTPException(status_code=400, detail="Cannot delete published QR code")
+        
         result = await db.qr_codes.delete_one({"id": qr_code_id})
         
-        if result.deleted_count == 0:
-            raise HTTPException(status_code=404, detail="QR code not found")
+        # Also delete associated scan data
+        await db.qr_scans.delete_many({"qr_code_id": qr_code_id})
         
         return {
             "success": True,
