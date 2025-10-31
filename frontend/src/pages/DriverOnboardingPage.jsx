@@ -196,22 +196,16 @@ const DriverOnboardingPage = () => {
   const [loadingBackups, setLoadingBackups] = useState(false);
   const [rollingBack, setRollingBack] = useState(false);
   
-  // Source filter - Extract unique stages (since 'source' field doesn't exist, use 'stage')
+  // Source filter - Extract unique import sources (from 'source' field)
   const [sourceFilter, setSourceFilter] = useState(null);
   const uniqueSources = [...new Set(
     leads
-      .map(l => l.stage?.trim())
-      .filter(Boolean)
-      .map(s => s.toUpperCase()) // Keep stage format like S1, S2
+      .map(l => l.source?.trim())
+      .filter(Boolean) // Remove empty/null values
   )].sort();
   
-  // If no stages available, try to use status instead
-  const sourceOptions = uniqueSources.length > 0 ? uniqueSources : [...new Set(
-    leads
-      .map(l => l.status?.trim())
-      .filter(Boolean)
-      .map(s => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase())
-  )].sort();
+  // Source options for dropdown
+  const sourceOptions = uniqueSources.length > 0 ? uniqueSources : [];
   
   // Extract unique statuses from all leads
   const uniqueStatuses = [...new Set(
