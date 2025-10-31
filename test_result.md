@@ -1289,6 +1289,18 @@ frontend:
           agent: "main"
           comment: "✅ IMPLEMENTATION COMPLETE (Batch 2 - Telecallers Management): Modified Driver Onboarding page to implement manual status updates instead of immediate auto-update. Changes: 1) Added pendingStatusChanges state to track status changes before applying ({ leadId: { status, stage, originalStatus, originalStage } }). 2) Modified handleInlineStatusChange() to store pending changes locally without calling API immediately. 3) Created handleApplyStatusChange() function to apply pending change for a specific lead when 'Apply' button is clicked. 4) Created handleCancelStatusChange() function to revert status change and remove from pending changes. 5) Updated table cell UI to show 'Apply' (green with Save icon) and 'Cancel' (X icon) buttons next to status dropdown when there's a pending change. 6) Added visual indicators: (a) Green 'Apply' button with Save icon appears when status is changed, (b) Yellow ring highlight on status badge when change is pending, (c) '(Pending)' text in yellow appears on collapsed status badge. 7) Users can now: change status → see Apply/Cancel buttons → click Apply to save or Cancel to revert. Frontend code linted successfully with no errors. Ready for frontend testing to verify the manual apply workflow."
 
+  - task: "Driver Onboarding - Remarks Field Saving and Retrieval"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ COMPREHENSIVE TESTING COMPLETE: Remarks field saving and retrieval functionality verified and working perfectly. Success rate: 100% (6/6 tests passed). Key findings: 1) AUTHENTICATION: Successfully logged in as admin (admin/Nura@1234$) and obtained valid Bearer token. 2) TEST LEAD RETRIEVAL: Successfully retrieved test lead 'Shanthi Divakar' (ID: cf0f9853-ec89-467b-9f70-928103ee0de6) with current remarks 'Need to go training'. 3) PATCH REQUEST SUCCESS: PATCH /api/driver-onboarding/leads/{lead_id} with remarks field works correctly - returned 200 status with success message 'Lead updated successfully'. Response contains complete updated lead data including the new remarks field. 4) RESPONSE VERIFICATION: Response correctly contains updated remarks field matching the test input 'Test remarks from API - timestamp: 2025-10-31 04:10:36'. 5) PERSISTENCE VERIFICATION: GET /api/driver-onboarding/leads confirms remarks are correctly persisted in database - retrieved lead shows exact same remarks value as sent in PATCH request. 6) MULTIPLE UPDATES: Second PATCH request with different remarks 'Updated remarks from API - timestamp: 2025-10-31 04:10:36 - UPDATED' also works correctly and persists properly. The user's reported issue of remarks not being saved appears to be resolved - all PATCH operations successfully update and persist the remarks field in the database. Backend API is fully functional for remarks field operations."
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
