@@ -10008,21 +10008,14 @@ async def create_batch_qr_codes(
             # Generate short code for tracking
             short_code = generate_short_code()
             
-            # Determine QR content based on mode
-            if batch_data.qr_mode == "simple":
-                # Simple mode: QR code contains just the vehicle number/text
-                qr_content = qr_name.strip()
-                tracking_url = None
-            else:
-                # Tracking mode: QR code contains tracking URL for analytics
-                tracking_url = f"{os.environ.get('REACT_APP_BACKEND_URL', 'http://localhost:8001')}/api/qr-codes/scan/{short_code}"
-                qr_content = tracking_url
+            # Create tracking URL with proper UTM format
+            tracking_url = f"{os.environ.get('REACT_APP_BACKEND_URL', 'http://localhost:8001')}/api/qr-codes/scan/{short_code}"
             
-            # Generate QR code image with appropriate content
-            qr_image = generate_qr_code_image(qr_content)
+            # Generate QR code image with tracking URL (always use tracking)
+            qr_image = generate_qr_code_image(tracking_url)
             
-            # UTM parameters
-            utm_source = qr_name if batch_data.auto_fill_utm else batch_data.utm_campaign
+            # Create proper UTM parameters (Campaign-VehicleNumber format)
+            utm_source = f"{batch_data.campaign_name}-{qr_name}" if batch_data.auto_fill_utm else batch_data.utm_campaign
             
             # Prepare QR code document
             qr_code = {
