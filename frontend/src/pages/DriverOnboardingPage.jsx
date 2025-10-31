@@ -3201,12 +3201,26 @@ const DriverOnboardingPage = () => {
                 
                 {/* Remarks Field */}
                 <div>
-                  <Label className="text-xs text-gray-600 dark:text-gray-400 mb-2 block">
-                    Remarks
-                  </Label>
+                  <div className="flex items-center justify-between mb-2">
+                    <Label className="text-xs text-gray-600 dark:text-gray-400">
+                      Remarks
+                    </Label>
+                    <Button
+                      onClick={handleSaveLeadDetails}
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-300"
+                      disabled={updatingStatus}
+                    >
+                      Save Remarks
+                    </Button>
+                  </div>
                   <Textarea
                     value={editedLead.remarks || ''}
-                    onChange={(e) => handleFieldChange('remarks', e.target.value)}
+                    onChange={(e) => {
+                      handleFieldChange('remarks', e.target.value);
+                      setHasUnsavedChanges(true);
+                    }}
                     placeholder="Enter remarks about this lead..."
                     className="w-full min-h-[80px] dark:bg-gray-700 dark:border-gray-600 text-sm"
                   />
