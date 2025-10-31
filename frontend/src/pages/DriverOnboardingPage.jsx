@@ -3551,14 +3551,23 @@ const DriverOnboardingPage = () => {
               variant="outline"
               onClick={() => setIsUnassignDialogOpen(false)}
               className="dark:border-gray-600"
+              disabled={unassigning}
             >
               Cancel
             </Button>
             <Button
               onClick={handleUnassignLeads}
               className="bg-orange-600 hover:bg-orange-700"
+              disabled={unassigning}
             >
-              Unassign {selectedLeadIds.length} Lead(s)
+              {unassigning ? (
+                <>
+                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                  Unassigning...
+                </>
+              ) : (
+                `Unassign ${selectedLeadIds.length} Lead(s)`
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
