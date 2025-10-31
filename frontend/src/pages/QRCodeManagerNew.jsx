@@ -159,20 +159,71 @@ const QRCodeManagerNew = () => {
       let qrNamesArray = [];
       if (batchFile) {
         // Handle file upload
-        const formData = new FormData();
-        formData.append("file", batchFile);
-        
-        // For now, we'll parse it client-side
-        // In production, you'd want to send this to backend
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-          const text = e.target.result;
-          const lines = text.split('\n');
-          qrNamesArray = lines.slice(1).filter(line => line.trim()).map(line => line.split(',')[0].trim());
-          await createBatch(qrNamesArray);
-        };
-        reader.readAsText(batchFile);
-        return;
+        try {
+          if (batchFile.name.endsWith('.xlsx') || batchFile.name.endsWith('.xls')) {
+            // Handle Excel files
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+              try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const sheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                
+                // Extract vehicle numbers from first column, skip header row
+                qrNamesArray = jsonData
+                  .slice(1) // Skip header row
+                  .map(row => row[0]) // Get first column
+                  .filter(name => name && String(name).trim()) // Filter out empty values
+                  .map(name => String(name).trim()); // Convert to string and trim
+                
+                console.log("Parsed vehicle numbers:", qrNamesArray);
+                await createBatch(qrNamesArray);
+              } catch (parseError) {
+                console.error("Error parsing Excel file:", parseError);
+                toast.error("Error parsing Excel file. Please check the format.");
+              }
+            };
+            reader.onerror = () => {
+              toast.error("Error reading file. Please try again.");
+            };
+            reader.readAsArrayBuffer(batchFile);
+            return;
+          } else if (batchFile.name.endsWith('.csv')) {
+            // Handle CSV files
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+              try {
+                const text = e.target.result;
+                const lines = text.split('\n');
+                qrNamesArray = lines
+                  .slice(1) // Skip header row
+                  .filter(line => line.trim()) // Filter out empty lines
+                  .map(line => line.split(',')[0].trim()) // Get first column and trim
+                  .filter(name => name); // Filter out empty values
+                
+                console.log("Parsed vehicle numbers:", qrNamesArray);
+                await createBatch(qrNamesArray);
+              } catch (parseError) {
+                console.error("Error parsing CSV file:", parseError);
+                toast.error("Error parsing CSV file. Please check the format.");
+              }
+            };
+            reader.onerror = () => {
+              toast.error("Error reading file. Please try again.");
+            };
+            reader.readAsText(batchFile);
+            return;
+          } else {
+            toast.error("Unsupported file format. Please use .xlsx, .xls, or .csv files.");
+            return;
+          }
+        } catch (error) {
+          console.error("Error processing file:", error);
+          toast.error("Error processing file. Please try again.");
+          return;
+        }
       } else if (batchQrNames) {
         qrNamesArray = batchQrNames.split(',').map(name => name.trim()).filter(name => name);
       }
