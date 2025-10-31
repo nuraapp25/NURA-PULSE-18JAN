@@ -18,7 +18,7 @@
  */
 
 // ========== CONFIGURATION ==========
-var API_BASE_URL = "https://nura-pulse-app.preview.emergentagent.com/api";
+var API_BASE_URL = "https://driver-qr.preview.emergentagent.com/api";
 var BEARER_TOKEN = "YOUR_TOKEN_HERE"; // Update this with valid token
 var LEADS_SHEET_NAME = "Driver Leads";
 

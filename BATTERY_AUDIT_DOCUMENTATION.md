@@ -59,12 +59,12 @@ The audit report provides the following information in a tabular format:
 ### Method 1: API Call (For Integration)
 ```bash
 # Get authentication token first
-curl -X POST https://nura-pulse-app.preview.emergentagent.com/api/auth/login \
+curl -X POST https://driver-qr.preview.emergentagent.com/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"admin","password":"Nura@1234$"}'
 
 # Call the audit endpoint
-curl -X GET https://nura-pulse-app.preview.emergentagent.com/api/montra-vehicle/battery-audit \
+curl -X GET https://driver-qr.preview.emergentagent.com/api/montra-vehicle/battery-audit \
   -H "Authorization: Bearer YOUR_TOKEN_HERE"
 ```
 

@@ -52,7 +52,7 @@ Your Google Sheets should have these columns in Row 1:
 4. **Paste it** into the Apps Script editor
 5. **Update the BACKEND_URL** in the CONFIG section:
    ```javascript
-   BACKEND_URL: "https://nura-pulse-app.preview.emergentagent.com/api"
+   BACKEND_URL: "https://driver-qr.preview.emergentagent.com/api"
    ```
 6. **Save** the script (File → Save or Ctrl+S)
 7. **Name your project** (e.g., "Nura Driver Sync")
