@@ -9931,6 +9931,9 @@ class QRCodeCreate(BaseModel):
     utm_campaign: Optional[str] = None
     utm_term: Optional[str] = None
     utm_content: Optional[str] = None
+    use_color_qr: bool = False
+    qr_foreground_color: str = "#000000"
+    qr_background_color: str = "#FFFFFF"
 
 class QRCodeBatchCreate(BaseModel):
     campaign_name: str
@@ -9944,6 +9947,9 @@ class QRCodeBatchCreate(BaseModel):
     auto_fill_utm: bool = True
     utm_medium: str = "qrscan"
     utm_campaign: Optional[str] = None
+    use_color_qr: bool = False
+    qr_foreground_color: str = "#000000"
+    qr_background_color: str = "#FFFFFF"
 
 def generate_short_code(length: int = 8) -> str:
     """Generate a random short code for QR tracking"""
