@@ -2268,6 +2268,21 @@ async def update_lead(lead_id: str, lead_data: DriverLeadUpdate, current_user: U
     
     return {"message": "Lead updated successfully", "lead": updated_lead}
 
+@api_router.get("/driver-onboarding/leads/{lead_id}")
+async def get_lead(lead_id: str, current_user: User = Depends(get_current_user)):
+    """Get a single lead by ID"""
+    try:
+        # Find the lead
+        lead = await db.driver_leads.find_one({"id": lead_id}, {"_id": 0})
+        if not lead:
+            raise HTTPException(status_code=404, detail="Lead not found")
+        
+        return lead
+        
+    except Exception as e:
+        logger.error(f"Error fetching lead {lead_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch lead: {str(e)}")
+
 
 @api_router.patch("/driver-onboarding/leads/{lead_id}/status")
 async def update_lead_status(lead_id: str, status_data: LeadStatusUpdate, current_user: User = Depends(get_current_user)):
