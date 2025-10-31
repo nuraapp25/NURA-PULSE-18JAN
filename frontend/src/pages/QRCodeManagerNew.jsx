@@ -919,13 +919,15 @@ const QRCodeManagerNew = () => {
             </div>
             
             <div>
-              <Label>Or Upload File (.csv/.xlsx)</Label>
+              <Label>Or Upload File (.xlsx/.xls/.csv)</Label>
               <Input
                 type="file"
-                accept=".csv,.xlsx"
+                accept=".csv,.xlsx,.xls"
                 onChange={(e) => setBatchFile(e.target.files[0])}
               />
-              <p className="text-xs text-gray-500 mt-1">Names should be in column A, starting from row 2</p>
+              <p className="text-xs text-gray-500 mt-1">
+                Upload an Excel or CSV file with vehicle numbers in the first column. First row will be treated as header and skipped.
+              </p>
             </div>
             
             <div className="flex items-center gap-2">
