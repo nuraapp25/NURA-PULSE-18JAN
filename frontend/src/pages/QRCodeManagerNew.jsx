@@ -355,7 +355,10 @@ const QRCodeManagerNew = () => {
       qr_names: qrNamesArray.length > 0 ? qrNamesArray : null,
       auto_fill_utm: autoFillUtm,
       utm_medium: utmMedium,
-      utm_campaign: batchCampaignName
+      utm_campaign: batchCampaignName,
+      use_color_qr: batchUseColorQR,
+      qr_foreground_color: batchUseColorQR ? batchQrForegroundColor : "#000000",
+      qr_background_color: batchUseColorQR ? batchQrBackgroundColor : "#FFFFFF"
     };
     
     const response = await axios.post(`${API}/qr-codes/create-batch`, payload, {
