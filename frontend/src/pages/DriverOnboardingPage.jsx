@@ -14,6 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { toast } from "sonner";
 import { Upload, Users, FileSpreadsheet, RefreshCw, Plus, Calendar as CalendarIcon, Filter, X, CheckSquare, Square, XCircle, Save, ChevronDown, ChevronLeft, ChevronRight, Eye, Download, Trash2, DownloadCloud, UploadCloud, Archive, RotateCcw, Copy } from "lucide-react";
 import { format } from "date-fns";
+import LeadDetailsDialog from "@/components/LeadDetailsDialog";
 
 // Helper function to format status display
 // Removes alphabet codes like "S1-a Not interested" → "S1 - Not interested"
