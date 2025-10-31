@@ -1339,8 +1339,8 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Driver Onboarding - Assigned Telecaller Column"
-    - "User Management - Admin Approval Rights"
+    - "Remarks Persistence Fix - Lead Details Dialog"
+    - "Export Database Fix - Manage DB"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
