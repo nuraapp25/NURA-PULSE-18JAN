@@ -977,6 +977,14 @@ const QRCodeManagerNew = () => {
                         <Button 
                           size="sm" 
                           variant="outline" 
+                          onClick={() => handleIndividualAnalytics(qrCode)}
+                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                        >
+                          <BarChart3 className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
                           onClick={() => handleDeleteIndividualQRCode(qrCode.id)} 
                           className="text-red-600 hover:text-red-700 hover:bg-red-50"
                           disabled={selectedCampaignData?.published}
