@@ -346,6 +346,7 @@ const QRCodeManagerNew = () => {
     setIosUrl("");
     setAndroidUrl("");
     setWebUrl("");
+    setUseDefaultLinks(true);
     setUtmSource("");
     setUtmMedium("qrscan");
     setUtmCampaign("");
