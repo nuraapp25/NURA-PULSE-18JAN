@@ -104,6 +104,43 @@
 
 user_problem_statement: "Fix: 1) QR Code duplicate scan issue - single scans recording as two scans. 2) Double parentheses '))'  UI issue in QR Code Manager below PUBLISH button. 3) Source filter in Driver Onboarding should use actual import sources (e.g., 'bhavani', 'ganesh', 'digital leads') instead of stages (S1, S2, S3, S4)."
 
+
+  - task: "QR Code Duplicate Scan Prevention Fix"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "IMPLEMENTATION COMPLETE: Fixed duplicate scan recording issue in QR Code Manager. ROOT CAUSE: Backend duplicate detection logic was checking for duplicates but NOT early-returning, causing scan records to be inserted and scan counts incremented even for duplicates. FIX IMPLEMENTED: (1) Enhanced duplicate detection with 3-layer approach: Same IP + QR within 2 minutes (stricter window), Same User Agent + IP + QR within 5 minutes, Scan identifier check. (2) Added early return after each duplicate check to prevent database inserts. (3) Added comprehensive logging for duplicate prevention tracking. (4) Only unique scans now insert scan records and increment scan counts. Expected behavior: Single scan from a device now records as 1 scan instead of 2. Backend endpoint /api/qr-codes/scan/{short_code} now properly prevents duplicate scans."
+  
+  - task: "QR Code Manager - Double Parentheses UI Fix"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/QRCodeManagerNew.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "IMPLEMENTATION COMPLETE AND VERIFIED: Fixed double parentheses '))'  appearing below PUBLISH button in QR Code Manager campaign view. ROOT CAUSE: Extra closing `)}` on line 973 after the closing </div> tag (line 972). This was leftover code that rendered as text in the UI. FIX: Removed the extra `)}` from line 973. VERIFICATION: Tested with screenshots - Seatback campaign opens correctly without any '))'  visible. PUBLISH and VIEW ANALYTICS buttons display correctly. QR codes grid displays properly with all action buttons working. UI fix confirmed working - no more double parentheses in the interface."
+  
+  - task: "Driver Onboarding - Source Filter Fix"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/DriverOnboardingPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "IMPLEMENTATION COMPLETE: Fixed source filter to use actual import sources instead of stages (S1, S2, S3, S4). ROOT CAUSE: Frontend was extracting unique values from 'stage' field instead of 'source' field for the dropdown. Backend already stores import source in 'source' field (line 1131 in server.py: lead['source'] = row_lead_source or filename). CHANGES: (1) Updated uniqueSources extraction (lines 199-208) to use lead.source field. (2) Updated filter logic (lines 486-492) to filter by lead.source with case-insensitive comparison. (3) Updated filter button labels to 'Filter by Import Source' and 'All Import Sources'. (4) Updated summary dashboard source filter labels for consistency. Expected behavior: Source filter dropdown now shows actual import sources like 'bhavani', 'ganesh', 'digital leads', or filenames. Filter correctly filters leads by their import source. Backend 'source' field already exists and is populated during import, so no backend changes needed."
+
 backend:
   - task: "Telecaller's Desk - Status Update Fix"
     implemented: true
