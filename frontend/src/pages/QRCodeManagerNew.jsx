@@ -71,7 +71,47 @@ const QRCodeManagerNew = () => {
     fetchCampaigns();
   }, []);
   
-  const fetchCampaigns = async () => {
+  // Handle default links toggle for single QR
+  const handleUseDefaultLinks = () => {
+    setUseDefaultLinks(true);
+    if (landingPageType === "single") {
+      setSingleUrl(defaultUrls.web);
+    } else {
+      setIosUrl(defaultUrls.ios);
+      setAndroidUrl(defaultUrls.android);
+      setWebUrl(defaultUrls.web);
+    }
+  };
+
+  const handleUseCustomLinks = () => {
+    setUseDefaultLinks(false);
+    // Clear URLs to let user enter custom ones
+    setSingleUrl("");
+    setIosUrl("");
+    setAndroidUrl("");
+    setWebUrl("");
+  };
+
+  // Handle default links toggle for batch QR
+  const handleBatchUseDefaultLinks = () => {
+    setBatchUseDefaultLinks(true);
+    if (batchLandingPageType === "single") {
+      setSingleUrl(defaultUrls.web);
+    } else {
+      setIosUrl(defaultUrls.ios);
+      setAndroidUrl(defaultUrls.android);
+      setWebUrl(defaultUrls.web);
+    }
+  };
+
+  const handleBatchUseCustomLinks = () => {
+    setBatchUseDefaultLinks(false);
+    // Clear URLs to let user enter custom ones
+    setSingleUrl("");
+    setIosUrl("");
+    setAndroidUrl("");
+    setWebUrl("");
+  };
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
