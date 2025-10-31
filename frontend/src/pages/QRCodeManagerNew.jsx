@@ -49,6 +49,11 @@ const QRCodeManagerNew = () => {
   const [webUrl, setWebUrl] = useState("");
   const [useDefaultLinks, setUseDefaultLinks] = useState(true);
   
+  // QR Code color options
+  const [useColorQR, setUseColorQR] = useState(false);
+  const [qrForegroundColor, setQrForegroundColor] = useState("#000000");
+  const [qrBackgroundColor, setQrBackgroundColor] = useState("#FFFFFF");
+  
   // Default URLs
   const defaultUrls = {
     ios: "https://apps.apple.com/az/app/nura-mobility/id6749004862",
