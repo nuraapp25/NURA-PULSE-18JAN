@@ -783,9 +783,32 @@ const QRCodeManagerNew = () => {
                   variant="outline"
                   onClick={handleDeleteAllQRCodes}
                   className="border-red-500 text-red-600 hover:bg-red-50"
+                  disabled={selectedCampaignData?.published}
                 >
                   <Trash2 className="w-4 h-4 mr-2" />
                   Delete All
+                </Button>
+              </div>
+              
+              {/* Campaign Action Buttons */}
+              <div className="flex items-center gap-3 mb-4 flex-wrap border-t pt-4">
+                <Button
+                  size="sm"
+                  variant={selectedCampaignData?.published ? "default" : "outline"}
+                  onClick={handlePublishCampaign}
+                  className={selectedCampaignData?.published ? "bg-green-600 hover:bg-green-700" : "border-green-500 text-green-600 hover:bg-green-50"}
+                  disabled={campaignQRCodes.length === 0}
+                >
+                  {selectedCampaignData?.published ? "PUBLISHED" : "PUBLISH"}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleViewAnalytics}
+                  className="border-blue-500 text-blue-600 hover:bg-blue-50"
+                >
+                  <BarChart3 className="w-4 h-4 mr-2" />
+                  VIEW ANALYTICS
                 </Button>
               </div>
             )}
