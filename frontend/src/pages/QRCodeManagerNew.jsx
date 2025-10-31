@@ -1521,6 +1521,7 @@ const QRCodeManagerNew = () => {
                           <TableHead>Device & Browser</TableHead>
                           <TableHead>Location</TableHead>
                           <TableHead>IP Address</TableHead>
+                          <TableHead>UTM URL</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
