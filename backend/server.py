@@ -10211,8 +10211,8 @@ async def scan_qr_code(
         import hashlib
         current_time = datetime.now(timezone.utc)
         
-        # Check for recent scans from same IP and QR in last 5 minutes
-        cutoff_time = (current_time - timedelta(minutes=5)).isoformat()
+        # Check for recent scans from same IP and QR in last 2 minutes (stricter window)
+        cutoff_time = (current_time - timedelta(minutes=2)).isoformat()
         recent_scan = await db.qr_scans.find_one({
             "qr_code_id": qr_code["id"],
             "ip_address": client_ip,
@@ -10220,11 +10220,12 @@ async def scan_qr_code(
         })
         
         if recent_scan:
-            logger.info(f"Duplicate scan prevented - same IP {client_ip} scanned QR {short_code} within 5 minutes")
+            logger.info(f"Duplicate scan prevented - same IP {client_ip} scanned QR {short_code} within 2 minutes")
+            # Return redirect WITHOUT recording scan or incrementing count
             return RedirectResponse(url=redirect_url, status_code=307)
         
-        # Additional check: same User Agent + IP + QR within 10 minutes
-        cutoff_time_extended = (current_time - timedelta(minutes=10)).isoformat()
+        # Additional check: same User Agent + IP + QR within 5 minutes
+        cutoff_time_extended = (current_time - timedelta(minutes=5)).isoformat()
         duplicate_check = await db.qr_scans.find_one({
             "qr_code_id": qr_code["id"],
             "ip_address": client_ip,
@@ -10234,15 +10235,22 @@ async def scan_qr_code(
         
         if duplicate_check:
             logger.info(f"Duplicate scan prevented - same User Agent + IP combination for QR {short_code}")
+            # Return redirect WITHOUT recording scan or incrementing count
             return RedirectResponse(url=redirect_url, status_code=307)
         
         # Create unique scan identifier for additional deduplication
         scan_identifier = hashlib.md5(f"{client_ip}_{user_agent_string[:50]}_{qr_code['id']}_{current_time.strftime('%Y%m%d%H%M')}".encode()).hexdigest()
         
+        # Check if this exact scan identifier already exists (final safety check)
+        identifier_check = await db.qr_scans.find_one({"scan_identifier": scan_identifier})
+        if identifier_check:
+            logger.info(f"Duplicate scan prevented - scan identifier already exists for QR {short_code}")
+            return RedirectResponse(url=redirect_url, status_code=307)
+        
         # Get location data from IP (basic city/region detection)
         location_info = get_location_from_ip(client_ip)
         
-        # Log analytics with enhanced tracking
+        # Log analytics with enhanced tracking - only if not duplicate
         scan_data = {
             "id": str(uuid.uuid4()),
             "scan_identifier": scan_identifier,
@@ -10269,9 +10277,11 @@ async def scan_qr_code(
             "tracking_note": "Tracks store redirect only, not app installation"
         }
         
+        # Insert scan record
         await db.qr_scans.insert_one(scan_data)
+        logger.info(f"New scan recorded for QR {short_code} from IP {client_ip}")
         
-        # Increment scan count
+        # Increment scan count only for unique scans
         await db.qr_codes.update_one(
             {"short_code": short_code},
             {"$inc": {"scan_count": 1}}
