@@ -887,15 +887,26 @@ const QRCodeManagerNew = () => {
               
             {/* Campaign Action Buttons */}
             <div className="flex items-center gap-3 mb-4 flex-wrap border-t pt-4">
-              <Button
-                size="sm"
-                variant={selectedCampaignData?.published ? "default" : "outline"}
-                onClick={handlePublishCampaign}
-                className={selectedCampaignData?.published ? "bg-green-600 hover:bg-green-700" : "border-green-500 text-green-600 hover:bg-green-50"}
-                disabled={campaignQRCodes.length === 0}
-              >
-                {selectedCampaignData?.published ? "PUBLISHED" : "PUBLISH"}
-              </Button>
+              {selectedCampaignData?.published ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setUnpublishConfirmOpen(true)}
+                  className="border-orange-500 text-orange-600 hover:bg-orange-50"
+                >
+                  UNPUBLISH
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handlePublishCampaign}
+                  className="border-green-500 text-green-600 hover:bg-green-50"
+                  disabled={campaignQRCodes.length === 0}
+                >
+                  PUBLISH
+                </Button>
+              )}
               <Button
                 size="sm"
                 variant="outline"
@@ -905,6 +916,11 @@ const QRCodeManagerNew = () => {
                 <BarChart3 className="w-4 h-4 mr-2" />
                 VIEW ANALYTICS
               </Button>
+              {selectedCampaignData?.published && (
+                <div className="flex items-center text-sm text-green-600 font-medium">
+                  ✅ Published
+                </div>
+              )}
             </div>
             )}
             
