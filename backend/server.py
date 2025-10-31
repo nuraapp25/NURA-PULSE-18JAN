@@ -10153,6 +10153,20 @@ async def scan_qr_code(
             else:
                 redirect_url = qr_code.get('single_url', '') + utm_params
         
+        # Check if this IP has scanned this QR recently to prevent duplicates
+        recent_scan = await db.qr_scans.find_one({
+            "qr_code_id": qr_code["id"],
+            "ip_address": client_ip,
+            "scanned_at": {"$gte": (datetime.now(timezone.utc) - timedelta(seconds=30)).isoformat()}
+        })
+        
+        if recent_scan:
+            # This is likely a duplicate scan, just redirect without logging
+            return RedirectResponse(url=redirect_url, status_code=307)
+        
+        # Get location data from IP (basic city/region detection)
+        location_info = get_location_from_ip(client_ip)
+        
         # Log analytics
         scan_data = {
             "id": str(uuid.uuid4()),
@@ -10169,6 +10183,9 @@ async def scan_qr_code(
             "device": user_agent.device.family,
             "user_agent": user_agent_string,
             "ip_address": client_ip,
+            "location_city": location_info.get("city", "Unknown"),
+            "location_region": location_info.get("region", "Unknown"),
+            "location_country": location_info.get("country", "Unknown"),
             "redirect_url": redirect_url
         }
         
