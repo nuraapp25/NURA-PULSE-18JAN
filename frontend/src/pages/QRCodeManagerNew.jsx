@@ -607,6 +607,24 @@ const QRCodeManagerNew = () => {
     }
   };
 
+  const handleIndividualAnalytics = async (qrCode) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(`${API}/qr-codes/${qrCode.id}/analytics`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.success) {
+        setAnalyticsData([response.data.analytics]); // Wrap in array for compatibility
+        setSelectedCampaign(`${qrCode.qr_name || qrCode.utm_source} (Individual)`);
+        setAnalyticsDialogOpen(true);
+      }
+    } catch (error) {
+      console.error("Error fetching individual analytics:", error);
+      toast.error("Failed to load analytics");
+    }
+  };
+
   const handleDeleteIndividualQRCode = async (qrCodeId) => {
     if (!window.confirm("Are you sure you want to delete this QR code?")) {
       return;
