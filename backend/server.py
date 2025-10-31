@@ -1683,6 +1683,8 @@ async def get_leads(
     current_user: User = Depends(get_current_user),
     search: Optional[str] = None,
     telecaller: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
     page: int = 1,
     limit: int = 50,
     skip_pagination: bool = False
