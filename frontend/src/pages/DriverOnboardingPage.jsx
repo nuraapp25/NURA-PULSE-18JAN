@@ -2603,9 +2603,9 @@ const DriverOnboardingPage = () => {
                       className="w-full justify-start text-sm"
                       onClick={() => setSourceFilter(null)}
                     >
-                      All Sources
+                      All Stages/Statuses
                     </Button>
-                    {uniqueSources.map((source) => (
+                    {sourceOptions.map((source) => (
                       <Button
                         key={source}
                         variant="ghost"
