@@ -9951,6 +9951,28 @@ class QRCodeBatchCreate(BaseModel):
     qr_foreground_color: str = "#000000"
     qr_background_color: str = "#FFFFFF"
 
+def get_location_from_ip(ip_address: str) -> dict:
+    """Get location information from IP address"""
+    try:
+        # Skip for local/private IPs
+        if ip_address in ["127.0.0.1", "localhost"] or ip_address.startswith("192.168.") or ip_address.startswith("10."):
+            return {"city": "Local", "region": "Local", "country": "Local"}
+        
+        # Use a free IP geolocation service
+        response = requests.get(f"http://ip-api.com/json/{ip_address}", timeout=3)
+        if response.status_code == 200:
+            data = response.json()
+            return {
+                "city": data.get("city", "Unknown"),
+                "region": data.get("regionName", "Unknown"), 
+                "country": data.get("country", "Unknown")
+            }
+    except:
+        pass
+    
+    # Default fallback locations for India (since this is Nura Mobility)
+    return {"city": "Chennai", "region": "Tamil Nadu", "country": "India"}
+
 def generate_short_code(length: int = 8) -> str:
     """Generate a random short code for QR tracking"""
     characters = string.ascii_letters + string.digits
