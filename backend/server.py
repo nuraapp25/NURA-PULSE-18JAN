@@ -10486,9 +10486,13 @@ async def get_campaign_analytics(
             if scans:
                 last_scan = max([s.get("scanned_at") for s in scans if s.get("scanned_at")])
             
+            # Create proper filename format: Campaign-VehicleNumber
+            qr_filename = f"{campaign_name}-{qr_code.get('qr_name', qr_code.get('utm_source', 'Unknown'))}"
+            
             analytics.append({
                 "qr_code_id": qr_id,
                 "qr_name": qr_code.get("qr_name", qr_code.get("utm_source")),
+                "qr_filename": qr_filename,
                 "utm_source": qr_code.get("utm_source"),
                 "total_scans": len(scans),
                 "ios_scans": ios_scans,
@@ -10503,6 +10507,9 @@ async def get_campaign_analytics(
                         "browser": scan.get("browser"),
                         "device": scan.get("device"),
                         "ip_address": scan.get("ip_address"),
+                        "location_city": scan.get("location_city", "Unknown"),
+                        "location_region": scan.get("location_region", "Unknown"),
+                        "location_country": scan.get("location_country", "Unknown"),
                         "user_agent": scan.get("user_agent")
                     }
                     for scan in scans
