@@ -1797,12 +1797,27 @@ async def get_leads(
                 if tc.get('email'):
                     telecaller_map[tc['email']] = name
         
-        # Assign telecaller names to leads
+        # Assign telecaller names to leads and clean up remarks data
         for lead in leads:
             if lead.get('assigned_telecaller'):
                 telecaller_name = telecaller_map.get(lead['assigned_telecaller'])
                 if telecaller_name:
                     lead['assigned_telecaller_name'] = telecaller_name
+            
+            # Ensure remarks is always a string (handle legacy data)
+            if lead.get("remarks"):
+                if isinstance(lead["remarks"], list) and len(lead["remarks"]) > 0:
+                    # Convert array of remark objects to string
+                    lead["remarks"] = "\n".join([
+                        remark.get("text", str(remark)) if isinstance(remark, dict) else str(remark)
+                        for remark in lead["remarks"]
+                    ])
+                elif isinstance(lead["remarks"], dict):
+                    # Convert single remark object to string
+                    lead["remarks"] = lead["remarks"].get("text", str(lead["remarks"]))
+                elif not isinstance(lead["remarks"], str):
+                    # Convert any other type to string
+                    lead["remarks"] = str(lead["remarks"])
         
         # Return with pagination metadata
         if skip_pagination:
