@@ -9897,6 +9897,7 @@ class QRCodeBatchCreate(BaseModel):
     auto_fill_utm: bool = True
     utm_medium: str = "qrscan"
     utm_campaign: Optional[str] = None
+    qr_mode: str = "simple"  # "simple" for direct text, "tracking" for analytics URLs
 
 def generate_short_code(length: int = 8) -> str:
     """Generate a random short code for QR tracking"""
