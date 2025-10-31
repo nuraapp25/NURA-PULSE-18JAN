@@ -10197,8 +10197,12 @@ async def scan_qr_code(
         else:
             platform = "desktop"
         
-        # Get client IP
+        # Get client IP (check X-Forwarded-For for real IP behind proxies)
         client_ip = request.client.host
+        forwarded_for = request.headers.get("x-forwarded-for", "")
+        if forwarded_for:
+            client_ip = forwarded_for.split(",")[0].strip()
+            logger.info(f"Using X-Forwarded-For IP: {client_ip}")
         
         # Build UTM parameters in the format requested by user
         utm_value = qr_code.get('utm_source', f"{qr_code.get('campaign_name', '')}-{qr_code.get('qr_name', '')}")
@@ -10223,12 +10227,23 @@ async def scan_qr_code(
             else:
                 redirect_url = add_utm_to_url(qr_code.get('single_url', ''), utm_value)
         
-        # Enhanced duplicate scan prevention
-        # Use multiple criteria to identify duplicate scans
+        # Enhanced duplicate scan prevention with multiple layers
         import hashlib
         current_time = datetime.now(timezone.utc)
         
-        # Check for recent scans from same IP and QR in last 2 minutes (stricter window)
+        # LAYER 1: Check for same QR + User Agent within 3 seconds (catches rapid double-clicks)
+        cutoff_rapid = (current_time - timedelta(seconds=3)).isoformat()
+        rapid_scan = await db.qr_scans.find_one({
+            "qr_code_id": qr_code["id"],
+            "user_agent": user_agent_string,
+            "scanned_at": {"$gte": cutoff_rapid}
+        })
+        
+        if rapid_scan:
+            logger.info(f"RAPID DUPLICATE prevented - same User Agent scanned QR {short_code} within 3 seconds")
+            return RedirectResponse(url=redirect_url, status_code=307)
+        
+        # LAYER 2: Check for recent scans from same IP and QR in last 2 minutes
         cutoff_time = (current_time - timedelta(minutes=2)).isoformat()
         recent_scan = await db.qr_scans.find_one({
             "qr_code_id": qr_code["id"],
@@ -10241,7 +10256,7 @@ async def scan_qr_code(
             # Return redirect WITHOUT recording scan or incrementing count
             return RedirectResponse(url=redirect_url, status_code=307)
         
-        # Additional check: same User Agent + IP + QR within 5 minutes
+        # LAYER 3: Additional check - same User Agent + IP + QR within 5 minutes
         cutoff_time_extended = (current_time - timedelta(minutes=5)).isoformat()
         duplicate_check = await db.qr_scans.find_one({
             "qr_code_id": qr_code["id"],
@@ -10255,7 +10270,7 @@ async def scan_qr_code(
             # Return redirect WITHOUT recording scan or incrementing count
             return RedirectResponse(url=redirect_url, status_code=307)
         
-        # Create unique scan identifier for additional deduplication
+        # LAYER 4: Create unique scan identifier for additional deduplication (minute-level)
         scan_identifier = hashlib.md5(f"{client_ip}_{user_agent_string[:50]}_{qr_code['id']}_{current_time.strftime('%Y%m%d%H%M')}".encode()).hexdigest()
         
         # Check if this exact scan identifier already exists (final safety check)
@@ -10264,8 +10279,8 @@ async def scan_qr_code(
             logger.info(f"Duplicate scan prevented - scan identifier already exists for QR {short_code}")
             return RedirectResponse(url=redirect_url, status_code=307)
         
-        # Get location data from IP (basic city/region detection)
-        location_info = get_location_from_ip(client_ip)
+        # Get location data from IP with X-Forwarded-For support
+        location_info = get_location_from_ip(client_ip, dict(request.headers))
         
         # Log analytics with enhanced tracking - only if not duplicate
         scan_data = {
