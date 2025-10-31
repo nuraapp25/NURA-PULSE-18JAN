@@ -1233,6 +1233,55 @@ const QRCodeManagerNew = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Analytics Dialog */}
+      <Dialog open={analyticsDialogOpen} onOpenChange={setAnalyticsDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Campaign Analytics - {selectedCampaign}</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {analyticsData.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>QR Code</TableHead>
+                    <TableHead>Total Scans</TableHead>
+                    <TableHead>iOS Scans</TableHead>
+                    <TableHead>Android Scans</TableHead>
+                    <TableHead>Web Scans</TableHead>
+                    <TableHead>Last Scan</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {analyticsData.map((item, index) => (
+                    <TableRow key={index}>
+                      <TableCell className="font-medium">{item.qr_name || item.utm_source}</TableCell>
+                      <TableCell>{item.total_scans}</TableCell>
+                      <TableCell>{item.ios_scans}</TableCell>
+                      <TableCell>{item.android_scans}</TableCell>
+                      <TableCell>{item.web_scans}</TableCell>
+                      <TableCell>{item.last_scan ? new Date(item.last_scan).toLocaleDateString() : 'Never'}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <div className="text-center py-8">
+                <BarChart3 className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+                <p className="text-gray-500">No analytics data available</p>
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAnalyticsDialogOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
