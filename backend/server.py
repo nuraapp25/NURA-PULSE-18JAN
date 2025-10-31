@@ -6642,13 +6642,14 @@ async def get_qr_codes(
 async def get_campaigns(current_user: User = Depends(get_current_user)):
     """Get all campaigns with QR code counts"""
     try:
-        # Aggregate campaigns
+        # Aggregate campaigns with published status
         pipeline = [
             {"$group": {
                 "_id": "$campaign_name",
                 "qr_count": {"$sum": 1},
                 "total_scans": {"$sum": "$scan_count"},
-                "created_at": {"$first": "$created_at"}
+                "created_at": {"$first": "$created_at"},
+                "published": {"$max": "$published"}  # True if any QR in campaign is published
             }},
             {"$sort": {"created_at": -1}}
         ]
@@ -6661,7 +6662,8 @@ async def get_campaigns(current_user: User = Depends(get_current_user)):
                 "campaign_name": c["_id"],
                 "qr_count": c["qr_count"],
                 "total_scans": c["total_scans"],
-                "created_at": c["created_at"]
+                "created_at": c["created_at"],
+                "published": c.get("published", False)
             }
             for c in campaigns
         ]
