@@ -476,20 +476,69 @@ const QRCodeManagerNew = () => {
       </div>
       
       {/* Campaigns Grid */}
+      {campaigns.length > 0 && (
+        <div className="flex items-center gap-3 mb-4">
+          <div className="flex items-center gap-2">
+            <Checkbox
+              checked={selectAllCampaigns}
+              onCheckedChange={handleSelectAllCampaigns}
+              id="select-all-campaigns"
+            />
+            <Label htmlFor="select-all-campaigns" className="text-sm">
+              Select All ({campaigns.length})
+            </Label>
+          </div>
+          {selectedCampaigns.length > 0 && (
+            <>
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={handleDeleteSelectedCampaigns}
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete Selected ({selectedCampaigns.length})
+              </Button>
+            </>
+          )}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleDeleteAllCampaigns}
+            className="border-red-500 text-red-600 hover:bg-red-50"
+          >
+            <Trash2 className="w-4 h-4 mr-2" />
+            Delete All
+          </Button>
+        </div>
+      )}
+      
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {campaigns.map((campaign) => (
           <Card 
             key={campaign.campaign_name}
-            className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-transparent hover:border-teal-500"
-            onClick={() => fetchCampaignQRCodes(campaign.campaign_name)}
+            className={`hover:shadow-lg transition-shadow border-2 ${
+              selectedCampaigns.includes(campaign.campaign_name) 
+                ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/20' 
+                : 'border-transparent hover:border-teal-500'
+            }`}
           >
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <FolderOpen className="w-5 h-5 text-teal-600" />
-                {campaign.campaign_name}
+                <Checkbox
+                  checked={selectedCampaigns.includes(campaign.campaign_name)}
+                  onCheckedChange={() => handleCampaignCheckbox(campaign.campaign_name)}
+                  onClick={(e) => e.stopPropagation()}
+                />
+                <div 
+                  className="flex-1 flex items-center gap-2 cursor-pointer"
+                  onClick={() => fetchCampaignQRCodes(campaign.campaign_name)}
+                >
+                  <FolderOpen className="w-5 h-5 text-teal-600" />
+                  {campaign.campaign_name}
+                </div>
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent onClick={() => fetchCampaignQRCodes(campaign.campaign_name)} className="cursor-pointer">
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600 dark:text-gray-400">QR Codes:</span>
