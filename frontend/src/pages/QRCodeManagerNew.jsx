@@ -231,7 +231,6 @@ const QRCodeManagerNew = () => {
     setBatchFile(null);
     setAutoFillUtm(true);
     setBatchLandingPageType("single");
-    setBatchQrMode("simple");
   };
   
   const downloadQRCode = (qrCode) => {
