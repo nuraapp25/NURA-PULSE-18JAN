@@ -9986,8 +9986,10 @@ async def create_qr_code(
         backend_url = os.environ.get('BACKEND_URL') or os.environ.get('REACT_APP_BACKEND_URL', 'https://nura-pulse-app.preview.emergentagent.com/api')
         tracking_url = f"{backend_url}/qr-codes/scan/{short_code}"
         
-        # Generate QR code image
-        qr_image = generate_qr_code_image(tracking_url)
+        # Generate QR code image with color parameters
+        foreground_color = qr_data.qr_foreground_color if qr_data.use_color_qr else "black"
+        background_color = qr_data.qr_background_color if qr_data.use_color_qr else "white"
+        qr_image = generate_qr_code_image(tracking_url, foreground_color, background_color)
         
         # Prepare QR code document
         qr_code = {
