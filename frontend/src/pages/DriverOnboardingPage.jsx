@@ -3097,7 +3097,17 @@ const DriverOnboardingPage = () => {
               Lead Details
               <div className="flex gap-2">
                 <Button
-                  onClick={() => setIsEditMode(!isEditMode)}
+                  onClick={() => {
+                    if (isEditMode) {
+                      // Cancel edit - reset editedLead to selectedLead
+                      setEditedLead({...selectedLead});
+                      setHasUnsavedChanges(false);
+                    } else {
+                      // Enter edit mode - sync editedLead with latest selectedLead
+                      setEditedLead({...selectedLead});
+                    }
+                    setIsEditMode(!isEditMode);
+                  }}
                   variant="outline"
                   size="sm"
                 >
