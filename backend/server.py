@@ -10586,6 +10586,94 @@ async def get_campaign_analytics(
         logger.error(f"Failed to get campaign analytics: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to get campaign analytics: {str(e)}")
 
+@api_router.get("/qr-codes/{qr_code_id}/analytics")
+async def get_individual_qr_analytics(
+    qr_code_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get detailed analytics for a single QR code"""
+    try:
+        # Get the specific QR code
+        qr_code = await db.qr_codes.find_one({"id": qr_code_id})
+        
+        if not qr_code:
+            raise HTTPException(status_code=404, detail="QR code not found")
+        
+        # Get scan analytics for this QR code
+        scans = await db.qr_scans.find({"qr_code_id": qr_code_id}).to_list(None)
+        
+        # Calculate platform breakdown
+        ios_scans = len([s for s in scans if s.get("platform") == "ios"])
+        android_scans = len([s for s in scans if s.get("platform") == "android"])
+        web_scans = len([s for s in scans if s.get("platform") in ["desktop", "mobile_other"]])
+        
+        # Get last scan time
+        last_scan = None
+        if scans:
+            last_scan = max([s.get("scanned_at") for s in scans if s.get("scanned_at")])
+        
+        # Create proper filename format: Campaign-VehicleNumber
+        qr_filename = f"{qr_code.get('campaign_name', 'Unknown')}-{qr_code.get('qr_name', qr_code.get('utm_source', 'Unknown'))}"
+        
+        # Generate UTM URLs for all platforms
+        utm_value = qr_code.get('utm_source', f"{qr_code.get('campaign_name', 'Unknown')}-{qr_code.get('qr_name', 'Unknown')}")
+        utm_params = f"?utm={utm_value}"
+        
+        # Determine URLs for all platforms with UTM
+        if qr_code.get('landing_page_type') == 'single':
+            utm_url_web = qr_code.get('single_url', '') + utm_params
+            utm_url_ios = utm_url_web  # Same URL for single mode
+            utm_url_android = utm_url_web  # Same URL for single mode
+        else:
+            # Different URLs for each platform
+            utm_url_ios = qr_code.get('ios_url', '') + utm_params
+            utm_url_android = qr_code.get('android_url', '') + utm_params
+            utm_url_web = qr_code.get('web_url', qr_code.get('single_url', '')) + utm_params
+        
+        analytics = {
+            "qr_code_id": qr_code_id,
+            "qr_name": qr_code.get("qr_name", qr_code.get("utm_source")),
+            "qr_filename": qr_filename,
+            "campaign_name": qr_code.get("campaign_name"),
+            "utm_source": qr_code.get("utm_source"),
+            "utm_url_web": utm_url_web,
+            "utm_url_ios": utm_url_ios,
+            "utm_url_android": utm_url_android,
+            "landing_page_type": qr_code.get("landing_page_type", "single"),
+            "total_scans": len(scans),
+            "ios_scans": ios_scans,
+            "android_scans": android_scans,
+            "web_scans": web_scans,
+            "last_scan": last_scan,
+            "created_at": qr_code.get("created_at"),
+            "scan_details": [
+                {
+                    "scanned_at": scan.get("scanned_at"),
+                    "platform": scan.get("platform"),
+                    "os_family": scan.get("os_family"),
+                    "browser": scan.get("browser"),
+                    "device": scan.get("device"),
+                    "ip_address": scan.get("ip_address"),
+                    "location_city": scan.get("location_city", "Unknown"),
+                    "location_region": scan.get("location_region", "Unknown"),
+                    "location_country": scan.get("location_country", "Unknown"),
+                    "user_agent": scan.get("user_agent")
+                }
+                for scan in scans
+            ]
+        }
+        
+        return {
+            "success": True,
+            "analytics": analytics
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get QR code analytics: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get QR code analytics: {str(e)}")
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
