@@ -338,7 +338,7 @@ const LeadDetailsDialog = ({
                 />
               ) : (
                 <p className="text-base text-gray-900 dark:text-white mt-1 whitespace-pre-wrap min-h-[80px] p-2 border border-gray-200 dark:border-gray-700 rounded">
-                  {lead.remarks || 'No remarks'}
+                  {typeof lead.remarks === 'string' ? lead.remarks : (lead.remarks ? JSON.stringify(lead.remarks) : 'No remarks')}
                 </p>
               )}
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
