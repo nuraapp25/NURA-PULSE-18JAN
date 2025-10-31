@@ -712,6 +712,10 @@ const QRCodeManagerNew = () => {
                 size="sm"
                 variant="destructive"
                 onClick={handleDeleteSelectedCampaigns}
+                disabled={selectedCampaigns.some(name => {
+                  const campaign = campaigns.find(c => c.campaign_name === name);
+                  return campaign?.published;
+                })}
               >
                 <Trash2 className="w-4 h-4 mr-2" />
                 Delete Selected ({selectedCampaigns.length})
@@ -723,6 +727,7 @@ const QRCodeManagerNew = () => {
             variant="outline"
             onClick={handleDeleteAllCampaigns}
             className="border-red-500 text-red-600 hover:bg-red-50"
+            disabled={campaigns.some(c => c.published)}
           >
             <Trash2 className="w-4 h-4 mr-2" />
             Delete All
