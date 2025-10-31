@@ -9974,8 +9974,9 @@ async def create_qr_code(
         # Generate short code for tracking
         short_code = generate_short_code()
         
-        # Create tracking URL
-        tracking_url = f"{os.environ.get('REACT_APP_BACKEND_URL', 'http://localhost:8001')}/api/qr-codes/scan/{short_code}"
+        # Create tracking URL with correct backend URL
+        backend_url = os.environ.get('BACKEND_URL') or os.environ.get('REACT_APP_BACKEND_URL', 'https://nura-pulse-app.preview.emergentagent.com/api')
+        tracking_url = f"{backend_url}/qr-codes/scan/{short_code}"
         
         # Generate QR code image
         qr_image = generate_qr_code_image(tracking_url)
