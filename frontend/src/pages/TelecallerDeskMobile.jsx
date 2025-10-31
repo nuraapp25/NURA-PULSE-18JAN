@@ -180,14 +180,20 @@ const TelecallerDeskMobile = () => {
       
       toast.success("Lead details updated successfully!");
       
-      // Update local state with fresh data
+      // Update local state with fresh data from response
       const updatedLead = response.data.lead;
+      
+      // Update the leads array immediately with the fresh data
+      setLeads(prevLeads => 
+        prevLeads.map(lead => 
+          lead.id === updatedLead.id ? updatedLead : lead
+        )
+      );
+      
+      // Update selected lead and edited lead with fresh data
       setSelectedLead(updatedLead);
       setEditedLead({...updatedLead});
       setIsEditMode(false);
-      
-      // Refresh leads list in background
-      fetchLeads();
       
     } catch (error) {
       toast.error(error.response?.data?.detail || "Failed to update lead");
