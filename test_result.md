@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Fix remarks persistence in Lead Details Dialog (not saving/showing when reopened in Driver Onboarding and Telecaller's Desk) and fix Export Database functionality in Manage DB page."
+user_problem_statement: "Fix: 1) QR Code duplicate scan issue - single scans recording as two scans. 2) Double parentheses '))'  UI issue in QR Code Manager below PUBLISH button. 3) Source filter in Driver Onboarding should use actual import sources (e.g., 'bhavani', 'ganesh', 'digital leads') instead of stages (S1, S2, S3, S4)."
 
 backend:
   - task: "Telecaller's Desk - Status Update Fix"
