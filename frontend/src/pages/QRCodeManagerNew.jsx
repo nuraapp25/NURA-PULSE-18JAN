@@ -903,7 +903,13 @@ const QRCodeManagerNew = () => {
                         <Button size="sm" variant="outline" onClick={() => copyToClipboard(qrCode.tracking_url)}>
                           <Copy className="w-4 h-4" />
                         </Button>
-                        <Button size="sm" variant="outline" onClick={() => handleDeleteIndividualQRCode(qrCode.id)} className="text-red-600 hover:text-red-700 hover:bg-red-50">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={() => handleDeleteIndividualQRCode(qrCode.id)} 
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          disabled={selectedCampaignData?.published}
+                        >
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
