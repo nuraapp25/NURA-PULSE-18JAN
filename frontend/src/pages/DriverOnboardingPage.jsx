@@ -767,6 +767,9 @@ const DriverOnboardingPage = () => {
       // Refetch leads to update summary (do this in background)
       fetchLeads().catch(err => console.error("Failed to refresh leads:", err));
       
+      // Refetch status summary to reflect changes immediately
+      fetchStatusSummary().catch(err => console.error("Failed to refresh status summary:", err));
+      
       // Update last sync time after edit
       fetchLastSyncTime().catch(err => console.error("Failed to fetch sync time:", err));
       
