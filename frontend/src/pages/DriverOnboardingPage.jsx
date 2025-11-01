@@ -1230,6 +1230,9 @@ const DriverOnboardingPage = () => {
       setBulkStatusDialogOpen(false);
       setBulkStatus("");
       
+      // Refresh status summary dashboard to reflect bulk changes
+      await fetchStatusSummary();
+      
       // Update last sync time after bulk update
       await fetchLastSyncTime();
       
