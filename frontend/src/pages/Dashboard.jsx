@@ -214,7 +214,7 @@ const Dashboard = () => {
                     Admin
                   </div>
                 )}
-                {user?.account_type === "master_admin" && (
+                {(user?.account_type === "master_admin" || user?.account_type === "admin") && (
                   <button
                     data-testid="sidebar-user-management"
                     onClick={() => {
