@@ -634,12 +634,12 @@ const QRCodeManagerNew = () => {
   };
 
   const handleDeleteIndividualQRCode = async (qrCodeId) => {
-    if (!window.confirm("Are you sure you want to delete this QR code?")) {
+    if (!window.confirm("Are you sure you want to delete this QR code? This will delete it even if published.")) {
       return;
     }
 
     try {
-      await axios.delete(`${API}/qr-codes/${qrCodeId}`, {
+      await axios.delete(`${API}/qr-codes/${qrCodeId}?force=true`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
       });
       
