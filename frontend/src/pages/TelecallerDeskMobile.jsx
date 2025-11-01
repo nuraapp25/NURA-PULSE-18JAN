@@ -98,8 +98,8 @@ const TelecallerDeskMobile = () => {
       
       // Auto-select first telecaller if available
       if (response.data && response.data.length > 0) {
-        setSelectedTelecaller(response.data[0].id);
-        fetchLeadsForTelecaller(response.data[0].id);
+        setSelectedTelecaller(response.data[0].email); // Use email instead of id
+        fetchLeadsForTelecaller(response.data[0].email);
       }
     } catch (error) {
       console.error("Error fetching telecallers:", error);
