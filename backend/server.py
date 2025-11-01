@@ -730,8 +730,8 @@ async def get_stats(current_user: User = Depends(get_current_user)):
 
 @api_router.post("/users/sync-to-sheets")
 async def sync_all_users_to_sheets(current_user: User = Depends(get_current_user)):
-    """Manually sync all users to Google Sheets (master admin only)"""
-    if current_user.account_type != "master_admin":
+    """Manually sync all users to Google Sheets (master admin and admin only)"""
+    if current_user.account_type not in ["master_admin", "admin"]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     users = await db.users.find({}, {"_id": 0, "password": 0}).to_list(1000)
