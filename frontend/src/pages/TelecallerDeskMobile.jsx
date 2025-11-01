@@ -64,6 +64,11 @@ const TelecallerDeskMobile = () => {
   const [selectedStatus, setSelectedStatus] = useState("");
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   
+  // Admin/Master Admin telecaller selection
+  const isAdmin = user?.account_type === "master_admin" || user?.account_type === "admin";
+  const [telecallers, setTelecallers] = useState([]);
+  const [selectedTelecaller, setSelectedTelecaller] = useState(null);
+  
   // State for LeadDetailsDialog
   const [editedLead, setEditedLead] = useState(null);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -75,8 +80,56 @@ const TelecallerDeskMobile = () => {
   const [scanningDoc, setScanningDoc] = useState(null);
 
   useEffect(() => {
-    fetchLeads();
+    if (isAdmin) {
+      fetchTelecallers();
+    } else {
+      fetchLeads();
+    }
   }, []);
+  
+  // Fetch telecallers for admin dropdown
+  const fetchTelecallers = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(`${API}/driver-onboarding/telecallers`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setTelecallers(response.data.telecallers || []);
+      
+      // Auto-select first telecaller if available
+      if (response.data.telecallers && response.data.telecallers.length > 0) {
+        setSelectedTelecaller(response.data.telecallers[0].id);
+        fetchLeadsForTelecaller(response.data.telecallers[0].id);
+      }
+    } catch (error) {
+      console.error("Error fetching telecallers:", error);
+      toast.error("Failed to load telecallers");
+    }
+  };
+  
+  // Fetch leads for a specific telecaller (admin view)
+  const fetchLeadsForTelecaller = async (telecallerId) => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("token");
+      const response = await axios.get(`${API}/driver-onboarding/leads?telecaller=${telecallerId}&skip_pagination=true`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const leadsData = response.data.leads || response.data || [];
+      setLeads(leadsData);
+    } catch (error) {
+      console.error("Error fetching leads:", error);
+      toast.error("Failed to load leads");
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Handle telecaller selection change
+  const handleTelecallerChange = (telecallerId) => {
+    setSelectedTelecaller(telecallerId);
+    fetchLeadsForTelecaller(telecallerId);
+  };
 
   const fetchLeads = async () => {
     try {
