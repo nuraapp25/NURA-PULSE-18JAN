@@ -10497,6 +10497,7 @@ async def delete_qr_code(
 @api_router.delete("/qr-codes/campaigns/{campaign_name}")
 async def delete_campaign(
     campaign_name: str,
+    force: bool = False,  # Add force parameter
     current_user: User = Depends(get_current_user)
 ):
     """Delete all QR codes in a campaign"""
@@ -10508,8 +10509,14 @@ async def delete_campaign(
             raise HTTPException(status_code=404, detail="Campaign not found")
         
         # Check if any QR code in the campaign is published
-        if any(qr.get("published", False) for qr in qr_codes):
-            raise HTTPException(status_code=400, detail="Cannot delete published campaign")
+        has_published = any(qr.get("published", False) for qr in qr_codes)
+        
+        if has_published and not force:
+            raise HTTPException(status_code=400, detail="Cannot delete published campaign. Use force=true to override (master admin only)")
+        
+        if has_published and force:
+            if current_user.account_type != "master_admin":
+                raise HTTPException(status_code=403, detail="Only master admins can force delete published campaigns")
         
         # Delete all QR codes in the campaign
         result = await db.qr_codes.delete_many({"campaign_name": campaign_name})
