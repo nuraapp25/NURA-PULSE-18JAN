@@ -637,8 +637,8 @@ async def reject_user(approval: UserApproval, current_user: User = Depends(get_c
 
 @api_router.post("/users/{user_id}/generate-temp-password")
 async def generate_temp_password_for_user(user_id: str, current_user: User = Depends(get_current_user)):
-    """Generate temporary password for a user (master admin only)"""
-    if current_user.account_type != "master_admin":
+    """Generate temporary password for a user (master admin and admin only)"""
+    if current_user.account_type not in ["master_admin", "admin"]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     user = await db.users.find_one({"id": user_id})
