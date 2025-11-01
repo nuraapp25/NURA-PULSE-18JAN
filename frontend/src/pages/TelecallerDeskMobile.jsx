@@ -458,7 +458,7 @@ const TelecallerDeskMobile = () => {
               </SelectTrigger>
               <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
                 {telecallers.map((telecaller) => (
-                  <SelectItem key={telecaller.id} value={telecaller.id}>
+                  <SelectItem key={telecaller.email} value={telecaller.email}>
                     {telecaller.name} ({telecaller.email})
                   </SelectItem>
                 ))}
@@ -503,7 +503,7 @@ const TelecallerDeskMobile = () => {
               </SelectTrigger>
               <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
                 {telecallers.map((telecaller) => (
-                  <SelectItem key={telecaller.id} value={telecaller.id}>
+                  <SelectItem key={telecaller.email} value={telecaller.email}>
                     {telecaller.name} ({telecaller.email})
                   </SelectItem>
                 ))}
