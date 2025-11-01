@@ -108,11 +108,11 @@ const TelecallerDeskMobile = () => {
   };
   
   // Fetch leads for a specific telecaller (admin view)
-  const fetchLeadsForTelecaller = async (telecallerId) => {
+  const fetchLeadsForTelecaller = async (telecallerEmail) => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      const response = await axios.get(`${API}/driver-onboarding/leads?telecaller=${telecallerId}&skip_pagination=true`, {
+      const response = await axios.get(`${API}/driver-onboarding/leads?telecaller=${telecallerEmail}&skip_pagination=true`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const leadsData = response.data.leads || response.data || [];
@@ -126,9 +126,9 @@ const TelecallerDeskMobile = () => {
   };
   
   // Handle telecaller selection change
-  const handleTelecallerChange = (telecallerId) => {
-    setSelectedTelecaller(telecallerId);
-    fetchLeadsForTelecaller(telecallerId);
+  const handleTelecallerChange = (telecallerEmail) => {
+    setSelectedTelecaller(telecallerEmail);
+    fetchLeadsForTelecaller(telecallerEmail);
   };
 
   const fetchLeads = async () => {
