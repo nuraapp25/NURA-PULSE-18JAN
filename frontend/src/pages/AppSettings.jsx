@@ -163,7 +163,7 @@ const AppSettings = () => {
             </Alert>
           )}
 
-          {user?.account_type === 'master_admin' && (
+          {(user?.account_type === 'master_admin' || user?.account_type === 'admin') && (
             <Alert className="bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800">
               <AlertCircle className="h-4 w-4 text-yellow-600" />
               <AlertDescription className="text-yellow-800 dark:text-yellow-200">
