@@ -91,7 +91,7 @@ const TelecallerDeskMobile = () => {
   const fetchTelecallers = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get(`${API}/telecallers`, {
+      const response = await axios.get(`${API}/users/telecallers`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setTelecallers(response.data || []);
