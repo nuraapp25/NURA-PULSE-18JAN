@@ -10,7 +10,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 const PaymentScreenshots = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const isMasterAdmin = user?.account_type === "master_admin";
+  const canDelete = user?.account_type === "master_admin" || user?.account_type === "admin";
   
   const [currentPath, setCurrentPath] = useState([]);
   const [folders, setFolders] = useState([]);
