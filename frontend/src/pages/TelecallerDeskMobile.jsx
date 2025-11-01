@@ -437,15 +437,39 @@ const TelecallerDeskMobile = () => {
     );
   }
 
-  if (leads.length === 0) {
+  if (leads.length === 0 && !loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-4">
         <AlertCircle className="w-16 h-16 text-gray-400 mb-4" />
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No leads assigned yet</h2>
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+          {isAdmin ? "No leads assigned to this telecaller" : "No leads assigned yet"}
+        </h2>
         <p className="text-gray-600 dark:text-gray-400 text-center mb-4">
-          You don't have any leads assigned. Please contact your admin.
+          {isAdmin 
+            ? "This telecaller doesn't have any leads assigned. Try selecting a different telecaller."
+            : "You don't have any leads assigned. Please contact your admin."
+          }
         </p>
-        <Button onClick={fetchLeads} variant="outline">
+        {isAdmin && telecallers.length > 0 && (
+          <div className="w-full max-w-md mb-4">
+            <Select value={selectedTelecaller} onValueChange={handleTelecallerChange}>
+              <SelectTrigger className="w-full dark:bg-gray-800 dark:border-gray-700">
+                <SelectValue placeholder="Select a telecaller" />
+              </SelectTrigger>
+              <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                {telecallers.map((telecaller) => (
+                  <SelectItem key={telecaller.id} value={telecaller.id}>
+                    {telecaller.first_name} {telecaller.last_name} ({telecaller.email})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        <Button 
+          onClick={isAdmin ? () => fetchLeadsForTelecaller(selectedTelecaller) : fetchLeads} 
+          variant="outline"
+        >
           <RefreshCw className="w-4 h-4 mr-2" />
           Refresh
         </Button>
