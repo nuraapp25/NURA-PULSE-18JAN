@@ -523,8 +523,8 @@ async def get_all_users(current_user: User = Depends(get_current_user)):
 
 @api_router.post("/users/create")
 async def create_user(user_data: UserCreate, current_user: User = Depends(get_current_user)):
-    """Create a new user (master admin only)"""
-    if current_user.account_type != "master_admin":
+    """Create a new user (master admin and admin only)"""
+    if current_user.account_type not in ["master_admin", "admin"]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     # Check if user already exists
