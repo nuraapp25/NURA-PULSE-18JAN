@@ -10459,18 +10459,24 @@ async def get_qr_analytics(
 @api_router.delete("/qr-codes/{qr_code_id}")
 async def delete_qr_code(
     qr_code_id: str,
+    force: bool = False,  # Add force parameter to allow deleting published QR codes
     current_user: User = Depends(get_current_user)
 ):
     """Delete a QR code"""
     try:
-        # Check if the QR code exists and is not published
+        # Check if the QR code exists
         qr_code = await db.qr_codes.find_one({"id": qr_code_id})
         
         if not qr_code:
             raise HTTPException(status_code=404, detail="QR code not found")
         
-        if qr_code.get("published", False):
-            raise HTTPException(status_code=400, detail="Cannot delete published QR code")
+        # Only master admins can delete published QR codes
+        if qr_code.get("published", False) and not force:
+            raise HTTPException(status_code=400, detail="Cannot delete published QR code. Use force=true to override (master admin only)")
+        
+        if qr_code.get("published", False) and force:
+            if current_user.account_type != "master_admin":
+                raise HTTPException(status_code=403, detail="Only master admins can force delete published QR codes")
         
         result = await db.qr_codes.delete_one({"id": qr_code_id})
         
