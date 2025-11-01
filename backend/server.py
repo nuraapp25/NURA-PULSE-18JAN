@@ -707,8 +707,8 @@ async def delete_user(user_id: str, current_user: User = Depends(get_current_use
 
 @api_router.get("/stats")
 async def get_stats(current_user: User = Depends(get_current_user)):
-    """Get user statistics (master admin only)"""
-    if current_user.account_type != "master_admin":
+    """Get user statistics (master admin and admin only)"""
+    if current_user.account_type not in ["master_admin", "admin"]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     total_users = await db.users.count_documents({"status": {"$ne": "deleted"}})
