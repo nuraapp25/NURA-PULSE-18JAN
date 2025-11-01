@@ -309,13 +309,13 @@ const PaymentScreenshots = () => {
                           >
                             <Download className="w-4 h-4" />
                           </Button>
-                          {isMasterAdmin && (
+                          {canDelete && (
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => handleDeleteFile(file.name)}
                               className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                              title="Delete (Master Admin only)"
+                              title="Delete (Admin/Master Admin only)"
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
