@@ -280,6 +280,7 @@ const BatteryConsumption = () => {
     let previousOdometer = null;
     let lastValidBattery = null;
     let lastValidDistance = null;
+    let previousBattery = null; // Track previous battery for interval calculations
     
     const processedData = fullTimelineHours.map((hourKey, index) => {
       // Check if we have data for this hour
@@ -294,6 +295,8 @@ const BatteryConsumption = () => {
         const currentBattery = parseFloat(lastReading['Battery Soc(%)'] || lastReading['Battery SOC(%)'] || 0);
         
         let distanceTraveled = 0;
+        let chargeDrop = 0;
+        let efficiency = null;
         
         // Calculate distance traveled
         if (previousOdometer === null) {
@@ -301,6 +304,7 @@ const BatteryConsumption = () => {
           cumulativeDistance = 0;
           distanceTraveled = 0;
           previousOdometer = currentOdometer;
+          previousBattery = currentBattery;
           console.log(`Hour ${hourKey} - First data point. Baseline Odometer: ${currentOdometer} km, Cumulative: 0 km`);
         } else {
           // Calculate distance traveled this hour = current - previous
@@ -314,16 +318,35 @@ const BatteryConsumption = () => {
             distanceTraveled = 0;
           }
           previousOdometer = currentOdometer;
+          
+          // Calculate charge drop (battery decrease)
+          if (previousBattery !== null) {
+            chargeDrop = previousBattery - currentBattery; // Positive if battery decreased
+          }
+          
+          // Calculate efficiency (km per % battery)
+          if (chargeDrop > 0 && distanceTraveled > 0) {
+            efficiency = distanceTraveled / chargeDrop;
+          }
+          
+          previousBattery = currentBattery;
         }
         
         // Store last valid values
         lastValidBattery = currentBattery;
         lastValidDistance = cumulativeDistance;
         
+        // Get previous hour for interval label
+        const previousHour = index > 0 ? fullTimelineHours[index - 1] : null;
+        
         return {
           time: hourKey,
           battery: currentBattery > 0 ? currentBattery : null,
           distance: cumulativeDistance >= 0 ? cumulativeDistance : null,
+          intervalDistance: distanceTraveled, // Distance traveled in this hour
+          chargeDrop: chargeDrop, // Battery drop in this hour
+          efficiency: efficiency, // km per % battery
+          previousHour: previousHour,
           hasData: true
         };
       } else {
@@ -332,6 +355,10 @@ const BatteryConsumption = () => {
           time: hourKey,
           battery: null, // Show as blank in graph
           distance: null, // Show as blank in graph
+          intervalDistance: 0,
+          chargeDrop: 0,
+          efficiency: null,
+          previousHour: index > 0 ? fullTimelineHours[index - 1] : null,
           hasData: false
         };
       }
