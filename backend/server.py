@@ -2050,6 +2050,57 @@ async def get_status_summary(
     }
 
 
+
+@api_router.get("/driver-onboarding/sources")
+async def get_unique_sources(current_user: User = Depends(get_current_user)):
+    """
+    Get unique import sources from all leads for filter dropdown.
+    Returns sources with meaningful names, filtering out filenames when possible.
+    """
+    try:
+        # Use MongoDB aggregation to get distinct non-null sources
+        pipeline = [
+            {"$match": {"source": {"$exists": True, "$ne": None, "$ne": ""}}},
+            {"$group": {"_id": "$source"}},
+            {"$sort": {"_id": 1}}
+        ]
+        
+        results = await db.driver_leads.aggregate(pipeline).to_list(None)
+        sources = [result['_id'] for result in results if result['_id']]
+        
+        # Filter out filename-like sources (with extensions) and keep meaningful names
+        meaningful_sources = []
+        filename_sources = []
+        
+        for source in sources:
+            source_str = str(source).strip()
+            # Check if it looks like a filename (has extension like .xlsx, .csv, .xls)
+            if any(source_str.lower().endswith(ext) for ext in ['.xlsx', '.xls', '.csv', '.txt']):
+                # Extract meaningful part from filename (remove extension and path)
+                import os
+                base_name = os.path.splitext(os.path.basename(source_str))[0]
+                if base_name and base_name not in meaningful_sources:
+                    filename_sources.append({"value": source_str, "label": base_name})
+            else:
+                # It's a meaningful source name (like 'bhavani', 'ganesh', 'digital leads')
+                meaningful_sources.append({"value": source_str, "label": source_str})
+        
+        # Combine: meaningful names first, then filename-based sources
+        all_sources = meaningful_sources + filename_sources
+        
+        logger.info(f"Found {len(all_sources)} unique import sources")
+        
+        return {
+            "success": True,
+            "sources": all_sources,
+            "count": len(all_sources)
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching unique sources: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch sources: {str(e)}")
+
+
 @api_router.post("/driver-onboarding/sync-leads")
 async def sync_leads_to_sheets(current_user: User = Depends(get_current_user)):
     """Sync all leads to Google Sheets with batch processing to avoid timeouts"""
