@@ -457,13 +457,45 @@ const TelecallerDeskMobile = () => {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 pb-20">
       {/* Header */}
       <div className="mb-4 sticky top-0 bg-gray-50 dark:bg-gray-900 z-10 py-2">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">My Leads</h1>
-          <Button onClick={fetchLeads} variant="outline" size="sm">
+        <div className="flex items-center justify-between mb-2">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            {isAdmin ? "Telecaller's Desk" : "My Leads"}
+          </h1>
+          <Button 
+            onClick={isAdmin ? () => fetchLeadsForTelecaller(selectedTelecaller) : fetchLeads} 
+            variant="outline" 
+            size="sm"
+          >
             <RefreshCw className="w-4 h-4" />
           </Button>
         </div>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{leads.length} leads assigned</p>
+        
+        {/* Telecaller Selector for Admins */}
+        {isAdmin && telecallers.length > 0 && (
+          <div className="mb-3">
+            <Select value={selectedTelecaller} onValueChange={handleTelecallerChange}>
+              <SelectTrigger className="w-full dark:bg-gray-800 dark:border-gray-700">
+                <SelectValue placeholder="Select a telecaller" />
+              </SelectTrigger>
+              <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                {telecallers.map((telecaller) => (
+                  <SelectItem key={telecaller.id} value={telecaller.id}>
+                    {telecaller.first_name} {telecaller.last_name} ({telecaller.email})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        
+        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+          {leads.length} leads assigned
+          {isAdmin && selectedTelecaller && telecallers.length > 0 && (
+            <span className="ml-2 text-blue-600 dark:text-blue-400">
+              • Viewing: {telecallers.find(t => t.id === selectedTelecaller)?.first_name}'s desk
+            </span>
+          )}
+        </p>
       </div>
 
       {/* Leads List */}
