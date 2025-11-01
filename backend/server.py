@@ -2574,6 +2574,26 @@ async def get_telecallers(current_user: User = Depends(get_current_user)):
     return telecallers
 
 
+@api_router.get("/users/telecallers")
+async def get_telecaller_users(current_user: User = Depends(get_current_user)):
+    """Get all users with telecaller account type - returns actual user names"""
+    if current_user.account_type not in ["master_admin", "admin"]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    telecallers = await db.users.find(
+        {
+            "account_type": "telecaller",
+            "status": {"$ne": "deleted"}  # Exclude deleted users
+        },
+        {
+            "_id": 0,
+            "password": 0  # Don't return password
+        }
+    ).to_list(1000)
+    
+    return telecallers
+
+
 @api_router.post("/telecallers")
 async def create_telecaller(
     telecaller_data: TelecallerProfileCreate,
