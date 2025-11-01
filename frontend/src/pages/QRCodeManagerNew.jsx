@@ -1012,7 +1012,7 @@ const QRCodeManagerNew = () => {
                           variant="outline" 
                           onClick={() => handleDeleteIndividualQRCode(qrCode.id)} 
                           className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                          disabled={selectedCampaignData?.published}
+                          title="Delete QR code (works even if published)"
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
