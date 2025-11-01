@@ -1851,9 +1851,10 @@ const DriverOnboardingPage = () => {
                     variant="outline"
                     size="sm"
                     className="text-xs dark:bg-gray-700 dark:border-gray-600"
+                    disabled={loadingSources}
                   >
                     <Filter className="mr-2 h-3 w-3" />
-                    {summarySourceFilter ? `Source: ${summarySourceFilter}` : "All Import Sources"}
+                    {loadingSources ? "Loading..." : summarySourceFilter ? `Source: ${sourceOptions.find(s => s.value === summarySourceFilter)?.label || summarySourceFilter}` : "All Import Sources"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-56 dark:bg-gray-800 dark:border-gray-700">
@@ -1865,14 +1866,14 @@ const DriverOnboardingPage = () => {
                     >
                       All Import Sources
                     </Button>
-                    {uniqueSources.map((source) => (
+                    {sourceOptions.map((source) => (
                       <Button
-                        key={source}
+                        key={source.value}
                         variant="ghost"
                         className="w-full justify-start text-xs"
-                        onClick={() => setSummarySourceFilter(source)}
+                        onClick={() => setSummarySourceFilter(source.value)}
                       >
-                        {source}
+                        {source.label}
                       </Button>
                     ))}
                   </div>
