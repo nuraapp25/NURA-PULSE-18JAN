@@ -378,29 +378,59 @@ const BatteryConsumption = () => {
       if (!data.hasData) {
         return (
           <div className="bg-white dark:bg-gray-800 p-3 border border-gray-200 dark:border-gray-700 rounded shadow-lg">
-            <p className="text-sm font-semibold text-gray-900 dark:text-white mb-1">{label}</p>
+            <p className="text-sm font-semibold text-gray-900 dark:text-white mb-1">Time: {label}</p>
             <p className="text-xs text-gray-500 dark:text-gray-400">No data available</p>
           </div>
         );
       }
       
       return (
-        <div className="bg-white dark:bg-gray-800 p-3 border border-gray-200 dark:border-gray-700 rounded shadow-lg">
-          <p className="text-sm font-semibold text-gray-900 dark:text-white mb-2">{label}</p>
-          <div className="space-y-1">
+        <div className="bg-white dark:bg-gray-800 p-3 border border-gray-200 dark:border-gray-700 rounded shadow-lg min-w-[200px]">
+          {/* Current Status */}
+          <p className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Time: {label}</p>
+          <div className="space-y-1 mb-3 pb-3 border-b border-gray-200 dark:border-gray-600">
             <p className="text-xs">
-              <span className="text-blue-600 dark:text-blue-400">Battery: </span>
+              <span className="text-gray-600 dark:text-gray-400">Battery: </span>
               <span className="text-gray-900 dark:text-white font-medium">
                 {data.battery !== null ? `${data.battery.toFixed(1)}%` : 'N/A'}
               </span>
             </p>
             <p className="text-xs">
-              <span className="text-green-600 dark:text-green-400">Distance: </span>
+              <span className="text-gray-600 dark:text-gray-400">Total Distance: </span>
               <span className="text-gray-900 dark:text-white font-medium">
                 {data.distance !== null ? `${data.distance.toFixed(2)} km` : 'N/A'}
               </span>
             </p>
           </div>
+          
+          {/* Interval Data (only if there's a previous hour) */}
+          {data.previousHour && (
+            <div>
+              <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                {data.previousHour} - {label}:
+              </p>
+              <div className="space-y-1">
+                <p className="text-xs">
+                  <span className="text-gray-600 dark:text-gray-400">Charge Drop: </span>
+                  <span className="text-gray-900 dark:text-white font-medium">
+                    {data.chargeDrop !== null ? `${data.chargeDrop.toFixed(2)}%` : 'N/A'}
+                  </span>
+                </p>
+                <p className="text-xs">
+                  <span className="text-gray-600 dark:text-gray-400">Distance Travelled: </span>
+                  <span className="text-gray-900 dark:text-white font-medium">
+                    {data.intervalDistance !== null ? `${data.intervalDistance.toFixed(2)} km` : 'N/A'}
+                  </span>
+                </p>
+                <p className="text-xs">
+                  <span className="text-gray-600 dark:text-gray-400">Efficiency: </span>
+                  <span className="text-gray-900 dark:text-white font-medium">
+                    {data.efficiency !== null ? `${data.efficiency.toFixed(2)} km/%` : 'N/A'}
+                  </span>
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       );
     }
