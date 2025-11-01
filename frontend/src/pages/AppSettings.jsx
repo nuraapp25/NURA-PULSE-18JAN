@@ -149,7 +149,7 @@ const AppSettings = () => {
             <Switch
               checked={settings?.payment_extractor_enabled || false}
               onCheckedChange={handleTogglePaymentExtractor}
-              disabled={updating || (user?.account_type !== 'master_admin' && user?.account_type !== 'admin')}
+              disabled={updating || user?.account_type !== 'master_admin'}
               className="data-[state=checked]:bg-green-600"
             />
           </div>
