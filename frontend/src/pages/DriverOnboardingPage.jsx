@@ -196,16 +196,10 @@ const DriverOnboardingPage = () => {
   const [loadingBackups, setLoadingBackups] = useState(false);
   const [rollingBack, setRollingBack] = useState(false);
   
-  // Source filter - Extract unique import sources (from 'source' field)
+  // Source filter - Fetch unique import sources from backend
   const [sourceFilter, setSourceFilter] = useState(null);
-  const uniqueSources = [...new Set(
-    leads
-      .map(l => l.source?.trim())
-      .filter(Boolean) // Remove empty/null values
-  )].sort();
-  
-  // Source options for dropdown
-  const sourceOptions = uniqueSources.length > 0 ? uniqueSources : [];
+  const [sourceOptions, setSourceOptions] = useState([]);
+  const [loadingSources, setLoadingSources] = useState(false);
   
   // Extract unique statuses from all leads
   const uniqueStatuses = [...new Set(
