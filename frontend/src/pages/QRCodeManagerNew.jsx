@@ -467,15 +467,15 @@ const QRCodeManagerNew = () => {
       return;
     }
     
-    if (!window.confirm(`Are you sure you want to delete ${selectedCampaigns.length} campaign(s)?`)) {
+    if (!window.confirm(`Are you sure you want to delete ${selectedCampaigns.length} campaign(s)? This will delete all QR codes in these campaigns, including published ones.`)) {
       return;
     }
     
     try {
       const token = localStorage.getItem("token");
-      // Delete each campaign
+      // Delete each campaign with force=true to delete published campaigns
       for (const campaignName of selectedCampaigns) {
-        await axios.delete(`${API}/qr-codes/campaigns/${encodeURIComponent(campaignName)}`, {
+        await axios.delete(`${API}/qr-codes/campaigns/${encodeURIComponent(campaignName)}?force=true`, {
           headers: { Authorization: `Bearer ${token}` }
         });
       }
@@ -486,7 +486,7 @@ const QRCodeManagerNew = () => {
       fetchCampaigns();
     } catch (error) {
       console.error("Error deleting campaigns:", error);
-      toast.error("Failed to delete campaigns");
+      toast.error(error.response?.data?.detail || "Failed to delete campaigns");
     }
   };
   
