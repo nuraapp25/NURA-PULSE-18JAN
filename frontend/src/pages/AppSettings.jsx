@@ -103,11 +103,11 @@ const AppSettings = () => {
         </p>
       </div>
 
-      {(user?.account_type !== 'master_admin' && user?.account_type !== 'admin') && (
+      {user?.account_type !== 'master_admin' && (
         <Alert variant="destructive" className="mb-6">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            You don't have permission to modify these settings. Only Master Admins and Admins can change app settings.
+            You don't have permission to modify these settings. Only Master Admins can change app settings.
           </AlertDescription>
         </Alert>
       )}
