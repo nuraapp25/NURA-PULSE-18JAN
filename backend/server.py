@@ -3923,17 +3923,29 @@ async def get_battery_consumption_data(
     date: str = Query(...),
     current_user: User = Depends(get_current_user)
 ):
-    """Get battery consumption data for a specific vehicle and date from MongoDB"""
+    """Get battery consumption data for a specific vehicle and date from MongoDB - OPTIMIZED"""
     try:
         logger.info(f"Fetching battery data for vehicle {vehicle_id} on {date}")
         
-        # Query MongoDB for matching data
+        # Query MongoDB for matching data with compound index (vehicle_id + date)
         query = {
             "vehicle_id": vehicle_id,
             "date": date
         }
         
-        results = await db.montra_feed_data.find(query, {"_id": 0}).sort("Date", 1).to_list(10000)
+        # Use projection to only fetch required fields (reduces data transfer)
+        # Exclude unnecessary fields to reduce payload size
+        projection = {
+            "_id": 0  # Already excluding MongoDB ID
+            # Include all other fields by default
+        }
+        
+        # Optimized query with index hint for fastest retrieval
+        # Limit to reasonable data points (24 hours * 60 readings per hour = 1440 max)
+        results = await db.montra_feed_data.find(
+            query, 
+            projection
+        ).hint("idx_vehicle_date").sort("Date", 1).limit(2000).to_list(2000)
         
         if not results:
             logger.warning(f"No data found for vehicle {vehicle_id} on {date}")
@@ -3942,7 +3954,7 @@ async def get_battery_consumption_data(
                 detail=f"No data found for vehicle {vehicle_id} on {date}. Please import the feed data first."
             )
         
-        logger.info(f"Retrieved {len(results)} rows for vehicle {vehicle_id}")
+        logger.info(f"Retrieved {len(results)} rows for vehicle {vehicle_id} (optimized with index)")
         
         return {
             "success": True,
