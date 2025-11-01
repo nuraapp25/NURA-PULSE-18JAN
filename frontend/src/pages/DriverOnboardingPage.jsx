@@ -397,6 +397,34 @@ const DriverOnboardingPage = () => {
     };
   }, []);
   
+  // Fetch unique import sources for filter dropdown
+  useEffect(() => {
+    const fetchSources = async () => {
+      setLoadingSources(true);
+      try {
+        const token = localStorage.getItem("token");
+        const response = await axios.get(`${API}/driver-onboarding/sources`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (response.data.success) {
+          setSourceOptions(response.data.sources || []);
+        }
+      } catch (error) {
+        console.error("Failed to fetch sources:", error);
+        // Fallback: extract from current leads if API fails
+        const fallbackSources = [...new Set(
+          leads.map(l => l.source?.trim()).filter(Boolean)
+        )].sort().map(source => ({ value: source, label: source }));
+        setSourceOptions(fallbackSources);
+      } finally {
+        setLoadingSources(false);
+      }
+    };
+    
+    fetchSources();
+  }, [leads.length]); // Refetch when leads count changes
+  
   // Debounce search query (500ms delay)
   useEffect(() => {
     const timer = setTimeout(() => {
