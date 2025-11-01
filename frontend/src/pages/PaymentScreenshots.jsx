@@ -260,7 +260,7 @@ const PaymentScreenshots = () => {
                             {folder.file_count} file{folder.file_count !== 1 ? 's' : ''}
                           </p>
                         </div>
-                        {isMasterAdmin && (
+                        {canDelete && (
                           <button
                             onClick={(e) => handleDeleteFolder(folder.name, e)}
                             className="absolute top-2 right-2 p-1.5 rounded-md bg-red-50 text-red-600 hover:bg-red-100 opacity-0 group-hover:opacity-100 transition-opacity"
