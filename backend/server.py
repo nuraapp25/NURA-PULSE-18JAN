@@ -506,8 +506,8 @@ async def approve_password_reset(
 
 @api_router.get("/users")
 async def get_all_users(current_user: User = Depends(get_current_user)):
-    """Get all users (master admin only) - excludes deleted users"""
-    if current_user.account_type != "master_admin":
+    """Get all users (master admin and admin only) - excludes deleted users"""
+    if current_user.account_type not in ["master_admin", "admin"]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     # Filter out deleted users
