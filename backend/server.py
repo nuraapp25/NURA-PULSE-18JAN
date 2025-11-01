@@ -1772,10 +1772,10 @@ async def get_leads(
                 if or_conditions:
                     query["$or"] = or_conditions
         
-        # Get total count for pagination
+        # Get total count for pagination (optimized with index)
         total_count = await db.driver_leads.count_documents(query)
         
-        # Fetch leads with pagination
+        # Fetch leads with pagination and index optimization
         if skip_pagination:
             # For showing all leads, optimize by fetching only essential display fields first
             # This reduces data transfer size significantly
@@ -1787,14 +1787,20 @@ async def get_leads(
                 "status": 1,
                 "stage": 1,
                 "assigned_telecaller": 1,
-                "import_date": 1
+                "import_date": 1,
+                "source": 1  # Added source for filtering
             }
-            leads = await db.driver_leads.find(query, projection).to_list(length=None)
+            # Add sort by import_date descending for better UX (newest first)
+            leads = await db.driver_leads.find(query, projection).sort("import_date", -1).limit(1000).to_list(1000)
         else:
-            # For paginated requests, return full documents
+            # For paginated requests, return full documents with index hint
             limit = min(limit, 100)
             skip = (page - 1) * limit
-            leads = await db.driver_leads.find(query, {"_id": 0}).skip(skip).limit(limit).to_list(length=limit)
+            # Use index hint if querying by telecaller for fastest retrieval
+            cursor = db.driver_leads.find(query, {"_id": 0}).sort("import_date", -1).skip(skip).limit(limit)
+            if telecaller:
+                cursor = cursor.hint("idx_assigned_telecaller")
+            leads = await cursor.to_list(length=limit)
         
         # Populate telecaller names for leads with assigned telecallers
         # Batch fetch all unique telecallers for efficiency
