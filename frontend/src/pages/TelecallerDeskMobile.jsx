@@ -91,15 +91,15 @@ const TelecallerDeskMobile = () => {
   const fetchTelecallers = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get(`${API}/driver-onboarding/telecallers`, {
+      const response = await axios.get(`${API}/telecallers`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setTelecallers(response.data.telecallers || []);
+      setTelecallers(response.data || []);
       
       // Auto-select first telecaller if available
-      if (response.data.telecallers && response.data.telecallers.length > 0) {
-        setSelectedTelecaller(response.data.telecallers[0].id);
-        fetchLeadsForTelecaller(response.data.telecallers[0].id);
+      if (response.data && response.data.length > 0) {
+        setSelectedTelecaller(response.data[0].id);
+        fetchLeadsForTelecaller(response.data[0].id);
       }
     } catch (error) {
       console.error("Error fetching telecallers:", error);
