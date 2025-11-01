@@ -2608,7 +2608,7 @@ const DriverOnboardingPage = () => {
                   >
                     <Filter className="w-3 h-3 mr-1" />
                     Filter by Import Source
-                    {sourceFilter && ` (${sourceFilter})`}
+                    {sourceFilter && ` (${sourceOptions.find(s => s.value === sourceFilter)?.label || sourceFilter})`}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-56 dark:bg-gray-800 dark:border-gray-700">
@@ -2622,12 +2622,12 @@ const DriverOnboardingPage = () => {
                     </Button>
                     {sourceOptions.map((source) => (
                       <Button
-                        key={source}
+                        key={source.value}
                         variant="ghost"
                         className="w-full justify-start text-xs"
-                        onClick={() => setSourceFilter(source)}
+                        onClick={() => setSourceFilter(source.value)}
                       >
-                        {source}
+                        {source.label}
                       </Button>
                     ))}
                   </div>
