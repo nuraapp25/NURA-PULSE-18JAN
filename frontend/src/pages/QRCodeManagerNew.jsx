@@ -496,15 +496,15 @@ const QRCodeManagerNew = () => {
       return;
     }
     
-    if (!window.confirm(`Are you sure you want to delete ALL ${campaigns.length} campaigns?`)) {
+    if (!window.confirm(`Are you sure you want to delete ALL ${campaigns.length} campaigns? This will delete all QR codes including published ones. This action cannot be undone!`)) {
       return;
     }
     
     try {
       const token = localStorage.getItem("token");
-      // Delete all campaigns
+      // Delete all campaigns with force=true
       for (const campaign of campaigns) {
-        await axios.delete(`${API}/qr-codes/campaigns/${encodeURIComponent(campaign.campaign_name)}`, {
+        await axios.delete(`${API}/qr-codes/campaigns/${encodeURIComponent(campaign.campaign_name)}?force=true`, {
           headers: { Authorization: `Bearer ${token}` }
         });
       }
