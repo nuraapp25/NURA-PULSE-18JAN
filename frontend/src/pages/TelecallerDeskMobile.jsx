@@ -516,7 +516,7 @@ const TelecallerDeskMobile = () => {
           {leads.length} leads assigned
           {isAdmin && selectedTelecaller && telecallers.length > 0 && (
             <span className="ml-2 text-blue-600 dark:text-blue-400">
-              • Viewing: {telecallers.find(t => t.email === selectedTelecaller)?.name}'s desk
+              • Viewing: {telecallers.find(t => t.email === selectedTelecaller)?.first_name} {telecallers.find(t => t.email === selectedTelecaller)?.last_name}'s desk
             </span>
           )}
         </p>
