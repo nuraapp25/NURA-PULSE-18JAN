@@ -137,6 +137,7 @@ const PaymentReconciliation = () => {
           id: record.id,
           driver: record.driver,
           vehicle: record.vehicle,
+          platform: record.platform || "N/A",  // Add platform field
           description: record.description,
           date: record.date,
           time: record.time,
