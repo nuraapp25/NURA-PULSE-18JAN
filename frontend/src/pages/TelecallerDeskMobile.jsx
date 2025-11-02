@@ -245,6 +245,10 @@ const TelecallerDeskMobile = () => {
   const handleCallDone = async (leadId, event) => {
     event?.stopPropagation(); // Prevent card click event
     
+    // Show confirmation dialog
+    const confirmed = window.confirm("Are you sure you want to mark this call as done?");
+    if (!confirmed) return;
+    
     try {
       const token = localStorage.getItem("token");
       await axios.post(
