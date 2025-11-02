@@ -102,7 +102,90 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Fix: 1) QR Code duplicate scan issue - single scans recording as two scans. 2) Double parentheses '))'  UI issue in QR Code Manager below PUBLISH button. 3) Source filter in Driver Onboarding should use actual import sources (e.g., 'bhavani', 'ganesh', 'digital leads') instead of stages (S1, S2, S3, S4)."
+user_problem_statement: "Telecaller's Desk Enhancements: 1) Move 'Show Status History' button from overlay to inside Lead Details Dialog. 2) Implement IMMEDIATE lead reordering after 'Calling Done' - leads move to bottom, new leads appear at top. 3) Display last call timestamp with relative format for first 10 hours (e.g., '2 hours ago'), then show full timestamp. 4) Add Call Back Scheduling System - when status is 'Call back 1D/1W/2W/1M', calculate callback_date and display in separate collapsible 'Call Back Scheduled' section below active leads, grouped by date with 'Due Today' badge for callbacks scheduled for today."
+
+backend:
+  - task: "Callback Date Calculation in Lead Update"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "IMPLEMENTATION COMPLETE: Added callback_date calculation logic to lead update endpoint (PATCH /driver-onboarding/leads/{lead_id}). When status starts with 'Call back', automatically calculates callback_date: Call back 1D = +1 day, Call back 1W = +7 days, Call back 2W = +14 days, Call back 1M = +30 days. callback_date is cleared if status changes to non-callback status. Uses UTC timezone for consistency."
+  
+  - task: "Lead Sorting Logic - New Leads First"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "IMPLEMENTATION COMPLETE: Updated GET /driver-onboarding/leads endpoint sorting logic. IMMEDIATE REORDERING: Leads without last_called (new/uncalled leads) appear first, then leads sorted by last_called ascending (oldest called first). This ensures after 'Calling Done', leads move to bottom and new leads remain at top. Sorting implemented in Python after fetch for flexibility and accuracy. Added last_called and callback_date fields to projection for frontend use."
+
+frontend:
+  - task: "Show Status History Button Inside Dialog"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/LeadDetailsDialog.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "IMPLEMENTATION COMPLETE: Moved 'Show Status History' button from floating overlay into LeadDetailsDialog component. Added onShowStatusHistory prop to dialog. Button appears in dialog footer section with History icon. Removed floating button from TelecallerDeskMobile that was appearing as overlay."
+  
+  - task: "Relative Time Display for Last Called"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/TelecallerDeskMobile.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "IMPLEMENTATION COMPLETE: Added formatRelativeTime() function that displays last_called timestamp intelligently: First 10 hours shows relative format ('2 hours ago', '45 minutes ago'), After 10 hours shows full timestamp ('Dec 15 at 2:30 PM'). Function handles time difference calculation and formatting automatically."
+  
+  - task: "Active and Scheduled Leads Separation"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/TelecallerDeskMobile.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "IMPLEMENTATION COMPLETE: Separated leads into 'Active Leads' and 'Call Back Scheduled' sections. Active Leads = status NOT starting with 'Call back'. Scheduled section is collapsible with toggle button. Within scheduled section: 'Due Today' subsection shows leads with callback_date matching today with red highlight. 'Upcoming' subsections group leads by callback_date in ascending order. Each date shows formatted date header with lead count. Scheduled section appears below active leads."
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 0
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Callback Date Calculation in Lead Update"
+    - "Lead Sorting Logic - New Leads First"
+    - "Show Status History Button Inside Dialog"
+    - "Relative Time Display for Last Called"
+    - "Active and Scheduled Leads Separation"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+    - agent: "main"
+      message: "Implemented all 4 Telecaller's Desk enhancements: 1) Moved Show Status History button inside dialog, 2) Added IMMEDIATE lead reordering (new leads first, recently called last), 3) Implemented relative time display for last_called (2 hours ago / Dec 15 at 2:30 PM), 4) Created Call Back Scheduled system with callback_date calculation, separate collapsible section, Due Today badges, and date grouping. Backend sorting updated to sort by last_called. Ready for comprehensive backend testing first, then frontend E2E testing."
 
 
   - task: "QR Code Duplicate Scan Prevention Fix"
