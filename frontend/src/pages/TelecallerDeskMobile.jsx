@@ -869,73 +869,101 @@ const TelecallerDeskMobile = () => {
             <DialogTitle>Status History - {historyLead?.name}</DialogTitle>
           </DialogHeader>
           
-          <div className="space-y-3 py-4">
+          <div className="space-y-2 py-4">
             {/* Lead Import Date */}
-            <div className="border-l-4 border-blue-500 pl-4 py-3 bg-blue-50 dark:bg-blue-900/20 rounded-r">
-              <div className="text-sm font-semibold text-blue-900 dark:text-blue-100">
-                📥 Lead Imported
-              </div>
-              <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                {historyLead?.import_date ? new Date(historyLead.import_date).toLocaleString() : 
-                 historyLead?.created_at ? new Date(historyLead.created_at).toLocaleString() : 'N/A'}
+            <div className="flex items-start space-x-3 py-2">
+              <div className="flex-1">
+                <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                  Imported
+                </div>
+                <div className="text-xs text-gray-600 dark:text-gray-400">
+                  {historyLead?.import_date ? 
+                    new Date(historyLead.import_date).toLocaleString('en-US', {
+                      hour: 'numeric',
+                      minute: '2-digit',
+                      second: '2-digit',
+                      hour12: true,
+                      month: 'short',
+                      day: '2-digit',
+                      year: 'numeric'
+                    }) : 
+                   historyLead?.created_at ? 
+                    new Date(historyLead.created_at).toLocaleString('en-US', {
+                      hour: 'numeric',
+                      minute: '2-digit',
+                      second: '2-digit',
+                      hour12: true,
+                      month: 'short',
+                      day: '2-digit',
+                      year: 'numeric'
+                    }) : 'N/A'}
+                </div>
               </div>
             </div>
             
-            {/* Calling History */}
-            {historyLead?.calling_history && historyLead.calling_history.length > 0 ? (
-              historyLead.calling_history.map((call, idx) => (
-                <div key={idx} className="border-l-4 border-green-500 pl-4 py-3 bg-green-50 dark:bg-green-900/20 rounded-r">
-                  <div className="text-sm font-semibold text-green-900 dark:text-green-100">
-                    📞 Call Made
-                  </div>
-                  <div className="text-xs text-gray-700 dark:text-gray-300 mt-1">
-                    By: {call.caller_name || call.called_by}
-                  </div>
-                  <div className="text-xs text-gray-600 dark:text-gray-400">
-                    {new Date(call.timestamp).toLocaleString()}
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="border-l-4 border-gray-300 pl-4 py-3 bg-gray-50 dark:bg-gray-800 rounded-r">
-                <div className="text-sm text-gray-600 dark:text-gray-400">
-                  No calls made yet
-                </div>
-              </div>
-            )}
-            
-            {/* Status History */}
-            {historyLead?.status_history && historyLead.status_history.length > 0 ? (
-              historyLead.status_history.map((entry, idx) => (
-                <div key={idx} className="border-l-4 border-purple-500 pl-4 py-3 bg-purple-50 dark:bg-purple-900/20 rounded-r">
-                  <div className="text-sm font-semibold text-purple-900 dark:text-purple-100">
-                    {entry.action === 'call_made' ? '📞 Call Made' : 
-                     entry.field === 'status' ? '🔄 Status Changed' : 
-                     entry.field === 'stage' ? '📊 Stage Changed' : 
-                     '✏️ Updated'}
-                  </div>
-                  {entry.old_value && entry.new_value && (
-                    <div className="text-xs text-gray-700 dark:text-gray-300 mt-1">
-                      <span className="font-medium">From:</span> {entry.old_value} 
-                      <span className="mx-2">→</span> 
-                      <span className="font-medium">To:</span> {entry.new_value}
+            {/* Combined Timeline - Calling History and Status History merged and sorted */}
+            {(() => {
+              const timeline = [];
+              
+              // Add calling history
+              if (historyLead?.calling_history && historyLead.calling_history.length > 0) {
+                historyLead.calling_history.forEach(call => {
+                  timeline.push({
+                    timestamp: call.timestamp,
+                    type: 'call',
+                    label: 'Calling Done',
+                    data: call
+                  });
+                });
+              }
+              
+              // Add status history
+              if (historyLead?.status_history && historyLead.status_history.length > 0) {
+                historyLead.status_history.forEach(entry => {
+                  if (entry.action === 'call_made') {
+                    // Skip call_made entries from status_history as we already have them in calling_history
+                    return;
+                  }
+                  timeline.push({
+                    timestamp: entry.timestamp,
+                    type: entry.field === 'status' ? 'status' : 'stage',
+                    label: entry.new_value,
+                    data: entry
+                  });
+                });
+              }
+              
+              // Sort by timestamp
+              timeline.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+              
+              // Render timeline
+              return timeline.length > 0 ? (
+                timeline.map((item, idx) => (
+                  <div key={idx} className="flex items-start space-x-3 py-2 border-l-2 border-gray-200 dark:border-gray-700 pl-4">
+                    <div className="flex-1">
+                      <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                        {item.label}
+                      </div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400">
+                        {new Date(item.timestamp).toLocaleString('en-US', {
+                          hour: 'numeric',
+                          minute: '2-digit',
+                          second: '2-digit',
+                          hour12: true,
+                          month: 'short',
+                          day: '2-digit',
+                          year: 'numeric'
+                        })}
+                      </div>
                     </div>
-                  )}
-                  <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                    By: {entry.changed_by}
                   </div>
-                  <div className="text-xs text-gray-600 dark:text-gray-400">
-                    {new Date(entry.timestamp).toLocaleString()}
-                  </div>
+                ))
+              ) : (
+                <div className="py-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                  No activity yet
                 </div>
-              ))
-            ) : (
-              <div className="border-l-4 border-gray-300 pl-4 py-3 bg-gray-50 dark:bg-gray-800 rounded-r">
-                <div className="text-sm text-gray-600 dark:text-gray-400">
-                  No status changes yet
-                </div>
-              </div>
-            )}
+              );
+            })()}
           </div>
           
           <DialogFooter>
