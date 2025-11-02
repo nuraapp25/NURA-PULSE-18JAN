@@ -8510,6 +8510,7 @@ Case Test 6,9876540006,interested"""
         
         # Run CRITICAL tests from review request FIRST
         critical_tests = [
+            self.test_telecaller_desk_enhancements,       # CRITICAL: Telecaller's Desk backend enhancements (CURRENT REVIEW)
             self.test_qr_code_deletion_functionality,     # CRITICAL: QR code deletion not working (user reported)
             self.test_remarks_persistence_comprehensive,  # CRITICAL: Remarks not persisting issue
             self.test_export_database_functionality,      # CRITICAL: Export Database not working
