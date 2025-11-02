@@ -2451,6 +2451,94 @@ async def mark_call_done(lead_id: str, current_user: User = Depends(get_current_
         }
     )
     
+
+
+@api_router.get("/driver-onboarding/telecaller-summary")
+async def get_telecaller_summary(
+    telecaller: str = Query(None),
+    start_date: str = Query(None),
+    end_date: str = Query(None),
+    source: str = Query(None),
+    current_user: User = Depends(get_current_user)
+):
+    """Get summary statistics for a telecaller (similar to status-summary but for telecaller view)"""
+    from datetime import datetime, date, timezone
+    
+    # If no telecaller specified, use current user's email
+    if not telecaller:
+        telecaller = current_user.email
+    
+    # Build query
+    query = {"assigned_telecaller": telecaller}
+    
+    # Add date filter if provided
+    if start_date and end_date:
+        try:
+            start = datetime.fromisoformat(start_date).date().isoformat()
+            end = datetime.fromisoformat(end_date).date().isoformat()
+            query["import_date"] = {"$gte": start, "$lte": end}
+        except Exception as e:
+            logger.error(f"Error parsing dates: {e}")
+    
+    # Add source filter if provided
+    if source:
+        query["source"] = source
+    
+    # Get all leads for this telecaller
+    leads = await db.driver_leads.find(query, {"_id": 0}).to_list(length=50000)
+    
+    total_leads = len(leads)
+    
+    # Count calls made today
+    today = date.today().isoformat()
+    calls_today = 0
+    for lead in leads:
+        last_called = lead.get("last_called")
+        if last_called:
+            try:
+                call_date = datetime.fromisoformat(last_called).date().isoformat()
+                if call_date == today:
+                    calls_today += 1
+            except:
+                pass
+    
+    # Calls pending = leads that have never been called or not called today
+    calls_pending = total_leads - calls_today
+    
+    # Group by stage
+    stage_breakdown = {}
+    for lead in leads:
+        stage = lead.get("stage", "Unknown")
+        if stage not in stage_breakdown:
+            stage_breakdown[stage] = {
+                "total": 0,
+                "statuses": {}
+            }
+        stage_breakdown[stage]["total"] += 1
+        
+        # Count statuses within each stage
+        status = lead.get("status", "Unknown")
+        if status not in stage_breakdown[stage]["statuses"]:
+            stage_breakdown[stage]["statuses"][status] = 0
+        stage_breakdown[stage]["statuses"][status] += 1
+    
+    # Sort stages (S1, S2, S3, S4, then others)
+    sorted_stages = sorted(
+        stage_breakdown.keys(),
+        key=lambda x: (0 if x.startswith("S") else 1, x)
+    )
+    
+    return {
+        "success": True,
+        "telecaller": telecaller,
+        "total_leads": total_leads,
+        "calls_made_today": calls_today,
+        "calls_pending": calls_pending,
+        "stage_breakdown": {stage: stage_breakdown[stage] for stage in sorted_stages},
+        "start_date": start_date,
+        "end_date": end_date
+    }
+
     return {
         "success": True,
         "message": "Call marked as done",
