@@ -522,6 +522,7 @@ const QRCodeManagerNew = () => {
     setLoading(true);
     let successCount = 0;
     let failCount = 0;
+    let errors = [];
     
     try {
       const token = localStorage.getItem("token");
@@ -529,21 +530,42 @@ const QRCodeManagerNew = () => {
       // Delete campaigns one by one with proper error handling
       for (const campaign of campaigns) {
         try {
-          await axios.delete(`${API}/qr-codes/campaigns/${encodeURIComponent(campaign.campaign_name)}?force=true`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
+          // Properly encode campaign name for URL
+          const encodedName = encodeURIComponent(campaign.campaign_name);
+          const response = await axios.delete(
+            `${API}/qr-codes/campaigns/${encodedName}?force=true`, 
+            {
+              headers: { Authorization: `Bearer ${token}` },
+              validateStatus: function (status) {
+                // Accept 2xx and also 404 (campaign already deleted)
+                return status >= 200 && status < 300 || status === 404;
+              }
+            }
+          );
           successCount++;
           console.log(`✓ Deleted campaign: ${campaign.campaign_name}`);
         } catch (error) {
           failCount++;
-          console.error(`✗ Failed to delete campaign ${campaign.campaign_name}:`, error.response?.data?.detail || error.message);
+          const errorMsg = error.response?.data?.detail || error.message;
+          errors.push(`${campaign.campaign_name}: ${errorMsg}`);
+          console.error(`✗ Failed to delete campaign ${campaign.campaign_name}:`, errorMsg);
         }
       }
       
-      if (successCount > 0) {
-        toast.success(`Successfully deleted ${successCount} campaign(s)${failCount > 0 ? `. Failed to delete ${failCount} campaign(s).` : ''}`);
+      // Show detailed results
+      if (successCount > 0 && failCount === 0) {
+        toast.success(`Successfully deleted all ${successCount} campaign(s)!`);
+      } else if (successCount > 0 && failCount > 0) {
+        toast.warning(`Deleted ${successCount} campaign(s), but ${failCount} failed. Check console for details.`);
+        console.error("Failed campaigns:", errors);
       } else {
-        toast.error(`Failed to delete all ${failCount} campaigns. Check console for details.`);
+        const permissionError = errors.some(e => e.includes("master admin") || e.includes("403"));
+        if (permissionError) {
+          toast.error(`Failed to delete campaigns. You need master admin permissions to delete published campaigns.`);
+        } else {
+          toast.error(`Failed to delete all ${failCount} campaigns. Check console for details.`);
+        }
+        console.error("All deletions failed:", errors);
       }
       
       setSelectedCampaigns([]);
