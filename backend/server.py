@@ -4850,6 +4850,12 @@ async def process_payment_screenshots(
         vehicle_number = form.get("vehicle_number", "")
         platform = form.get("platform", "")
         
+        logger.info(f"📋 Processing {len(files)} files with metadata:")
+        logger.info(f"  - Month/Year: {month_year}")
+        logger.info(f"  - Driver: {driver_name}")
+        logger.info(f"  - Vehicle: {vehicle_number}")
+        logger.info(f"  - Platform: '{platform}' (type: {type(platform).__name__})")
+        
         if not files:
             raise HTTPException(status_code=400, detail="No files uploaded")
         
