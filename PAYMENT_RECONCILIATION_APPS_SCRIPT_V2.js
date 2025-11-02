@@ -10,7 +10,7 @@
 
 const CONFIG = {
   SHEET_ID: '1CLhARhllhqZuDzkzNRqFcOGqjrSDzPgmC6gd3-AWOTs',
-  BACKEND_URL: 'https://driver-qr.preview.emergentagent.com/api'
+  BACKEND_URL: 'https://lead-management-4.preview.emergentagent.com/api'
 };
 
 // Column mapping for payment records

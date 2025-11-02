@@ -9,7 +9,7 @@
  */
 
 // ========== CONFIGURATION ==========
-var API_BASE_URL = "https://driver-qr.preview.emergentagent.com";
+var API_BASE_URL = "https://lead-management-4.preview.emergentagent.com";
 var BEARER_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsImV4cCI6MTczNTg5MDQwMH0.abc123xyz...";
 var LEADS_SHEET_NAME = "Driver Leads";
 
