@@ -78,6 +78,14 @@ const TelecallerDeskMobile = () => {
   const [uploadedDocs, setUploadedDocs] = useState({});
   const [uploadingDoc, setUploadingDoc] = useState(null);
   const [scanningDoc, setScanningDoc] = useState(null);
+  
+  // Summary Dashboard state
+  const [summaryData, setSummaryData] = useState(null);
+  const [loadingSummary, setLoadingSummary] = useState(false);
+  
+  // Status History Dialog state
+  const [statusHistoryDialogOpen, setStatusHistoryDialogOpen] = useState(false);
+  const [historyLead, setHistoryLead] = useState(null);
 
   useEffect(() => {
     if (isAdmin) {
