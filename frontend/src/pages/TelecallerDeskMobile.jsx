@@ -840,7 +840,101 @@ const TelecallerDeskMobile = () => {
         onDelete={() => {}}
         hasUnsavedChanges={false}
         onLeadUpdate={fetchLeads}
+        customActions={
+          <Button
+            onClick={() => showStatusHistory(selectedLead?.id)}
+            variant="outline"
+            className="w-full mt-2"
+          >
+            <History className="w-4 h-4 mr-2" />
+            Show Status History
+          </Button>
+        }
       />
+      
+      {/* Status History Dialog */}
+      <Dialog open={statusHistoryDialogOpen} onOpenChange={setStatusHistoryDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Status History - {historyLead?.name}</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-3 py-4">
+            {/* Lead Import Date */}
+            <div className="border-l-4 border-blue-500 pl-4 py-3 bg-blue-50 dark:bg-blue-900/20 rounded-r">
+              <div className="text-sm font-semibold text-blue-900 dark:text-blue-100">
+                📥 Lead Imported
+              </div>
+              <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                {historyLead?.import_date ? new Date(historyLead.import_date).toLocaleString() : 
+                 historyLead?.created_at ? new Date(historyLead.created_at).toLocaleString() : 'N/A'}
+              </div>
+            </div>
+            
+            {/* Calling History */}
+            {historyLead?.calling_history && historyLead.calling_history.length > 0 ? (
+              historyLead.calling_history.map((call, idx) => (
+                <div key={idx} className="border-l-4 border-green-500 pl-4 py-3 bg-green-50 dark:bg-green-900/20 rounded-r">
+                  <div className="text-sm font-semibold text-green-900 dark:text-green-100">
+                    📞 Call Made
+                  </div>
+                  <div className="text-xs text-gray-700 dark:text-gray-300 mt-1">
+                    By: {call.caller_name || call.called_by}
+                  </div>
+                  <div className="text-xs text-gray-600 dark:text-gray-400">
+                    {new Date(call.timestamp).toLocaleString()}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="border-l-4 border-gray-300 pl-4 py-3 bg-gray-50 dark:bg-gray-800 rounded-r">
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  No calls made yet
+                </div>
+              </div>
+            )}
+            
+            {/* Status History */}
+            {historyLead?.status_history && historyLead.status_history.length > 0 ? (
+              historyLead.status_history.map((entry, idx) => (
+                <div key={idx} className="border-l-4 border-purple-500 pl-4 py-3 bg-purple-50 dark:bg-purple-900/20 rounded-r">
+                  <div className="text-sm font-semibold text-purple-900 dark:text-purple-100">
+                    {entry.action === 'call_made' ? '📞 Call Made' : 
+                     entry.field === 'status' ? '🔄 Status Changed' : 
+                     entry.field === 'stage' ? '📊 Stage Changed' : 
+                     '✏️ Updated'}
+                  </div>
+                  {entry.old_value && entry.new_value && (
+                    <div className="text-xs text-gray-700 dark:text-gray-300 mt-1">
+                      <span className="font-medium">From:</span> {entry.old_value} 
+                      <span className="mx-2">→</span> 
+                      <span className="font-medium">To:</span> {entry.new_value}
+                    </div>
+                  )}
+                  <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                    By: {entry.changed_by}
+                  </div>
+                  <div className="text-xs text-gray-600 dark:text-gray-400">
+                    {new Date(entry.timestamp).toLocaleString()}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="border-l-4 border-gray-300 pl-4 py-3 bg-gray-50 dark:bg-gray-800 rounded-r">
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  No status changes yet
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button onClick={() => setStatusHistoryDialogOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
