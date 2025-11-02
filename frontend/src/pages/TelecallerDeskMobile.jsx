@@ -282,10 +282,39 @@ const TelecallerDeskMobile = () => {
       );
       setHistoryLead(response.data);
       setStatusHistoryDialogOpen(true);
+      setDetailsDialogOpen(false);  // Close details dialog when opening history
     } catch (error) {
       console.error("Failed to load status history:", error);
       toast.error("Failed to load status history");
     }
+  };
+  
+  // Format relative time for last_called
+  const formatRelativeTime = (lastCalled) => {
+    if (!lastCalled) return null;
+    
+    const now = new Date();
+    const callTime = new Date(lastCalled);
+    const diffMs = now - callTime;
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    
+    // Show relative time for first 10 hours
+    if (diffHours < 10) {
+      if (diffHours < 1) {
+        const diffMins = Math.floor(diffMs / (1000 * 60));
+        return `${diffMins} ${diffMins === 1 ? 'minute' : 'minutes'} ago`;
+      }
+      return `${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`;
+    }
+    
+    // After 10 hours, show timestamp
+    return callTime.toLocaleString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+      month: 'short',
+      day: '2-digit'
+    });
   };
 
   
