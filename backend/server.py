@@ -1776,6 +1776,8 @@ async def get_leads(
         total_count = await db.driver_leads.count_documents(query)
         
         # Fetch leads with pagination and index optimization
+        # SORTING LOGIC: Leads without last_called (new/uncalled leads) appear first,
+        # then leads sorted by last_called ascending (oldest called first)
         if skip_pagination:
             # For showing all leads, optimize by fetching only essential display fields first
             # This reduces data transfer size significantly
@@ -1788,26 +1790,46 @@ async def get_leads(
                 "stage": 1,
                 "assigned_telecaller": 1,
                 "import_date": 1,
-                "source": 1  # Added source for filtering
+                "source": 1,  # Added source for filtering
+                "last_called": 1,  # Add last_called for sorting
+                "callback_date": 1  # Add callback_date for filtering
             }
-            # Add sort by import_date descending for better UX (newest first)
-            # Increased limit to 50000 to handle large datasets properly
-            leads = await db.driver_leads.find(query, projection).sort("import_date", -1).limit(50000).to_list(50000)
+            # Fetch all leads first
+            all_leads = await db.driver_leads.find(query, projection).limit(50000).to_list(50000)
+            
+            # Sort in Python: new leads (no last_called) first, then by last_called ascending
+            leads = sorted(all_leads, key=lambda x: (
+                x.get('last_called') is not None,  # False (None) comes before True (has value)
+                x.get('last_called') or ''  # If has last_called, sort by it ascending
+            ))
         else:
-            # For paginated requests, return full documents with index hint
+            # For paginated requests, return full documents
             limit = min(limit, 100)
-            skip = (page - 1) * limit
-            # Use index hint if querying by telecaller for fastest retrieval
+            skip_value = (page - 1) * limit
+            
+            # Fetch all matching leads first (without pagination)
             try:
-                cursor = db.driver_leads.find(query, {"_id": 0}).sort("import_date", -1).skip(skip).limit(limit)
+                cursor = db.driver_leads.find(query, {"_id": 0})
                 if telecaller:
-                    cursor = cursor.hint("idx_assigned_telecaller")
-                leads = await cursor.to_list(length=limit)
+                    try:
+                        cursor = cursor.hint("idx_assigned_telecaller")
+                    except:
+                        pass  # Index might not exist
+                all_leads = await cursor.to_list(50000)
             except Exception as hint_error:
                 # If index doesn't exist, fall back to query without hint
                 logger.warning(f"Index not found for driver leads, using query without hint: {str(hint_error)}")
-                cursor = db.driver_leads.find(query, {"_id": 0}).sort("import_date", -1).skip(skip).limit(limit)
-                leads = await cursor.to_list(length=limit)
+                cursor = db.driver_leads.find(query, {"_id": 0})
+                all_leads = await cursor.to_list(50000)
+            
+            # Sort in Python: new leads (no last_called) first, then by last_called ascending
+            sorted_leads = sorted(all_leads, key=lambda x: (
+                x.get('last_called') is not None,  # False (None) comes before True (has value)
+                x.get('last_called') or ''  # If has last_called, sort by it ascending
+            ))
+            
+            # Apply pagination after sorting
+            leads = sorted_leads[skip_value:skip_value + limit]
         
         # Populate telecaller names for leads with assigned telecallers
         # Batch fetch all unique telecallers for efficiency
