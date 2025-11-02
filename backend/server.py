@@ -2505,7 +2505,7 @@ async def get_telecaller_summary(
     source: str = Query(None),
     current_user: User = Depends(get_current_user)
 ):
-    """Get summary statistics for a telecaller (similar to status-summary but for telecaller view)"""
+    """Get summary statistics for a telecaller - OPTIMIZED with projection and index hint"""
     from datetime import datetime, date, timezone
     
     # If no telecaller specified, use current user's email
@@ -2528,8 +2528,23 @@ async def get_telecaller_summary(
     if source:
         query["source"] = source
     
-    # Get all leads for this telecaller
-    leads = await db.driver_leads.find(query, {"_id": 0}).to_list(length=50000)
+    # OPTIMIZATION: Only fetch fields needed for summary (reduces data transfer)
+    projection = {
+        "_id": 0,
+        "status": 1,
+        "stage": 1,
+        "last_called": 1
+    }
+    
+    # Get all leads for this telecaller with optimized query
+    try:
+        cursor = db.driver_leads.find(query, projection).hint("idx_assigned_telecaller")
+        leads = await cursor.to_list(length=50000)
+    except Exception as hint_error:
+        # Fallback if index doesn't exist
+        logger.warning(f"Index not available, using query without hint: {hint_error}")
+        cursor = db.driver_leads.find(query, projection)
+        leads = await cursor.to_list(length=50000)
     
     total_leads = len(leads)
     
