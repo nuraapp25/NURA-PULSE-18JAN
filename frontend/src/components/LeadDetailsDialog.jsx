@@ -535,11 +535,22 @@ const LeadDetailsDialog = ({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-end items-center pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex justify-between items-center pt-4 border-t border-gray-200 dark:border-gray-700">
+            {onShowStatusHistory && (
+              <Button
+                variant="outline"
+                onClick={() => onShowStatusHistory(lead.id)}
+                className="border-indigo-300 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
+                disabled={updating}
+              >
+                <History className="w-4 h-4 mr-2" />
+                Show Status History
+              </Button>
+            )}
             <Button
               variant="outline"
               onClick={() => onOpenChange(false)}
-              className="dark:border-gray-600"
+              className="dark:border-gray-600 ml-auto"
               disabled={updating}
             >
               Close
