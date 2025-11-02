@@ -3753,101 +3753,203 @@ const DriverOnboardingPage = () => {
       </Dialog>
 
       {/* Bulk Import Dialog */}
-      <Dialog open={bulkImportDialogOpen} onOpenChange={setBulkImportDialogOpen}>
-        <DialogContent className="dark:bg-gray-800 max-w-lg">
+      <Dialog open={bulkImportDialogOpen} onOpenChange={(open) => {
+        setBulkImportDialogOpen(open);
+        if (!open) {
+          // Reset when closing
+          setBulkImportFile(null);
+          setShowColumnMapping(false);
+          setExcelColumns([]);
+          setColumnMapping({});
+          setPreviewData([]);
+        }
+      }}>
+        <DialogContent className="dark:bg-gray-800 max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="dark:text-white flex items-center gap-2">
               <UploadCloud className="w-5 h-5 text-orange-600" />
               Bulk Import from Excel
             </DialogTitle>
             <DialogDescription className="dark:text-gray-400">
-              Upload an Excel file to replace all current leads. A backup will be created automatically.
+              {showColumnMapping ? "Map your Excel columns to database fields" : "Upload an Excel file to replace all current leads"}
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-4">
-            {/* Warning */}
-            <div className="p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
-              <p className="text-sm text-orange-800 dark:text-orange-200 font-semibold flex items-center gap-2">
-                <XCircle className="w-4 h-4" />
-                Warning: This will REPLACE all current leads!
-              </p>
-              <p className="text-xs text-orange-700 dark:text-orange-300 mt-1">
-                • A backup will be created before import<br />
-                • All current leads will be deleted<br />
-                • New leads from Excel will be imported<br />
-                • Match is done by Lead ID column
-              </p>
-            </div>
-
-            {/* File Upload */}
-            <div className="space-y-2">
-              <Label className="dark:text-gray-300">Select Excel File (.xlsx or .xls)</Label>
-              <input
-                type="file"
-                accept=".xlsx,.xls"
-                onChange={(e) => setBulkImportFile(e.target.files[0])}
-                className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg
-                         bg-white dark:bg-gray-700 text-gray-900 dark:text-white
-                         file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0
-                         file:bg-orange-50 dark:file:bg-orange-900/20 file:text-orange-700 dark:file:text-orange-300
-                         file:cursor-pointer hover:file:bg-orange-100 dark:hover:file:bg-orange-900/30"
-              />
-              {bulkImportFile && (
-                <p className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
-                  <CheckSquare className="w-3 h-3" />
-                  Selected: {bulkImportFile.name}
+          {!showColumnMapping ? (
+            // Step 1: File Upload
+            <div className="space-y-4">
+              {/* Warning */}
+              <div className="p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
+                <p className="text-sm text-orange-800 dark:text-orange-200 font-semibold flex items-center gap-2">
+                  <XCircle className="w-4 h-4" />
+                  Warning: This will REPLACE all current leads!
                 </p>
-              )}
-            </div>
+                <p className="text-xs text-orange-700 dark:text-orange-300 mt-1">
+                  • A backup will be created before import<br />
+                  • All current leads will be deleted<br />
+                  • New leads from Excel will be imported
+                </p>
+              </div>
 
-            {/* Instructions */}
-            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-              <p className="text-xs text-blue-700 dark:text-blue-300">
-                <strong>📋 Format Requirements:</strong><br />
-                • Excel file must contain an 'id' column for lead identification<br />
-                • All other columns will be imported as-is<br />
-                • Use exported file as template for correct format<br />
-                <br />
-                <strong>📞 Telecaller Assignments (Column V):</strong><br />
-                • Add telecaller names in 'assigned_telecaller' column (Column V)<br />
-                • System will automatically assign leads to matching telecallers<br />
-                • Telecaller names must match existing telecallers in the database<br />
-                • Assignments will be reflected everywhere in the app
-              </p>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex gap-2 justify-end pt-4">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setBulkImportDialogOpen(false);
-                  setBulkImportFile(null);
-                }}
-                disabled={bulkImporting}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleBulkImport}
-                disabled={!bulkImportFile || bulkImporting}
-                className="bg-orange-600 hover:bg-orange-700"
-              >
-                {bulkImporting ? (
-                  <>
-                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                    Importing...
-                  </>
-                ) : (
-                  <>
-                    <UploadCloud className="w-4 h-4 mr-2" />
-                    Import & Replace All
-                  </>
+              {/* File Upload */}
+              <div className="space-y-2">
+                <Label className="dark:text-gray-300">Select Excel File (.xlsx or .xls)</Label>
+                <input
+                  type="file"
+                  accept=".xlsx,.xls"
+                  onChange={(e) => handleFileUpload(e.target.files[0])}
+                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg
+                           bg-white dark:bg-gray-700 text-gray-900 dark:text-white
+                           file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0
+                           file:bg-orange-50 dark:file:bg-orange-900/20 file:text-orange-700 dark:file:text-orange-300
+                           file:cursor-pointer hover:file:bg-orange-100 dark:hover:file:bg-orange-900/30"
+                />
+                {bulkImportFile && !showColumnMapping && (
+                  <p className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
+                    <CheckSquare className="w-3 h-3" />
+                    Selected: {bulkImportFile.name} - Parsing columns...
+                  </p>
                 )}
-              </Button>
+              </div>
+
+              {/* Instructions */}
+              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <p className="text-xs text-blue-700 dark:text-blue-300">
+                  <strong>📋 How it works:</strong><br />
+                  1. Upload your Excel file<br />
+                  2. Map your columns to our database fields<br />
+                  3. Preview and confirm import<br />
+                  <br />
+                  <strong>Note:</strong> First row must be column headers
+                </p>
+              </div>
             </div>
-          </div>
+          ) : (
+            // Step 2: Column Mapping
+            <div className="space-y-4">
+              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <p className="text-sm text-blue-700 dark:text-blue-300 font-semibold">
+                  Map Your Excel Columns
+                </p>
+                <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                  Select which column in your Excel file corresponds to each database field. Required fields are marked with *
+                </p>
+              </div>
+
+              {/* Column Mapping Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[400px] overflow-y-auto p-2">
+                {[
+                  { field: 'name', label: 'Driver Name', required: true },
+                  { field: 'phone_number', label: 'Phone Number', required: true },
+                  { field: 'email', label: 'Email' },
+                  { field: 'vehicle', label: 'Vehicle Type' },
+                  { field: 'driving_license', label: 'Driving License' },
+                  { field: 'experience', label: 'Experience (years)' },
+                  { field: 'interested_ev', label: 'Interested in EV' },
+                  { field: 'monthly_salary', label: 'Expected Salary' },
+                  { field: 'current_location', label: 'Current Location' },
+                  { field: 'status', label: 'Status' },
+                  { field: 'stage', label: 'Stage' },
+                  { field: 'assigned_telecaller', label: 'Assigned Telecaller' },
+                  { field: 'source', label: 'Source' },
+                  { field: 'dl_no', label: 'DL Number' },
+                  { field: 'badge_no', label: 'Badge Number' },
+                  { field: 'aadhar_card', label: 'Aadhar Card' },
+                  { field: 'pan_card', label: 'PAN Card' },
+                  { field: 'gas_bill', label: 'Gas Bill' },
+                  { field: 'bank_passbook', label: 'Bank Passbook' }
+                ].map(({ field, label, required }) => (
+                  <div key={field} className="space-y-1">
+                    <Label className="text-xs dark:text-gray-300">
+                      {label} {required && <span className="text-red-500">*</span>}
+                    </Label>
+                    <Select 
+                      value={columnMapping[field]?.toString() || ""} 
+                      onValueChange={(value) => setColumnMapping(prev => ({
+                        ...prev,
+                        [field]: value === "" ? undefined : parseInt(value)
+                      }))}
+                    >
+                      <SelectTrigger className="h-8 text-xs dark:bg-gray-700">
+                        <SelectValue placeholder="Select column" />
+                      </SelectTrigger>
+                      <SelectContent className="dark:bg-gray-800">
+                        <SelectItem value="">None</SelectItem>
+                        {excelColumns.map(col => (
+                          <SelectItem key={col.index} value={col.index.toString()}>
+                            Column {col.letter}: {col.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ))}
+              </div>
+
+              {/* Preview */}
+              {previewData.length > 0 && (
+                <div className="p-3 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg">
+                  <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    Preview (first 3 rows):
+                  </p>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="border-b border-gray-300 dark:border-gray-600">
+                          {Object.keys(previewData[0]).slice(0, 5).map((key, i) => (
+                            <th key={i} className="text-left p-1 text-gray-600 dark:text-gray-400">{key}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {previewData.map((row, i) => (
+                          <tr key={i} className="border-b border-gray-200 dark:border-gray-700">
+                            {Object.values(row).slice(0, 5).map((val, j) => (
+                              <td key={j} className="p-1 text-gray-700 dark:text-gray-300">{val || '-'}</td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex gap-2 justify-end pt-4 border-t border-gray-200 dark:border-gray-700">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowColumnMapping(false);
+                    setBulkImportFile(null);
+                    setExcelColumns([]);
+                    setColumnMapping({});
+                    setPreviewData([]);
+                  }}
+                  disabled={bulkImporting}
+                >
+                  Back
+                </Button>
+                <Button
+                  onClick={handleBulkImport}
+                  disabled={!Object.keys(columnMapping).length || bulkImporting}
+                  className="bg-orange-600 hover:bg-orange-700"
+                >
+                  {bulkImporting ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                      Importing...
+                    </>
+                  ) : (
+                    <>
+                      <UploadCloud className="w-4 h-4 mr-2" />
+                      Import & Replace All
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
