@@ -2341,7 +2341,7 @@ async def bulk_update_lead_status(bulk_data: BulkLeadStatusUpdate, current_user:
 
 @api_router.patch("/driver-onboarding/leads/{lead_id}")
 async def update_lead(lead_id: str, lead_data: DriverLeadUpdate, current_user: User = Depends(get_current_user)):
-    """Update lead details"""
+    """Update lead details with status history tracking"""
     from datetime import datetime, timezone
     
     # Find the lead
@@ -2358,14 +2358,52 @@ async def update_lead(lead_id: str, lead_data: DriverLeadUpdate, current_user: U
     if not update_data:
         raise HTTPException(status_code=400, detail="No fields to update")
     
-    # Add last_modified timestamp
-    update_data['last_modified'] = datetime.now(timezone.utc).isoformat()
+    # Track status/stage changes in history
+    current_time = datetime.now(timezone.utc).isoformat()
     
-    # Update lead
-    await db.driver_leads.update_one(
-        {"id": lead_id},
-        {"$set": update_data}
-    )
+    # Initialize status_history if it doesn't exist
+    if "status_history" not in lead:
+        lead["status_history"] = []
+    
+    # Check if status or stage changed
+    history_entry = None
+    if "status" in update_data and update_data["status"] != lead.get("status"):
+        history_entry = {
+            "timestamp": current_time,
+            "field": "status",
+            "old_value": lead.get("status", "N/A"),
+            "new_value": update_data["status"],
+            "changed_by": current_user.email,
+            "action": "status_changed"
+        }
+    elif "stage" in update_data and update_data["stage"] != lead.get("stage"):
+        history_entry = {
+            "timestamp": current_time,
+            "field": "stage",
+            "old_value": lead.get("stage", "N/A"),
+            "new_value": update_data["stage"],
+            "changed_by": current_user.email,
+            "action": "stage_changed"
+        }
+    
+    # Add last_modified timestamp
+    update_data['last_modified'] = current_time
+    
+    # If there's a history entry, add it to status_history
+    if history_entry:
+        await db.driver_leads.update_one(
+            {"id": lead_id},
+            {
+                "$set": update_data,
+                "$push": {"status_history": history_entry}
+            }
+        )
+    else:
+        # Update lead without history entry
+        await db.driver_leads.update_one(
+            {"id": lead_id},
+            {"$set": update_data}
+        )
     
     # Get updated lead for sync
     updated_lead = await db.driver_leads.find_one({"id": lead_id}, {"_id": 0})
