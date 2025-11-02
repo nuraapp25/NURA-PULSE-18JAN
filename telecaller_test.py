@@ -117,28 +117,21 @@ class TelecallerDeskTester:
         
         if response and response.status_code == 200:
             try:
-                leads = response.json()
-                print(f"DEBUG: Leads response type: {type(leads)}, length: {len(leads) if isinstance(leads, list) else 'N/A'}")
-                if isinstance(leads, list) and len(leads) > 0:
-                    test_lead_id = leads[0].get("id")
-                    self.log_test("Get Test Lead", True, 
-                                f"Retrieved test lead ID: {test_lead_id}")
-                    success_count += 1
-                elif isinstance(leads, dict):
-                    # Handle case where response might be wrapped in an object
-                    leads_list = leads.get("leads", leads.get("data", []))
+                data = response.json()
+                if isinstance(data, dict) and "leads" in data:
+                    leads_list = data["leads"]
                     if leads_list and len(leads_list) > 0:
                         test_lead_id = leads_list[0].get("id")
                         self.log_test("Get Test Lead", True, 
-                                    f"Retrieved test lead ID: {test_lead_id}")
+                                    f"Retrieved test lead ID: {test_lead_id} from {len(leads_list)} total leads")
                         success_count += 1
                     else:
                         self.log_test("Get Test Lead", False, 
-                                    f"No leads found in response: {leads}")
+                                    "No leads found in database for testing")
                         return False
                 else:
                     self.log_test("Get Test Lead", False, 
-                                f"No leads found in database for testing. Response: {leads}")
+                                f"Unexpected response format: {data}")
                     return False
             except json.JSONDecodeError:
                 self.log_test("Get Test Lead", False, 
