@@ -5149,9 +5149,13 @@ Rules:
             
             # Save to MongoDB
             try:
+                logger.info(f"💾 Attempting to save {len(all_results)} records to payment_records collection")
+                logger.info(f"Sample record platform value: {all_results[0].get('platform') if all_results else 'N/A'}")
+                
                 records_to_insert = [record.copy() for record in all_results]
-                await db.payment_records.insert_many(records_to_insert)
-                logger.info(f"✅ Saved {len(all_results)} payment records to MongoDB")
+                result = await db.payment_records.insert_many(records_to_insert)
+                logger.info(f"✅ Saved {len(result.inserted_ids)} payment records to MongoDB (payment_records collection)")
+                logger.info(f"First inserted ID: {result.inserted_ids[0] if result.inserted_ids else 'None'}")
                 
                 # Clean up _id
                 for record in all_results:
@@ -5159,6 +5163,9 @@ Rules:
                         del record["_id"]
             except Exception as e:
                 logger.error(f"❌ Failed to save to MongoDB: {str(e)}")
+                logger.error(f"Exception type: {type(e).__name__}")
+                import traceback
+                logger.error(f"Traceback: {traceback.format_exc()}")
         
         logger.info(f"🎉 Processing complete: {len(all_results)} rides from {len(files)} files")
         
