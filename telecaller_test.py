@@ -364,7 +364,7 @@ class TelecallerDeskTester:
         response = self.make_request("PATCH", f"/driver-onboarding/leads/{test_lead_id}", update_data)
         
         if response and response.status_code == 200:
-            # Fetch the lead again to verify callback_date persists
+            # PATCH successful, now fetch the lead again to verify callback_date persists
             lead_response = self.make_request("GET", f"/driver-onboarding/leads/{test_lead_id}")
             
             if lead_response and lead_response.status_code == 200:
