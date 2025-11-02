@@ -107,27 +107,33 @@ user_problem_statement: "Telecaller's Desk Enhancements: 1) Move 'Show Status Hi
 backend:
   - task: "Callback Date Calculation in Lead Update"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "IMPLEMENTATION COMPLETE: Added callback_date calculation logic to lead update endpoint (PATCH /driver-onboarding/leads/{lead_id}). When status starts with 'Call back', automatically calculates callback_date: Call back 1D = +1 day, Call back 1W = +7 days, Call back 2W = +14 days, Call back 1M = +30 days. callback_date is cleared if status changes to non-callback status. Uses UTC timezone for consistency."
+        - working: true
+          agent: "testing"
+          comment: "✅ COMPREHENSIVE TESTING COMPLETE: Callback date calculation working perfectly with 100% success rate (6/6 tests passed). Key findings: 1) CALLBACK DATE CALCULATION: All 4 callback status options working correctly - 'Call back 1D' sets date to +1 day, 'Call back 1W' to +7 days, 'Call back 2W' to +14 days, 'Call back 1M' to +30 days. All dates calculated accurately with UTC timezone. 2) CALLBACK DATE CLEARING: When status changes to non-callback (e.g., 'Interested'), callback_date is properly cleared/set to null. 3) CALLBACK DATE PERSISTENCE: callback_date field correctly persisted in database and returned in API responses with proper ISO format. 4) FIELD AVAILABILITY: callback_date field included in leads list projection for frontend use. All callback date functionality operational and ready for production use."
   
   - task: "Lead Sorting Logic - New Leads First"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "IMPLEMENTATION COMPLETE: Updated GET /driver-onboarding/leads endpoint sorting logic. IMMEDIATE REORDERING: Leads without last_called (new/uncalled leads) appear first, then leads sorted by last_called ascending (oldest called first). This ensures after 'Calling Done', leads move to bottom and new leads remain at top. Sorting implemented in Python after fetch for flexibility and accuracy. Added last_called and callback_date fields to projection for frontend use."
+        - working: true
+          agent: "testing"
+          comment: "✅ COMPREHENSIVE TESTING COMPLETE: Lead sorting logic working perfectly with 100% success rate (3/3 tests passed). Key findings: 1) INITIAL SORTING STATE: Successfully verified that uncalled leads (without last_called) appear first in the list. Found 16,749 uncalled leads and 1 called lead in correct order. 2) IMMEDIATE REORDERING AFTER CALL: After marking a lead as called using POST /driver-onboarding/leads/{id}/call-done, the lead immediately moved from uncalled list to called list. Verified counts changed from 16,749/1 to 16,748/2 correctly. 3) SORTING PERSISTENCE: New leads remain at top, recently called leads move to bottom as expected. The sorting logic ensures telecallers always see new/uncalled leads first for maximum efficiency. All lead sorting functionality operational and ready for production use."
 
 frontend:
   - task: "Show Status History Button Inside Dialog"
