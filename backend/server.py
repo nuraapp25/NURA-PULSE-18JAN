@@ -5336,11 +5336,12 @@ async def sync_payment_data_to_sheets(
                 "id": row.get("id", ""),
                 "driver": row.get("driver", "N/A"),
                 "vehicle": row.get("vehicle", "N/A"),
+                "platform": row.get("platform", "N/A"),  # Platform in Column C (replaces Mode)
                 "date": row.get("date", "N/A"),
                 "time": row.get("time", "N/A"),
                 "description": row.get("description", "Auto"),
                 "amount": str(row.get("amount", "0")),
-                "payment_mode": row.get("paymentMode", "N/A"),
+                "payment_mode": row.get("paymentMode", "N/A"),  # Keep for backward compatibility
                 "distance": str(row.get("distance", "N/A")),
                 "duration": str(row.get("duration", "N/A")),
                 "pickup_km": row.get("pickupKm", "N/A"),
