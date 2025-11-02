@@ -695,42 +695,52 @@ const TelecallerDeskMobile = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  onClick={() => handleCall(lead)}
-                  className="flex-1 min-w-[100px] bg-green-500 hover:bg-green-600 text-white"
-                  size="sm"
-                >
-                  <Phone className="w-4 h-4 mr-1" />
-                  Call
-                </Button>
-                <Button
-                  onClick={() => handleWhatsApp(lead)}
-                  className="flex-1 min-w-[100px] bg-green-500 hover:bg-green-600 text-white"
-                  size="sm"
-                >
-                  <MessageCircle className="w-4 h-4 mr-1" />
-                  WhatsApp
-                </Button>
-                <Button
-                  onClick={() => openStatusDialog(lead)}
-                  variant="outline"
-                  className="flex-1 min-w-[100px] border-blue-500 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                  size="sm"
-                >
-                  <CheckCircle className="w-4 h-4 mr-1" />
-                  Status
-                </Button>
+              <div className="space-y-2">
+                {/* Current Status Badge */}
+                <div className="flex items-center justify-between py-2 px-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <span className="text-xs text-gray-600 dark:text-gray-400">Current Status:</span>
+                  <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                    {lead.status || "New"}
+                  </Badge>
+                </div>
                 
-                {/* Calling Done Button */}
-                <Button
-                  onClick={(e) => handleCallDone(lead.id, e)}
-                  size="sm"
-                  className="flex-1 bg-purple-600 hover:bg-purple-700 text-white"
-                >
-                  <Phone className="w-4 h-4 mr-1" />
-                  Calling Done
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    onClick={() => handleCall(lead)}
+                    className="flex-1 min-w-[100px] bg-green-500 hover:bg-green-600 text-white"
+                    size="sm"
+                  >
+                    <Phone className="w-4 h-4 mr-1" />
+                    Call
+                  </Button>
+                  <Button
+                    onClick={() => handleWhatsApp(lead)}
+                    className="flex-1 min-w-[100px] bg-green-500 hover:bg-green-600 text-white"
+                    size="sm"
+                  >
+                    <MessageCircle className="w-4 h-4 mr-1" />
+                    WhatsApp
+                  </Button>
+                  <Button
+                    onClick={() => openStatusDialog(lead)}
+                    variant="outline"
+                    className="flex-1 min-w-[100px] border-blue-500 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                    size="sm"
+                  >
+                    <CheckCircle className="w-4 h-4 mr-1" />
+                    Status
+                  </Button>
+                  
+                  {/* Calling Done Button */}
+                  <Button
+                    onClick={(e) => handleCallDone(lead.id, e)}
+                    size="sm"
+                    className="flex-1 bg-purple-600 hover:bg-purple-700 text-white"
+                  >
+                    <Phone className="w-4 h-4 mr-1" />
+                    Calling Done
+                  </Button>
+                </div>
               </div>
 
               {/* View Details Link */}
