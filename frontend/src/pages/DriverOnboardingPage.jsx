@@ -1752,26 +1752,6 @@ const DriverOnboardingPage = () => {
         </div>
         <div className="flex flex-wrap gap-2 sm:gap-3">
           <Button
-            onClick={() => setShowDateFilter(!showDateFilter)}
-            variant="outline"
-            className="border-gray-300 dark:border-gray-600 text-sm"
-            size="sm"
-          >
-            <Filter size={16} className="mr-1 sm:mr-2" />
-            <span className="hidden sm:inline">Date Filter</span>
-            <span className="sm:hidden">Date</span>
-          </Button>
-          <Button
-            onClick={() => setShowStageFilters(!showStageFilters)}
-            variant="outline"
-            className="border-purple-600 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 text-sm"
-            size="sm"
-          >
-            <Filter size={16} className="mr-1 sm:mr-2" />
-            <span className="hidden sm:inline">Stage Filters</span>
-            <span className="sm:hidden">Stages</span>
-          </Button>
-          <Button
             onClick={handleBulkExport}
             variant="outline"
             className="border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 text-sm"
