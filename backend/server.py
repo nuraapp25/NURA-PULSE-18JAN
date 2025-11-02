@@ -5118,7 +5118,11 @@ Rules:
                 record["month_year"] = month_year
                 record["driver"] = driver_name or record.get("driver", "N/A")
                 record["vehicle"] = vehicle_number or record.get("vehicle", "N/A")
-                record["platform"] = platform or record.get("platform", "N/A")
+                # Fix: Ensure platform is properly set (empty string should not override)
+                if platform and platform.strip():  # Check if platform is non-empty
+                    record["platform"] = platform
+                else:
+                    record["platform"] = record.get("platform", "N/A")
                 record["uploaded_at"] = datetime.now().isoformat()
                 record["status"] = "pending"
                 record["files_imported"] = False
