@@ -4645,17 +4645,34 @@ async def get_battery_milestones(
 
 
 @api_router.get("/montra-vehicle/battery-audit")
-async def get_battery_charge_audit(current_user: User = Depends(get_current_user)):
+async def get_battery_charge_audit(current_user: User = Depends(get_current_user), force_refresh: bool = False):
     """
-    Battery Audit Analysis: Analyze charge drops at 6AM, 12PM, and 5PM - OPTIMIZED FOR PRODUCTION
-    Returns: Date, Vehicle Name, Charge at 6AM/12PM/5PM, KM driven, Mileage, Critical flag
+    Battery Audit Analysis - CACHED VERSION for Production Performance
+    Uses pre-computed cache (updated daily), falls back to live computation if needed
     """
     try:
         from datetime import datetime, time as dt_time
         
-        logger.info("Starting battery audit - checking if data exists")
+        # Try to get from cache first (unless force_refresh is True)
+        if not force_refresh:
+            logger.info("Checking analytics cache for battery audit data")
+            cache_entry = await db.analytics_cache.find_one({"cache_type": "battery_audit"})
+            
+            if cache_entry:
+                computed_at = datetime.fromisoformat(cache_entry.get("computed_at"))
+                age_hours = (datetime.now(timezone.utc) - computed_at.replace(tzinfo=timezone.utc)).total_seconds() / 3600
+                
+                # Use cache if less than 24 hours old
+                if age_hours < 24:
+                    logger.info(f"✓ Returning cached battery audit data (age: {age_hours:.1f} hours)")
+                    return cache_entry.get("data")
+                else:
+                    logger.info(f"Cache is {age_hours:.1f} hours old, computing fresh data")
         
-        # OPTIMIZATION 1: Check if collection has data first (avoid processing empty dataset)
+        # LIVE COMPUTATION (Fallback or force refresh)
+        logger.info("Computing battery audit data live")
+        
+        # Check if collection has data
         sample_count = await db.montra_feed_data.count_documents({}, limit=1)
         if sample_count == 0:
             logger.warning("No montra_feed_data found in database")
@@ -4667,15 +4684,15 @@ async def get_battery_charge_audit(current_user: User = Depends(get_current_user
                 "message": "No Montra feed data found. Please import vehicle data first."
             }
         
-        # OPTIMIZATION 2: Limit to recent data only (last 90 days) to avoid timeout
+        # Limit to last 30 days (as requested by user)
         from datetime import date, timedelta
-        cutoff_date = (date.today() - timedelta(days=90)).isoformat()
+        cutoff_date = (date.today() - timedelta(days=30)).isoformat()
         
-        logger.info(f"Fetching records from {cutoff_date} onwards for performance")
+        logger.info(f"Fetching records from {cutoff_date} onwards (last 30 days)")
         
-        # OPTIMIZATION 3: Use aggregation pipeline with date filter and projection
+        # Use aggregation pipeline
         pipeline = [
-            {"$match": {"date": {"$gte": cutoff_date}}},  # Only recent data
+            {"$match": {"date": {"$gte": cutoff_date}}},
             {"$project": {
                 "_id": 0,
                 "vehicle_id": 1,
@@ -4686,8 +4703,8 @@ async def get_battery_charge_audit(current_user: User = Depends(get_current_user
                 "Battery SOC(%)": 1,
                 "Odometer (km)": 1
             }},
-            {"$sort": {"date": -1, "Date": 1}},  # Sort by date descending, then time ascending
-            {"$limit": 50000}  # Limit total records
+            {"$sort": {"date": -1, "Date": 1}},
+            {"$limit": 50000}
         ]
         
         cursor = db.montra_feed_data.aggregate(pipeline)
@@ -4700,19 +4717,19 @@ async def get_battery_charge_audit(current_user: User = Depends(get_current_user
             record_count += 1
             vehicle_id = record.get("vehicle_id")
             registration = record.get("registration_number")
-            date = record.get("date")
+            date_val = record.get("date")
             
-            if not vehicle_id or not date:
+            if not vehicle_id or not date_val:
                 continue
             
             display_name = registration if registration else vehicle_id
             
-            key = f"{vehicle_id}_{date}"
+            key = f"{vehicle_id}_{date_val}"
             if key not in vehicle_date_groups:
                 vehicle_date_groups[key] = {
                     "vehicle_id": vehicle_id,
                     "display_name": display_name,
-                    "date": date,
+                    "date": date_val,
                     "records": []
                 }
             vehicle_date_groups[key]["records"].append(record)
@@ -4724,7 +4741,7 @@ async def get_battery_charge_audit(current_user: User = Depends(get_current_user
                 "audit_results": [],
                 "count": 0,
                 "critical_count": 0,
-                "message": f"No data found in the last 90 days. Please import recent vehicle data."
+                "message": f"No data found in the last 30 days. Please import recent vehicle data."
             }
         
         logger.info(f"Processed {record_count} records, grouped into {len(vehicle_date_groups)} vehicle-date combinations")
