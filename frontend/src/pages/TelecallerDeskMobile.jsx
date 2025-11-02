@@ -240,6 +240,50 @@ const TelecallerDeskMobile = () => {
     // Fetch document status for the lead
     await fetchDocumentsStatus(lead.id);
   };
+
+  // Handle "Calling Done" button
+  const handleCallDone = async (leadId, event) => {
+    event?.stopPropagation(); // Prevent card click event
+    
+    try {
+      const token = localStorage.getItem("token");
+      await axios.post(
+        `${API}/driver-onboarding/leads/${leadId}/call-done`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success("✓ Call marked as done!");
+      
+      // Refresh leads and summary
+      if (isAdmin && selectedTelecaller) {
+        fetchLeadsForTelecaller(selectedTelecaller);
+        fetchSummary(selectedTelecaller);
+      } else {
+        fetchLeads();
+        fetchSummary();
+      }
+    } catch (error) {
+      console.error("Error marking call done:", error);
+      toast.error("Failed to mark call as done");
+    }
+  };
+  
+  // Show Status History Dialog
+  const showStatusHistory = async (leadId) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        `${API}/driver-onboarding/leads/${leadId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setHistoryLead(response.data);
+      setStatusHistoryDialogOpen(true);
+    } catch (error) {
+      console.error("Failed to load status history:", error);
+      toast.error("Failed to load status history");
+    }
+  };
+
   
   const handleFieldChange = (fieldName, value) => {
     setEditedLead(prev => ({
