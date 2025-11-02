@@ -606,6 +606,62 @@ const TelecallerDeskMobile = () => {
         </p>
       </div>
 
+      {/* Summary Dashboard */}
+      {summaryData && !loadingSummary && (
+        <div className="mb-4 space-y-3">
+          {/* Top 3 Summary Cards */}
+          <div className="grid grid-cols-3 gap-2">
+            <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+              <CardContent className="p-3 text-center">
+                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                  {summaryData.total_leads}
+                </div>
+                <div className="text-xs text-gray-600 dark:text-gray-400 font-medium">Total Leads</div>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
+              <CardContent className="p-3 text-center">
+                <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                  {summaryData.calls_made_today}
+                </div>
+                <div className="text-xs text-gray-600 dark:text-gray-400 font-medium">Calls Today</div>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800">
+              <CardContent className="p-3 text-center">
+                <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                  {summaryData.calls_pending}
+                </div>
+                <div className="text-xs text-gray-600 dark:text-gray-400 font-medium">Pending</div>
+              </CardContent>
+            </Card>
+          </div>
+          
+          {/* Stage Breakdown */}
+          <div className="space-y-2">
+            {Object.entries(summaryData.stage_breakdown || {}).map(([stage, data]) => (
+              <Card key={stage} className="bg-white dark:bg-gray-800">
+                <CardContent className="p-3">
+                  <div className="font-bold text-base mb-2 text-gray-900 dark:text-white border-b pb-2">
+                    {stage} <span className="text-blue-600 dark:text-blue-400">({data.total})</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {Object.entries(data.statuses || {}).map(([status, count]) => (
+                      <div key={status} className="text-xs flex justify-between items-center bg-gray-50 dark:bg-gray-700/50 p-2 rounded">
+                        <span className="text-gray-700 dark:text-gray-300">{status}</span>
+                        <Badge variant="secondary" className="text-xs">{count}</Badge>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Leads List */}
       <div className="space-y-3">
         {leads.map((lead, index) => (
