@@ -721,6 +721,16 @@ const TelecallerDeskMobile = () => {
                   <CheckCircle className="w-4 h-4 mr-1" />
                   Status
                 </Button>
+                
+                {/* Calling Done Button */}
+                <Button
+                  onClick={(e) => handleCallDone(lead.id, e)}
+                  size="sm"
+                  className="flex-1 bg-purple-600 hover:bg-purple-700 text-white"
+                >
+                  <Phone className="w-4 h-4 mr-1" />
+                  Calling Done
+                </Button>
               </div>
 
               {/* View Details Link */}
