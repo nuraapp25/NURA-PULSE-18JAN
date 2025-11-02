@@ -4841,21 +4841,56 @@ async def get_battery_charge_audit(current_user: User = Depends(get_current_user
 @api_router.get("/montra-vehicle/morning-charge-audit")
 async def get_morning_charge_audit(current_user: User = Depends(get_current_user)):
     """
-    Morning Charge Audit: Find all instances where vehicle charge at 6 AM was less than 95%
-    This helps identify vehicles that didn't charge properly overnight.
-    
+    Morning Charge Audit: Find instances where vehicle charge at 6 AM was < 95% - OPTIMIZED FOR PRODUCTION
     Returns: Date, Vehicle Name, Charge at 6 AM (only for instances < 95%)
     """
     try:
-        from datetime import datetime, time as dt_time
+        from datetime import datetime, time as dt_time, date, timedelta
         
-        # Get all Montra feed data using cursor (memory efficient)
-        logger.info("Starting morning charge audit - fetching data with cursor")
+        logger.info("Starting morning charge audit")
         
-        # Use cursor instead of loading all at once
-        cursor = db.montra_feed_data.find({})
+        # OPTIMIZATION 1: Check if collection has data first
+        sample_count = await db.montra_feed_data.count_documents({}, limit=1)
+        if sample_count == 0:
+            logger.warning("No montra_feed_data found in database")
+            return {
+                "success": True,
+                "audit_results": [],
+                "count": 0,
+                "message": "No Montra feed data found. Please import vehicle data first."
+            }
         
-        # Group records by vehicle and date (process in chunks)
+        # OPTIMIZATION 2: Limit to recent data only (last 90 days)
+        cutoff_date = (date.today() - timedelta(days=90)).isoformat()
+        
+        logger.info(f"Fetching records from {cutoff_date} onwards for performance")
+        
+        # OPTIMIZATION 3: Use aggregation with filters and projection
+        pipeline = [
+            {"$match": {"date": {"$gte": cutoff_date}}},
+            {"$project": {
+                "_id": 0,
+                "vehicle_id": 1,
+                "Vehicle ID": 1,
+                "registration_number": 1,
+                "Registration Number": 1,
+                "date": 1,
+                "Date": 1,
+                "Portal Received Time": 1,
+                "time": 1,
+                "Time": 1,
+                "Battery Soc(%)": 1,
+                "Battery SOC(%)": 1,
+                "Battery %": 1,
+                "battery_soc_percentage": 1
+            }},
+            {"$sort": {"date": -1}},
+            {"$limit": 50000}
+        ]
+        
+        cursor = db.montra_feed_data.aggregate(pipeline)
+        
+        # Group records by vehicle and date
         vehicle_date_groups = {}
         record_count = 0
         
@@ -4868,7 +4903,6 @@ async def get_morning_charge_audit(current_user: User = Depends(get_current_user
             if not vehicle_id or not date:
                 continue
             
-            # Use registration number if available, otherwise vehicle_id
             display_name = registration if registration else vehicle_id
             
             key = f"{vehicle_id}_{date}"
@@ -4881,13 +4915,13 @@ async def get_morning_charge_audit(current_user: User = Depends(get_current_user
                 }
             vehicle_date_groups[key]["records"].append(record)
         
-        # Check if we have any data
         if record_count == 0:
+            logger.warning(f"No records found after {cutoff_date}")
             return {
                 "success": True,
                 "audit_results": [],
                 "count": 0,
-                "message": "No Montra feed data found. Please import vehicle data first."
+                "message": f"No data found in the last 90 days. Please import recent vehicle data."
             }
         
         logger.info(f"Processed {record_count} records, grouped into {len(vehicle_date_groups)} vehicle-date combinations")
