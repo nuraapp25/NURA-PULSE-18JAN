@@ -92,8 +92,31 @@ const TelecallerDeskMobile = () => {
       fetchTelecallers();
     } else {
       fetchLeads();
+      fetchSummary();
     }
   }, []);
+  
+  // Fetch summary dashboard data
+  const fetchSummary = async (telecallerEmail = null) => {
+    try {
+      setLoadingSummary(true);
+      const token = localStorage.getItem("token");
+      const email = telecallerEmail || (isAdmin ? selectedTelecaller : user.email);
+      
+      if (!email) return;
+      
+      const response = await axios.get(
+        `${API}/driver-onboarding/telecaller-summary?telecaller=${email}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setSummaryData(response.data);
+    } catch (error) {
+      console.error("Failed to fetch summary:", error);
+      toast.error("Failed to load summary dashboard");
+    } finally {
+      setLoadingSummary(false);
+    }
+  };
   
   // Fetch telecallers for admin dropdown
   const fetchTelecallers = async () => {
