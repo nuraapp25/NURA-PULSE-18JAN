@@ -191,6 +191,13 @@ const DriverOnboardingPage = () => {
   const [bulkImporting, setBulkImporting] = useState(false);
   const [bulkImportFile, setBulkImportFile] = useState(null);
   const [bulkImportDialogOpen, setBulkImportDialogOpen] = useState(false);
+  
+  // Column mapping states
+  const [showColumnMapping, setShowColumnMapping] = useState(false);
+  const [excelColumns, setExcelColumns] = useState([]);
+  const [columnMapping, setColumnMapping] = useState({});
+  const [previewData, setPreviewData] = useState([]);
+  
   const [backupLibraryOpen, setBackupLibraryOpen] = useState(false);
   const [backups, setBackups] = useState([]);
   const [loadingBackups, setLoadingBackups] = useState(false);
