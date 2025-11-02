@@ -3947,12 +3947,20 @@ async def get_battery_consumption_data(
             # Include all other fields by default
         }
         
-        # Optimized query with index hint for fastest retrieval
-        # Limit to reasonable data points (24 hours * 60 readings per hour = 1440 max)
-        results = await db.montra_feed_data.find(
-            query, 
-            projection
-        ).hint("idx_vehicle_date").sort("Date", 1).limit(2000).to_list(2000)
+        # Check if index exists before using hint
+        try:
+            # Try to use index for fastest retrieval
+            results = await db.montra_feed_data.find(
+                query, 
+                projection
+            ).hint("idx_vehicle_date").sort("Date", 1).limit(2000).to_list(2000)
+        except Exception as hint_error:
+            # If index doesn't exist, fall back to query without hint
+            logger.warning(f"Index not found, using query without hint: {str(hint_error)}")
+            results = await db.montra_feed_data.find(
+                query, 
+                projection
+            ).sort("Date", 1).limit(2000).to_list(2000)
         
         if not results:
             logger.warning(f"No data found for vehicle {vehicle_id} on {date}")
