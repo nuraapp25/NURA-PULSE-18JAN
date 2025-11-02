@@ -500,22 +500,41 @@ const QRCodeManagerNew = () => {
       return;
     }
     
+    setLoading(true);
+    let successCount = 0;
+    let failCount = 0;
+    
     try {
       const token = localStorage.getItem("token");
-      // Delete all campaigns with force=true
+      
+      // Delete campaigns one by one with proper error handling
       for (const campaign of campaigns) {
-        await axios.delete(`${API}/qr-codes/campaigns/${encodeURIComponent(campaign.campaign_name)}?force=true`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        try {
+          await axios.delete(`${API}/qr-codes/campaigns/${encodeURIComponent(campaign.campaign_name)}?force=true`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          successCount++;
+          console.log(`✓ Deleted campaign: ${campaign.campaign_name}`);
+        } catch (error) {
+          failCount++;
+          console.error(`✗ Failed to delete campaign ${campaign.campaign_name}:`, error.response?.data?.detail || error.message);
+        }
       }
       
-      toast.success(`Deleted all ${campaigns.length} campaigns`);
+      if (successCount > 0) {
+        toast.success(`Successfully deleted ${successCount} campaign(s)${failCount > 0 ? `. Failed to delete ${failCount} campaign(s).` : ''}`);
+      } else {
+        toast.error(`Failed to delete all ${failCount} campaigns. Check console for details.`);
+      }
+      
       setSelectedCampaigns([]);
       setSelectAllCampaigns(false);
       fetchCampaigns();
     } catch (error) {
-      console.error("Error deleting all campaigns:", error);
-      toast.error("Failed to delete all campaigns");
+      console.error("Error in delete all campaigns:", error);
+      toast.error("An unexpected error occurred while deleting campaigns");
+    } finally {
+      setLoading(false);
     }
   };
   
