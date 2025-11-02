@@ -1079,6 +1079,7 @@ const PaymentReconciliation = () => {
                     </th>
                     <th className="text-left py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">Driver</th>
                     <th className="text-left py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">Vehicle</th>
+                    <th className="text-left py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">Platform</th>
                     <th className="text-left py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">Date</th>
                     <th className="text-left py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">Time</th>
                     <th className="text-left py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">Description</th>
