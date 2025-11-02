@@ -82,6 +82,15 @@ def debug_apis():
                 print(f"List with {len(data)} items")
                 test_lead_id = data[0].get('id')
                 print(f"Test lead ID: {test_lead_id}")
+            elif isinstance(data, dict) and 'leads' in data:
+                leads = data['leads']
+                print(f"Dict with leads array: {len(leads)} items")
+                if leads:
+                    test_lead_id = leads[0].get('id')
+                    print(f"Test lead ID: {test_lead_id}")
+                else:
+                    print("No leads in the array")
+                    return
                 
                 # Test 3: Update lead status
                 print(f"\n3. Testing PATCH /driver-onboarding/leads/{test_lead_id}")
