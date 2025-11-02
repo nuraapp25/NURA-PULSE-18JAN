@@ -2405,6 +2405,58 @@ async def update_lead(lead_id: str, lead_data: DriverLeadUpdate, current_user: U
             {"$set": update_data}
         )
     
+
+
+@api_router.post("/driver-onboarding/leads/{lead_id}/call-done")
+async def mark_call_done(lead_id: str, current_user: User = Depends(get_current_user)):
+    """Mark that telecaller completed a call for this lead"""
+    from datetime import datetime, timezone
+    
+    # Find the lead
+    lead = await db.driver_leads.find_one({"id": lead_id})
+    if not lead:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    
+    current_time = datetime.now(timezone.utc).isoformat()
+    
+    # Create call history entry
+    call_entry = {
+        "timestamp": current_time,
+        "called_by": current_user.email,
+        "caller_name": f"{current_user.first_name} {current_user.last_name}" if hasattr(current_user, 'first_name') else current_user.email
+    }
+    
+    # Add to status history as well
+    status_history_entry = {
+        "timestamp": current_time,
+        "field": "call_made",
+        "old_value": None,
+        "new_value": "Call completed",
+        "changed_by": current_user.email,
+        "action": "call_made"
+    }
+    
+    # Update lead with call history
+    await db.driver_leads.update_one(
+        {"id": lead_id},
+        {
+            "$push": {
+                "calling_history": call_entry,
+                "status_history": status_history_entry
+            },
+            "$set": {
+                "last_called": current_time,
+                "last_modified": current_time
+            }
+        }
+    )
+    
+    return {
+        "success": True,
+        "message": "Call marked as done",
+        "timestamp": current_time
+    }
+
     # Get updated lead for sync
     updated_lead = await db.driver_leads.find_one({"id": lead_id}, {"_id": 0})
     
