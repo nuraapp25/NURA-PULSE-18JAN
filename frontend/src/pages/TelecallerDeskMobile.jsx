@@ -745,6 +745,19 @@ const TelecallerDeskMobile = () => {
                     Calling Done
                   </Button>
                 </div>
+                
+                {/* Show Last Called Time if available */}
+                {lead.last_called && (
+                  <div className="mt-2 text-xs text-gray-600 dark:text-gray-400 text-center bg-purple-50 dark:bg-purple-900/20 py-1 px-2 rounded">
+                    Last Called: {new Date(lead.last_called).toLocaleString('en-US', {
+                      hour: 'numeric',
+                      minute: '2-digit',
+                      hour12: true,
+                      month: 'short',
+                      day: '2-digit'
+                    })}
+                  </div>
+                )}
               </div>
 
               {/* View Details Link */}
