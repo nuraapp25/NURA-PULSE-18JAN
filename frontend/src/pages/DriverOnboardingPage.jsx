@@ -1482,10 +1482,118 @@ const DriverOnboardingPage = () => {
     }
   };
   
-  // Handle Bulk Import
+  // Parse Excel file and show column mapping
+  const handleFileUpload = async (file) => {
+    if (!file) return;
+    
+    setBulkImportFile(file);
+    
+    try {
+      // Parse Excel file using XLSX library
+      const XLSX = await import('xlsx');
+      const reader = new FileReader();
+      
+      reader.onload = (e) => {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+          
+          if (jsonData.length < 2) {
+            toast.error("Excel file must have at least a header row and one data row");
+            return;
+          }
+          
+          // First row is headers
+          const headers = jsonData[0];
+          const columns = headers.map((header, index) => ({
+            index,
+            letter: String.fromCharCode(65 + index), // A, B, C, etc.
+            name: header || `Column ${String.fromCharCode(65 + index)}`
+          }));
+          
+          setExcelColumns(columns);
+          
+          // Preview data (first 3 rows excluding header)
+          const preview = jsonData.slice(1, 4).map(row => 
+            headers.reduce((obj, header, i) => {
+              obj[header || `col_${i}`] = row[i];
+              return obj;
+            }, {})
+          );
+          setPreviewData(preview);
+          
+          // Initialize default mapping (try to auto-match)
+          const defaultMapping = {};
+          const fieldMap = {
+            name: ['name', 'driver name', 'driver_name', 'full name', 'fullname'],
+            phone_number: ['phone', 'phone number', 'phone_number', 'mobile', 'contact'],
+            email: ['email', 'email address', 'e-mail'],
+            vehicle: ['vehicle', 'vehicle type', 'vehicle_type'],
+            driving_license: ['license', 'driving license', 'driving_license', 'dl'],
+            experience: ['experience', 'years of experience', 'exp'],
+            interested_ev: ['ev', 'interested ev', 'interested_ev', 'ev interest'],
+            monthly_salary: ['salary', 'monthly salary', 'monthly_salary', 'expected salary'],
+            current_location: ['location', 'current location', 'current_location', 'address'],
+            status: ['status', 'lead status'],
+            stage: ['stage', 'lead stage'],
+            assigned_telecaller: ['telecaller', 'assigned telecaller', 'assigned_telecaller'],
+            source: ['source', 'import source', 'lead source'],
+            dl_no: ['dl no', 'dl_no', 'license number'],
+            badge_no: ['badge', 'badge no', 'badge_no'],
+            aadhar_card: ['aadhar', 'aadhar card', 'aadhar_card'],
+            pan_card: ['pan', 'pan card', 'pan_card'],
+            gas_bill: ['gas bill', 'gas_bill'],
+            bank_passbook: ['bank', 'passbook', 'bank passbook', 'bank_passbook']
+          };
+          
+          // Try to auto-match columns
+          headers.forEach((header, index) => {
+            const headerLower = (header || '').toLowerCase().trim();
+            for (const [field, patterns] of Object.entries(fieldMap)) {
+              if (patterns.some(pattern => headerLower.includes(pattern))) {
+                defaultMapping[field] = index;
+                break;
+              }
+            }
+          });
+          
+          setColumnMapping(defaultMapping);
+          setShowColumnMapping(true);
+          
+        } catch (parseError) {
+          console.error("Error parsing Excel:", parseError);
+          toast.error("Failed to parse Excel file. Please ensure it's a valid .xlsx or .xls file.");
+        }
+      };
+      
+      reader.readAsArrayBuffer(file);
+      
+    } catch (error) {
+      console.error("Error reading file:", error);
+      toast.error("Failed to read Excel file");
+    }
+  };
+  
+  // Handle Bulk Import with Column Mapping
   const handleBulkImport = async () => {
     if (!bulkImportFile) {
       toast.error("Please select an Excel file to import");
+      return;
+    }
+    
+    if (!showColumnMapping) {
+      toast.error("Please complete column mapping first");
+      return;
+    }
+    
+    // Validate required fields are mapped
+    const requiredFields = ['name', 'phone_number'];
+    const missingFields = requiredFields.filter(field => columnMapping[field] === undefined);
+    
+    if (missingFields.length > 0) {
+      toast.error(`Please map these required fields: ${missingFields.join(', ')}`);
       return;
     }
     
@@ -1493,7 +1601,6 @@ const DriverOnboardingPage = () => {
     if (!window.confirm(
       "⚠️ WARNING: This will REPLACE ALL current leads with the data from your Excel file.\n\n" +
       "A backup will be created automatically before import.\n\n" +
-      "Telecaller assignments in Column V (assigned_telecaller) will be processed.\n\n" +
       "Are you sure you want to proceed?"
     )) {
       return;
@@ -1504,6 +1611,7 @@ const DriverOnboardingPage = () => {
       const token = localStorage.getItem("token");
       const formData = new FormData();
       formData.append('file', bulkImportFile);
+      formData.append('column_mapping', JSON.stringify(columnMapping));
       
       toast.info("📥 Starting bulk import... Creating backup and processing data...");
       
@@ -1544,6 +1652,10 @@ const DriverOnboardingPage = () => {
       
       // Reset and refresh
       setBulkImportFile(null);
+      setShowColumnMapping(false);
+      setExcelColumns([]);
+      setColumnMapping({});
+      setPreviewData([]);
       setBulkImportDialogOpen(false);
       fetchLeads();
       
