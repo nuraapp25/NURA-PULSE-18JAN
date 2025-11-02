@@ -2341,8 +2341,8 @@ async def bulk_update_lead_status(bulk_data: BulkLeadStatusUpdate, current_user:
 
 @api_router.patch("/driver-onboarding/leads/{lead_id}")
 async def update_lead(lead_id: str, lead_data: DriverLeadUpdate, current_user: User = Depends(get_current_user)):
-    """Update lead details with status history tracking"""
-    from datetime import datetime, timezone
+    """Update lead details with status history tracking and callback date calculation"""
+    from datetime import datetime, timezone, timedelta
     
     # Find the lead
     lead = await db.driver_leads.find_one({"id": lead_id})
@@ -2364,6 +2364,28 @@ async def update_lead(lead_id: str, lead_data: DriverLeadUpdate, current_user: U
     # Initialize status_history if it doesn't exist
     if "status_history" not in lead:
         lead["status_history"] = []
+    
+    # Calculate callback_date if status starts with "Call back"
+    if "status" in update_data and update_data["status"].startswith("Call back"):
+        now = datetime.now(timezone.utc)
+        callback_days = 0
+        
+        if update_data["status"] == "Call back 1D":
+            callback_days = 1
+        elif update_data["status"] == "Call back 1W":
+            callback_days = 7
+        elif update_data["status"] == "Call back 2W":
+            callback_days = 14
+        elif update_data["status"] == "Call back 1M":
+            callback_days = 30
+        
+        if callback_days > 0:
+            callback_date = now + timedelta(days=callback_days)
+            update_data["callback_date"] = callback_date.isoformat()
+    else:
+        # If status is NOT a callback status, clear callback_date
+        if "status" in update_data:
+            update_data["callback_date"] = None
     
     # Check if status or stage changed
     history_entry = None
