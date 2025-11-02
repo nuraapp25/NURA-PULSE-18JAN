@@ -86,10 +86,19 @@ def debug_apis():
                 # Test 3: Update lead status
                 print(f"\n3. Testing PATCH /driver-onboarding/leads/{test_lead_id}")
                 update_data = {"status": "Call back 1D"}
+                headers_with_content = headers.copy()
+                headers_with_content["Content-Type"] = "application/json"
                 patch_response = requests.patch(f"{BASE_URL}/driver-onboarding/leads/{test_lead_id}", 
-                                              json=update_data, headers=headers, timeout=30)
+                                              json=update_data, headers=headers_with_content, timeout=30)
                 print(f"PATCH Status: {patch_response.status_code}")
                 print(f"PATCH Response: {patch_response.text}")
+                
+                if patch_response.status_code == 200:
+                    try:
+                        patch_data = patch_response.json()
+                        print(f"PATCH Response JSON: {patch_data}")
+                    except:
+                        print("PATCH Response is not JSON")
                 
                 # Test 4: Get updated lead
                 print(f"\n4. Testing GET /driver-onboarding/leads/{test_lead_id}")
