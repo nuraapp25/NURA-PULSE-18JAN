@@ -1798,10 +1798,16 @@ async def get_leads(
             limit = min(limit, 100)
             skip = (page - 1) * limit
             # Use index hint if querying by telecaller for fastest retrieval
-            cursor = db.driver_leads.find(query, {"_id": 0}).sort("import_date", -1).skip(skip).limit(limit)
-            if telecaller:
-                cursor = cursor.hint("idx_assigned_telecaller")
-            leads = await cursor.to_list(length=limit)
+            try:
+                cursor = db.driver_leads.find(query, {"_id": 0}).sort("import_date", -1).skip(skip).limit(limit)
+                if telecaller:
+                    cursor = cursor.hint("idx_assigned_telecaller")
+                leads = await cursor.to_list(length=limit)
+            except Exception as hint_error:
+                # If index doesn't exist, fall back to query without hint
+                logger.warning(f"Index not found for driver leads, using query without hint: {str(hint_error)}")
+                cursor = db.driver_leads.find(query, {"_id": 0}).sort("import_date", -1).skip(skip).limit(limit)
+                leads = await cursor.to_list(length=limit)
         
         # Populate telecaller names for leads with assigned telecallers
         # Batch fetch all unique telecallers for efficiency
