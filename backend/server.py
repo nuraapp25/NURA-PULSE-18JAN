@@ -4647,26 +4647,52 @@ async def get_battery_milestones(
 @api_router.get("/montra-vehicle/battery-audit")
 async def get_battery_charge_audit(current_user: User = Depends(get_current_user)):
     """
-    Battery Audit Analysis: Analyze charge drops at 6AM, 12PM, and 5PM across all historical data.
-    Calculates mileage and highlights problematic charge drops.
-    
-    Returns table with:
-    - Date, Vehicle Name
-    - Charge at 6AM, 12PM, 5PM
-    - KM driven (6AM-12PM, 6AM-5PM)
-    - Mileage calculations
-    - Flags rows where 12PM < 60% AND 5PM < 20%
+    Battery Audit Analysis: Analyze charge drops at 6AM, 12PM, and 5PM - OPTIMIZED FOR PRODUCTION
+    Returns: Date, Vehicle Name, Charge at 6AM/12PM/5PM, KM driven, Mileage, Critical flag
     """
     try:
         from datetime import datetime, time as dt_time
         
-        # Get all Montra feed data using cursor (memory efficient)
-        logger.info("Starting battery audit - fetching data with cursor")
+        logger.info("Starting battery audit - checking if data exists")
         
-        # Use cursor instead of loading all at once
-        cursor = db.montra_feed_data.find({})
+        # OPTIMIZATION 1: Check if collection has data first (avoid processing empty dataset)
+        sample_count = await db.montra_feed_data.count_documents({}, limit=1)
+        if sample_count == 0:
+            logger.warning("No montra_feed_data found in database")
+            return {
+                "success": True,
+                "audit_results": [],
+                "count": 0,
+                "critical_count": 0,
+                "message": "No Montra feed data found. Please import vehicle data first."
+            }
         
-        # Group records by vehicle and date (process in chunks)
+        # OPTIMIZATION 2: Limit to recent data only (last 90 days) to avoid timeout
+        from datetime import date, timedelta
+        cutoff_date = (date.today() - timedelta(days=90)).isoformat()
+        
+        logger.info(f"Fetching records from {cutoff_date} onwards for performance")
+        
+        # OPTIMIZATION 3: Use aggregation pipeline with date filter and projection
+        pipeline = [
+            {"$match": {"date": {"$gte": cutoff_date}}},  # Only recent data
+            {"$project": {
+                "_id": 0,
+                "vehicle_id": 1,
+                "registration_number": 1,
+                "date": 1,
+                "Date": 1,
+                "Battery Soc(%)": 1,
+                "Battery SOC(%)": 1,
+                "Odometer (km)": 1
+            }},
+            {"$sort": {"date": -1, "Date": 1}},  # Sort by date descending, then time ascending
+            {"$limit": 50000}  # Limit total records
+        ]
+        
+        cursor = db.montra_feed_data.aggregate(pipeline)
+        
+        # Group records by vehicle and date
         vehicle_date_groups = {}
         record_count = 0
         
@@ -4691,13 +4717,14 @@ async def get_battery_charge_audit(current_user: User = Depends(get_current_user
                 }
             vehicle_date_groups[key]["records"].append(record)
         
-        # Check if we have any data
         if record_count == 0:
+            logger.warning(f"No records found after {cutoff_date}")
             return {
                 "success": True,
                 "audit_results": [],
                 "count": 0,
-                "message": "No Montra feed data found. Please import vehicle data first."
+                "critical_count": 0,
+                "message": f"No data found in the last 90 days. Please import recent vehicle data."
             }
         
         logger.info(f"Processed {record_count} records, grouped into {len(vehicle_date_groups)} vehicle-date combinations")
