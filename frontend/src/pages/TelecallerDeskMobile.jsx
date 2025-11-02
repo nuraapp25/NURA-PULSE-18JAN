@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Phone, MessageCircle, CheckCircle, RefreshCw, AlertCircle, User, History } from "lucide-react";
+import { Phone, MessageCircle, CheckCircle, RefreshCw, AlertCircle, User, History, ChevronDown, ChevronUp } from "lucide-react";
 import LeadDetailsDialog from "@/components/LeadDetailsDialog";
 
 // Status options grouped by stage
@@ -87,6 +87,7 @@ const TelecallerDeskMobile = () => {
   const [statusHistoryDialogOpen, setStatusHistoryDialogOpen] = useState(false);
   const [historyLead, setHistoryLead] = useState(null);
   const [showScheduledLeads, setShowScheduledLeads] = useState(true); // For collapsible section
+  const [showActiveLeads, setShowActiveLeads] = useState(true); // For collapsible active leads
   
   // Separate leads into active and scheduled
   const activeLeads = leads.filter(lead => !lead.status?.startsWith("Call back"));
@@ -122,27 +123,35 @@ const TelecallerDeskMobile = () => {
       fetchTelecallers();
     } else {
       fetchLeads();
-      fetchSummary();
+      // Fetch summary after a short delay to prioritize leads loading
+      setTimeout(() => fetchSummary(), 100);
     }
   }, []);
   
-  // Fetch summary dashboard data
+  // Fetch summary dashboard data with optimization
   const fetchSummary = async (telecallerEmail = null) => {
     try {
       setLoadingSummary(true);
       const token = localStorage.getItem("token");
       const email = telecallerEmail || (isAdmin ? selectedTelecaller : user.email);
       
-      if (!email) return;
+      if (!email) {
+        setLoadingSummary(false);
+        return;
+      }
       
       const response = await axios.get(
         `${API}/driver-onboarding/telecaller-summary?telecaller=${email}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { 
+          headers: { Authorization: `Bearer ${token}` },
+          timeout: 10000 // 10 second timeout
+        }
       );
       setSummaryData(response.data);
     } catch (error) {
       console.error("Failed to fetch summary:", error);
-      toast.error("Failed to load summary dashboard");
+      // Don't show error toast to avoid annoying users
+      setSummaryData(null);
     } finally {
       setLoadingSummary(false);
     }
@@ -159,8 +168,9 @@ const TelecallerDeskMobile = () => {
       
       // Auto-select first telecaller if available
       if (response.data && response.data.length > 0) {
-        setSelectedTelecaller(response.data[0].email); // Use email instead of id
+        setSelectedTelecaller(response.data[0].email);
         fetchLeadsForTelecaller(response.data[0].email);
+        setTimeout(() => fetchSummary(response.data[0].email), 100);
       }
     } catch (error) {
       console.error("Error fetching telecallers:", error);
@@ -190,7 +200,7 @@ const TelecallerDeskMobile = () => {
   const handleTelecallerChange = (telecallerEmail) => {
     setSelectedTelecaller(telecallerEmail);
     fetchLeadsForTelecaller(telecallerEmail);
-    fetchSummary(telecallerEmail);
+    setTimeout(() => fetchSummary(telecallerEmail), 100);
   };
 
   const fetchLeads = async () => {
@@ -241,7 +251,15 @@ const TelecallerDeskMobile = () => {
       
       toast.success("Status updated successfully!");
       setStatusDialogOpen(false);
-      fetchLeads();
+      
+      // Refresh leads and summary
+      if (isAdmin && selectedTelecaller) {
+        await fetchLeadsForTelecaller(selectedTelecaller);
+        setTimeout(() => fetchSummary(selectedTelecaller), 100);
+      } else {
+        await fetchLeads();
+        setTimeout(() => fetchSummary(), 100);
+      }
     } catch (error) {
       toast.error(error.response?.data?.detail || "Failed to update status");
     }
@@ -290,11 +308,11 @@ const TelecallerDeskMobile = () => {
       
       // Refresh leads and summary
       if (isAdmin && selectedTelecaller) {
-        fetchLeadsForTelecaller(selectedTelecaller);
-        fetchSummary(selectedTelecaller);
+        await fetchLeadsForTelecaller(selectedTelecaller);
+        setTimeout(() => fetchSummary(selectedTelecaller), 100);
       } else {
-        fetchLeads();
-        fetchSummary();
+        await fetchLeads();
+        setTimeout(() => fetchSummary(), 100);
       }
     } catch (error) {
       console.error("Error marking call done:", error);
@@ -390,10 +408,10 @@ const TelecallerDeskMobile = () => {
       // Refresh leads and summary to reflect changes
       if (isAdmin && selectedTelecaller) {
         await fetchLeadsForTelecaller(selectedTelecaller);
-        await fetchSummary(selectedTelecaller);
+        setTimeout(() => fetchSummary(selectedTelecaller), 100);
       } else {
         await fetchLeads();
-        await fetchSummary();
+        setTimeout(() => fetchSummary(), 100);
       }
       
       // Fetch fresh lead data after save
@@ -635,10 +653,10 @@ const TelecallerDeskMobile = () => {
             onClick={() => {
               if (isAdmin && selectedTelecaller) {
                 fetchLeadsForTelecaller(selectedTelecaller);
-                fetchSummary(selectedTelecaller);
+                setTimeout(() => fetchSummary(selectedTelecaller), 100);
               } else {
                 fetchLeads();
-                fetchSummary();
+                setTimeout(() => fetchSummary(), 100);
               }
             }} 
             variant="outline" 
@@ -677,7 +695,14 @@ const TelecallerDeskMobile = () => {
       </div>
 
       {/* Summary Dashboard */}
-      {summaryData && !loadingSummary && (
+      {loadingSummary ? (
+        <div className="mb-4 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
+          <div className="flex items-center justify-center">
+            <RefreshCw className="w-5 h-5 animate-spin text-blue-600 mr-2" />
+            <span className="text-sm text-gray-600 dark:text-gray-400">Loading summary...</span>
+          </div>
+        </div>
+      ) : summaryData ? (
         <div className="mb-4 space-y-3">
           {/* Top 3 Summary Cards */}
           <div className="grid grid-cols-3 gap-2">
@@ -730,130 +755,141 @@ const TelecallerDeskMobile = () => {
             ))}
           </div>
         </div>
-      )}
+      ) : null}
 
-      {/* Active Leads List */}
+      {/* Active Leads List - Collapsible */}
       {activeLeads.length > 0 && (
-        <>
-          <div className="mb-2">
+        <div className="mb-6">
+          <button
+            onClick={() => setShowActiveLeads(!showActiveLeads)}
+            className="w-full flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 border-2 border-green-200 dark:border-green-800 rounded-lg mb-3"
+          >
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
               Active Leads ({activeLeads.length})
             </h2>
-          </div>
-          <div className="space-y-3 mb-6">
-            {activeLeads.map((lead, index) => (
-              <Card
-                key={lead.id}
-                className="relative overflow-hidden border-2 hover:shadow-md transition-shadow"
-              >
-                {/* High Priority Tag */}
-                {isHighPriority(lead) && (
-                  <div className="absolute top-0 right-0 bg-red-500 text-white text-xs font-semibold px-3 py-1 rounded-bl-lg">
-                    High Priority
-                  </div>
-                )}
+            {showActiveLeads ? (
+              <ChevronUp className="w-5 h-5 text-green-600 dark:text-green-400" />
+            ) : (
+              <ChevronDown className="w-5 h-5 text-green-600 dark:text-green-400" />
+            )}
+          </button>
 
-                <CardContent className="p-4">
-                  {/* Lead Info */}
-                  <div className="mb-3">
-                    <div className="flex items-start justify-between mb-2">
-                      <h3 className="text-lg font-bold text-gray-900 dark:text-white pr-20">
-                        {index + 1}. {lead.name}
-                      </h3>
+          {showActiveLeads && (
+            <div className="space-y-3">
+              {activeLeads.map((lead, index) => (
+                <Card
+                  key={lead.id}
+                  className="relative overflow-hidden border-2 hover:shadow-md transition-shadow"
+                >
+                  {/* High Priority Tag */}
+                  {isHighPriority(lead) && (
+                    <div className="absolute top-0 right-0 bg-red-500 text-white text-xs font-semibold px-3 py-1 rounded-bl-lg">
+                      High Priority
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                      {lead.phone_number}
-                    </p>
-                    {isNewLead(lead) && (
-                      <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-0">
-                        New
-                      </Badge>
-                    )}
-                  </div>
+                  )}
 
-                  {/* Action Buttons */}
-                  <div className="space-y-2">
-                    {/* Current Status Badge */}
-                    <div className="flex items-center justify-between py-2 px-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                      <span className="text-xs text-gray-600 dark:text-gray-400">Current Status:</span>
-                      <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-                        {lead.status || "New"}
-                      </Badge>
-                    </div>
-                    
-                    <div className="flex flex-wrap gap-2">
-                      <Button
-                        onClick={() => handleCall(lead)}
-                        className="flex-1 min-w-[100px] bg-green-500 hover:bg-green-600 text-white"
-                        size="sm"
-                      >
-                        <Phone className="w-4 h-4 mr-1" />
-                        Call
-                      </Button>
-                      <Button
-                        onClick={() => handleWhatsApp(lead)}
-                        className="flex-1 min-w-[100px] bg-green-500 hover:bg-green-600 text-white"
-                        size="sm"
-                      >
-                        <MessageCircle className="w-4 h-4 mr-1" />
-                        WhatsApp
-                      </Button>
-                      <Button
-                        onClick={() => openStatusDialog(lead)}
-                        variant="outline"
-                        className="flex-1 min-w-[100px] border-blue-500 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                        size="sm"
-                      >
-                        <CheckCircle className="w-4 h-4 mr-1" />
-                        Status
-                      </Button>
-                      
-                      {/* Calling Done Button */}
-                      <Button
-                        onClick={(e) => handleCallDone(lead.id, e)}
-                        size="sm"
-                        className="flex-1 bg-purple-600 hover:bg-purple-700 text-white"
-                      >
-                        <Phone className="w-4 h-4 mr-1" />
-                        Calling Done
-                      </Button>
-                    </div>
-                    
-                    {/* Show Last Called Time if available */}
-                    {lead.last_called && (
-                      <div className="mt-2 text-xs text-gray-600 dark:text-gray-400 text-center bg-purple-50 dark:bg-purple-900/20 py-1 px-2 rounded">
-                        Last Called: {formatRelativeTime(lead.last_called)}
+                  <CardContent className="p-4">
+                    {/* Lead Info */}
+                    <div className="mb-3">
+                      <div className="flex items-start justify-between mb-2">
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white pr-20">
+                          {index + 1}. {lead.name}
+                        </h3>
                       </div>
-                    )}
-                  </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                        {lead.phone_number}
+                      </p>
+                      {isNewLead(lead) && (
+                        <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-0">
+                          New
+                        </Badge>
+                      )}
+                    </div>
 
-                  {/* View Details and Status History Links */}
-                  <div className="flex gap-2 mt-3">
-                    <button
-                      onClick={() => openLeadDetails(lead)}
-                      className="flex-1 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-center py-1 border border-blue-300 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                    >
-                      View Full Details →
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        showStatusHistory(lead.id);
-                      }}
-                      className="flex-1 text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 text-center py-1 border border-indigo-300 rounded hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
-                    >
-                      <History className="w-3 h-3 inline mr-1" />
-                      Status History
-                    </button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </>
+                    {/* Action Buttons */}
+                    <div className="space-y-2">
+                      {/* Current Status Badge */}
+                      <div className="flex items-center justify-between py-2 px-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                        <span className="text-xs text-gray-600 dark:text-gray-400">Current Status:</span>
+                        <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                          {lead.status || "New"}
+                        </Badge>
+                      </div>
+                      
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          onClick={() => handleCall(lead)}
+                          className="flex-1 min-w-[100px] bg-green-500 hover:bg-green-600 text-white"
+                          size="sm"
+                        >
+                          <Phone className="w-4 h-4 mr-1" />
+                          Call
+                        </Button>
+                        <Button
+                          onClick={() => handleWhatsApp(lead)}
+                          className="flex-1 min-w-[100px] bg-green-500 hover:bg-green-600 text-white"
+                          size="sm"
+                        >
+                          <MessageCircle className="w-4 h-4 mr-1" />
+                          WhatsApp
+                        </Button>
+                        <Button
+                          onClick={() => openStatusDialog(lead)}
+                          variant="outline"
+                          className="flex-1 min-w-[100px] border-blue-500 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                          size="sm"
+                        >
+                          <CheckCircle className="w-4 h-4 mr-1" />
+                          Status
+                        </Button>
+                        
+                        {/* Calling Done Button */}
+                        <Button
+                          onClick={(e) => handleCallDone(lead.id, e)}
+                          size="sm"
+                          className="flex-1 bg-purple-600 hover:bg-purple-700 text-white"
+                        >
+                          <Phone className="w-4 h-4 mr-1" />
+                          Calling Done
+                        </Button>
+                      </div>
+                      
+                      {/* Show Last Called Time if available */}
+                      {lead.last_called && (
+                        <div className="mt-2 text-xs text-gray-600 dark:text-gray-400 text-center bg-purple-50 dark:bg-purple-900/20 py-1 px-2 rounded">
+                          Last Called: {formatRelativeTime(lead.last_called)}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* View Details and Status History Links */}
+                    <div className="flex gap-2 mt-3">
+                      <button
+                        onClick={() => openLeadDetails(lead)}
+                        className="flex-1 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-center py-1 border border-blue-300 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                      >
+                        View Full Details →
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          showStatusHistory(lead.id);
+                        }}
+                        className="flex-1 text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 text-center py-1 border border-indigo-300 rounded hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
+                      >
+                        <History className="w-3 h-3 inline mr-1" />
+                        Status History
+                      </button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
       )}
 
-      {/* Call Back Scheduled Section */}
+      {/* Call Back Scheduled Section - Collapsible */}
       {scheduledLeads.length > 0 && (
         <div className="mt-6">
           <button
@@ -863,9 +899,11 @@ const TelecallerDeskMobile = () => {
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
               Call Back Scheduled ({scheduledLeads.length})
             </h2>
-            <span className="text-blue-600 dark:text-blue-400">
-              {showScheduledLeads ? '▼' : '▶'}
-            </span>
+            {showScheduledLeads ? (
+              <ChevronUp className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            ) : (
+              <ChevronDown className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            )}
           </button>
 
           {showScheduledLeads && (
