@@ -97,7 +97,8 @@ const LeadDetailsDialog = ({
   updating,
   showDeleteButton = false,
   onDelete,
-  hasUnsavedChanges = false
+  hasUnsavedChanges = false,
+  onShowStatusHistory  // New prop for showing status history
 }) => {
   if (!lead || !editedLead) return null;
 
