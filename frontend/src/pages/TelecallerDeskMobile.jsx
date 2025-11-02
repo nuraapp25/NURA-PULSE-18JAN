@@ -160,6 +160,7 @@ const TelecallerDeskMobile = () => {
   const handleTelecallerChange = (telecallerEmail) => {
     setSelectedTelecaller(telecallerEmail);
     fetchLeadsForTelecaller(telecallerEmail);
+    fetchSummary(telecallerEmail);
   };
 
   const fetchLeads = async () => {
