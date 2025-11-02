@@ -562,7 +562,15 @@ const TelecallerDeskMobile = () => {
             {isAdmin ? "Telecaller's Desk" : "My Leads"}
           </h1>
           <Button 
-            onClick={isAdmin ? () => fetchLeadsForTelecaller(selectedTelecaller) : fetchLeads} 
+            onClick={() => {
+              if (isAdmin && selectedTelecaller) {
+                fetchLeadsForTelecaller(selectedTelecaller);
+                fetchSummary(selectedTelecaller);
+              } else {
+                fetchLeads();
+                fetchSummary();
+              }
+            }} 
             variant="outline" 
             size="sm"
           >
