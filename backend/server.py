@@ -1791,7 +1791,8 @@ async def get_leads(
                 "source": 1  # Added source for filtering
             }
             # Add sort by import_date descending for better UX (newest first)
-            leads = await db.driver_leads.find(query, projection).sort("import_date", -1).limit(1000).to_list(1000)
+            # Increased limit to 50000 to handle large datasets properly
+            leads = await db.driver_leads.find(query, projection).sort("import_date", -1).limit(50000).to_list(50000)
         else:
             # For paginated requests, return full documents with index hint
             limit = min(limit, 100)
