@@ -84,6 +84,35 @@ def debug_apis():
                     if leads:
                         test_lead_id = leads[0].get('id')
                         print(f"Test lead ID: {test_lead_id}")
+                        
+                        # Test 3: Update lead status
+                        print(f"\n3. Testing PATCH /driver-onboarding/leads/{test_lead_id}")
+                        update_data = {"status": "Call back 1D"}
+                        headers_with_content = headers.copy()
+                        headers_with_content["Content-Type"] = "application/json"
+                        patch_response = requests.patch(f"{BASE_URL}/driver-onboarding/leads/{test_lead_id}", 
+                                                      json=update_data, headers=headers_with_content, timeout=30)
+                        print(f"PATCH Status: {patch_response.status_code}")
+                        print(f"PATCH Response: {patch_response.text}")
+                        
+                        if patch_response.status_code == 200:
+                            try:
+                                patch_data = patch_response.json()
+                                print(f"PATCH Response JSON: {patch_data}")
+                            except:
+                                print("PATCH Response is not JSON")
+                        
+                        # Test 4: Get updated lead
+                        print(f"\n4. Testing GET /driver-onboarding/leads/{test_lead_id}")
+                        get_response = requests.get(f"{BASE_URL}/driver-onboarding/leads/{test_lead_id}", 
+                                                  headers=headers, timeout=30)
+                        print(f"GET Status: {get_response.status_code}")
+                        if get_response.status_code == 200:
+                            lead_data = get_response.json()
+                            print(f"Lead status: {lead_data.get('status')}")
+                            print(f"Callback date: {lead_data.get('callback_date')}")
+                        else:
+                            print(f"GET Error: {get_response.text}")
                     else:
                         print("No leads in the array")
                         return
@@ -92,7 +121,7 @@ def debug_apis():
                 test_lead_id = data[0].get('id')
                 print(f"Test lead ID: {test_lead_id}")
                 
-                # Test 3: Update lead status
+                # Test 3: Update lead status (duplicate code for list case)
                 print(f"\n3. Testing PATCH /driver-onboarding/leads/{test_lead_id}")
                 update_data = {"status": "Call back 1D"}
                 headers_with_content = headers.copy()
