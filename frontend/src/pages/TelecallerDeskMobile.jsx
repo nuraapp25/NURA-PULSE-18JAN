@@ -86,6 +86,36 @@ const TelecallerDeskMobile = () => {
   // Status History Dialog state
   const [statusHistoryDialogOpen, setStatusHistoryDialogOpen] = useState(false);
   const [historyLead, setHistoryLead] = useState(null);
+  const [showScheduledLeads, setShowScheduledLeads] = useState(true); // For collapsible section
+  
+  // Separate leads into active and scheduled
+  const activeLeads = leads.filter(lead => !lead.status?.startsWith("Call back"));
+  const scheduledLeads = leads.filter(lead => lead.status?.startsWith("Call back"));
+  
+  // Group scheduled leads by callback date
+  const groupedScheduledLeads = () => {
+    const today = new Date().toISOString().split('T')[0];
+    const groups = {
+      dueToday: [],
+      upcoming: {}
+    };
+    
+    scheduledLeads.forEach(lead => {
+      if (lead.callback_date) {
+        const callbackDate = new Date(lead.callback_date).toISOString().split('T')[0];
+        if (callbackDate === today) {
+          groups.dueToday.push(lead);
+        } else {
+          if (!groups.upcoming[callbackDate]) {
+            groups.upcoming[callbackDate] = [];
+          }
+          groups.upcoming[callbackDate].push(lead);
+        }
+      }
+    });
+    
+    return groups;
+  };
 
   useEffect(() => {
     if (isAdmin) {
