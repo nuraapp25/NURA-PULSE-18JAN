@@ -4644,6 +4644,33 @@ async def get_battery_milestones(
         raise HTTPException(status_code=500, detail=f"Error analyzing battery milestones: {str(e)}")
 
 
+@api_router.post("/montra-vehicle/refresh-analytics-cache")
+async def refresh_analytics_cache(current_user: User = Depends(get_current_user)):
+    """Manually trigger analytics cache refresh (admin only)"""
+    if current_user.account_type not in ["master_admin", "admin"]:
+        raise HTTPException(status_code=403, detail="Only admins can refresh analytics cache")
+    
+    try:
+        import subprocess
+        
+        logger.info(f"Manual cache refresh triggered by {current_user.email}")
+        
+        # Run the cache computation script in background
+        subprocess.Popen(
+            ["python", "/app/backend/analytics_cache.py"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+        
+        return {
+            "success": True,
+            "message": "Analytics cache refresh started in background. This may take 1-2 minutes."
+        }
+    except Exception as e:
+        logger.error(f"Failed to trigger cache refresh: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to trigger cache refresh: {str(e)}")
+
+
 @api_router.get("/montra-vehicle/battery-audit")
 async def get_battery_charge_audit(current_user: User = Depends(get_current_user), force_refresh: bool = False):
     """
