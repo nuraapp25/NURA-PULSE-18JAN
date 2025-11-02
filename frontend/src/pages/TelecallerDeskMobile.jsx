@@ -625,7 +625,7 @@ const TelecallerDeskMobile = () => {
                 <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                   {summaryData.calls_made_today}
                 </div>
-                <div className="text-xs text-gray-600 dark:text-gray-400 font-medium">Calls Today</div>
+                <div className="text-xs text-gray-600 dark:text-gray-400 font-medium">Calls Done Today</div>
               </CardContent>
             </Card>
             
@@ -634,7 +634,7 @@ const TelecallerDeskMobile = () => {
                 <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
                   {summaryData.calls_pending}
                 </div>
-                <div className="text-xs text-gray-600 dark:text-gray-400 font-medium">Pending</div>
+                <div className="text-xs text-gray-600 dark:text-gray-400 font-medium">Calls Pending</div>
               </CardContent>
             </Card>
           </div>
