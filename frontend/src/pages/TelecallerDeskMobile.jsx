@@ -867,17 +867,24 @@ const TelecallerDeskMobile = () => {
         onDelete={() => {}}
         hasUnsavedChanges={false}
         onLeadUpdate={fetchLeads}
-        customActions={
+      />
+      
+      {/* Add Show Status History Button when details dialog is open */}
+      {detailsDialogOpen && selectedLead && (
+        <div className="fixed bottom-20 right-4 z-[60]">
           <Button
-            onClick={() => showStatusHistory(selectedLead?.id)}
-            variant="outline"
-            className="w-full mt-2"
+            onClick={() => {
+              setDetailsDialogOpen(false);
+              showStatusHistory(selectedLead.id);
+            }}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg"
+            size="lg"
           >
-            <History className="w-4 h-4 mr-2" />
+            <History className="w-5 h-5 mr-2" />
             Show Status History
           </Button>
-        }
-      />
+        </div>
+      )}
       
       {/* Status History Dialog */}
       <Dialog open={statusHistoryDialogOpen} onOpenChange={setStatusHistoryDialogOpen}>
