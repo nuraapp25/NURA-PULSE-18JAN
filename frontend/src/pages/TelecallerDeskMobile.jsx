@@ -725,117 +725,304 @@ const TelecallerDeskMobile = () => {
         </div>
       )}
 
-      {/* Leads List */}
-      <div className="space-y-3">
-        {leads.map((lead, index) => (
-          <Card
-            key={lead.id}
-            className="relative overflow-hidden border-2 hover:shadow-md transition-shadow"
-          >
-            {/* High Priority Tag */}
-            {isHighPriority(lead) && (
-              <div className="absolute top-0 right-0 bg-red-500 text-white text-xs font-semibold px-3 py-1 rounded-bl-lg">
-                High Priority
-              </div>
-            )}
-
-            <CardContent className="p-4">
-              {/* Lead Info */}
-              <div className="mb-3">
-                <div className="flex items-start justify-between mb-2">
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-white pr-20">
-                    {index + 1}. {lead.name}
-                  </h3>
-                </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                  {lead.phone_number}
-                </p>
-                {isNewLead(lead) && (
-                  <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-0">
-                    New
-                  </Badge>
-                )}
-              </div>
-
-              {/* Action Buttons */}
-              <div className="space-y-2">
-                {/* Current Status Badge */}
-                <div className="flex items-center justify-between py-2 px-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <span className="text-xs text-gray-600 dark:text-gray-400">Current Status:</span>
-                  <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-                    {lead.status || "New"}
-                  </Badge>
-                </div>
-                
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    onClick={() => handleCall(lead)}
-                    className="flex-1 min-w-[100px] bg-green-500 hover:bg-green-600 text-white"
-                    size="sm"
-                  >
-                    <Phone className="w-4 h-4 mr-1" />
-                    Call
-                  </Button>
-                  <Button
-                    onClick={() => handleWhatsApp(lead)}
-                    className="flex-1 min-w-[100px] bg-green-500 hover:bg-green-600 text-white"
-                    size="sm"
-                  >
-                    <MessageCircle className="w-4 h-4 mr-1" />
-                    WhatsApp
-                  </Button>
-                  <Button
-                    onClick={() => openStatusDialog(lead)}
-                    variant="outline"
-                    className="flex-1 min-w-[100px] border-blue-500 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                    size="sm"
-                  >
-                    <CheckCircle className="w-4 h-4 mr-1" />
-                    Status
-                  </Button>
-                  
-                  {/* Calling Done Button */}
-                  <Button
-                    onClick={(e) => handleCallDone(lead.id, e)}
-                    size="sm"
-                    className="flex-1 bg-purple-600 hover:bg-purple-700 text-white"
-                  >
-                    <Phone className="w-4 h-4 mr-1" />
-                    Calling Done
-                  </Button>
-                </div>
-                
-                {/* Show Last Called Time if available */}
-                {lead.last_called && (
-                  <div className="mt-2 text-xs text-gray-600 dark:text-gray-400 text-center bg-purple-50 dark:bg-purple-900/20 py-1 px-2 rounded">
-                    Last Called: {formatRelativeTime(lead.last_called)}
+      {/* Active Leads List */}
+      {activeLeads.length > 0 && (
+        <>
+          <div className="mb-2">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Active Leads ({activeLeads.length})
+            </h2>
+          </div>
+          <div className="space-y-3 mb-6">
+            {activeLeads.map((lead, index) => (
+              <Card
+                key={lead.id}
+                className="relative overflow-hidden border-2 hover:shadow-md transition-shadow"
+              >
+                {/* High Priority Tag */}
+                {isHighPriority(lead) && (
+                  <div className="absolute top-0 right-0 bg-red-500 text-white text-xs font-semibold px-3 py-1 rounded-bl-lg">
+                    High Priority
                   </div>
                 )}
-              </div>
 
-              {/* View Details and Status History Links */}
-              <div className="flex gap-2 mt-3">
-                <button
-                  onClick={() => openLeadDetails(lead)}
-                  className="flex-1 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-center py-1 border border-blue-300 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                >
-                  View Full Details →
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    showStatusHistory(lead.id);
-                  }}
-                  className="flex-1 text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 text-center py-1 border border-indigo-300 rounded hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
-                >
-                  <History className="w-3 h-3 inline mr-1" />
-                  Status History
-                </button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                <CardContent className="p-4">
+                  {/* Lead Info */}
+                  <div className="mb-3">
+                    <div className="flex items-start justify-between mb-2">
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white pr-20">
+                        {index + 1}. {lead.name}
+                      </h3>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                      {lead.phone_number}
+                    </p>
+                    {isNewLead(lead) && (
+                      <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-0">
+                        New
+                      </Badge>
+                    )}
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="space-y-2">
+                    {/* Current Status Badge */}
+                    <div className="flex items-center justify-between py-2 px-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                      <span className="text-xs text-gray-600 dark:text-gray-400">Current Status:</span>
+                      <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                        {lead.status || "New"}
+                      </Badge>
+                    </div>
+                    
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        onClick={() => handleCall(lead)}
+                        className="flex-1 min-w-[100px] bg-green-500 hover:bg-green-600 text-white"
+                        size="sm"
+                      >
+                        <Phone className="w-4 h-4 mr-1" />
+                        Call
+                      </Button>
+                      <Button
+                        onClick={() => handleWhatsApp(lead)}
+                        className="flex-1 min-w-[100px] bg-green-500 hover:bg-green-600 text-white"
+                        size="sm"
+                      >
+                        <MessageCircle className="w-4 h-4 mr-1" />
+                        WhatsApp
+                      </Button>
+                      <Button
+                        onClick={() => openStatusDialog(lead)}
+                        variant="outline"
+                        className="flex-1 min-w-[100px] border-blue-500 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                        size="sm"
+                      >
+                        <CheckCircle className="w-4 h-4 mr-1" />
+                        Status
+                      </Button>
+                      
+                      {/* Calling Done Button */}
+                      <Button
+                        onClick={(e) => handleCallDone(lead.id, e)}
+                        size="sm"
+                        className="flex-1 bg-purple-600 hover:bg-purple-700 text-white"
+                      >
+                        <Phone className="w-4 h-4 mr-1" />
+                        Calling Done
+                      </Button>
+                    </div>
+                    
+                    {/* Show Last Called Time if available */}
+                    {lead.last_called && (
+                      <div className="mt-2 text-xs text-gray-600 dark:text-gray-400 text-center bg-purple-50 dark:bg-purple-900/20 py-1 px-2 rounded">
+                        Last Called: {formatRelativeTime(lead.last_called)}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* View Details and Status History Links */}
+                  <div className="flex gap-2 mt-3">
+                    <button
+                      onClick={() => openLeadDetails(lead)}
+                      className="flex-1 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-center py-1 border border-blue-300 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                    >
+                      View Full Details →
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        showStatusHistory(lead.id);
+                      }}
+                      className="flex-1 text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 text-center py-1 border border-indigo-300 rounded hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
+                    >
+                      <History className="w-3 h-3 inline mr-1" />
+                      Status History
+                    </button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* Call Back Scheduled Section */}
+      {scheduledLeads.length > 0 && (
+        <div className="mt-6">
+          <button
+            onClick={() => setShowScheduledLeads(!showScheduledLeads)}
+            className="w-full flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-lg mb-3"
+          >
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Call Back Scheduled ({scheduledLeads.length})
+            </h2>
+            <span className="text-blue-600 dark:text-blue-400">
+              {showScheduledLeads ? '▼' : '▶'}
+            </span>
+          </button>
+
+          {showScheduledLeads && (
+            <div className="space-y-4">
+              {/* Due Today Section */}
+              {(() => {
+                const groups = groupedScheduledLeads();
+                return (
+                  <>
+                    {groups.dueToday.length > 0 && (
+                      <div className="mb-4">
+                        <div className="mb-2 px-2 py-1 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded">
+                          <h3 className="text-sm font-semibold text-red-700 dark:text-red-400">
+                            Due Today ({groups.dueToday.length})
+                          </h3>
+                        </div>
+                        <div className="space-y-3">
+                          {groups.dueToday.map((lead, index) => (
+                            <Card
+                              key={lead.id}
+                              className="relative overflow-hidden border-2 border-red-200 dark:border-red-800"
+                            >
+                              <div className="absolute top-0 right-0 bg-red-500 text-white text-xs font-semibold px-3 py-1 rounded-bl-lg">
+                                Due Today
+                              </div>
+
+                              <CardContent className="p-4">
+                                <div className="mb-3">
+                                  <h3 className="text-lg font-bold text-gray-900 dark:text-white pr-20">
+                                    {lead.name}
+                                  </h3>
+                                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                                    {lead.phone_number}
+                                  </p>
+                                  <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                                    {lead.status}
+                                  </Badge>
+                                </div>
+
+                                <div className="space-y-2">
+                                  <div className="flex flex-wrap gap-2">
+                                    <Button
+                                      onClick={() => handleCall(lead)}
+                                      className="flex-1 bg-green-500 hover:bg-green-600 text-white"
+                                      size="sm"
+                                    >
+                                      <Phone className="w-4 h-4 mr-1" />
+                                      Call
+                                    </Button>
+                                    <Button
+                                      onClick={() => openStatusDialog(lead)}
+                                      variant="outline"
+                                      className="flex-1 border-blue-500 text-blue-600"
+                                      size="sm"
+                                    >
+                                      <CheckCircle className="w-4 h-4 mr-1" />
+                                      Status
+                                    </Button>
+                                  </div>
+
+                                  {lead.last_called && (
+                                    <div className="text-xs text-gray-600 dark:text-gray-400 text-center bg-purple-50 dark:bg-purple-900/20 py-1 px-2 rounded">
+                                      Last Called: {formatRelativeTime(lead.last_called)}
+                                    </div>
+                                  )}
+                                </div>
+
+                                <div className="flex gap-2 mt-3">
+                                  <button
+                                    onClick={() => openLeadDetails(lead)}
+                                    className="flex-1 text-sm text-blue-600 hover:text-blue-800 text-center py-1 border border-blue-300 rounded"
+                                  >
+                                    View Details →
+                                  </button>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Upcoming Callbacks Grouped by Date */}
+                    {Object.keys(groups.upcoming).length > 0 && (
+                      Object.entries(groups.upcoming)
+                        .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
+                        .map(([date, leadsForDate]) => (
+                          <div key={date} className="mb-4">
+                            <div className="mb-2 px-2 py-1 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded">
+                              <h3 className="text-sm font-semibold text-blue-700 dark:text-blue-400">
+                                {new Date(date).toLocaleDateString('en-US', {
+                                  weekday: 'short',
+                                  month: 'short',
+                                  day: 'numeric',
+                                  year: 'numeric'
+                                })} ({leadsForDate.length})
+                              </h3>
+                            </div>
+                            <div className="space-y-3">
+                              {leadsForDate.map((lead) => (
+                                <Card
+                                  key={lead.id}
+                                  className="relative overflow-hidden border-2"
+                                >
+                                  <CardContent className="p-4">
+                                    <div className="mb-3">
+                                      <h3 className="text-base font-bold text-gray-900 dark:text-white">
+                                        {lead.name}
+                                      </h3>
+                                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                                        {lead.phone_number}
+                                      </p>
+                                      <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                                        {lead.status}
+                                      </Badge>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                      <div className="flex gap-2">
+                                        <Button
+                                          onClick={() => handleCall(lead)}
+                                          className="flex-1 bg-green-500 hover:bg-green-600 text-white"
+                                          size="sm"
+                                        >
+                                          <Phone className="w-4 h-4 mr-1" />
+                                          Call
+                                        </Button>
+                                        <Button
+                                          onClick={() => openStatusDialog(lead)}
+                                          variant="outline"
+                                          className="flex-1 border-blue-500 text-blue-600"
+                                          size="sm"
+                                        >
+                                          Status
+                                        </Button>
+                                      </div>
+
+                                      {lead.last_called && (
+                                        <div className="text-xs text-gray-600 dark:text-gray-400 text-center bg-purple-50 dark:bg-purple-900/20 py-1 px-2 rounded">
+                                          Last Called: {formatRelativeTime(lead.last_called)}
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    <button
+                                      onClick={() => openLeadDetails(lead)}
+                                      className="w-full mt-3 text-sm text-blue-600 hover:text-blue-800 text-center py-1 border border-blue-300 rounded"
+                                    >
+                                      View Details →
+                                    </button>
+                                  </CardContent>
+                                </Card>
+                              ))}
+                            </div>
+                          </div>
+                        ))
+                    )}
+                  </>
+                );
+              })()}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Update Status Dialog */}
       <Dialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
