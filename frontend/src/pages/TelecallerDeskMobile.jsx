@@ -387,15 +387,22 @@ const TelecallerDeskMobile = () => {
       
       toast.success("Lead details updated successfully!");
       
-      // Update local state with fresh data from response
-      const updatedLead = response.data.lead;
+      // Refresh leads and summary to reflect changes
+      if (isAdmin && selectedTelecaller) {
+        await fetchLeadsForTelecaller(selectedTelecaller);
+        await fetchSummary(selectedTelecaller);
+      } else {
+        await fetchLeads();
+        await fetchSummary();
+      }
       
-      // Update the leads array immediately with the fresh data
-      setLeads(prevLeads => 
-        prevLeads.map(lead => 
-          lead.id === updatedLead.id ? updatedLead : lead
-        )
+      // Fetch fresh lead data after save
+      const freshResponse = await axios.get(
+        `${API}/driver-onboarding/leads/${editedLead.id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
       );
+      
+      const updatedLead = freshResponse.data;
       
       // Update selected lead and edited lead with fresh data
       setSelectedLead(updatedLead);
