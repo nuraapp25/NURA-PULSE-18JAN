@@ -248,7 +248,8 @@ class TelecallerDeskTester:
         
         if response and response.status_code == 200:
             try:
-                leads_before = response.json()
+                data = response.json()
+                leads_before = data.get("leads", []) if isinstance(data, dict) else data
                 
                 # Find leads without last_called (should be at top)
                 uncalled_leads = [lead for lead in leads_before if not lead.get("last_called")]
