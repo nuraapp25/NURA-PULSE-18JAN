@@ -760,13 +760,25 @@ const TelecallerDeskMobile = () => {
                 )}
               </div>
 
-              {/* View Details Link */}
-              <button
-                onClick={() => openLeadDetails(lead)}
-                className="w-full mt-3 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-center"
-              >
-                View Full Details →
-              </button>
+              {/* View Details and Status History Links */}
+              <div className="flex gap-2 mt-3">
+                <button
+                  onClick={() => openLeadDetails(lead)}
+                  className="flex-1 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-center py-1 border border-blue-300 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                >
+                  View Full Details →
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    showStatusHistory(lead.id);
+                  }}
+                  className="flex-1 text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 text-center py-1 border border-indigo-300 rounded hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
+                >
+                  <History className="w-3 h-3 inline mr-1" />
+                  Status History
+                </button>
+              </div>
             </CardContent>
           </Card>
         ))}
