@@ -1109,6 +1109,7 @@ const PaymentReconciliation = () => {
                       </td>
                       <td className="py-3 px-2 text-sm">{row.driver}</td>
                       <td className="py-3 px-2 text-sm">{row.vehicle}</td>
+                      <td className="py-3 px-2 text-sm font-medium text-purple-600 dark:text-purple-400">{row.platform || "N/A"}</td>
                       <td className="py-3 px-2 text-sm">{row.date}</td>
                       <td className="py-3 px-2 text-sm">{row.time}</td>
                       <td className="py-3 px-2 text-sm font-medium text-blue-600 dark:text-blue-400">{row.description}</td>
