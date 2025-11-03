@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "CRITICAL PRODUCTION ISSUES: 1) Unable to delete campaign folders. 2) Batch QR codes created with multi URLs (device specific) are not working - showing 'QR code not found'."
+user_problem_statement: "URGENT PRODUCTION ISSUE INVESTIGATION: 1) Campaign Folder Cannot Be Deleted (5 QR codes, 0 scans, created 28/10/2025). 2) Scan Data Not Showing (0 Total Scans) - QR codes work correctly but scan analytics show 0 scans."
 
 backend:
   - task: "QR Code Batch Field Name Mismatch Fix"
