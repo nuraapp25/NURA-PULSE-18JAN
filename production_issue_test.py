@@ -343,7 +343,8 @@ class ProductionIssueTester:
                                 
                                 if updated_response and updated_response.status_code == 200:
                                     try:
-                                        updated_qr_codes = updated_response.json()
+                                        updated_data = updated_response.json()
+                                        updated_qr_codes = updated_data.get('qr_codes', [])
                                         updated_qr = next((qr for qr in updated_qr_codes if qr.get('id') == qr_id), None)
                                         
                                         if updated_qr:
