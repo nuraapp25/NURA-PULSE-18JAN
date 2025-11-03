@@ -291,7 +291,7 @@ class QRCodeFlowTester:
                                 "User-Agent": "Mozilla/5.0 (Linux; Android 10; SM-G973F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.120 Mobile Safari/537.36"
                             }
                             
-                            scan_url = f"https://leadmanager-15.preview.emergentagent.com/qr/{unique_code}"
+                            scan_url = f"https://leadmanager-15.preview.emergentagent.com/api/qr/{unique_code}"
                             
                             try:
                                 android_response = requests.get(scan_url, headers=android_headers, 
