@@ -1617,7 +1617,7 @@ const DriverOnboardingPage = () => {
       formData.append('file', bulkImportFile);
       formData.append('column_mapping', JSON.stringify(columnMapping));
       
-      toast.info("📥 Starting bulk import... Creating backup and processing data...");
+      toast.info("📥 Starting import... Creating backup and checking for duplicates...");
       
       const response = await axios.post(
         `${API}/driver-onboarding/bulk-import`,
@@ -1633,17 +1633,17 @@ const DriverOnboardingPage = () => {
       
       const { 
         backup_created, 
-        deleted_count, 
-        inserted_count, 
+        new_leads_count,
+        duplicates_skipped,
         total_leads_now,
         telecaller_assignments 
       } = response.data;
       
       // Show detailed success message
-      let successMessage = `✅ Bulk import completed!\n\n` +
+      let successMessage = `✅ Import completed!\n\n` +
         `Backup: ${backup_created || 'N/A'}\n` +
-        `Deleted: ${deleted_count} leads\n` +
-        `Imported: ${inserted_count} leads\n` +
+        `New leads added: ${new_leads_count}\n` +
+        `Duplicates skipped: ${duplicates_skipped}\n` +
         `Total leads now: ${total_leads_now}`;
       
       if (telecaller_assignments && telecaller_assignments.leads_assigned > 0) {
