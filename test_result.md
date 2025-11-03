@@ -188,14 +188,14 @@ metadata:
 
 test_plan:
   current_focus:
-    - "QR Code Dynamic URL Generation Fix"
+    - "QR Code Campaign Delete Fix - Scan Cleanup"
   stuck_tasks: []
   test_all: false
   test_priority: "critical_first"
 
 agent_communication:
     - agent: "main"
-      message: "PRODUCTION CRITICAL FIX IMPLEMENTED: QR Code Dynamic URL Generation. Fixed QR codes showing 'not found' errors in production. Root cause: QR code tracking URLs were embedding hardcoded preview environment URLs. Solution: Made backend URL dynamic by extracting host and scheme from Request object instead of using environment variables. Updated 4 endpoints: /qr-codes/create (main), /qr-codes/create-batch, /qr-codes/create (single), /admin/files/{file_id}/share-link. QR codes created in production will now have correct production URLs automatically. Ready for backend testing to verify tracking URLs are environment-specific and QR scanning works in production."
+      message: "PRODUCTION CRITICAL FIXES COMPLETE: 1) QR Code Dynamic URL Generation - TESTED & WORKING: QR codes now use environment-specific URLs (100% test success). QR codes created in production will work when scanned. 2) QR Code Campaign Delete Fix - NEW FIX: Campaign deletion failing in production because scans weren't being deleted properly. Backend was using wrong field (campaign_name) to delete scans, but QRScan model only has qr_code_id. Fixed by extracting QR code IDs first, then deleting scans with $in query. This was causing campaigns to remain even after delete attempts. Ready for backend testing to verify campaign deletion now works correctly."
     - agent: "testing"
       message: "✅ QR CODE DYNAMIC URL GENERATION TESTING COMPLETE: Successfully verified the production critical fix with 100% test success rate (4/4 tests passed). CRITICAL VERIFICATION: 1) Single QR creation (POST /api/qr-codes/create) generates dynamic URLs correctly - tested with real data and confirmed QR URLs use current environment host instead of hardcoded preview URLs. 2) Batch QR creation (POST /api/qr-codes/create-batch) generates dynamic tracking URLs for all QR codes in batch. 3) URL format verification confirms all generated URLs match expected pattern {scheme}://{host}/qr/{unique_code}?to=... 4) Backend logging verification shows 'Creating QR code with backend URL:' messages confirming dynamic URL extraction working. PRODUCTION ISSUE RESOLVED: QR codes created in production will now have production URLs and work correctly when scanned. The fix successfully extracts host from request headers and generates environment-specific URLs dynamically."
 
