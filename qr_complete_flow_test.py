@@ -188,7 +188,7 @@ class QRCodeFlowTester:
                             # Step 3: Verify scan was recorded in analytics
                             print("\n--- Step 3: Verifying Scan Analytics ---")
                             
-                            analytics_response = self.make_request("GET", f"/qr-codes/analytics/{qr_id}")
+                            analytics_response = self.make_request("GET", f"/qr-codes/{qr_id}/analytics")
                             
                             if analytics_response and analytics_response.status_code == 200:
                                 try:
@@ -373,7 +373,7 @@ class QRCodeFlowTester:
                             # Step 5: Verify all scans were recorded with correct platform detection
                             print("\n--- Step 5: Verifying Platform Detection in Analytics ---")
                             
-                            analytics_response = self.make_request("GET", f"/qr-codes/analytics/{qr_id}")
+                            analytics_response = self.make_request("GET", f"/qr-codes/{qr_id}/analytics")
                             
                             if analytics_response and analytics_response.status_code == 200:
                                 try:
