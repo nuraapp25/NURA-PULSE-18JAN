@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Production Critical Issues: 1) Battery Consumption Analysis failing to fetch data with error 'Failed to fetch battery data' (worked in preview). 2) Battery Audits (Morning Charge & Battery Charge) only showing last 3 days instead of 30 days. 3) Need background processing system for faster data display - daily pre-computation and caching."
+user_problem_statement: "Production Critical Issue: QR codes created in QR Code Manager are not working when scanned in production. They show 'QR code not found' error because QR codes are embedding preview environment URLs instead of production URLs. The QR code tracking URLs must be dynamic based on the deployment environment."
 
 backend:
   - task: "Analytics Caching System with Background Processing"
