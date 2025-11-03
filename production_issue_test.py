@@ -203,7 +203,7 @@ class ProductionIssueTester:
             # Check scan counts for each QR code
             total_scans = 0
             for qr in qr_codes:
-                scan_count = qr.get('scan_count', 0)
+                scan_count = qr.get('total_scans', 0)
                 total_scans += scan_count
                 print(f"   QR Code {qr.get('id', 'Unknown')}: {scan_count} scans")
             
