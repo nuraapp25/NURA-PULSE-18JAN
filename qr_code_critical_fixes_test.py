@@ -450,7 +450,7 @@ class QRCodeCriticalFixesTester:
         print("\n--- Verifying QR codes and scans are properly deleted ---")
         
         # Try to access the deleted campaign
-        response = self.make_request("GET", f"/qr-codes/campaigns/{published_campaign_name}")
+        response = self.make_request("GET", f"/qr-codes/campaign/{published_campaign_name}")
         
         if response and response.status_code == 404:
             self.log_test("Campaign Deletion Verification", True, 
