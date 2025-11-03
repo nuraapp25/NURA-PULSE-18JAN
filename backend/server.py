@@ -10120,6 +10120,23 @@ async def get_app_settings(
         raise HTTPException(status_code=500, detail=f"Failed to get settings: {str(e)}")
 
 
+@api_router.get("/maintenance-status")
+async def get_maintenance_status():
+    """
+    Public endpoint to check maintenance mode (no authentication required)
+    """
+    try:
+        settings_collection = db['app_settings']
+        settings = await settings_collection.find_one({'_id': 'global_settings'})
+        
+        return {
+            "maintenance_mode": settings.get('maintenance_mode', False) if settings else False
+        }
+    except Exception as e:
+        logger.error(f"Failed to check maintenance status: {str(e)}")
+        return {"maintenance_mode": False}
+
+
 @api_router.put("/app-settings")
 async def update_app_settings(
     payment_extractor_enabled: bool = None,
