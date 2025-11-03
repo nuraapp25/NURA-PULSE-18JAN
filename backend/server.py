@@ -11032,10 +11032,10 @@ async def scan_qr_code(
             logger.error(f"Empty redirect URL for QR {short_code}, QR Data: {qr_code}")
             raise HTTPException(status_code=500, detail=f"QR code configuration error: No valid landing page URL configured for {platform}")
         
-        # Redirect
+        # Redirect with proper status code (307 Temporary Redirect)
         from fastapi.responses import RedirectResponse
-        logger.info(f"Redirecting to: {redirect_url}")
-        return RedirectResponse(url=redirect_url)
+        logger.info(f"QR scan recorded: {short_code} -> {platform}. Redirecting to: {redirect_url}")
+        return RedirectResponse(url=redirect_url, status_code=307)
         
     except HTTPException:
         raise
