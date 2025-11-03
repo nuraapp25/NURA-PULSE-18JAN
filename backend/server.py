@@ -1328,17 +1328,19 @@ async def bulk_export_leads(current_user: User = Depends(get_current_user)):
 @api_router.post("/driver-onboarding/bulk-import")
 async def bulk_import_leads(
     file: UploadFile = File(...),
+    column_mapping: str = Form(None),
     current_user: User = Depends(get_current_user)
 ):
     """
-    Import Excel file and OVERWRITE all existing leads
+    Import Excel file and OVERWRITE all existing leads with column mapping support
     Automatically creates backup before import
-    Processes telecaller assignments from 'assigned_telecaller' column (Column V)
+    Supports flexible column mapping from user's Excel file
     """
     try:
         import pandas as pd
         from datetime import datetime
         import shutil
+        import json
         
         logger.info(f"Starting bulk import for user {current_user.email}")
         
@@ -1346,11 +1348,21 @@ async def bulk_import_leads(
         if not file.filename.endswith(('.xlsx', '.xls')):
             raise HTTPException(status_code=400, detail="File must be Excel format (.xlsx or .xls)")
         
+        # Parse column mapping if provided
+        mapping = None
+        if column_mapping:
+            try:
+                mapping = json.loads(column_mapping)
+                logger.info(f"Using column mapping: {mapping}")
+            except json.JSONDecodeError:
+                raise HTTPException(status_code=400, detail="Invalid column mapping format")
+        
         # Step 1: Create backup of current leads before import
         logger.info("Creating backup of current leads...")
         leads_collection = db['driver_leads']
         current_leads = await leads_collection.find({}, {"_id": 0}).to_list(length=None)
         
+        backup_filename = None
         if current_leads:
             # Save backup to library
             backup_df = pd.DataFrame(current_leads)
@@ -1365,17 +1377,36 @@ async def bulk_import_leads(
         
         # Step 2: Read uploaded Excel file
         contents = await file.read()
-        df = pd.read_excel(io.BytesIO(contents))
+        df_raw = pd.read_excel(io.BytesIO(contents))
         
-        total_rows = len(df)
+        total_rows = len(df_raw)
         logger.info(f"Read {total_rows} rows from uploaded file")
         
         if total_rows == 0:
             raise HTTPException(status_code=400, detail="Uploaded file is empty")
         
-        # Step 3: Validate required columns
-        if 'id' not in df.columns:
-            raise HTTPException(status_code=400, detail="Excel file must contain 'id' column for lead identification")
+        # Step 3: Apply column mapping if provided
+        if mapping:
+            logger.info("Applying column mapping...")
+            df = pd.DataFrame()
+            
+            # Map each field to its corresponding column
+            for field, col_index in mapping.items():
+                if col_index is not None and col_index < len(df_raw.columns):
+                    df[field] = df_raw.iloc[:, col_index]
+            
+            # Generate IDs if not provided
+            if 'id' not in df.columns or df['id'].isna().all():
+                import uuid
+                df['id'] = [str(uuid.uuid4()) for _ in range(len(df))]
+                logger.info("Generated UUIDs for leads")
+        else:
+            # Use original dataframe if no mapping
+            df = df_raw
+            
+            # Validate required columns for backward compatibility
+            if 'id' not in df.columns:
+                raise HTTPException(status_code=400, detail="Excel file must contain 'id' column or provide column mapping")
         
         # Step 4: Process telecaller assignments from Column V (assigned_telecaller)
         telecallers_collection = db['telecallers']
