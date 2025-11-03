@@ -10805,6 +10805,17 @@ async def create_batch_qr_codes(
         logger.error(f"Failed to create batch QR codes: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to create batch QR codes: {str(e)}")
 
+@api_router.get("/qr/{short_code}")
+async def scan_qr_code_short(
+    short_code: str,
+    request: Request
+):
+    """Short URL handler for QR code scans - redirects to main scan endpoint"""
+    # This endpoint exists because QR codes use /qr/{code} format
+    # Delegate to the main scan handler
+    return await scan_qr_code(short_code, request)
+
+
 @api_router.get("/qr-codes/scan/{short_code}")
 async def scan_qr_code(
     short_code: str,
@@ -10813,8 +10824,11 @@ async def scan_qr_code(
     """Handle QR code scan and redirect based on device"""
     from fastapi.responses import RedirectResponse
     try:
-        # Get QR code from database
+        # Get QR code from database - try both field names for backwards compatibility
         qr_code = await db.qr_codes.find_one({"short_code": short_code})
+        if not qr_code:
+            # Try the alternate field name used in creation
+            qr_code = await db.qr_codes.find_one({"unique_short_code": short_code})
         
         if not qr_code:
             raise HTTPException(status_code=404, detail="QR code not found")
