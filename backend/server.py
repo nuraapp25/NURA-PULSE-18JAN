@@ -7054,6 +7054,7 @@ async def get_expense_receipt(
 @api_router.post("/qr-codes/create")
 async def create_qr_code(
     qr_data: QRCodeCreate,
+    request: Request,
     current_user: User = Depends(get_current_user)
 ):
     """Create QR code(s) - Supports bulk generation and UTM tracking - Master Admin only"""
@@ -7066,8 +7067,13 @@ async def create_qr_code(
         from io import BytesIO
         from urllib.parse import urlencode
         
-        # Get backend URL from environment
-        backend_url = os.environ.get('BACKEND_URL', 'https://leadmanager-15.preview.emergentagent.com/api')
+        # Get backend URL dynamically from request to ensure correct environment
+        # This ensures QR codes created in production use production URLs
+        host = request.headers.get('host', 'localhost:8001')
+        scheme = 'https' if 'https' in str(request.url) or request.headers.get('x-forwarded-proto') == 'https' else 'http'
+        backend_url = f"{scheme}://{host}"
+        
+        logger.info(f"Creating QR code with backend URL: {backend_url}")
         
         # Determine bulk count (1 to 100)
         bulk_count = min(max(qr_data.bulk_count or 1, 1), 100)
