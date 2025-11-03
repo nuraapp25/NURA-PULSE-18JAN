@@ -105,17 +105,17 @@
 user_problem_statement: "Production Critical Issue: QR codes created in QR Code Manager are not working when scanned in production. They show 'QR code not found' error because QR codes are embedding preview environment URLs instead of production URLs. The QR code tracking URLs must be dynamic based on the deployment environment."
 
 backend:
-  - task: "Analytics Caching System with Background Processing"
-    implemented: true
+  - task: "QR Code Dynamic URL Generation Fix"
+    implemented: false
     working: "NA"
-    file: "/app/backend/analytics_cache.py"
+    file: "/app/backend/server.py"
     stuck_count: 0
     priority: "critical"
     needs_retesting: true
     status_history:
         - working: "NA"
           agent: "main"
-          comment: "PRODUCTION OPTIMIZATION: Created comprehensive analytics caching system. New file analytics_cache.py with background jobs for: 1) Battery Audit pre-computation, 2) Morning Charge Audit pre-computation. Jobs run daily at 2 AM via cron. Cache valid for 24 hours, auto-fallback to live computation if stale. Reduces load time from 10-30s to <1s. Includes manual refresh API endpoint for admins."
+          comment: "PRODUCTION CRITICAL FIX: QR codes embedding wrong URLs. ROOT CAUSE: QR code creation endpoint uses BACKEND_URL environment variable which has preview URL hardcoded as fallback. When QR codes created in production, they embed preview URLs causing 'QR code not found' errors. SOLUTION: Make QR code tracking URLs dynamic by using Request object to get actual deployment host. This ensures QR codes created in production have production URLs, and preview QR codes have preview URLs. Will update create_qr_code endpoint to use request.url.scheme and request.headers.get('host') to construct dynamic backend URL instead of hardcoded environment variable."
   
   - task: "Battery Audit Endpoint - 30 Day Filter & Cache Integration"
     implemented: true
