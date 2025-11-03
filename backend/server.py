@@ -10702,10 +10702,18 @@ async def create_qr_code(
 @api_router.post("/qr-codes/create-batch")
 async def create_batch_qr_codes(
     batch_data: QRCodeBatchCreate,
+    request: Request,
     current_user: User = Depends(get_current_user)
 ):
     """Create multiple QR codes in a batch"""
     try:
+        # Get backend URL dynamically from request to ensure correct environment
+        host = request.headers.get('host', 'localhost:8001')
+        scheme = 'https' if 'https' in str(request.url) or request.headers.get('x-forwarded-proto') == 'https' else 'http'
+        backend_url = f"{scheme}://{host}"
+        
+        logger.info(f"Creating batch QR codes with backend URL: {backend_url}")
+        
         qr_codes = []
         qr_names = batch_data.qr_names or [f"QR{i+1}" for i in range(batch_data.qr_count)]
         
@@ -10716,8 +10724,7 @@ async def create_batch_qr_codes(
             # Generate short code for tracking
             short_code = generate_short_code()
             
-            # Create tracking URL with correct backend URL
-            backend_url = os.environ.get('BACKEND_URL') or os.environ.get('REACT_APP_BACKEND_URL', 'https://leadmanager-15.preview.emergentagent.com/api')
+            # Create tracking URL with dynamic backend URL
             tracking_url = f"{backend_url}/qr-codes/scan/{short_code}"
             
             # Generate QR code image with color parameters
