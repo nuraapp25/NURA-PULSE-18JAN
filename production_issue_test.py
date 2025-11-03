@@ -134,7 +134,8 @@ class ProductionIssueTester:
         
         if response and response.status_code == 200:
             try:
-                qr_codes = response.json()
+                response_data = response.json()
+                qr_codes = response_data.get('qr_codes', [])
                 
                 # Group QR codes by campaign
                 campaigns = {}
