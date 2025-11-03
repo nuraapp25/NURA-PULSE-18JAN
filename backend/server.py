@@ -4036,7 +4036,11 @@ async def download_file(file_id: str, current_user: User = Depends(get_current_u
 
 
 @api_router.get("/admin/files/{file_id}/share-link")
-async def get_share_link(file_id: str, current_user: User = Depends(get_current_user)):
+async def get_share_link(
+    file_id: str,
+    request: Request,
+    current_user: User = Depends(get_current_user)
+):
     """Get shareable download link for a file"""
     try:
         file_metadata = await db.admin_files.find_one({"id": file_id}, {"_id": 0})
@@ -4044,8 +4048,10 @@ async def get_share_link(file_id: str, current_user: User = Depends(get_current_
         if not file_metadata:
             raise HTTPException(status_code=404, detail="File not found")
         
-        # Get backend URL from environment
-        backend_url = os.environ.get('BACKEND_URL', 'https://leadmanager-15.preview.emergentagent.com')
+        # Get backend URL dynamically from request
+        host = request.headers.get('host', 'localhost:8001')
+        scheme = 'https' if 'https' in str(request.url) or request.headers.get('x-forwarded-proto') == 'https' else 'http'
+        backend_url = f"{scheme}://{host}"
         
         share_link = f"{backend_url}/api/admin/files/{file_id}/download"
         
