@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Production Critical Issue: Bulk import failing with error 'NoneType object has no attribute strip' when uploading Excel file with empty phone number cells in Driver Onboarding page."
+user_problem_statement: "CRITICAL PRODUCTION ISSUE: All created QR codes are not working. They are not opening links when scanned from phone and scan data is not being recorded in the app. User has lost all working codes."
 
 backend:
   - task: "Bulk Import Error - Empty Phone Number Handling"
