@@ -454,7 +454,7 @@ class QRCodeFlowTester:
                 analytics_data = response.json()
                 if analytics_data.get("success"):
                     total_scans = analytics_data.get("total_scans", 0)
-                    qr_codes_count = analytics_data.get("qr_codes_count", 0)
+                    qr_codes_count = analytics_data.get("total_qr_codes", 0)
                     
                     self.log_test("Campaign Analytics - Basic Data", True, 
                                 f"Campaign analytics retrieved: {total_scans} total scans, {qr_codes_count} QR codes")
