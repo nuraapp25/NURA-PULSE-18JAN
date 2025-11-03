@@ -10676,8 +10676,8 @@ async def create_qr_code(
         # Generate short code for tracking
         short_code = generate_short_code()
         
-        # Create tracking URL with dynamic backend URL
-        tracking_url = f"{backend_url}/qr-codes/scan/{short_code}"
+        # Create tracking URL with dynamic backend URL - Must include /api prefix
+        tracking_url = f"{backend_url}/api/qr/{short_code}"
         
         # Generate QR code image with color parameters
         foreground_color = qr_data.qr_foreground_color if qr_data.use_color_qr else "black"
