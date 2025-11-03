@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Production Critical Issue: QR codes created in QR Code Manager are not working when scanned in production. They show 'QR code not found' error because QR codes are embedding preview environment URLs instead of production URLs. The QR code tracking URLs must be dynamic based on the deployment environment."
+user_problem_statement: "Production Critical Issue: Bulk import failing with error 'NoneType object has no attribute strip' when uploading Excel file with empty phone number cells in Driver Onboarding page."
 
 backend:
   - task: "QR Code Dynamic URL Generation Fix"
