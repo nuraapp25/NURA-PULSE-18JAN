@@ -5,7 +5,7 @@
 
 // ======================== CONFIGURATION ========================
 // IMPORTANT: Update these values with your actual URLs
-const APP_WEBHOOK_URL = 'https://leadmanager-15.preview.emergentagent.com/api/driver-onboarding/webhook/sync-from-sheets';
+const APP_WEBHOOK_URL = 'https://driver-onboard-4.preview.emergentagent.com/api/driver-onboarding/webhook/sync-from-sheets';
 const SHEET_NAME = 'Driver Leads'; // Name of the sheet tab with lead data
 
 // Column mapping - adjust if your sheet has different column positions
