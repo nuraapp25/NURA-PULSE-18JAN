@@ -209,7 +209,8 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Bulk Import Error - Empty Phone Number Handling"
+    - "QR Code Batch Field Name Mismatch Fix"
+    - "Campaign Deletion Enhanced Logging"
   stuck_tasks: []
   test_all: false
   test_priority: "critical_first"
