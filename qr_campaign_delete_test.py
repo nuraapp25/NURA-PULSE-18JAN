@@ -137,7 +137,7 @@ class QRCampaignDeleteTester:
                     if qr_codes and len(qr_codes) > 0:
                         test_qr_code = qr_codes[0]
                         test_qr_code_id = test_qr_code.get("id")
-                        test_short_code = test_qr_code.get("unique_short_code")
+                        test_short_code = test_qr_code.get("unique_code")
                         
                         self.log_test("Create Test QR", True, 
                                     f"Created QR code with ID: {test_qr_code_id}, Short code: {test_short_code}")
