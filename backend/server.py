@@ -1332,7 +1332,8 @@ async def bulk_import_leads(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Import Excel file and OVERWRITE all existing leads with column mapping support
+    Import Excel file and ADD new leads (does not replace existing)
+    Checks for duplicates by phone number and skips them
     Automatically creates backup before import
     Supports flexible column mapping from user's Excel file
     """
@@ -1342,7 +1343,7 @@ async def bulk_import_leads(
         import shutil
         import json
         
-        logger.info(f"Starting bulk import for user {current_user.email}")
+        logger.info(f"Starting bulk import (add mode) for user {current_user.email}")
         
         # Validate file type
         if not file.filename.endswith(('.xlsx', '.xls')):
@@ -1407,6 +1408,43 @@ async def bulk_import_leads(
             # Validate required columns for backward compatibility
             if 'id' not in df.columns:
                 raise HTTPException(status_code=400, detail="Excel file must contain 'id' column or provide column mapping")
+        
+        # Step 4: Get existing phone numbers for duplicate detection
+        logger.info("Checking for duplicates by phone number...")
+        existing_phones = set()
+        if current_leads:
+            for lead in current_leads:
+                phone = lead.get('phone_number', '').strip()
+                if phone:
+                    # Normalize phone number (remove spaces, dashes, etc.)
+                    normalized_phone = ''.join(filter(str.isdigit, phone))
+                    existing_phones.add(normalized_phone)
+        
+        logger.info(f"Found {len(existing_phones)} existing phone numbers")
+        
+        # Step 5: Filter out duplicates and prepare new leads
+        new_leads = []
+        duplicates_skipped = 0
+        
+        for idx, row in df.iterrows():
+            phone = str(row.get('phone_number', '')).strip()
+            if phone and phone != 'nan':
+                # Normalize phone number
+                normalized_phone = ''.join(filter(str.isdigit, phone))
+                
+                # Check if duplicate
+                if normalized_phone in existing_phones:
+                    duplicates_skipped += 1
+                    logger.info(f"Skipping duplicate phone: {phone}")
+                    continue
+                
+                # Add to existing phones to prevent duplicates within import file
+                existing_phones.add(normalized_phone)
+            
+            # Add to new leads list
+            new_leads.append(row)
+        
+        logger.info(f"New leads to add: {len(new_leads)}, Duplicates skipped: {duplicates_skipped}")
         
         # Step 4: Process telecaller assignments from Column V (assigned_telecaller)
         telecallers_collection = db['telecallers']
