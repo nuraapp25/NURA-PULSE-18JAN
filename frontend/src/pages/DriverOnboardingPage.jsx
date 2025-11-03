@@ -3864,17 +3864,17 @@ const DriverOnboardingPage = () => {
                       {label} {required && <span className="text-red-500">*</span>}
                     </Label>
                     <Select 
-                      value={columnMapping[field]?.toString() || ""} 
+                      value={columnMapping[field] !== undefined ? columnMapping[field].toString() : "none"} 
                       onValueChange={(value) => setColumnMapping(prev => ({
                         ...prev,
-                        [field]: value === "" ? undefined : parseInt(value)
+                        [field]: value === "none" ? undefined : parseInt(value)
                       }))}
                     >
                       <SelectTrigger className="h-8 text-xs dark:bg-gray-700">
                         <SelectValue placeholder="Select column" />
                       </SelectTrigger>
                       <SelectContent className="dark:bg-gray-800">
-                        <SelectItem value="">None</SelectItem>
+                        <SelectItem value="none">None</SelectItem>
                         {excelColumns.map(col => (
                           <SelectItem key={col.index} value={col.index.toString()}>
                             Column {col.letter}: {col.name}
