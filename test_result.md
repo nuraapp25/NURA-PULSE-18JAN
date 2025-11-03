@@ -167,23 +167,20 @@ backend:
 
 metadata:
   created_by: "main_agent"
-  version: "3.0"
+  version: "4.0"
   test_sequence: 0
   run_ui: false
 
 test_plan:
   current_focus:
-    - "Analytics Caching System with Background Processing"
-    - "Battery Audit Endpoint - 30 Day Filter & Cache Integration"
-    - "Morning Charge Audit Endpoint - 30 Day Filter & Cache Integration"
-    - "Manual Cache Refresh API Endpoint"
+    - "QR Code Dynamic URL Generation Fix"
   stuck_tasks: []
   test_all: false
   test_priority: "critical_first"
 
 agent_communication:
     - agent: "main"
-      message: "Fixed ALL production analytics issues with comprehensive caching system: 1) Created analytics_cache.py for background pre-computation of Battery Audit & Morning Charge Audit data. 2) Updated both audit endpoints to check cache first (instant <1s response), fall back to live computation if needed. 3) Changed data retention from 90 days to 30 days as requested. 4) Added admin API endpoint for manual cache refresh. 5) Created cron job script for daily 2 AM updates. System now: Loads instantly from cache (<1s vs 10-30s), Shows 30 days of data, Has auto-fallback for stale cache, Allows manual refresh. Battery Consumption endpoint already optimized with indexes. Ready for production deployment with cron setup."
+      message: "PRODUCTION CRITICAL FIX IMPLEMENTED: QR Code Dynamic URL Generation. Fixed QR codes showing 'not found' errors in production. Root cause: QR code tracking URLs were embedding hardcoded preview environment URLs. Solution: Made backend URL dynamic by extracting host and scheme from Request object instead of using environment variables. Updated 4 endpoints: /qr-codes/create (main), /qr-codes/create-batch, /qr-codes/create (single), /admin/files/{file_id}/share-link. QR codes created in production will now have correct production URLs automatically. Ready for backend testing to verify tracking URLs are environment-specific and QR scanning works in production."
 
 backend:
   - task: "Battery Audit Optimization for Production"
