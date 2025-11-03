@@ -10120,7 +10120,8 @@ async def get_app_settings(
 
 @api_router.put("/app-settings")
 async def update_app_settings(
-    payment_extractor_enabled: bool,
+    payment_extractor_enabled: bool = None,
+    maintenance_mode: bool = None,
     current_user: User = Depends(get_current_user)
 ):
     """
@@ -10132,11 +10133,21 @@ async def update_app_settings(
     try:
         settings_collection = db['app_settings']
         
+        # Build update data based on what was provided
         update_data = {
-            'payment_extractor_enabled': payment_extractor_enabled,
             'updated_at': datetime.now(timezone.utc).isoformat(),
             'updated_by': current_user.email
         }
+        
+        action_message = []
+        
+        if payment_extractor_enabled is not None:
+            update_data['payment_extractor_enabled'] = payment_extractor_enabled
+            action_message.append(f"Payment Extractor {'enabled' if payment_extractor_enabled else 'disabled'}")
+        
+        if maintenance_mode is not None:
+            update_data['maintenance_mode'] = maintenance_mode
+            action_message.append(f"Maintenance Mode {'enabled' if maintenance_mode else 'disabled'}")
         
         result = await settings_collection.update_one(
             {'_id': 'global_settings'},
@@ -10148,15 +10159,19 @@ async def update_app_settings(
         await log_user_activity(
             user_email=current_user.email,
             action="update_app_settings",
-            details=f"Payment Extractor {'enabled' if payment_extractor_enabled else 'disabled'}",
+            details=", ".join(action_message),
             module="App Settings"
         )
         
+        # Get updated settings to return
+        updated_settings = await settings_collection.find_one({'_id': 'global_settings'})
+        
         return {
             "success": True,
-            "message": f"Payment Data Extractor has been {'enabled' if payment_extractor_enabled else 'disabled'}",
+            "message": ", ".join(action_message),
             "settings": {
-                "payment_extractor_enabled": payment_extractor_enabled
+                "payment_extractor_enabled": updated_settings.get('payment_extractor_enabled', True),
+                "maintenance_mode": updated_settings.get('maintenance_mode', False)
             }
         }
         
