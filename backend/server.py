@@ -10591,6 +10591,13 @@ class QRCodeCreate(BaseModel):
 class QRCodeBatchCreate(BaseModel):
     campaign_name: str
     landing_page_type: str = "single"
+    # NEW field names matching scan endpoint expectations
+    landing_page_ios: Optional[str] = None
+    landing_page_android: Optional[str] = None
+    landing_page_mobile: Optional[str] = None
+    landing_page_desktop: Optional[str] = None
+    landing_page_single: Optional[str] = None
+    # Keep OLD field names for backward compatibility
     ios_url: Optional[str] = None
     android_url: Optional[str] = None
     web_url: Optional[str] = None
