@@ -167,6 +167,37 @@ const AppSettings = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* Maintenance Mode Toggle */}
+          <div className="flex items-center justify-between p-4 border-2 border-orange-300 dark:border-orange-700 rounded-lg bg-orange-50 dark:bg-orange-900/10">
+            <div className="space-y-1">
+              <Label className="text-base font-semibold dark:text-white flex items-center gap-2">
+                <EyeOff className="h-4 w-4" />
+                Maintenance Mode
+              </Label>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Lock out ALL users (except master admins) from the entire app. Users will see a stylish maintenance message.
+              </p>
+              <div className="flex items-center gap-2 mt-2">
+                {settings?.maintenance_mode ? (
+                  <span className="text-xs font-medium px-2 py-1 rounded bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    🔒 App Locked (Maintenance Active)
+                  </span>
+                ) : (
+                  <span className="text-xs font-medium px-2 py-1 rounded bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 flex items-center gap-1">
+                    <CheckCircle className="h-3 w-3" />
+                    ✅ App Active (Users Can Access)
+                  </span>
+                )}
+              </div>
+            </div>
+            <Switch
+              checked={settings?.maintenance_mode || false}
+              onCheckedChange={handleToggleMaintenanceMode}
+              disabled={updating || user?.account_type !== 'master_admin'}
+            />
+          </div>
+
           {/* Payment Data Extractor Toggle */}
           <div className="flex items-center justify-between p-4 border rounded-lg dark:border-gray-700">
             <div className="space-y-1">
