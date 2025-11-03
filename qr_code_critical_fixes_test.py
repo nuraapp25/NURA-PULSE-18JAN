@@ -416,6 +416,17 @@ class QRCodeCriticalFixesTester:
                                 f"Wrong error message: {error_message}")
             except json.JSONDecodeError:
                 self.log_test("Delete Published Campaign Without Force", False, "Invalid JSON response", response.text)
+        elif response and response.status_code == 400:
+            # Check if it's the expected error about published campaigns
+            try:
+                result = response.json()
+                error_message = result.get("detail", result.get("message", ""))
+                self.log_test("Delete Published Campaign Without Force", True, 
+                            f"Correctly rejected deletion: {error_message}")
+                success_count += 1
+            except:
+                self.log_test("Delete Published Campaign Without Force", False, 
+                            f"Got 400 but couldn't parse error message")
         else:
             status = response.status_code if response else "Network error"
             self.log_test("Delete Published Campaign Without Force", False, 
