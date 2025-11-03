@@ -106,7 +106,7 @@ user_problem_statement: "Production Critical Issue: QR codes created in QR Code 
 
 backend:
   - task: "QR Code Dynamic URL Generation Fix"
-    implemented: false
+    implemented: true
     working: "NA"
     file: "/app/backend/server.py"
     stuck_count: 0
@@ -115,7 +115,7 @@ backend:
     status_history:
         - working: "NA"
           agent: "main"
-          comment: "PRODUCTION CRITICAL FIX: QR codes embedding wrong URLs. ROOT CAUSE: QR code creation endpoint uses BACKEND_URL environment variable which has preview URL hardcoded as fallback. When QR codes created in production, they embed preview URLs causing 'QR code not found' errors. SOLUTION: Make QR code tracking URLs dynamic by using Request object to get actual deployment host. This ensures QR codes created in production have production URLs, and preview QR codes have preview URLs. Will update create_qr_code endpoint to use request.url.scheme and request.headers.get('host') to construct dynamic backend URL instead of hardcoded environment variable."
+          comment: "PRODUCTION CRITICAL FIX COMPLETED: Fixed QR codes embedding wrong URLs. ROOT CAUSE: QR code creation endpoints used BACKEND_URL environment variable with hardcoded preview URL fallback. SOLUTION IMPLEMENTED: Updated 4 endpoints to use dynamic URL generation based on Request object: 1) POST /qr-codes/create (line 7054) - main QR creation with bulk support, 2) POST /qr-codes/create-batch (line 10702) - batch creation, 3) POST /qr-codes/create (line 10643) - single QR creation, 4) GET /admin/files/{file_id}/share-link (line 4038) - file sharing. All endpoints now extract host from request.headers.get('host') and scheme from request URL/headers. QR codes created in production will have production URLs, preview QR codes will have preview URLs. Added logging to track backend URL being used. Ready for backend testing to verify QR code URLs are correct in both environments."
   
   - task: "Battery Audit Endpoint - 30 Day Filter & Cache Integration"
     implemented: true
