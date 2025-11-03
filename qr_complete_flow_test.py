@@ -384,8 +384,9 @@ class QRCodeFlowTester:
                                 try:
                                     analytics_data = analytics_response.json()
                                     if analytics_data.get("success"):
-                                        scans = analytics_data.get("scans", [])
-                                        total_scans = analytics_data.get("total_scans", 0)
+                                        analytics = analytics_data.get("analytics", {})
+                                        scans = analytics.get("scan_details", [])
+                                        total_scans = analytics.get("total_scans", 0)
                                         
                                         if total_scans >= 3:  # Should have Android, iOS, and fallback scans
                                             self.log_test("Multi QR - All Scans Recorded", True, 
