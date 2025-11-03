@@ -3771,7 +3771,7 @@ const DriverOnboardingPage = () => {
               Bulk Import from Excel
             </DialogTitle>
             <DialogDescription className="dark:text-gray-400">
-              {showColumnMapping ? "Map your Excel columns to database fields" : "Upload an Excel file to replace all current leads"}
+              {showColumnMapping ? "Map your Excel columns to database fields" : "Upload an Excel file to add new leads. Duplicates will be skipped."}
             </DialogDescription>
           </DialogHeader>
           
