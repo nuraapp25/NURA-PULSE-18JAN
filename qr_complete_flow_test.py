@@ -197,8 +197,9 @@ class QRCodeFlowTester:
                                 try:
                                     analytics_data = analytics_response.json()
                                     if analytics_data.get("success"):
-                                        scan_count = analytics_data.get("total_scans", 0)
-                                        scans = analytics_data.get("scans", [])
+                                        analytics = analytics_data.get("analytics", {})
+                                        scan_count = analytics.get("total_scans", 0)
+                                        scans = analytics.get("scan_details", [])
                                         
                                         if scan_count > 0:
                                             self.log_test("Single QR - Scan Recording", True, 
