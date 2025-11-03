@@ -1844,4 +1844,28 @@ agent_communication:
         - working: true
           agent: "testing"
           comment: "✅ COMPREHENSIVE TESTING COMPLETE: Driver Onboarding table simplification successfully verified and working correctly. Success rate: 87.5% (7/8 tests passed). Key findings: 1) TABLE STRUCTURE PERFECT: Exactly 6 columns in correct order - S. No., Leads ID, Name, Phone Number, Status, Import Date. No unwanted columns (checkbox, location, actions) found in headers. 2) COPY BUTTONS IMPLEMENTED: All 3 copy buttons present per row (Leads ID, Name, Phone Number) with blue color styling. Found 60 total copy buttons across 20 visible rows. 3) DATA DISPLAY CORRECT: S. No. shows sequential numbers, Leads ID shows first 8 characters (c53595ba), Name shows full names (Uma M), Phone shows complete numbers (8608522051), Status shows colored badges (Not Interested), Import Date shows formatted dates (10/29/2025). 4) CLEAN LAYOUT: No checkboxes in table, simplified structure as requested. 5) VISUAL VERIFICATION: Screenshots confirm clean, professional table layout with proper copy button placement and blue styling. Minor: Copy toast notifications may have timing issues in automated testing but copy buttons are functional and properly implemented. The table simplification is working perfectly as specified in the review request."
+  
+  - task: "Batch QR Code Field Name Mismatch Fix"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "CRITICAL FIX IMPLEMENTED: Fixed batch QR codes with device-specific URLs not working. ROOT CAUSE: Field name mismatch between frontend, backend model, backend storage, and scan endpoint. Frontend sends 'landing_page_ios/android/mobile/desktop/single' but backend Pydantic model expected 'ios_url/android_url/web_url/single_url' and stored with old field names, while scan endpoint looks for 'landing_page_*' fields. FIX: 1) Updated QRCodeBatchCreate Pydantic model (line 10591) to accept BOTH old and new field names for backward compatibility. 2) Updated batch creation storage (line 10766-10791) to store with NEW field names matching scan endpoint expectations. 3) Added backward compatibility logic to support old field names if new ones not provided. Now batch QR codes store data with correct field names that scan endpoint can read. Ready for backend testing with batch QR code creation and scanning."
+  
+  - task: "Campaign Deletion Enhanced Logging"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "ENHANCED LOGGING IMPLEMENTED: Added comprehensive logging to campaign deletion endpoint (line 11140) to diagnose deletion issues. Logging includes: 1) Request details (campaign name, force flag, user email, user role), 2) QR code count found in campaign, 3) Published status check results, 4) Permission validation for force delete, 5) Scan deletion count, 6) Final QR code deletion count, 7) Error details with stack traces. Also enhanced response to include both qr_codes_deleted and scans_deleted counts. This will help identify exactly why deletion is failing (campaign not found, permission denied, published without force flag, etc.). Ready for backend testing with campaign deletion scenarios."
 
