@@ -10773,7 +10773,15 @@ async def create_batch_qr_codes(
             # Create proper UTM parameters (Campaign-VehicleNumber format)
             utm_source = f"{batch_data.campaign_name}-{qr_name}" if batch_data.auto_fill_utm else batch_data.utm_campaign
             
-            # Prepare QR code document
+            # Support both OLD and NEW field names for backward compatibility
+            # Priority: NEW field names > OLD field names
+            landing_page_ios = batch_data.landing_page_ios or batch_data.ios_url
+            landing_page_android = batch_data.landing_page_android or batch_data.android_url
+            landing_page_mobile = batch_data.landing_page_mobile or batch_data.web_url
+            landing_page_desktop = batch_data.landing_page_desktop or batch_data.web_url
+            landing_page_single = batch_data.landing_page_single or batch_data.single_url or "https://nuraemobility.co.in/"
+            
+            # Prepare QR code document with NEW field names matching scan endpoint expectations
             qr_code = {
                 "id": str(uuid.uuid4()),
                 "short_code": short_code,
@@ -10782,10 +10790,12 @@ async def create_batch_qr_codes(
                 "qr_filename": f"{batch_data.campaign_name}-{qr_name}.png",  # Proper filename format
                 "campaign_name": batch_data.campaign_name,
                 "landing_page_type": batch_data.landing_page_type,
-                "ios_url": batch_data.ios_url,
-                "android_url": batch_data.android_url,
-                "web_url": batch_data.web_url,
-                "single_url": batch_data.single_url or "https://nuraemobility.co.in/",  # Default URL
+                # Store with NEW field names to match scan endpoint
+                "landing_page_ios": landing_page_ios,
+                "landing_page_android": landing_page_android,
+                "landing_page_mobile": landing_page_mobile,
+                "landing_page_desktop": landing_page_desktop,
+                "landing_page_single": landing_page_single,
                 "utm_source": utm_source,
                 "utm_medium": batch_data.utm_medium,
                 "utm_campaign": batch_data.utm_campaign or batch_data.campaign_name,
