@@ -303,11 +303,12 @@ class ProductionIssueTester:
         
         if response and response.status_code == 200:
             try:
-                qr_codes = response.json()
+                response_data = response.json()
+                qr_codes = response_data.get('qr_codes', [])
                 
                 total_qr_codes = len(qr_codes)
-                qr_codes_with_scans = [qr for qr in qr_codes if qr.get('scan_count', 0) > 0]
-                qr_codes_zero_scans = [qr for qr in qr_codes if qr.get('scan_count', 0) == 0]
+                qr_codes_with_scans = [qr for qr in qr_codes if qr.get('total_scans', 0) > 0]
+                qr_codes_zero_scans = [qr for qr in qr_codes if qr.get('total_scans', 0) == 0]
                 
                 self.log_test("Scan Investigation - QR Code Scan Counts", True, 
                             f"Total QR codes: {total_qr_codes}, With scans: {len(qr_codes_with_scans)}, Zero scans: {len(qr_codes_zero_scans)}")
