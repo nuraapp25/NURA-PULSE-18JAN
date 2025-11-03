@@ -10972,22 +10972,30 @@ async def scan_qr_code(
         
         # Insert scan record
         await db.qr_scans.insert_one(scan_data)
-        logger.info(f"New scan recorded for QR {short_code} from IP {client_ip}")
+        logger.info(f"New scan recorded for QR {short_code} from IP {client_ip}, Platform: {platform}, Redirect: {redirect_url}")
         
-        # Increment scan count only for unique scans
+        # Increment scan count only for unique scans - use the QR code's actual ID
         await db.qr_codes.update_one(
-            {"short_code": short_code},
+            {"id": qr_code["id"]},
             {"$inc": {"scan_count": 1}}
         )
         
+        # Validate redirect URL before redirecting
+        if not redirect_url or redirect_url == 'None' or redirect_url.strip() == '':
+            logger.error(f"Empty redirect URL for QR {short_code}, QR Data: {qr_code}")
+            raise HTTPException(status_code=500, detail=f"QR code configuration error: No valid landing page URL configured for {platform}")
+        
         # Redirect
         from fastapi.responses import RedirectResponse
+        logger.info(f"Redirecting to: {redirect_url}")
         return RedirectResponse(url=redirect_url)
         
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Failed to process QR scan: {str(e)}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"Failed to process QR scan: {str(e)}")
 
 @api_router.get("/qr-codes/campaign/{campaign_name}")
