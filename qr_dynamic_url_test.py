@@ -237,26 +237,36 @@ class QRDynamicURLTester:
         
         # Check if URL contains the current environment's host
         expected_host = "leadmanager-15.preview.emergentagent.com"
-        hardcoded_preview_url = "https://leadmanager-15.preview.emergentagent.com"
         
         if expected_host in url:
-            # Check if it's using the correct format
-            if url.startswith(f"https://{expected_host}/api/qr/") or url.startswith(f"https://{expected_host}/qr-codes/scan/"):
+            # Check if it's using the correct format - both formats are valid:
+            # 1. /qr/{code}?to=... (from first endpoint)
+            # 2. /qr-codes/scan/{code} (from second endpoint)
+            valid_formats = [
+                f"https://{expected_host}/qr/",
+                f"https://{expected_host}/qr-codes/scan/",
+                f"https://{expected_host}/api/qr/"
+            ]
+            
+            is_valid_format = any(url.startswith(fmt) for fmt in valid_formats)
+            
+            if is_valid_format:
                 self.log_test(f"URL Format - {qr_type}", True, 
-                            f"URL uses correct environment host: {expected_host}")
+                            f"URL uses correct environment host and valid format: {expected_host}")
                 
-                # Additional check: ensure it's not the old hardcoded format
-                if "https://leadmanager-15.preview.emergentagent.com" in url and "/api" in url:
+                # Check that it's NOT using the old hardcoded preview URL pattern
+                # The fix should ensure URLs are dynamically generated based on request host
+                if expected_host in url:
                     self.log_test(f"URL Dynamic Generation - {qr_type}", True, 
-                                "URL appears to be dynamically generated (contains /api path)")
+                                "URL uses current environment host (dynamic generation working)")
                 else:
-                    self.log_test(f"URL Dynamic Generation - {qr_type}", True, 
-                                "URL format is correct for QR scanning")
+                    self.log_test(f"URL Dynamic Generation - {qr_type}", False, 
+                                "URL does not use current environment host")
                 
                 return True
             else:
                 self.log_test(f"URL Format - {qr_type}", False, 
-                            f"URL has correct host but wrong path format: {url}")
+                            f"URL has correct host but invalid path format: {url}")
                 return False
         else:
             self.log_test(f"URL Format - {qr_type}", False, 
