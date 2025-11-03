@@ -3948,7 +3948,7 @@ const DriverOnboardingPage = () => {
                   ) : (
                     <>
                       <UploadCloud className="w-4 h-4 mr-2" />
-                      Import & Replace All
+                      Import New Leads
                     </>
                   )}
                 </Button>
