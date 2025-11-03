@@ -1869,3 +1869,22 @@ agent_communication:
           agent: "main"
           comment: "ENHANCED LOGGING IMPLEMENTED: Added comprehensive logging to campaign deletion endpoint (line 11140) to diagnose deletion issues. Logging includes: 1) Request details (campaign name, force flag, user email, user role), 2) QR code count found in campaign, 3) Published status check results, 4) Permission validation for force delete, 5) Scan deletion count, 6) Final QR code deletion count, 7) Error details with stack traces. Also enhanced response to include both qr_codes_deleted and scans_deleted counts. This will help identify exactly why deletion is failing (campaign not found, permission denied, published without force flag, etc.). Ready for backend testing with campaign deletion scenarios."
 
+
+metadata:
+  created_by: "main_agent"
+  version: "6.0"
+  test_sequence: 0
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Batch QR Code Field Name Mismatch Fix"
+    - "Campaign Deletion Enhanced Logging"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "critical_first"
+
+agent_communication:
+    - agent: "main"
+      message: "CRITICAL QR CODE PRODUCTION FIXES IMPLEMENTED: Fixed 2 production issues reported by user. ISSUE 1 - Batch QR codes with device-specific URLs not working (showing 'QR code not found'): ROOT CAUSE: Field name mismatch across the entire stack. Frontend sends 'landing_page_ios/android/mobile/desktop/single', backend Pydantic model expected 'ios_url/android_url/web_url/single_url', batch creation stored with old field names, but scan endpoint looks for new 'landing_page_*' fields. This mismatch caused QR codes to store URLs that scan endpoint couldn't find. FIX: 1) Updated QRCodeBatchCreate Pydantic model to accept BOTH old and new field names for backward compatibility. 2) Updated batch creation storage logic to prioritize new field names and store data matching what scan endpoint expects. 3) Added backward compatibility to support old field names if new ones not provided. ISSUE 2 - Unable to delete campaign folders: Enhanced campaign deletion endpoint with comprehensive logging to diagnose failures. Added detailed logs for: request details, QR code counts, published status checks, permission validation, scan/QR deletion counts, and error stack traces. Also enhanced response to include qr_codes_deleted and scans_deleted counts for transparency. Backend restarted successfully. Both fixes ready for comprehensive backend testing with: 1) Batch QR code creation with multi-device URLs, 2) QR code scanning to verify redirects work, 3) Campaign deletion with various scenarios (published/unpublished, with/without force flag, different user roles)."
+
