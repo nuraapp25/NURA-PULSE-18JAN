@@ -13,14 +13,15 @@ const MaintenancePage = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4 overflow-hidden relative">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-black flex items-center justify-center p-4 overflow-hidden relative">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
         {[...Array(20)].map((_, i) => (
           <div
             key={i}
-            className="absolute rounded-full bg-white/10 animate-float"
+            className="absolute rounded-full animate-float"
             style={{
+              background: i % 2 === 0 ? 'rgba(169, 229, 11, 0.1)' : 'rgba(168, 85, 247, 0.1)',
               width: `${Math.random() * 100 + 50}px`,
               height: `${Math.random() * 100 + 50}px`,
               left: `${Math.random() * 100}%`,
@@ -34,20 +35,26 @@ const MaintenancePage = () => {
 
       {/* Main Content */}
       <div className="relative z-10 max-w-4xl w-full">
-        <div className="bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20 shadow-2xl p-8 md:p-12">
+        <div className="bg-black/40 backdrop-blur-xl rounded-3xl border-2 shadow-2xl p-8 md:p-12" style={{ borderColor: 'rgba(169, 229, 11, 0.3)' }}>
           {/* Animated Icon */}
           <div className="flex justify-center mb-8">
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full blur-xl opacity-50 animate-pulse"></div>
-              <div className="relative bg-gradient-to-br from-purple-500 to-pink-500 p-6 rounded-full animate-bounce-slow">
-                <Wrench className="w-16 h-16 text-white" />
+              <div className="absolute inset-0 rounded-full blur-xl opacity-50 animate-pulse" style={{ background: '#a9e50b' }}></div>
+              <div className="relative p-6 rounded-full animate-bounce-slow" style={{ background: 'linear-gradient(135deg, #a9e50b 0%, #7cb305 100%)' }}>
+                <Wrench className="w-16 h-16 text-black" />
               </div>
-              <Sparkles className="absolute -top-2 -right-2 w-8 h-8 text-yellow-300 animate-spin-slow" />
+              <Sparkles className="absolute -top-2 -right-2 w-8 h-8 animate-spin-slow" style={{ color: '#a9e50b' }} />
             </div>
           </div>
 
           {/* Main Heading with Gradient */}
-          <h1 className="text-4xl md:text-6xl font-black text-center mb-6 bg-gradient-to-r from-purple-200 via-pink-200 to-blue-200 text-transparent bg-clip-text animate-gradient">
+          <h1 className="text-4xl md:text-6xl font-black text-center mb-6 animate-gradient" style={{
+            background: 'linear-gradient(90deg, #a9e50b 0%, #d4ff00 50%, #a9e50b 100%)',
+            backgroundSize: '200% auto',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text'
+          }}>
             We're Leveling Up! 🚀
           </h1>
 
@@ -57,16 +64,16 @@ const MaintenancePage = () => {
               Web App is undergoing a major update
             </p>
             <div className="flex items-center justify-center gap-2 text-lg text-white/80">
-              <Zap className="w-5 h-5 text-yellow-300 animate-pulse" />
+              <Zap className="w-5 h-5 animate-pulse" style={{ color: '#a9e50b' }} />
               <span>Please wait, while we enhance your experience</span>
-              <Zap className="w-5 h-5 text-yellow-300 animate-pulse" />
+              <Zap className="w-5 h-5 animate-pulse" style={{ color: '#a9e50b' }} />
             </div>
           </div>
 
           {/* Nura Auto Image */}
           <div className="flex justify-center mb-8">
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 rounded-2xl blur-2xl opacity-30 animate-pulse"></div>
+              <div className="absolute inset-0 rounded-2xl blur-2xl opacity-30 animate-pulse" style={{ background: '#a9e50b' }}></div>
               <img 
                 src="https://customer-assets.emergentagent.com/job_lead-management-4/artifacts/giqdvh5o_Nura%20Auto.png" 
                 alt="Nura Auto" 
@@ -78,9 +85,9 @@ const MaintenancePage = () => {
           {/* Loading Animation */}
           <div className="flex flex-col items-center gap-4 mb-8">
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
-              <div className="w-3 h-3 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-              <div className="w-3 h-3 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+              <div className="w-3 h-3 rounded-full animate-bounce" style={{ background: '#a9e50b', animationDelay: '0s' }}></div>
+              <div className="w-3 h-3 rounded-full animate-bounce" style={{ background: '#c4f01a', animationDelay: '0.2s' }}></div>
+              <div className="w-3 h-3 rounded-full animate-bounce" style={{ background: '#d4ff00', animationDelay: '0.4s' }}></div>
             </div>
             <p className="text-white/70 text-lg font-medium">
               Upgrading systems{dots}
@@ -88,11 +95,14 @@ const MaintenancePage = () => {
           </div>
 
           {/* Info Message */}
-          <div className="bg-white/5 border border-white/10 rounded-xl p-6 backdrop-blur-sm">
+          <div className="border rounded-xl p-6 backdrop-blur-sm" style={{ 
+            background: 'rgba(169, 229, 11, 0.05)',
+            borderColor: 'rgba(169, 229, 11, 0.2)'
+          }}>
             <p className="text-center text-white/70 text-sm md:text-base">
               Sorry for the inconvenience. We're working hard to bring you amazing new features! 
               <br />
-              <span className="text-purple-300 font-semibold">This won't take long.</span>
+              <span className="font-semibold" style={{ color: '#a9e50b' }}>This won't take long.</span>
             </p>
           </div>
 
@@ -107,7 +117,7 @@ const MaintenancePage = () => {
         {/* Powered By */}
         <div className="text-center mt-6">
           <p className="text-white/50 text-sm font-medium">
-            Powered by <span className="text-white/80 font-bold">Nura Pulse</span>
+            Powered by <span className="text-white/80 font-bold" style={{ color: '#a9e50b' }}>Nura Pulse</span>
           </p>
         </div>
       </div>
@@ -157,7 +167,6 @@ const MaintenancePage = () => {
         }
         
         .animate-gradient {
-          background-size: 200% 200%;
           animation: gradient 3s ease infinite;
         }
         
