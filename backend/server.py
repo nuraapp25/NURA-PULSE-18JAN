@@ -1414,11 +1414,16 @@ async def bulk_import_leads(
         existing_phones = set()
         if current_leads:
             for lead in current_leads:
-                phone = lead.get('phone_number', '').strip()
-                if phone:
+                phone = lead.get('phone_number', '')
+                # Handle None/null phone numbers
+                if phone is None:
+                    continue
+                phone = str(phone).strip()
+                if phone and phone != 'nan':
                     # Normalize phone number (remove spaces, dashes, etc.)
                     normalized_phone = ''.join(filter(str.isdigit, phone))
-                    existing_phones.add(normalized_phone)
+                    if normalized_phone:  # Only add if there are digits
+                        existing_phones.add(normalized_phone)
         
         logger.info(f"Found {len(existing_phones)} existing phone numbers")
         
