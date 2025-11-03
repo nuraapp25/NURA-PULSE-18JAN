@@ -10824,6 +10824,8 @@ async def scan_qr_code(
     """Handle QR code scan and redirect based on device"""
     from fastapi.responses import RedirectResponse
     try:
+        logger.info(f"=== QR SCAN ATTEMPT === Code: {short_code}")
+        
         # Get QR code from database - try both field names for backwards compatibility
         qr_code = await db.qr_codes.find_one({"short_code": short_code})
         if not qr_code:
@@ -10831,6 +10833,12 @@ async def scan_qr_code(
             qr_code = await db.qr_codes.find_one({"unique_short_code": short_code})
         
         if not qr_code:
+            logger.error(f"QR CODE NOT FOUND in database! Searched for short_code='{short_code}' and unique_short_code='{short_code}'")
+            # Let's check what QR codes exist
+            sample_qr = await db.qr_codes.find_one({})
+            if sample_qr:
+                logger.info(f"Sample QR code in database has fields: {list(sample_qr.keys())}")
+                logger.info(f"Sample unique_short_code: {sample_qr.get('unique_short_code')}, short_code: {sample_qr.get('short_code')}")
             raise HTTPException(status_code=404, detail="QR code not found")
         
         # Parse user agent
