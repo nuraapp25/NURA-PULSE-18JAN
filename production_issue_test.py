@@ -436,7 +436,7 @@ class ProductionIssueTester:
             try:
                 result = response.json()
                 new_qr_id = result.get('qr_code', {}).get('id')
-                new_short_code = result.get('qr_code', {}).get('short_code') or result.get('qr_code', {}).get('unique_short_code')
+                new_short_code = result.get('qr_code', {}).get('unique_short_code')
                 
                 if new_qr_id and new_short_code:
                     self.log_test("Scan Investigation - Create Test QR", True, 
