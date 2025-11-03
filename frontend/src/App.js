@@ -65,6 +65,8 @@ export const useTheme = () => {
 function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [checkingMaintenance, setCheckingMaintenance] = useState(true);
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem("theme") || "light"; // Default light mode
   });
@@ -78,6 +80,27 @@ function App() {
   const toggleTheme = () => {
     setTheme(prev => prev === "light" ? "dark" : "light");
   };
+  
+  // Check maintenance mode on app load
+  useEffect(() => {
+    const checkMaintenanceMode = async () => {
+      try {
+        const response = await axios.get(`${API}/maintenance-status`);
+        setMaintenanceMode(response.data.maintenance_mode || false);
+      } catch (error) {
+        console.error("Failed to check maintenance mode:", error);
+        setMaintenanceMode(false);
+      } finally {
+        setCheckingMaintenance(false);
+      }
+    };
+    
+    checkMaintenanceMode();
+    
+    // Check every 30 seconds if maintenance mode changed
+    const interval = setInterval(checkMaintenanceMode, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     // Check if user is logged in
