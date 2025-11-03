@@ -3778,16 +3778,17 @@ const DriverOnboardingPage = () => {
           {!showColumnMapping ? (
             // Step 1: File Upload
             <div className="space-y-4">
-              {/* Warning */}
-              <div className="p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
-                <p className="text-sm text-orange-800 dark:text-orange-200 font-semibold flex items-center gap-2">
-                  <XCircle className="w-4 h-4" />
-                  Warning: This will REPLACE all current leads!
+              {/* Info */}
+              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <p className="text-sm text-blue-800 dark:text-blue-200 font-semibold flex items-center gap-2">
+                  <CheckSquare className="w-4 h-4" />
+                  Import New Leads
                 </p>
-                <p className="text-xs text-orange-700 dark:text-orange-300 mt-1">
+                <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
+                  • New leads will be added to existing leads<br />
+                  • Duplicates (same phone number) will be skipped<br />
                   • A backup will be created before import<br />
-                  • All current leads will be deleted<br />
-                  • New leads from Excel will be imported
+                  • Existing leads will NOT be deleted
                 </p>
               </div>
 
