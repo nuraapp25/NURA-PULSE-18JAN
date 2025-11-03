@@ -8910,7 +8910,8 @@ Case Test 6,9876540006,interested"""
         
         # Run CRITICAL tests from review request FIRST
         critical_tests = [
-            self.test_qr_code_dynamic_url_generation,     # CRITICAL: QR Code Dynamic URL Generation Fix (CURRENT REVIEW)
+            self.test_qr_code_campaign_delete_fix,        # CRITICAL: QR Code Campaign Delete Fix - Scan Cleanup (CURRENT REVIEW)
+            self.test_qr_code_dynamic_url_generation,     # CRITICAL: QR Code Dynamic URL Generation Fix
             self.test_telecaller_desk_enhancements,       # CRITICAL: Telecaller's Desk backend enhancements
             self.test_qr_code_deletion_functionality,     # CRITICAL: QR code deletion not working (user reported)
             self.test_remarks_persistence_comprehensive,  # CRITICAL: Remarks not persisting issue
