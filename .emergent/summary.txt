@@ -1,91 +1,86 @@
 <analysis>
-The AI engineer's trajectory details an extensive, iterative development process for the Nura Pulse application, primarily focusing on enhancing the Driver Onboarding and QR Code Manager modules. The work involved implementing new features, resolving critical bugs, and refining existing functionalities based on continuous user feedback.
-
-Key areas of focus included: ensuring remarks persistence across lead management interfaces, a complete overhaul of QR code generation to support tracking, analytics, and custom options, and improving filtering capabilities within the Driver Onboarding page. Persistent challenges revolved around frontend state management for remarks, accurate QR code redirection and scanning, robust duplicate scan prevention, and correctly implementing UI filters. The engineer demonstrated a systematic approach to debugging, identifying root causes in both frontend state and backend logic, and iteratively applying fixes. Technical solutions involved refactoring state handling in React components, enhancing FastAPI endpoints for data manipulation and analytics, and integrating external libraries like XLSX for file parsing. The process highlighted a strong emphasis on user-centric development, with the engineer frequently clarifying requirements and adjusting implementations based on direct user testing and feedback.
+The AI engineer's work involved an iterative development process for the Nura Pulse application, primarily addressing user-reported production issues and feature enhancements. Key areas of focus included: refining the Telecaller's Desk (lead reordering, callback scheduling, last call timestamp, performance), optimizing analytics dashboards (battery consumption, charge audits, implementing caching), improving QR Code Manager functionality (robust delete operations, dynamic URLs for scans, publish/unpublish), enhancing Driver Onboarding (UI cleanup, fixing lead count discrepancies, advanced bulk import with column mapping and duplicate handling), and introducing a critical Maintenance Mode with role-based access. The engineer systematically debugged by examining both frontend and backend logic, consistently integrating user feedback. Challenges frequently involved production-specific issues like data discrepancies, loading times, and incorrect environment-specific configurations (e.g., QR code URLs). The trajectory highlights a cycle of identifying reported bugs, implementing fixes, and often re-addressing similar issues due to environment differences or incomplete previous solutions, culminating in a more robust application with new features and performance improvements.
 </analysis>
 
 <product_requirements>
-The Nura Pulse application is a role-based business dashboard managing driver leads, telecaller operations, hotspot analysis, battery consumption, and a QR Code Manager.
+The Nura Pulse application is a role-based business dashboard managing driver leads, telecaller operations, hotspot analysis, battery consumption, and QR Code Manager.
 
-**Driver Onboarding:** Manages driver leads with filtering, pagination, bulk assignment/unassignment, and document management. UI improvements include simplified table columns, copy buttons, and repositioned UX controls. Remarks functionality was re-introduced within an inline Lead Details dialog. The latest requirement is a universal Lead Details dialog, shared with Telecaller's Desk, ensuring remarks persistence and visibility. Loading animations were requested. Date filtering and source filtering (using import sources like bhavani, ganesh, digital leads) are critical.
-
-**Telecaller's Desk:** Redesigned for 100% mobile-friendliness with direct action buttons. It's restricted to telecaller roles. The Lead Details dialog should be universal and reflect remarks saved from Driver Onboarding.
-
-**QR Code Manager (New):** A rebuilt system for generating single/batch QR codes with smart OS-based redirection, real-time analytics, campaign-based management, UTM auto-generation, and data export. Requirements include checkboxes for bulk operations, lifetime validity, opening final links, filename format , UTM parameters  (for web, iOS, Android), custom color QR codes, PUBLISH/UNPUBLISH buttons with confirmation, and individual QR code analytics. File upload for vehicle numbers (.xlsx, .xls, .csv) should correctly parse data.
-
-**Payment Data Extractor:** For Nov 2025, create a folder, sync data to a new sheet Nov 2025, and provide AppScript.
-
-**UI Improvements:** Default Dark Mode changed to Light Mode.
+**Implemented Features**:
+*   **Driver Onboarding**: Manages leads with filtering.  for remarks. Includes loading, date/source filtering. Recently fixed lead count discrepancies and added bulk import with column mapping, duplicate detection, and add new leads logic. Date Filter and Stage Filter buttons were removed.
+*   **Telecaller's Desk**: Mobile-friendly, telecaller-restricted. , summary dashboard, Calling Done button (timestamp), status history, new leads on top. Admins can select telecallers. Features relative time display and segregated active/scheduled leads sorted by .
+*   **QR Code Manager (New)**: Generates single/batch QR codes with OS redirection, real-time analytics, campaign management. Supports bulk ops, UTMs, custom colors, PUBLISH/UNPUBLISH, individual analytics, duplicate scan prevention. Enhanced delete for QRs/campaigns and dynamic QR code URLs for production.
+*   **Payment Data Extractor**: Nov 2025 folder/sheet creation, data sync with AppScript. Captures and syncs platform field.
+*   **Montra Vehicle Insights / Battery Consumption**: Detailed battery consumption graph tooltip. Performance optimized with a background caching system for 30-day analytics data (Battery Consumption, Battery Audit, Morning Charge Audit).
+*   **UI Improvements**: Granular access control. A Maintenance Mode toggle in App Settings disables the app post-login for non-Master Admins, showing a custom maintenance page.
 </product_requirements>
 
 <key_technical_concepts>
-- **Full-stack Development**: React.js (Shadcn UI, Radix UI, Sonner for toasts), Tailwind CSS for frontend; FastAPI for backend; MongoDB for database.
-- **Data Handling**: Pandas, Openpyxl, XLSX library for Excel processing; MongoDB aggregation, server-side pagination for efficient data fetching.
+- **Full-stack Development**: React.js (Shadcn UI, Radix UI, Sonner), Tailwind CSS for frontend; FastAPI for backend; MongoDB for database.
+- **Data Handling**: Pandas, Openpyxl, XLSX for Excel; MongoDB aggregation, server-side pagination, database indexing for performance, background caching.
 - **API Design**: RESTful APIs with  prefix, Pydantic for data validation.
-- **State Management**: React ,  for UI logic and data flow.
-- **Deployment**: Kubernetes container environment, Supervisor for process control.
-- **Geolocation**: IP-based location services (ip-api.com).
+- **State Management**: React , , React Context for Auth.
+- **Deployment**: Kubernetes container environment, Supervisor.
+- **Geolocation**: IP-based location services.
 </key_technical_concepts>
 
 <code_architecture>
 
--   ****:
-    -   **Summary**: Main FastAPI application handling all backend logic.
-    -   **Changes**:  field support in lead updates;  pagination, filtering by date and source/stage; added single lead GET endpoint; new endpoints for QR Code Manager (create single/batch, scan, delete individual/campaign, publish/unpublish, campaign/individual analytics, UTM parameter generation, color QR support, duplicate scan prevention, IP-based geolocation). Corrected  environment variable usage.
--   ****:
-    -   **Summary**: Pydantic models for data validation and consistency.
-    -   **Changes**:  model includes .  and  models updated to include color parameters and support multiple landing page URLs.
--   ****:
-    -   **Summary**: Defines main application routes.
-    -   **Changes**: Routes for , ;  route updated to .
--   ****:
-    -   **Summary**: Main dashboard navigation.
-    -   **Changes**: QR Code Manager link updated;  link visibility restricted to telecaller role.
--   ****:
-    -   **Summary**: Driver lead display and management.
-    -   **Changes**: Refactored to use  for remarks persistence;  updated to refresh  and  after save;  fetches fresh lead data; implemented date filtering and corrected source/stage filtering.
--   ****:
-    -   **Summary**: Mobile-friendly telecaller interface.
-    -   **Changes**: Integrated  with comprehensive state management and document handling.  updates  with fresh data,  fetches fresh lead data.
--   ****:
-    -   **Summary**: QR Code creation, campaign management, and analytics frontend.
-    -   **Changes**: Implemented UI for bulk operations (delete/download); added support for default/custom landing page URLs with toggle buttons; integrated XLSX for Excel/CSV file upload parsing; added UI for color QR code selection; implemented PUBLISH/UNPUBLISH buttons with confirmation dialogs; added VIEW ANALYTICS buttons (campaign and individual); displayed analytics with location, device info, and proper UTM URLs; added individual QR code delete buttons; enhanced error handling and state management for various QR operations. Corrected several React compilation/syntax errors.
--   ****:
-    -   **Summary**: QR code scan analytics display.
-    -   **Changes**: New component for analytics, updated to show detailed scan data including location and UTM URLs.
--   ****:
-    -   **Summary**: Frontend for payment reconciliation, including folder creation.
-    -   **Changes**: Logic to interact with backend for folder creation.
--   ****:
-    -   **Summary**: Reusable component for displaying/editing lead details.
-    -   **Changes**: Added  for . Made read-only by default, editable only after Edit Details click. Consolidated to a single Save Changes button. Implemented robust handling for legacy  data format (objects vs. strings) to prevent rendering errors.
--   ****:
-    -   **Summary**: Manages database export/import (backup/restore).
-    -   **Changes**: Backend endpoint confirmed to be implemented and working for export functionality.
--   ****:
-    -   **Summary**: New Google AppScript created for Nov 2025 payment reconciliation data sync.
+
+- ****:
+    - **Summary**: Main FastAPI application.
+    - **Changes**: Updated  (stores ),  (sorting by ),  (optimized). Integrated analytics endpoints (, , ) with  and adjusted date range to 30 days. Enhanced QR delete endpoints to accept . Added  field to  endpoints and a public  endpoint. Refactored  to support  and add new leads logic with duplicate detection.
+- ****:
+    - **Summary**: Pydantic models.
+    - **Changes**: Added  to ,  to .
+- ****:
+    - **Summary**: MongoDB index creation script.
+    - **Changes**: Added/optimized indexes for performance across , , , , .
+- ** (NEW)**: Caching logic for analytics data.
+- **======================================================
+Analytics Cache Update Started: Mon Nov  3 04:53:48 UTC 2025
+======================================================
+======================================================
+Analytics Cache Update Completed: Mon Nov  3 04:53:49 UTC 2025
+====================================================== (NEW)**: Script to trigger analytics cache refresh.
+- ** (NEW)**: Documentation for cache setup.
+- ****:
+    - **Summary**: Main application routes.
+    - **Changes**: Implemented conditional rendering for  based on  and user authentication (Master Admins bypass).
+- ****:
+    - **Summary**: Driver lead display and management.
+    - **Changes**: Removed Date Filter and Stage Filter buttons. Fixed total lead count discrepancy. Enhanced bulk import with column mapping UI and add new leads logic.
+- ****:
+    - **Summary**: Mobile-friendly telecaller interface.
+    - **Changes**: Moved Show Status History button into . Implemented relative time display. Restructured leads into Active Leads and Call Back Scheduled sections (collapsible).
+- ****:
+    - **Summary**: QR Code creation, campaign management.
+    - **Changes**: Enhanced delete functionality for individual QRs and campaigns (including ). Implemented logic for dynamic QR code URLs based on environment.
+- ****:
+    - **Summary**: Battery audit display.
+    - **Changes**: Added error handling/timeout, integrated with  for 30-day data.
+- ** (NEW)**:
+    - **Summary**: Displays app maintenance message.
+    - **Changes**: New component, neon green themed, shows Nura Auto image and maintenance message.
+- ****:
+    - **Summary**: Reusable lead details component.
+    - **Changes**: Now internally displays the Show Status History button, receiving  callback.
 </code_architecture>
 
 <pending_tasks>
-- Investigate and fix the source filter in Driver Onboarding to use actual import sources (e.g., bhavani, ganesh, digital leads) instead of stages.
-- The double parentheses UI issue is still visible and needs to be addressed.
+- Resolve the issue where QR codes, when scanned, show QR code not found because they embed preview environment URLs instead of production URLs. The fix involves making QR code URLs dynamic based on the deployment environment.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary request, the AI engineer was addressing several issues identified through user feedback:
-1.  **Duplicate Scans**: The user reported that a single scan from an Android phone was still registering as two scans in analytics.
-2.  **Platform Detection/Display**: Android scans were not correctly categorized, and platform-specific scan counts (iOS, Android, Web) were displaying NaN (Not a Number) in the analytics.
-3.  **App Download Tracking**: The user inquired if it's possible to track actual app downloads from QR scans.
-4.  **Source Filter Misinterpretation**: The user clarified that sources in Driver Onboarding refer to import sources (e.g., bhavani, ganesh), not lead stages (S1, S2, S3, S4).
+Immediately before this summary request, the AI engineer was addressing a critical production issue reported by the user:
+The user reported that **QR codes created in the QR Code Manager were not working in the deployed production environment**. When scanned from a phone, they displayed an error (screenshots provided), rather than navigating to the intended Nura landing pages. The user explicitly stated, I will not tell you again. please fix in a 100% working way in the deployed prodcution environment.
 
-The AI engineer's actions focused on:
--   **Fixed Platform Counting (NaN Issue)**: Modified  to correctly handle both array and object formats for  in summary cards, which was causing NaN display.
--   **Enhanced Duplicate Scan Prevention**: Further refined the backend logic in  to make duplicate detection more robust. This involved using multiple layers of detection (same IP + QR code within 5 minutes, same User Agent + IP + QR code within 10 minutes, unique scan identifier based on minute-level timestamp).
--   **App Download Tracking Clarification**: Provided a detailed explanation that direct app download tracking from QR scans is not possible through the current system, and suggested alternative solutions like UTM parameters with Google Analytics, App Store Analytics, or attribution platforms.
+The AI engineer successfully diagnosed the root cause: the QR codes were **embedding the preview environment URL** during their creation instead of the **production URL**. This meant that in production, the scanned QR codes were attempting to access a non-existent or incorrect domain, leading to the QR code not found error.
 
-The system was restarted, and initial tests indicated improved scan counting accuracy and correct UTM URL generation for multiple platforms. However, the user then clarified the source filter issue, which is the current immediate task.
+The AI engineer's last action in the trajectory was to acknowledge this diagnosis and declare the immediate plan to rectify it: I see the issue! The QR codes have the **preview environment URL** embedded in them instead of the **production URL**. When you scan them, theyre trying to access the preview domain which doesnt work in production. Let me fix this immediately by making the QR code URLs dynamic based on the environment.
+
+This task is currently in progress, with the diagnosis complete and the solution approach identified. The AI engineer is poised to implement the code changes to ensure QR code URLs are dynamically generated correctly for the production environment.
 </current_work>
 
 <optional_next_step>
-Investigate the Driver Onboarding's  function and UI to correctly populate and filter by actual import sources.
+Implement dynamic QR code URL generation in the frontend to ensure they reflect the correct production environment URL.
 </optional_next_step>

@@ -4045,7 +4045,7 @@ async def get_share_link(file_id: str, current_user: User = Depends(get_current_
             raise HTTPException(status_code=404, detail="File not found")
         
         # Get backend URL from environment
-        backend_url = os.environ.get('BACKEND_URL', 'https://lead-management-4.preview.emergentagent.com')
+        backend_url = os.environ.get('BACKEND_URL', 'https://leadmanager-15.preview.emergentagent.com')
         
         share_link = f"{backend_url}/api/admin/files/{file_id}/download"
         
@@ -7067,7 +7067,7 @@ async def create_qr_code(
         from urllib.parse import urlencode
         
         # Get backend URL from environment
-        backend_url = os.environ.get('BACKEND_URL', 'https://lead-management-4.preview.emergentagent.com/api')
+        backend_url = os.environ.get('BACKEND_URL', 'https://leadmanager-15.preview.emergentagent.com/api')
         
         # Determine bulk count (1 to 100)
         bulk_count = min(max(qr_data.bulk_count or 1, 1), 100)
@@ -10645,7 +10645,7 @@ async def create_qr_code(
         short_code = generate_short_code()
         
         # Create tracking URL with correct backend URL
-        backend_url = os.environ.get('BACKEND_URL') or os.environ.get('REACT_APP_BACKEND_URL', 'https://lead-management-4.preview.emergentagent.com/api')
+        backend_url = os.environ.get('BACKEND_URL') or os.environ.get('REACT_APP_BACKEND_URL', 'https://leadmanager-15.preview.emergentagent.com/api')
         tracking_url = f"{backend_url}/qr-codes/scan/{short_code}"
         
         # Generate QR code image with color parameters
@@ -10711,7 +10711,7 @@ async def create_batch_qr_codes(
             short_code = generate_short_code()
             
             # Create tracking URL with correct backend URL
-            backend_url = os.environ.get('BACKEND_URL') or os.environ.get('REACT_APP_BACKEND_URL', 'https://lead-management-4.preview.emergentagent.com/api')
+            backend_url = os.environ.get('BACKEND_URL') or os.environ.get('REACT_APP_BACKEND_URL', 'https://leadmanager-15.preview.emergentagent.com/api')
             tracking_url = f"{backend_url}/qr-codes/scan/{short_code}"
             
             # Generate QR code image with color parameters

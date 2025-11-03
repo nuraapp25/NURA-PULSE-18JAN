@@ -11,7 +11,7 @@ import io
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://lead-management-4.preview.emergentagent.com/api"
+BASE_URL = "https://leadmanager-15.preview.emergentagent.com/api"
 MASTER_ADMIN_EMAIL = "admin"
 MASTER_ADMIN_PASSWORD = "Nura@1234$"
 
