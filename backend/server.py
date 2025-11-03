@@ -10865,18 +10865,28 @@ async def scan_qr_code(
             separator = "&" if "?" in base_url else "?"
             return f"{base_url}{separator}utm={utm_param}"
         
-        # Determine redirect URL
+        # Determine redirect URL based on device platform
         if qr_code.get('landing_page_type') == 'single':
-            redirect_url = add_utm_to_url(qr_code.get('single_url', ''), utm_value)
+            redirect_url = add_utm_to_url(qr_code.get('landing_page_single', ''), utm_value)
         else:
-            if platform == "ios" and qr_code.get('ios_url'):
-                redirect_url = add_utm_to_url(qr_code.get('ios_url'), utm_value)
-            elif platform == "android" and qr_code.get('android_url'):
-                redirect_url = add_utm_to_url(qr_code.get('android_url'), utm_value)
-            elif qr_code.get('web_url'):
-                redirect_url = add_utm_to_url(qr_code.get('web_url'), utm_value)
+            # Multi-URL QR code - redirect based on device platform
+            if platform == "ios" and qr_code.get('landing_page_ios'):
+                redirect_url = add_utm_to_url(qr_code.get('landing_page_ios'), utm_value)
+            elif platform == "android" and qr_code.get('landing_page_android'):
+                redirect_url = add_utm_to_url(qr_code.get('landing_page_android'), utm_value)
+            elif platform == "mobile_other" and qr_code.get('landing_page_mobile'):
+                redirect_url = add_utm_to_url(qr_code.get('landing_page_mobile'), utm_value)
+            elif platform == "desktop" and qr_code.get('landing_page_desktop'):
+                redirect_url = add_utm_to_url(qr_code.get('landing_page_desktop'), utm_value)
             else:
-                redirect_url = add_utm_to_url(qr_code.get('single_url', ''), utm_value)
+                # Fallback order: mobile -> iOS -> Android -> desktop -> single
+                redirect_url = (
+                    add_utm_to_url(qr_code.get('landing_page_mobile'), utm_value) or
+                    add_utm_to_url(qr_code.get('landing_page_ios'), utm_value) or
+                    add_utm_to_url(qr_code.get('landing_page_android'), utm_value) or
+                    add_utm_to_url(qr_code.get('landing_page_desktop'), utm_value) or
+                    add_utm_to_url(qr_code.get('landing_page_single', ''), utm_value)
+                )
         
         # Enhanced duplicate scan prevention with multiple layers
         import hashlib
