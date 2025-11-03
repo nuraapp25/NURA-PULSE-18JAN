@@ -1432,19 +1432,26 @@ async def bulk_import_leads(
         duplicates_skipped = 0
         
         for idx, row in df.iterrows():
-            phone = str(row.get('phone_number', '')).strip()
+            # Handle None/null phone numbers safely
+            phone = row.get('phone_number', '')
+            if phone is None or pd.isna(phone):
+                phone = ''
+            else:
+                phone = str(phone).strip()
+            
             if phone and phone != 'nan':
                 # Normalize phone number
                 normalized_phone = ''.join(filter(str.isdigit, phone))
                 
-                # Check if duplicate
-                if normalized_phone in existing_phones:
+                # Check if duplicate (only if normalized_phone has digits)
+                if normalized_phone and normalized_phone in existing_phones:
                     duplicates_skipped += 1
                     logger.info(f"Skipping duplicate phone: {phone}")
                     continue
                 
                 # Add to existing phones to prevent duplicates within import file
-                existing_phones.add(normalized_phone)
+                if normalized_phone:
+                    existing_phones.add(normalized_phone)
             
             # Add to new leads list
             new_leads.append(row)
