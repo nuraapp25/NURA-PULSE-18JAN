@@ -10875,6 +10875,8 @@ async def scan_qr_code(
             logger.info(f"Using single URL: {redirect_url}")
         else:
             # Multi-URL QR code - redirect based on device platform
+            redirect_url = None
+            
             if platform == "ios" and qr_code.get('landing_page_ios'):
                 redirect_url = add_utm_to_url(qr_code.get('landing_page_ios'), utm_value)
                 logger.info(f"iOS detected - Using iOS URL: {redirect_url}")
@@ -10887,16 +10889,19 @@ async def scan_qr_code(
             elif platform == "desktop" and qr_code.get('landing_page_desktop'):
                 redirect_url = add_utm_to_url(qr_code.get('landing_page_desktop'), utm_value)
                 logger.info(f"Desktop detected - Using Desktop URL: {redirect_url}")
-            else:
-                # Fallback order: mobile -> iOS -> Android -> desktop -> single
+            
+            # If no URL found for detected platform, use fallback
+            if not redirect_url or redirect_url == 'None':
+                # Fallback order: try other platforms, then default to nuraemobility.co.in
                 redirect_url = (
                     add_utm_to_url(qr_code.get('landing_page_mobile'), utm_value) or
                     add_utm_to_url(qr_code.get('landing_page_ios'), utm_value) or
                     add_utm_to_url(qr_code.get('landing_page_android'), utm_value) or
                     add_utm_to_url(qr_code.get('landing_page_desktop'), utm_value) or
-                    add_utm_to_url(qr_code.get('landing_page_single', ''), utm_value)
+                    add_utm_to_url(qr_code.get('landing_page_single'), utm_value) or
+                    add_utm_to_url('https://nuraemobility.co.in', utm_value)  # Default fallback
                 )
-                logger.info(f"Using fallback URL: {redirect_url}")
+                logger.info(f"No URL for {platform}, using fallback: {redirect_url}")
         
         # Enhanced duplicate scan prevention with multiple layers
         import hashlib
