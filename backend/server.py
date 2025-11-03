@@ -10868,18 +10868,25 @@ async def scan_qr_code(
             return f"{base_url}{separator}utm={utm_param}"
         
         # Determine redirect URL based on device platform
+        logger.info(f"QR Code Landing Pages - Type: {qr_code.get('landing_page_type')}, iOS: {qr_code.get('landing_page_ios')}, Android: {qr_code.get('landing_page_android')}, Mobile: {qr_code.get('landing_page_mobile')}, Single: {qr_code.get('landing_page_single')}")
+        
         if qr_code.get('landing_page_type') == 'single':
             redirect_url = add_utm_to_url(qr_code.get('landing_page_single', ''), utm_value)
+            logger.info(f"Using single URL: {redirect_url}")
         else:
             # Multi-URL QR code - redirect based on device platform
             if platform == "ios" and qr_code.get('landing_page_ios'):
                 redirect_url = add_utm_to_url(qr_code.get('landing_page_ios'), utm_value)
+                logger.info(f"iOS detected - Using iOS URL: {redirect_url}")
             elif platform == "android" and qr_code.get('landing_page_android'):
                 redirect_url = add_utm_to_url(qr_code.get('landing_page_android'), utm_value)
+                logger.info(f"Android detected - Using Android URL: {redirect_url}")
             elif platform == "mobile_other" and qr_code.get('landing_page_mobile'):
                 redirect_url = add_utm_to_url(qr_code.get('landing_page_mobile'), utm_value)
+                logger.info(f"Other Mobile detected - Using Mobile URL: {redirect_url}")
             elif platform == "desktop" and qr_code.get('landing_page_desktop'):
                 redirect_url = add_utm_to_url(qr_code.get('landing_page_desktop'), utm_value)
+                logger.info(f"Desktop detected - Using Desktop URL: {redirect_url}")
             else:
                 # Fallback order: mobile -> iOS -> Android -> desktop -> single
                 redirect_url = (
@@ -10889,6 +10896,7 @@ async def scan_qr_code(
                     add_utm_to_url(qr_code.get('landing_page_desktop'), utm_value) or
                     add_utm_to_url(qr_code.get('landing_page_single', ''), utm_value)
                 )
+                logger.info(f"Using fallback URL: {redirect_url}")
         
         # Enhanced duplicate scan prevention with multiple layers
         import hashlib
