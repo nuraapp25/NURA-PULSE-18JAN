@@ -458,7 +458,8 @@ class ProductionIssueTester:
                         check_response = self.make_request("GET", "/qr-codes")
                         if check_response and check_response.status_code == 200:
                             try:
-                                all_qr_codes = check_response.json()
+                                check_data = check_response.json()
+                                all_qr_codes = check_data.get('qr_codes', [])
                                 test_qr = next((qr for qr in all_qr_codes if qr.get('id') == new_qr_id), None)
                                 
                                 if test_qr:
