@@ -10785,6 +10785,7 @@ async def create_batch_qr_codes(
             qr_code = {
                 "id": str(uuid.uuid4()),
                 "short_code": short_code,
+                "unique_short_code": short_code,  # Add this field for scanning endpoint compatibility
                 "tracking_url": tracking_url,
                 "qr_name": qr_name,
                 "qr_filename": f"{batch_data.campaign_name}-{qr_name}.png",  # Proper filename format
