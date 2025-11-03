@@ -10848,6 +10848,8 @@ async def scan_qr_code(
         else:
             platform = "desktop"
         
+        logger.info(f"QR Scan - Short Code: {short_code}, Platform Detected: {platform}, OS: {user_agent.os.family}, User Agent: {user_agent_string[:100]}")
+        
         # Get client IP (check X-Forwarded-For for real IP behind proxies)
         client_ip = request.client.host
         forwarded_for = request.headers.get("x-forwarded-for", "")
