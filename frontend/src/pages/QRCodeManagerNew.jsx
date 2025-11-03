@@ -217,20 +217,20 @@ const QRCodeManagerNew = () => {
     try {
       const token = localStorage.getItem("token");
       const payload = {
+        name: `${campaignName}-QR`,  // Add a name field
         campaign_name: campaignName,
         landing_page_type: landingPageType,
-        single_url: singleUrl || null,
-        ios_url: iosUrl || null,
-        android_url: androidUrl || null,
-        web_url: webUrl || null,
+        landing_page_single: singleUrl || null,
+        landing_page_ios: iosUrl || null,
+        landing_page_android: androidUrl || null,
+        landing_page_mobile: webUrl || null,  // Map webUrl to landing_page_mobile
+        landing_page_desktop: webUrl || null,  // Map webUrl to landing_page_desktop
         utm_source: utmSource || campaignName,
         utm_medium: utmMedium,
         utm_campaign: utmCampaign || campaignName,
         utm_term: utmTerm || null,
         utm_content: utmContent || null,
-        use_color_qr: useColorQR,
-        qr_foreground_color: useColorQR ? qrForegroundColor : "#000000",
-        qr_background_color: useColorQR ? qrBackgroundColor : "#FFFFFF"
+        bulk_count: 1  // Single QR code
       };
       
       const response = await axios.post(`${API}/qr-codes/create`, payload, {
