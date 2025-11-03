@@ -1599,8 +1599,12 @@ const DriverOnboardingPage = () => {
     
     // Confirmation dialog
     if (!window.confirm(
-      "⚠️ WARNING: This will REPLACE ALL current leads with the data from your Excel file.\n\n" +
-      "A backup will be created automatically before import.\n\n" +
+      "📥 Import New Leads\n\n" +
+      "This will ADD new leads to your existing database.\n\n" +
+      "• New leads will be added\n" +
+      "• Duplicates (same phone number) will be skipped\n" +
+      "• A backup will be created automatically\n" +
+      "• Existing leads will NOT be deleted\n\n" +
       "Are you sure you want to proceed?"
     )) {
       return;
