@@ -10643,15 +10643,22 @@ def generate_qr_code_image(data: str, foreground_color: str = "black", backgroun
 @api_router.post("/qr-codes/create")
 async def create_qr_code(
     qr_data: QRCodeCreate,
+    request: Request,
     current_user: User = Depends(get_current_user)
 ):
     """Create a single QR code"""
     try:
+        # Get backend URL dynamically from request to ensure correct environment
+        host = request.headers.get('host', 'localhost:8001')
+        scheme = 'https' if 'https' in str(request.url) or request.headers.get('x-forwarded-proto') == 'https' else 'http'
+        backend_url = f"{scheme}://{host}"
+        
+        logger.info(f"Creating single QR code with backend URL: {backend_url}")
+        
         # Generate short code for tracking
         short_code = generate_short_code()
         
-        # Create tracking URL with correct backend URL
-        backend_url = os.environ.get('BACKEND_URL') or os.environ.get('REACT_APP_BACKEND_URL', 'https://leadmanager-15.preview.emergentagent.com/api')
+        # Create tracking URL with dynamic backend URL
         tracking_url = f"{backend_url}/qr-codes/scan/{short_code}"
         
         # Generate QR code image with color parameters
