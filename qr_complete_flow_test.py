@@ -154,8 +154,11 @@ class QRCodeFlowTester:
                             scan_url = f"https://leadmanager-15.preview.emergentagent.com/api/qr/{unique_code}"
                             
                             try:
+                                # Use unique user agent to avoid duplicate detection
+                                import time
+                                unique_headers = {"User-Agent": f"TestBot-Single-{int(time.time())}"}
                                 # Use allow_redirects=False to capture the redirect response
-                                scan_response = requests.get(scan_url, allow_redirects=False, timeout=10)
+                                scan_response = requests.get(scan_url, headers=unique_headers, allow_redirects=False, timeout=10)
                                 
                                 if scan_response.status_code == 302:
                                     redirect_location = scan_response.headers.get('Location', '')
