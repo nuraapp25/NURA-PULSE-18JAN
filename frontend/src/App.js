@@ -35,6 +35,7 @@ import UserActivityAnalytics from "@/pages/UserActivityAnalytics";
 import RidePayExtractV2 from "@/pages/RidePayExtractV2";
 import ManageDB from "@/pages/ManagePage";
 import SettingsPage from "@/pages/SettingsPage";
+import MaintenancePage from "@/pages/MaintenancePage";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 export const API = `${BACKEND_URL}/api`;
