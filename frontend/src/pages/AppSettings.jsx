@@ -81,6 +81,50 @@ const AppSettings = () => {
     }
   };
 
+  const handleToggleMaintenanceMode = async (enabled) => {
+    if (enabled) {
+      if (!window.confirm(
+        "⚠️ ENABLE MAINTENANCE MODE?\n\n" +
+        "This will lock out ALL users (except master admins) from the app.\n\n" +
+        "Users will see a maintenance message and cannot access any features.\n\n" +
+        "Are you sure?"
+      )) {
+        return;
+      }
+    }
+
+    setUpdating(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API}/app-settings?maintenance_mode=${enabled}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to update maintenance mode');
+      }
+
+      const data = await response.json();
+      setSettings(data.settings);
+      toast.success(data.message);
+      
+      if (enabled) {
+        toast.info("🔒 Maintenance mode enabled. All users (except master admins) are now locked out.", { duration: 5000 });
+      } else {
+        toast.success("✅ Maintenance mode disabled. All users can now access the app.", { duration: 5000 });
+      }
+    } catch (error) {
+      console.error('Error updating maintenance mode:', error);
+      toast.error(error.message || 'Failed to update maintenance mode');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="container mx-auto p-6 max-w-4xl">
