@@ -318,7 +318,7 @@ class ProductionIssueTester:
                 if qr_codes_zero_scans:
                     test_qr = qr_codes_zero_scans[0]
                     qr_id = test_qr.get('id')
-                    short_code = test_qr.get('short_code') or test_qr.get('unique_short_code')
+                    short_code = test_qr.get('unique_short_code')
                     
                     if short_code:
                         print(f"   Testing QR code: {qr_id} with short_code: {short_code}")
