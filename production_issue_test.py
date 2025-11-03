@@ -462,7 +462,7 @@ class ProductionIssueTester:
                                 test_qr = next((qr for qr in all_qr_codes if qr.get('id') == new_qr_id), None)
                                 
                                 if test_qr:
-                                    scan_count = test_qr.get('scan_count', 0)
+                                    scan_count = test_qr.get('total_scans', 0)
                                     if scan_count > 0:
                                         self.log_test("Scan Investigation - New QR Scan Recording", True, 
                                                     f"Scan recorded successfully: {scan_count} scans")
