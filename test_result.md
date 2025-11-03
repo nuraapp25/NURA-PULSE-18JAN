@@ -201,16 +201,22 @@ metadata:
   test_sequence: 0
   run_ui: false
 
+metadata:
+  created_by: "main_agent"
+  version: "5.0"
+  test_sequence: 0
+  run_ui: false
+
 test_plan:
   current_focus:
-    - "QR Code Campaign Delete Fix - Scan Cleanup"
+    - "Bulk Import Error - Empty Phone Number Handling"
   stuck_tasks: []
   test_all: false
   test_priority: "critical_first"
 
 agent_communication:
     - agent: "main"
-      message: "PRODUCTION CRITICAL FIXES COMPLETE: 1) QR Code Dynamic URL Generation - TESTED & WORKING: QR codes now use environment-specific URLs (100% test success). QR codes created in production will work when scanned. 2) QR Code Campaign Delete Fix - NEW FIX: Campaign deletion failing in production because scans weren't being deleted properly. Backend was using wrong field (campaign_name) to delete scans, but QRScan model only has qr_code_id. Fixed by extracting QR code IDs first, then deleting scans with $in query. This was causing campaigns to remain even after delete attempts. Ready for backend testing to verify campaign deletion now works correctly."
+      message: "PRODUCTION CRITICAL FIX IMPLEMENTED: Bulk Import Error - Empty Phone Number Handling. User reported bulk import failing with 'NoneType object has no attribute strip' error when uploading Excel file. Root cause: Excel file has many empty phone number cells (None values from pandas). Code attempted to call .strip() on None without checking. Fixed by: 1) Adding proper None checks (if phone is None or pd.isna(phone)), 2) Converting to string only after null check, 3) Validating normalized phone has digits before checking duplicates. Now gracefully handles Excel files with partial data (some leads with phones, some without). Ready for backend testing with user's actual Excel file."
     - agent: "testing"
       message: "✅ QR CODE DYNAMIC URL GENERATION TESTING COMPLETE: Successfully verified the production critical fix with 100% test success rate (4/4 tests passed). CRITICAL VERIFICATION: 1) Single QR creation (POST /api/qr-codes/create) generates dynamic URLs correctly - tested with real data and confirmed QR URLs use current environment host instead of hardcoded preview URLs. 2) Batch QR creation (POST /api/qr-codes/create-batch) generates dynamic tracking URLs for all QR codes in batch. 3) URL format verification confirms all generated URLs match expected pattern {scheme}://{host}/qr/{unique_code}?to=... 4) Backend logging verification shows 'Creating QR code with backend URL:' messages confirming dynamic URL extraction working. PRODUCTION ISSUE RESOLVED: QR codes created in production will now have production URLs and work correctly when scanned. The fix successfully extracts host from request headers and generates environment-specific URLs dynamically."
 
