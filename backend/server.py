@@ -1547,13 +1547,16 @@ async def bulk_import_leads(
                     updated_telecallers += 1
                     logger.info(f"Updated telecaller {telecaller_email} with {len(lead_ids)} new assigned leads")
         
+        # Get final count
+        total_leads_now = await leads_collection.count_documents({})
+        
         return {
             "success": True,
-            "message": "Bulk import completed successfully",
+            "message": "Import completed successfully. New leads added.",
             "backup_created": backup_filename if current_leads else None,
-            "deleted_count": delete_result.deleted_count,
-            "inserted_count": inserted_count,
-            "total_leads_now": inserted_count,
+            "new_leads_count": inserted_count,
+            "duplicates_skipped": duplicates_skipped,
+            "total_leads_now": total_leads_now,
             "telecaller_assignments": {
                 "leads_assigned": leads_with_assignments,
                 "telecallers_updated": updated_telecallers
