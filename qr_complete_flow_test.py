@@ -348,7 +348,7 @@ class QRCodeFlowTester:
                             print("\n--- Step 4: Testing Fallback for Unrecognized Device ---")
                             
                             generic_headers = {
-                                "User-Agent": "GenericBot/1.0"
+                                "User-Agent": f"GenericBot/1.0-{int(time.time())}"
                             }
                             
                             try:
