@@ -7140,8 +7140,8 @@ async def create_qr_code(
             parsed = urlparse(dest_url)
             dest_display = f"{parsed.netloc}{parsed.path}" if parsed.netloc else dest_url
             
-            # Create QR redirect URL
-            qr_redirect_url = f"{backend_url}/qr/{unique_code}?to={dest_display}"
+            # Create QR redirect URL - Must include /api prefix for Kubernetes routing
+            qr_redirect_url = f"{backend_url}/api/qr/{unique_code}"
             
             # Generate QR code image
             qr = qrcode.QRCode(
