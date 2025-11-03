@@ -275,13 +275,13 @@ class QRCodeFlowTester:
                     qr_codes = result["qr_codes"]
                     if len(qr_codes) > 0:
                         qr_code = qr_codes[0]
-                        unique_short_code = qr_code.get("unique_short_code")
+                        unique_code = qr_code.get("unique_code")
                         qr_id = qr_code.get("id")
                         
-                        if unique_short_code and qr_id:
-                            self.created_qr_codes.append({"id": qr_id, "short_code": unique_short_code})
+                        if unique_code and qr_id:
+                            self.created_qr_codes.append({"id": qr_id, "short_code": unique_code})
                             self.log_test("Multi QR - Creation", True, 
-                                        f"Created multi-URL QR code with short code: {unique_short_code}")
+                                        f"Created multi-URL QR code with short code: {unique_code}")
                             success_count += 1
                             
                             # Step 2: Test Android scan
