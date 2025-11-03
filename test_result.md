@@ -147,6 +147,18 @@ backend:
           agent: "main"
           comment: "PRODUCTION CRITICAL BUG FIX: Bulk import failing with 'NoneType object has no attribute strip' error when Excel file has empty phone number cells. ROOT CAUSE: Code attempted to call .strip() directly on None values from empty cells without checking for None first. Lines 1417 and 1430 in bulk import endpoint. SOLUTION IMPLEMENTED: 1) Added proper None/null checks before calling .strip(): check if phone is None or pd.isna(phone) first, 2) Convert to string only if not None, 3) Added validation to only normalize and check duplicates if phone has actual digits, 4) This handles Excel files with missing/empty phone number data gracefully without crashing. Now supports partial data imports where some leads have phone numbers and others don't. Ready for backend testing with user's Excel file that has many empty phone number cells."
   
+  - task: "Production Issue Investigation - Campaign Deletion & Scan Analytics"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "🚨 URGENT PRODUCTION INVESTIGATION COMPLETE: Investigated specific production issues reported by user. SUCCESS RATE: 42.9% (3/7 tests passed). CRITICAL FINDINGS: 1) CAMPAIGN DELETION ISSUE: No existing campaigns with exactly 5 QR codes found in current database (user reported campaign with 5 QR codes from 28/10/2025). Campaign deletion functionality is working correctly for existing campaigns - backend logs show proper deletion with enhanced logging. 2) SCAN DATA ISSUE CONFIRMED: QR codes are NOT redirecting properly - scan endpoint /qr-codes/scan/{short_code} returns 200 instead of expected 302 redirect. Backend logs show scans ARE being recorded correctly (logs: 'New scan recorded for QR 505101dc', 'QR scan recorded: 505101dc -> desktop'), but the HTTP response is incorrect. 3) QR CODE CREATION ISSUES: Both single QR creation and batch creation endpoints return 422 errors due to missing required fields (e.g., 'name' field required). 4) ANALYTICS ENDPOINT ISSUES: /qr-codes/analytics returns 404 'QR code not found' error. ROOT CAUSE ANALYSIS: The scan recording logic is working (backend logs confirm), but the HTTP response handling may have issues. The user's specific campaign from 28/10/2025 is not present in current database, suggesting data may have been cleaned up or the issue occurred in a different environment. RECOMMENDATION: Check scan endpoint response handling and analytics endpoint parameter requirements."
+  
   - task: "QR Code Dynamic URL Generation Fix"
     implemented: true
     working: true
