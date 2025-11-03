@@ -838,14 +838,6 @@ const QRCodeManagerNew = () => {
         </div>
         <div className="flex gap-3">
           <Button 
-            onClick={() => navigate('/qr-analytics-dashboard')}
-            variant="outline"
-            className="border-teal-600 text-teal-600 hover:bg-teal-50"
-          >
-            <BarChart3 className="w-4 h-4 mr-2" />
-            View Analytics
-          </Button>
-          <Button 
             onClick={() => setCreateDialogOpen(true)}
             className="bg-teal-600 hover:bg-teal-700"
           >
