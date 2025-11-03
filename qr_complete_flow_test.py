@@ -138,13 +138,13 @@ class QRCodeFlowTester:
                     qr_codes = result["qr_codes"]
                     if len(qr_codes) > 0:
                         qr_code = qr_codes[0]
-                        unique_short_code = qr_code.get("unique_short_code")
+                        unique_code = qr_code.get("unique_code")
                         qr_id = qr_code.get("id")
                         
-                        if unique_short_code and qr_id:
-                            self.created_qr_codes.append({"id": qr_id, "short_code": unique_short_code})
+                        if unique_code and qr_id:
+                            self.created_qr_codes.append({"id": qr_id, "short_code": unique_code})
                             self.log_test("Single QR - Creation", True, 
-                                        f"Created QR code with short code: {unique_short_code}")
+                                        f"Created QR code with short code: {unique_code}")
                             success_count += 1
                             
                             # Step 2: Simulate QR scan
