@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "CRITICAL PRODUCTION ISSUE: All created QR codes are not working. They are not opening links when scanned from phone and scan data is not being recorded in the app. User has lost all working codes."
+user_problem_statement: "CRITICAL PRODUCTION ISSUES: 1) Unable to delete campaign folders. 2) Batch QR codes created with multi URLs (device specific) are not working - showing 'QR code not found'."
 
 backend:
   - task: "Bulk Import Error - Empty Phone Number Handling"
