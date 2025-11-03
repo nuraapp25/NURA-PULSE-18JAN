@@ -81,9 +81,16 @@ function App() {
     setTheme(prev => prev === "light" ? "dark" : "light");
   };
   
-  // Check maintenance mode on app load
+  // Check maintenance mode on app load and when user changes
   useEffect(() => {
     const checkMaintenanceMode = async () => {
+      // Only check maintenance mode if user is logged in
+      if (!user) {
+        setMaintenanceMode(false);
+        setCheckingMaintenance(false);
+        return;
+      }
+      
       try {
         const response = await axios.get(`${API}/maintenance-status`);
         setMaintenanceMode(response.data.maintenance_mode || false);
@@ -97,10 +104,12 @@ function App() {
     
     checkMaintenanceMode();
     
-    // Check every 30 seconds if maintenance mode changed
-    const interval = setInterval(checkMaintenanceMode, 30000);
-    return () => clearInterval(interval);
-  }, []);
+    // Check every 30 seconds if maintenance mode changed (only when logged in)
+    if (user) {
+      const interval = setInterval(checkMaintenanceMode, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [user]); // Depend on user so it re-checks when user logs in/out
 
   useEffect(() => {
     // Check if user is logged in
