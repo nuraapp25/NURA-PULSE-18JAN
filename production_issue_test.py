@@ -347,8 +347,8 @@ class ProductionIssueTester:
                                         updated_qr = next((qr for qr in updated_qr_codes if qr.get('id') == qr_id), None)
                                         
                                         if updated_qr:
-                                            new_scan_count = updated_qr.get('scan_count', 0)
-                                            old_scan_count = test_qr.get('scan_count', 0)
+                                            new_scan_count = updated_qr.get('total_scans', 0)
+                                            old_scan_count = test_qr.get('total_scans', 0)
                                             
                                             if new_scan_count > old_scan_count:
                                                 self.log_test("Scan Investigation - Scan Count Increment", True, 
