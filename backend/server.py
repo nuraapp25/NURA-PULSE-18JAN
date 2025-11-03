@@ -10100,6 +10100,7 @@ async def get_app_settings(
             default_settings = {
                 '_id': 'global_settings',
                 'payment_extractor_enabled': True,
+                'maintenance_mode': False,
                 'updated_at': datetime.now(timezone.utc).isoformat(),
                 'updated_by': 'system'
             }
@@ -10109,7 +10110,8 @@ async def get_app_settings(
         return {
             "success": True,
             "settings": {
-                "payment_extractor_enabled": settings.get('payment_extractor_enabled', True)
+                "payment_extractor_enabled": settings.get('payment_extractor_enabled', True),
+                "maintenance_mode": settings.get('maintenance_mode', False)
             }
         }
         
