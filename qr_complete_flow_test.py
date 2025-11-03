@@ -232,7 +232,7 @@ class QRCodeFlowTester:
                                 self.log_test("Single QR - Scan Recording", False, error_msg)
                         else:
                             self.log_test("Single QR - Creation", False, 
-                                        "QR code missing unique_short_code or id")
+                                        "QR code missing unique_code or id")
                     else:
                         self.log_test("Single QR - Creation", False, 
                                     "No QR codes returned in response")
