@@ -151,7 +151,7 @@ class QRCodeFlowTester:
                             print("\n--- Step 2: Simulating QR Code Scan ---")
                             
                             # Test direct scan endpoint (should redirect)
-                            scan_url = f"https://leadmanager-15.preview.emergentagent.com/qr/{unique_short_code}"
+                            scan_url = f"https://leadmanager-15.preview.emergentagent.com/qr/{unique_code}"
                             
                             try:
                                 # Use allow_redirects=False to capture the redirect response
