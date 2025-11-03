@@ -11088,11 +11088,16 @@ async def delete_campaign(
             if current_user.account_type != "master_admin":
                 raise HTTPException(status_code=403, detail="Only master admins can force delete published campaigns")
         
+        # Extract all QR code IDs to delete associated scans
+        qr_code_ids = [qr.get("id") for qr in qr_codes if qr.get("id")]
+        
+        # Delete associated scan data first (scans are linked by qr_code_id, not campaign_name)
+        if qr_code_ids:
+            scans_result = await db.qr_scans.delete_many({"qr_code_id": {"$in": qr_code_ids}})
+            logger.info(f"Deleted {scans_result.deleted_count} scans for campaign '{campaign_name}'")
+        
         # Delete all QR codes in the campaign
         result = await db.qr_codes.delete_many({"campaign_name": campaign_name})
-        
-        # Also delete associated scan data
-        await db.qr_scans.delete_many({"campaign_name": campaign_name})
         
         return {
             "success": True,
