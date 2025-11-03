@@ -133,6 +133,24 @@ function App() {
     setUser(null);
   };
 
+  if (checkingMaintenance) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  // Show maintenance page for non-master-admins when maintenance mode is active
+  if (maintenanceMode && user && user.account_type !== "master_admin") {
+    return <MaintenancePage />;
+  }
+  
+  // Show maintenance page for non-logged-in users when maintenance mode is active
+  if (maintenanceMode && !user) {
+    return <MaintenancePage />;
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
