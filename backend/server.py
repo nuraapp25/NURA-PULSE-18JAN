@@ -1446,13 +1446,31 @@ async def bulk_import_leads(
         
         logger.info(f"New leads to add: {len(new_leads)}, Duplicates skipped: {duplicates_skipped}")
         
-        # Step 4: Process telecaller assignments from Column V (assigned_telecaller)
+        if len(new_leads) == 0:
+            logger.info("No new leads to add (all were duplicates)")
+            return {
+                "success": True,
+                "backup_created": backup_filename,
+                "new_leads_count": 0,
+                "duplicates_skipped": duplicates_skipped,
+                "total_leads_now": len(current_leads),
+                "telecaller_assignments": {
+                    "leads_assigned": 0,
+                    "telecallers_updated": 0
+                },
+                "message": "No new leads added. All entries were duplicates."
+            }
+        
+        # Convert new leads list to DataFrame for processing
+        df_new = pd.DataFrame(new_leads)
+        
+        # Step 6: Process telecaller assignments
         telecallers_collection = db['telecallers']
-        telecaller_assignments = {}  # Map telecaller_name -> [lead_ids]
+        telecaller_assignments = {}
         leads_with_assignments = 0
         
-        if 'assigned_telecaller' in df.columns:
-            logger.info("Processing telecaller assignments from Column V (assigned_telecaller)...")
+        if 'assigned_telecaller' in df_new.columns:
+            logger.info("Processing telecaller assignments...")
             
             # Get all active telecallers
             all_telecallers = await telecallers_collection.find({"is_active": True}).to_list(length=None)
@@ -1460,59 +1478,49 @@ async def bulk_import_leads(
             
             logger.info(f"Found {len(all_telecallers)} active telecallers in database")
             
-            # Process each lead's telecaller assignment
-            for idx, row in df.iterrows():
+            # Process each new lead's telecaller assignment
+            for idx, row in df_new.iterrows():
                 assigned_telecaller = row.get('assigned_telecaller')
                 
-                # Check if telecaller name is provided and not NaN
                 if pd.notna(assigned_telecaller) and str(assigned_telecaller).strip():
                     telecaller_name = str(assigned_telecaller).strip()
                     telecaller_name_lower = telecaller_name.lower()
                     
-                    # Find matching telecaller
                     if telecaller_name_lower in telecaller_name_map:
                         telecaller = telecaller_name_map[telecaller_name_lower]
                         lead_id = row['id']
                         
-                        # Update the lead with telecaller email
-                        df.at[idx, 'assigned_telecaller'] = telecaller['email']
+                        df_new.at[idx, 'assigned_telecaller'] = telecaller['email']
                         
-                        # Track assignments for updating telecaller profiles
                         if telecaller['email'] not in telecaller_assignments:
                             telecaller_assignments[telecaller['email']] = []
                         telecaller_assignments[telecaller['email']].append(lead_id)
                         
                         leads_with_assignments += 1
-                        logger.info(f"Assigned lead {lead_id} to telecaller {telecaller['name']} ({telecaller['email']})")
+                        logger.info(f"Assigned lead {lead_id} to telecaller {telecaller['name']}")
                     else:
-                        logger.warning(f"Telecaller '{telecaller_name}' not found in database for lead {row['id']}")
-                        df.at[idx, 'assigned_telecaller'] = None
+                        logger.warning(f"Telecaller '{telecaller_name}' not found for lead {row['id']}")
+                        df_new.at[idx, 'assigned_telecaller'] = None
                 else:
-                    # No telecaller assigned
-                    df.at[idx, 'assigned_telecaller'] = None
+                    df_new.at[idx, 'assigned_telecaller'] = None
         
-        # Step 5: Convert DataFrame to list of dictionaries
-        new_leads = df.to_dict('records')
-        
-        # Clean up NaN values
-        for lead in new_leads:
+        # Step 7: Convert to list and clean NaN values
+        leads_to_insert = df_new.to_dict('records')
+        for lead in leads_to_insert:
             for key, value in list(lead.items()):
                 if pd.isna(value):
                     lead[key] = None
         
-        # Step 6: DELETE all existing leads
-        delete_result = await leads_collection.delete_many({})
-        logger.info(f"Deleted {delete_result.deleted_count} existing leads")
-        
-        # Step 7: INSERT all new leads from Excel
-        if new_leads:
-            insert_result = await leads_collection.insert_many(new_leads)
+        # Step 8: INSERT only new leads (don't delete existing)
+        logger.info(f"Inserting {len(leads_to_insert)} new leads...")
+        if leads_to_insert:
+            insert_result = await leads_collection.insert_many(leads_to_insert)
             inserted_count = len(insert_result.inserted_ids)
             logger.info(f"Inserted {inserted_count} new leads")
         else:
             inserted_count = 0
         
-        # Step 8: Update telecaller profiles with assigned leads
+        # Step 9: Update telecaller profiles with assigned leads
         updated_telecallers = 0
         if telecaller_assignments:
             logger.info(f"Updating {len(telecaller_assignments)} telecaller profiles with assigned leads...")
