@@ -7186,7 +7186,13 @@ async def create_qr_code(
             )
             
             # Save to database
-            await db.qr_codes.insert_one(qr_code.model_dump())
+            logger.info(f"About to save QR code to database: ID={qr_code.id}, Code={unique_code}")
+            try:
+                result = await db.qr_codes.insert_one(qr_code.model_dump())
+                logger.info(f"QR code saved to database successfully. Inserted ID: {result.inserted_id}")
+            except Exception as db_error:
+                logger.error(f"DATABASE SAVE FAILED: {str(db_error)}")
+                raise
             
             created_qr_codes.append({
                 "id": qr_code.id,
