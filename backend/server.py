@@ -11162,24 +11162,35 @@ async def delete_campaign(
 ):
     """Delete all QR codes in a campaign"""
     try:
+        logger.info(f"=== CAMPAIGN DELETE REQUEST === Campaign: '{campaign_name}', Force: {force}, User: {current_user.email}, Role: {current_user.account_type}")
+        
         # Find all QR codes in the campaign
         qr_codes = await db.qr_codes.find({"campaign_name": campaign_name}).to_list(None)
         
         if not qr_codes:
+            logger.error(f"Campaign '{campaign_name}' not found in database")
             raise HTTPException(status_code=404, detail="Campaign not found")
+        
+        logger.info(f"Found {len(qr_codes)} QR codes in campaign '{campaign_name}'")
         
         # Check if any QR code in the campaign is published
         has_published = any(qr.get("published", False) for qr in qr_codes)
         
+        logger.info(f"Campaign has published QR codes: {has_published}")
+        
         if has_published and not force:
+            logger.warning(f"Attempted to delete published campaign '{campaign_name}' without force flag")
             raise HTTPException(status_code=400, detail="Cannot delete published campaign. Use force=true to override (master admin only)")
         
         if has_published and force:
             if current_user.account_type != "master_admin":
+                logger.warning(f"Non-master admin {current_user.email} attempted to force delete published campaign '{campaign_name}'")
                 raise HTTPException(status_code=403, detail="Only master admins can force delete published campaigns")
         
         # Extract all QR code IDs to delete associated scans
         qr_code_ids = [qr.get("id") for qr in qr_codes if qr.get("id")]
+        
+        logger.info(f"Deleting associated scans for {len(qr_code_ids)} QR codes")
         
         # Delete associated scan data first (scans are linked by qr_code_id, not campaign_name)
         if qr_code_ids:
@@ -11189,15 +11200,19 @@ async def delete_campaign(
         # Delete all QR codes in the campaign
         result = await db.qr_codes.delete_many({"campaign_name": campaign_name})
         
+        logger.info(f"Successfully deleted campaign '{campaign_name}' with {result.deleted_count} QR codes")
+        
         return {
             "success": True,
-            "message": f"Campaign '{campaign_name}' and {result.deleted_count} QR codes deleted successfully"
+            "message": f"Campaign '{campaign_name}' and {result.deleted_count} QR codes deleted successfully",
+            "qr_codes_deleted": result.deleted_count,
+            "scans_deleted": scans_result.deleted_count if qr_code_ids else 0
         }
         
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Failed to delete campaign: {str(e)}")
+        logger.error(f"Failed to delete campaign '{campaign_name}': {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to delete campaign: {str(e)}")
 
 @api_router.post("/qr-codes/campaigns/{campaign_name}/publish")
