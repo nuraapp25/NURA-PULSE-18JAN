@@ -167,7 +167,7 @@ class QRCodeCriticalFixesTester:
         print("\n--- Verifying QR codes stored with correct field names ---")
         
         # Get campaign details to verify field names
-        response = self.make_request("GET", f"/qr-codes/campaigns/{campaign_name}")
+        response = self.make_request("GET", f"/qr-codes/campaign/{campaign_name}")
         
         if response and response.status_code == 200:
             try:
