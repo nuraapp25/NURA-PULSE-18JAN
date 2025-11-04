@@ -111,9 +111,14 @@ class PhoneNumberProcessingTester:
                     if leads_response.status_code == 200:
                         all_leads = leads_response.json()
                         
+                        # Check if response is a list or has a different structure
+                        if isinstance(all_leads, dict):
+                            print(f"Leads response is dict: {all_leads}")
+                            return False
+                        
                         # Find our test leads by source
                         test_leads = [lead for lead in all_leads 
-                                    if lead.get("source") == f'Phone Test - {test_name}']
+                                    if isinstance(lead, dict) and lead.get("source") == f'Phone Test - {test_name}']
                         
                         print(f"Found {len(test_leads)} test leads")
                         
