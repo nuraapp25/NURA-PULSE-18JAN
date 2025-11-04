@@ -438,6 +438,18 @@ frontend:
           agent: "main"
           comment: "IMPLEMENTATION COMPLETE: Separated leads into 'Active Leads' and 'Call Back Scheduled' sections. Active Leads = status NOT starting with 'Call back'. Scheduled section is collapsible with toggle button. Within scheduled section: 'Due Today' subsection shows leads with callback_date matching today with red highlight. 'Upcoming' subsections group leads by callback_date in ascending order. Each date shows formatted date header with lead count. Scheduled section appears below active leads."
 
+  - task: "Telecaller's Desk - Calendar Date Filter & Search Bar"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/TelecallerDeskMobile.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "IMPLEMENTATION COMPLETE: Added calendar date picker and search bar to Telecaller's Desk for enhanced lead filtering. FEATURES: (1) CALENDAR DATE FILTER - Date input with calendar icon at top, filters leads by import_date field, shows selected date in readable format (e.g., '15 Dec 2024'), clear button (X) to reset filter, visual feedback showing filtered date. (2) SEARCH BAR - Search input with search icon, searches across name and phone_number fields, case-insensitive partial matching, real-time filtering as user types, clear button (X) to reset search, shows count of matching leads. (3) FILTER LOGIC - getFilteredLeads() function filters both active and scheduled leads, filters can be combined (date + search work together), smart empty state handling when no matches found. (4) UI/UX - Responsive design for mobile and desktop, proper dark mode support, sticky header keeps filters visible while scrolling, visual indicators for active filters. (5) NO RESULTS STATE - Shows helpful message when filters exclude all leads, provides clear buttons to reset date/search filters. Both filters work independently and in combination. Users can click a date to see that day's leads, or search by name/phone to find specific leads."
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
