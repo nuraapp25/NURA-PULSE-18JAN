@@ -674,6 +674,139 @@ const TelecallerDeskMobile = () => {
       </div>
     );
   }
+  
+  // Check if there are filtered leads
+  const hasFilteredLeads = activeLeads.length > 0 || scheduledLeads.length > 0;
+  
+  if (!hasFilteredLeads && !loading && leads.length > 0) {
+    // Leads exist but filters exclude all of them
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 pb-20">
+        {/* Header with filters */}
+        <div className="mb-4 sticky top-0 bg-gray-50 dark:bg-gray-900 z-10 py-2">
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              {isAdmin ? "Telecaller's Desk" : "My Leads"}
+            </h1>
+            <Button 
+              onClick={() => {
+                if (isAdmin && selectedTelecaller) {
+                  fetchLeadsForTelecaller(selectedTelecaller);
+                  setTimeout(() => fetchSummary(selectedTelecaller), 100);
+                } else {
+                  fetchLeads();
+                  setTimeout(() => fetchSummary(), 100);
+                }
+              }} 
+              variant="outline" 
+              size="sm"
+            >
+              <RefreshCw className="w-4 h-4" />
+            </Button>
+          </div>
+          
+          {/* Telecaller Selector for Admins */}
+          {isAdmin && telecallers.length > 0 && (
+            <div className="mb-3">
+              <Select value={selectedTelecaller} onValueChange={handleTelecallerChange}>
+                <SelectTrigger className="w-full dark:bg-gray-800 dark:border-gray-700">
+                  <SelectValue placeholder="Select a telecaller" />
+                </SelectTrigger>
+                <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                  {telecallers.map((telecaller) => (
+                    <SelectItem key={telecaller.email} value={telecaller.email}>
+                      {telecaller.first_name} {telecaller.last_name} ({telecaller.email})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          
+          {/* Date Filter (Calendar) */}
+          <div className="mb-3">
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-gray-400" />
+                <Input
+                  type="date"
+                  value={selectedDate || ""}
+                  onChange={(e) => setSelectedDate(e.target.value || null)}
+                  className="pl-10 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+                  placeholder="Filter by date"
+                />
+              </div>
+              {selectedDate && (
+                <Button
+                  onClick={() => setSelectedDate(null)}
+                  variant="outline"
+                  size="sm"
+                  className="dark:bg-gray-800 dark:border-gray-700"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
+            {selectedDate && (
+              <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                Showing leads from {new Date(selectedDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+              </p>
+            )}
+          </div>
+          
+          {/* Search Bar */}
+          <div className="mb-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-gray-400" />
+              <Input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by name or phone number..."
+                className="pl-10 pr-10 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+        
+        {/* No results message */}
+        <div className="flex flex-col items-center justify-center mt-20">
+          <AlertCircle className="w-16 h-16 text-gray-400 mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+            No leads found
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 text-center mb-4">
+            {selectedDate && searchQuery 
+              ? `No leads match the date "${new Date(selectedDate).toLocaleDateString('en-GB')}" and search "${searchQuery}"`
+              : selectedDate 
+              ? `No leads found for date "${new Date(selectedDate).toLocaleDateString('en-GB')}"`
+              : `No leads match the search "${searchQuery}"`
+            }
+          </p>
+          <div className="flex gap-2">
+            {selectedDate && (
+              <Button onClick={() => setSelectedDate(null)} variant="outline">
+                Clear Date Filter
+              </Button>
+            )}
+            {searchQuery && (
+              <Button onClick={() => setSearchQuery("")} variant="outline">
+                Clear Search
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 pb-20">
