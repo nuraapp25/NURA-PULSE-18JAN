@@ -191,8 +191,10 @@ class QRAnalyticsDisplayTester:
             
             all_qr_data = all_qr_response.json()
             target_qr = None
-            for qr in all_qr_data:
-                if qr.get("id") == self.created_qr_id:
+            # Handle both list and dict responses
+            qr_list = all_qr_data if isinstance(all_qr_data, list) else all_qr_data.get("qr_codes", [])
+            for qr in qr_list:
+                if isinstance(qr, dict) and qr.get("id") == self.created_qr_id:
                     target_qr = qr
                     break
             
