@@ -944,8 +944,8 @@ const TelecallerDeskMobile = () => {
         </div>
       ) : summaryData ? (
         <div className="mb-4 space-y-3">
-          {/* Top 3 Summary Cards */}
-          <div className="grid grid-cols-3 gap-2">
+          {/* Top 4 Summary Cards - 2x2 grid on mobile, 4 columns on larger screens */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
             <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
               <CardContent className="p-3 text-center">
                 <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
@@ -967,9 +967,42 @@ const TelecallerDeskMobile = () => {
             <Card className="bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800">
               <CardContent className="p-3 text-center">
                 <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-                  {summaryData.calls_pending}
+                  {/* Calculate pending calls excluding callback leads */}
+                  {(() => {
+                    const callbackStatuses = ['Call back 1D', 'Call back 1W', 'Call back 2W', 'Call back 1M'];
+                    let callbackCount = 0;
+                    Object.entries(summaryData.stage_breakdown || {}).forEach(([stage, data]) => {
+                      Object.entries(data.statuses || {}).forEach(([status, count]) => {
+                        if (callbackStatuses.includes(status)) {
+                          callbackCount += count;
+                        }
+                      });
+                    });
+                    return Math.max(0, (summaryData.calls_pending || 0) - callbackCount);
+                  })()}
                 </div>
                 <div className="text-xs text-gray-600 dark:text-gray-400 font-medium">Calls Pending</div>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800">
+              <CardContent className="p-3 text-center">
+                <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                  {/* Count callback leads from stage breakdown */}
+                  {(() => {
+                    const callbackStatuses = ['Call back 1D', 'Call back 1W', 'Call back 2W', 'Call back 1M'];
+                    let callbackCount = 0;
+                    Object.entries(summaryData.stage_breakdown || {}).forEach(([stage, data]) => {
+                      Object.entries(data.statuses || {}).forEach(([status, count]) => {
+                        if (callbackStatuses.includes(status)) {
+                          callbackCount += count;
+                        }
+                      });
+                    });
+                    return callbackCount;
+                  })()}
+                </div>
+                <div className="text-xs text-gray-600 dark:text-gray-400 font-medium">Call Backs Scheduled</div>
               </CardContent>
             </Card>
           </div>
