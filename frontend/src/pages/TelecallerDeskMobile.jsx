@@ -718,8 +718,66 @@ const TelecallerDeskMobile = () => {
           </div>
         )}
         
+        {/* Date Filter (Calendar) */}
+        <div className="mb-3">
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-gray-400" />
+              <Input
+                type="date"
+                value={selectedDate || ""}
+                onChange={(e) => setSelectedDate(e.target.value || null)}
+                className="pl-10 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+                placeholder="Filter by date"
+              />
+            </div>
+            {selectedDate && (
+              <Button
+                onClick={() => setSelectedDate(null)}
+                variant="outline"
+                size="sm"
+                className="dark:bg-gray-800 dark:border-gray-700"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
+          {selectedDate && (
+            <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+              Showing leads from {new Date(selectedDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+            </p>
+          )}
+        </div>
+        
+        {/* Search Bar */}
+        <div className="mb-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-gray-400" />
+            <Input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by name or phone number..."
+              className="pl-10 pr-10 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+          {searchQuery && (
+            <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+              Found {activeLeads.length + scheduledLeads.length} matching leads
+            </p>
+          )}
+        </div>
+        
         <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-          {leads.length} leads assigned
+          {activeLeads.length + scheduledLeads.length} leads {selectedDate || searchQuery ? 'matched' : 'assigned'}
           {isAdmin && selectedTelecaller && telecallers.length > 0 && (
             <span className="ml-2 text-blue-600 dark:text-blue-400">
               • Viewing: {telecallers.find(t => t.email === selectedTelecaller)?.first_name} {telecallers.find(t => t.email === selectedTelecaller)?.last_name}'s desk
