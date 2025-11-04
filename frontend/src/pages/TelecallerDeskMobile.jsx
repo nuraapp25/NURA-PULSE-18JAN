@@ -948,7 +948,15 @@ const TelecallerDeskMobile = () => {
         </div>
         
         <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-          {activeLeads.length + scheduledLeads.length} leads {selectedDate || searchQuery ? 'matched' : 'assigned'}
+          {activeLeads.length + scheduledLeads.length} leads {summaryFilter ? 'filtered' : (selectedDate || searchQuery ? 'matched' : 'assigned')}
+          {summaryFilter && (
+            <span className="ml-2 text-blue-600 dark:text-blue-400 font-semibold">
+              • {summaryFilter === 'total' ? 'All Leads' : 
+                 summaryFilter === 'calls_done' ? 'Called Today' :
+                 summaryFilter === 'calls_pending' ? 'Pending Calls' :
+                 'Call Backs'}
+            </span>
+          )}
           {isAdmin && selectedTelecaller && telecallers.length > 0 && (
             <span className="ml-2 text-blue-600 dark:text-blue-400">
               • Viewing: {telecallers.find(t => t.email === selectedTelecaller)?.first_name} {telecallers.find(t => t.email === selectedTelecaller)?.last_name}'s desk
