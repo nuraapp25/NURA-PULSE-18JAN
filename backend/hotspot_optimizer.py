@@ -257,14 +257,14 @@ def assign_points_to_hotspots(points: np.ndarray,
     return nearest_rank
 
 
-def optimize_hotspots(df: pd.DataFrame, N: int = 5, h3_res: int = 9, 
+def optimize_hotspots(df: pd.DataFrame, N: int = 10, h3_res: int = 9, 
                      use_h3: bool = True) -> dict:
     """
     Main function to optimize hotspot locations for a given time slot.
     
     Args:
         df: DataFrame with columns ['lat', 'lon', 'weight']
-        N: Number of hotspots to find
+        N: Number of hotspots to find (default: 10)
         h3_res: H3 resolution (8-10 typical)
         use_h3: Whether to use H3 for candidate generation
     
