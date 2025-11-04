@@ -8,7 +8,7 @@ import json
 import sys
 
 # Configuration
-BASE_URL = "https://driver-onboard-4.preview.emergentagent.com/api"
+BASE_URL = "https://qr-campaign-fix.preview.emergentagent.com/api"
 MASTER_ADMIN_EMAIL = "admin"
 MASTER_ADMIN_PASSWORD = "Nura@1234$"
 
