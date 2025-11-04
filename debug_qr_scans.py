@@ -44,7 +44,9 @@ def debug_qr_scans():
     response = requests.get(f"{BASE_URL}/qr-codes", headers=headers, timeout=10)
     
     if response.status_code == 200:
-        qr_codes = response.json()
+        qr_codes_data = response.json()
+        # Handle both list and dict responses
+        qr_codes = qr_codes_data if isinstance(qr_codes_data, list) else qr_codes_data.get("qr_codes", [])
         print(f"   Found {len(qr_codes)} QR codes")
         
         # Show recent QR codes
