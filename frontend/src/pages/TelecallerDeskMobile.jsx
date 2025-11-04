@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Phone, MessageCircle, CheckCircle, RefreshCw, AlertCircle, User, History, ChevronDown, ChevronUp } from "lucide-react";
+import { Phone, MessageCircle, CheckCircle, RefreshCw, AlertCircle, User, History, ChevronDown, ChevronUp, Calendar, Search, X } from "lucide-react";
 import LeadDetailsDialog from "@/components/LeadDetailsDialog";
 
 // Status options grouped by stage
