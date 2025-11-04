@@ -77,7 +77,7 @@ async def check_database():
     for index in indexes:
         print(f"     - {index.get('name')}: {index.get('key')}")
     
-    await client.close()
+    client.close()
 
 if __name__ == "__main__":
     asyncio.run(check_database())
