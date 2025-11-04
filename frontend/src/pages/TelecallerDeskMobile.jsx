@@ -90,9 +90,42 @@ const TelecallerDeskMobile = () => {
   const [showScheduledLeads, setShowScheduledLeads] = useState(true); // For collapsible section
   const [showActiveLeads, setShowActiveLeads] = useState(true); // For collapsible active leads
   
-  // Separate leads into active and scheduled
-  const activeLeads = leads.filter(lead => !lead.status?.startsWith("Call back"));
-  const scheduledLeads = leads.filter(lead => lead.status?.startsWith("Call back"));
+  // NEW: Calendar and Search state
+  const [selectedDate, setSelectedDate] = useState(null); // null means show all dates
+  const [searchQuery, setSearchQuery] = useState("");
+  
+  // Filter leads based on date and search query
+  const getFilteredLeads = (leadsArray) => {
+    let filtered = [...leadsArray];
+    
+    // Filter by selected date (check import_date field)
+    if (selectedDate) {
+      filtered = filtered.filter(lead => {
+        const leadDate = lead.import_date ? lead.import_date.split('T')[0] : null;
+        return leadDate === selectedDate;
+      });
+    }
+    
+    // Filter by search query (phone number or name)
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(lead => {
+        const name = (lead.name || "").toLowerCase();
+        const phone = (lead.phone_number || "").toLowerCase();
+        return name.includes(query) || phone.includes(query);
+      });
+    }
+    
+    return filtered;
+  };
+  
+  // Apply filters to active and scheduled leads
+  const filteredActiveLeads = getFilteredLeads(leads.filter(lead => !lead.status?.startsWith("Call back")));
+  const filteredScheduledLeads = getFilteredLeads(leads.filter(lead => lead.status?.startsWith("Call back")));
+  
+  // Separate leads into active and scheduled (using filtered leads now)
+  const activeLeads = filteredActiveLeads;
+  const scheduledLeads = filteredScheduledLeads;
   
   // Group scheduled leads by callback date
   const groupedScheduledLeads = () => {
