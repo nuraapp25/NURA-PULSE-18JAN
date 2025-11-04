@@ -350,6 +350,8 @@ test_plan:
 agent_communication:
     - agent: "main"
       message: "Fixed 2 critical production issues: 1) Battery Audits optimized for production scale - added 90-day date filter, aggregation pipelines, field projection, and proper error handling to prevent timeouts on large datasets. Now successfully fetches data. 2) QR Code Delete All enhanced with loading states, individual error handling, and clear feedback for partial successes/permission errors. Both issues stemmed from production having larger datasets than preview environment. Ready for production deployment and testing."
+    - agent: "main"
+      message: "CRITICAL PHONE NUMBER PROCESSING FIX IMPLEMENTED: Fixed 2 issues in Driver Onboarding bulk import: (1) Incorrect 91 removal - now extracts last 10 digits only if number >10 digits, preserves 10-digit numbers starting with 91 (e.g., 9178822331). (2) Zero appended at end - fixed pandas float .0 issue by converting to int first (str(int(float(phone)))). All 10 test cases passed. Fixes especially affect Work India source leads. Ready for backend testing with user's actual Excel file. Changes at lines 1081-1110 in server.py."
 
 backend:
   - task: "Callback Date Calculation in Lead Update"
