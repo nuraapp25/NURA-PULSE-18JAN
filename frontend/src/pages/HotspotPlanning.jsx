@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { Upload, MapPin, Clock, TrendingUp, Users, Download, Library, Copy } from 'lucide-react';
-import { MapContainer, TileLayer, CircleMarker, Circle, Popup, Tooltip, useMap } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
+import { GoogleMap, LoadScript, Marker, Circle, InfoWindow } from '@react-google-maps/api';
 import { toast } from 'sonner';
 
 const API = process.env.REACT_APP_BACKEND_URL || '';
+const GOOGLE_MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY || process.env.VITE_GOOGLE_MAPS_API_KEY || 'AIzaSyBSkRVGAnQUQY6NFklYVQQfqUBxWX1CU2c';
 
 // Time slot definitions matching backend
 const TIME_SLOTS = [
@@ -17,16 +17,11 @@ const TIME_SLOTS = [
   { name: "Late Night", label: "10PM-1AM", color: "bg-teal-400" }
 ];
 
-// Map center updater component
-function MapCenterUpdater({ center }) {
-  const map = useMap();
-  useEffect(() => {
-    if (center) {
-      map.setView(center, 12);
-    }
-  }, [center, map]);
-  return null;
-}
+const mapContainerStyle = {
+  width: '100%',
+  height: '600px',
+  borderRadius: '0.5rem'
+};
 
 function HotspotPlanning() {
   const [file, setFile] = useState(null);
@@ -35,10 +30,22 @@ function HotspotPlanning() {
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [library, setLibrary] = useState([]);
   const [showLibrary, setShowLibrary] = useState(false);
+  const [mapCenter, setMapCenter] = useState({ lat: 13.0827, lng: 80.2707 }); // Chennai
+  const [selectedHotspot, setSelectedHotspot] = useState(null);
+
+  const selectedSlotData = analysisResult?.time_slots?.[selectedSlot];
 
   useEffect(() => {
     fetchLibrary();
   }, []);
+
+  // Update map center when new analysis is loaded
+  useEffect(() => {
+    if (selectedSlotData?.hotspots?.length > 0) {
+      const firstHotspot = selectedSlotData.hotspots[0];
+      setMapCenter({ lat: firstHotspot.lat, lng: firstHotspot.lon });
+    }
+  }, [selectedSlotData]);
 
   const fetchLibrary = async () => {
     try {
@@ -104,6 +111,7 @@ function HotspotPlanning() {
       }
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Analysis failed');
+      console.error('Analysis error:', error);
     } finally {
       setAnalyzing(false);
     }
@@ -113,104 +121,120 @@ function HotspotPlanning() {
     setFile(null);
     setAnalysisResult(null);
     setSelectedSlot(null);
+    setSelectedHotspot(null);
+  };
+
+  const loadFromLibrary = (analysis) => {
+    setAnalysisResult(analysis);
+    setShowLibrary(false);
+    const firstSlotWithData = TIME_SLOTS.find(slot => 
+      analysis.time_slots[slot.name]?.status === 'success'
+    );
+    if (firstSlotWithData) {
+      setSelectedSlot(firstSlotWithData.name);
+    }
+    toast.success('Analysis loaded from library');
   };
 
   const copyCoordinates = (lat, lon) => {
     navigator.clipboard.writeText(`${lat}, ${lon}`);
-    toast.success('Coordinates copied!');
+    toast.success('Coordinates copied to clipboard');
   };
 
   const downloadReport = () => {
-    if (!selectedSlot || !analysisResult) return;
+    if (!selectedSlotData) return;
     
-    const slotData = analysisResult.time_slots[selectedSlot];
-    if (!slotData.hotspots) return;
-
-    const csv = [
-      ['Rank', 'Latitude', 'Longitude', 'Covered Count', 'Covered Weight'],
-      ...slotData.hotspots.map(h => [h.rank, h.lat, h.lon, h.covered_count, h.covered_weight])
-    ].map(row => row.join(',')).join('\n');
-
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `hotspots_${selectedSlot.replace(/\s+/g, '_')}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
+    const report = {
+      time_slot: selectedSlot,
+      analysis_date: analysisResult.created_at,
+      metrics: {
+        total_rides: selectedSlotData.rides_count,
+        covered_rides: selectedSlotData.covered_rides,
+        coverage_percentage: selectedSlotData.coverage_percentage
+      },
+      hotspots: selectedSlotData.hotspots
+    };
+    
+    const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `hotspot-report-${selectedSlot.replace(/\s+/g, '-')}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    
+    toast.success('Report downloaded');
   };
-
-  const selectedSlotData = selectedSlot && analysisResult ? 
-    analysisResult.time_slots[selectedSlot] : null;
-
-  // Calculate map center from hotspots
-  const mapCenter = selectedSlotData?.hotspots && selectedSlotData.hotspots.length > 0 ?
-    [selectedSlotData.hotspots[0].lat, selectedSlotData.hotspots[0].lon] :
-    [13.0827, 80.2707]; // Chennai default
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
-      {/* Header */}
-      <div className="mb-8 flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <MapPin className="text-blue-600" />
-            Hotspot Planning
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
-            Time slot-based optimal location placement for 5-minute pickup coverage (IST)
-          </p>
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+              <MapPin className="w-8 h-8 text-orange-500" />
+              Hotspot Planning
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">
+              Optimize charging station locations with AI-powered analysis
+            </p>
+          </div>
+          <button
+            onClick={() => setShowLibrary(true)}
+            className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 flex items-center gap-2"
+          >
+            <Library className="w-5 h-5" />
+            Library ({library.length})
+          </button>
         </div>
-        <button
-          onClick={() => setShowLibrary(!showLibrary)}
-          className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 flex items-center gap-2"
-        >
-          <Library className="w-4 h-4" />
-          View Library
-        </button>
-      </div>
 
       {/* Upload Section */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
           <Upload className="w-5 h-5" />
           Upload Ride Data
         </h2>
         
-        <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center">
-          <input
-            type="file"
-            accept=".csv"
-            onChange={handleFileChange}
-            className="hidden"
-            id="file-upload"
-          />
-          <label htmlFor="file-upload" className="cursor-pointer">
-            <Upload className="w-12 h-12 mx-auto text-blue-500 mb-4" />
-            <p className="text-lg font-medium text-gray-900 dark:text-white">
-              {file ? file.name : 'Click to upload or drag and drop'}
-            </p>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-              CSV with pickupLat, pickupLong, dropLat, dropLong, time (UTC)
-            </p>
-          </label>
-        </div>
-
-        <div className="flex gap-4 mt-4">
-          <button
-            onClick={handleAnalyze}
-            disabled={!file || analyzing}
-            className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 font-medium"
-          >
-            <TrendingUp className="w-5 h-5" />
-            {analyzing ? 'Analyzing...' : 'Analyze & Optimize'}
-          </button>
-          <button
-            onClick={handleReset}
-            className="px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
-          >
-            Reset
-          </button>
+        <div className="space-y-4">
+          <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6">
+            <input
+              type="file"
+              accept=".csv"
+              onChange={handleFileChange}
+              className="hidden"
+              id="csv-upload"
+            />
+            <label
+              htmlFor="csv-upload"
+              className="flex flex-col items-center justify-center cursor-pointer"
+            >
+              <Upload className="w-12 h-12 text-gray-400 mb-2" />
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                {file ? file.name : 'Click to upload CSV file'}
+              </span>
+              <span className="text-xs text-gray-500 mt-1">
+                CSV with pickup coordinates and timestamps
+              </span>
+            </label>
+          </div>
+          
+          <div className="flex gap-3">
+            <button
+              onClick={handleAnalyze}
+              disabled={!file || analyzing}
+              className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 font-medium"
+            >
+              <TrendingUp className="w-5 h-5" />
+              {analyzing ? 'Analyzing...' : 'Analyze & Optimize'}
+            </button>
+            <button
+              onClick={handleReset}
+              className="px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
+            >
+              Reset
+            </button>
+          </div>
         </div>
 
         {/* How it works */}
@@ -224,6 +248,7 @@ function HotspotPlanning() {
             <li>Analyzes 6 time slots: Morning Rush, Mid-Morning, Afternoon, Evening Rush, Night, Late Night</li>
             <li>Finds up to 5 optimal hotspot locations per time slot using CELF + 1-Swap algorithm</li>
             <li>Shows 1km coverage radius for each hotspot (≈5-min pickup at urban speeds)</li>
+            <li><strong>Displays ALL pickup points on Google Maps</strong></li>
           </ul>
         </div>
       </div>
@@ -323,99 +348,107 @@ function HotspotPlanning() {
             </div>
           </div>
 
-          {/* Map */}
+          {/* Google Map */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                <MapPin className="w-5 h-5" />
-                Hotspot Map for {selectedSlot}
-              </h2>
-            </div>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <MapPin className="w-5 h-5" />
+              Coverage Map - {selectedSlot}
+            </h2>
             
-            <div className="h-96 rounded-lg overflow-hidden">
-              <MapContainer
-                center={mapCenter}
-                zoom={12}
-                style={{ height: '100%', width: '100%' }}
-              >
-                <MapCenterUpdater center={mapCenter} />
-                <TileLayer
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                />
-                
-                {/* Hotspots */}
-                {selectedSlotData.hotspots?.map((hotspot, idx) => (
-                  <React.Fragment key={idx}>
-                    {/* Hotspot marker - bigger size */}
-                    <CircleMarker
-                      center={[hotspot.lat, hotspot.lon]}
-                      radius={15}
-                      fillColor="#f59e0b"
-                      color="#fff"
-                      weight={3}
-                      fillOpacity={0.9}
-                    >
-                      <Popup>
-                        <div className="font-sans">
-                          <strong className="text-lg">Hotspot #{hotspot.rank}</strong><br />
-                          <span className="text-sm text-gray-600">{hotspot.locality || 'Unknown'}</span><br />
-                          <span className="text-xs">Lat: {hotspot.lat.toFixed(6)}</span><br />
-                          <span className="text-xs">Lon: {hotspot.lon.toFixed(6)}</span><br />
-                          <span className="text-sm font-semibold text-green-600 mt-2">Covered: {hotspot.covered_count} rides</span>
-                        </div>
-                      </Popup>
-                    </CircleMarker>
-                    
-                    {/* Coverage circle with tooltip */}
-                    <Circle
-                      center={[hotspot.lat, hotspot.lon]}
-                      radius={1000}
-                      fillColor="#10b981"
-                      color="#10b981"
-                      weight={2}
-                      fillOpacity={0.15}
-                    >
-                      <Tooltip permanent={false} direction="top">
-                        <div className="text-xs">
-                          <strong>{hotspot.locality || 'Hotspot'}</strong><br />
-                          1km coverage radius<br />
-                          {hotspot.covered_count} rides covered
-                        </div>
-                      </Tooltip>
-                    </Circle>
-                  </React.Fragment>
-                ))}
-                
-                {/* Pickup points - bigger and show all including uncovered */}
-                {selectedSlotData.geojson?.features
-                  .filter(f => f.properties.type === 'pickup')
-                  .slice(0, 300) // Increased limit
-                  .map((feature, idx) => {
-                    const isCovered = feature.properties.assigned_rank > 0;
-                    return (
-                      <CircleMarker
-                        key={`pickup-${idx}`}
-                        center={[feature.geometry.coordinates[1], feature.geometry.coordinates[0]]}
-                        radius={isCovered ? 5 : 4}
-                        fillColor={isCovered ? '#3b82f6' : '#ef4444'}
-                        color="transparent"
-                        fillOpacity={isCovered ? 0.6 : 0.5}
-                      >
-                        <Tooltip>
-                          <div className="text-xs">
-                            {isCovered ? (
-                              <>Covered by Hotspot #{feature.properties.assigned_rank}</>
-                            ) : (
-                              <>Uncovered pickup</>
-                            )}
+            <div className="rounded-lg overflow-hidden">
+              <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY}>
+                <GoogleMap
+                  mapContainerStyle={mapContainerStyle}
+                  center={mapCenter}
+                  zoom={12}
+                  options={{
+                    styles: [
+                      {
+                        featureType: "poi",
+                        elementType: "labels",
+                        stylers: [{ visibility: "off" }]
+                      }
+                    ]
+                  }}
+                >
+                  {/* Hotspot Markers and Circles */}
+                  {selectedSlotData.hotspots?.map((hotspot, idx) => (
+                    <React.Fragment key={`hotspot-${idx}`}>
+                      {/* Hotspot Circle (1km radius) */}
+                      <Circle
+                        center={{ lat: hotspot.lat, lng: hotspot.lon }}
+                        radius={1000}
+                        options={{
+                          fillColor: '#10b981',
+                          fillOpacity: 0.15,
+                          strokeColor: '#10b981',
+                          strokeWeight: 2
+                        }}
+                      />
+                      
+                      {/* Hotspot Marker */}
+                      <Marker
+                        position={{ lat: hotspot.lat, lng: hotspot.lon }}
+                        icon={{
+                          path: window.google.maps.SymbolPath.CIRCLE,
+                          scale: 15,
+                          fillColor: '#f97316',
+                          fillOpacity: 1,
+                          strokeColor: '#ffffff',
+                          strokeWeight: 3
+                        }}
+                        label={{
+                          text: `${hotspot.rank}`,
+                          color: '#ffffff',
+                          fontSize: '14px',
+                          fontWeight: 'bold'
+                        }}
+                        onClick={() => setSelectedHotspot(hotspot)}
+                      />
+                      
+                      {/* InfoWindow for selected hotspot */}
+                      {selectedHotspot?.rank === hotspot.rank && (
+                        <InfoWindow
+                          position={{ lat: hotspot.lat, lng: hotspot.lon }}
+                          onCloseClick={() => setSelectedHotspot(null)}
+                        >
+                          <div className="p-2">
+                            <h3 className="font-bold text-base">Hotspot #{hotspot.rank}</h3>
+                            <p className="text-sm">{hotspot.locality || 'Unknown'}</p>
+                            <p className="text-xs text-gray-600 mt-1">
+                              Covers {hotspot.covered_count} rides
+                            </p>
                           </div>
-                        </Tooltip>
-                      </CircleMarker>
-                    );
-                  })
-                }
-              </MapContainer>
+                        </InfoWindow>
+                      )}
+                    </React.Fragment>
+                  ))}
+                  
+                  {/* ALL Pickup Points - NO LIMIT */}
+                  {selectedSlotData.geojson?.features
+                    .filter(f => f.properties.type === 'pickup')
+                    .map((feature, idx) => {
+                      const isCovered = feature.properties.assigned_rank > 0;
+                      return (
+                        <Marker
+                          key={`pickup-${idx}`}
+                          position={{
+                            lat: feature.geometry.coordinates[1],
+                            lng: feature.geometry.coordinates[0]
+                          }}
+                          icon={{
+                            path: window.google.maps.SymbolPath.CIRCLE,
+                            scale: 4,
+                            fillColor: isCovered ? '#3b82f6' : '#ef4444',
+                            fillOpacity: isCovered ? 0.6 : 0.5,
+                            strokeColor: 'transparent'
+                          }}
+                        />
+                      );
+                    })
+                  }
+                </GoogleMap>
+              </LoadScript>
             </div>
             
             <div className="flex gap-4 mt-4 text-sm">
@@ -425,11 +458,11 @@ function HotspotPlanning() {
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                <span className="text-gray-700 dark:text-gray-300">Covered Pickups</span>
+                <span className="text-gray-700 dark:text-gray-300">Covered Pickups ({selectedSlotData.covered_rides})</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                <span className="text-gray-700 dark:text-gray-300">Uncovered Pickups</span>
+                <span className="text-gray-700 dark:text-gray-300">Uncovered Pickups ({selectedSlotData.rides_count - selectedSlotData.covered_rides})</span>
               </div>
             </div>
           </div>
@@ -498,53 +531,39 @@ function HotspotPlanning() {
 
       {/* Library Modal */}
       {showLibrary && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] overflow-hidden">
-            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                  <Library className="w-6 h-6" />
-                  Analysis Library
-                </h2>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-4xl w-full max-h-[80vh] overflow-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Analysis Library</h2>
                 <button
                   onClick={() => setShowLibrary(false)}
-                  className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                 >
                   ✕
                 </button>
               </div>
-            </div>
-            
-            <div className="p-6 overflow-y-auto max-h-[60vh]">
+              
               {library.length === 0 ? (
-                <p className="text-center text-gray-500 dark:text-gray-400">No saved analyses yet</p>
+                <p className="text-gray-500 text-center py-8">No saved analyses yet</p>
               ) : (
-                <div className="space-y-4">
-                  {library.map((item) => (
+                <div className="space-y-3">
+                  {library.map((analysis, idx) => (
                     <div
-                      key={item.id}
-                      className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
-                      onClick={() => {
-                        // Load this analysis
-                        setShowLibrary(false);
-                        toast.info('Loading analysis...');
-                      }}
+                      key={idx}
+                      className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+                      onClick={() => loadFromLibrary(analysis)}
                     >
                       <div className="flex justify-between items-start">
                         <div>
-                          <h3 className="font-semibold text-gray-900 dark:text-white">{item.filename}</h3>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {new Date(item.uploaded_at).toLocaleString()}
+                          <h3 className="font-semibold text-gray-900 dark:text-white">{analysis.filename}</h3>
+                          <p className="text-sm text-gray-500 mt-1">
+                            {new Date(analysis.created_at).toLocaleString()}
                           </p>
                         </div>
-                        <div className="text-right">
-                          <div className="text-sm font-medium text-gray-900 dark:text-white">
-                            {item.total_rides} rides
-                          </div>
-                          <div className="text-xs text-gray-600 dark:text-gray-400">
-                            {item.time_slots_count} slots
-                          </div>
-                        </div>
+                        <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded">
+                          {Object.keys(analysis.time_slots).length} time slots
+                        </span>
                       </div>
                     </div>
                   ))}
@@ -554,6 +573,7 @@ function HotspotPlanning() {
           </div>
         </div>
       )}
+    </div>
     </div>
   );
 }
