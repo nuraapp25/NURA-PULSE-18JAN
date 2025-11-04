@@ -11288,16 +11288,26 @@ async def get_individual_qr_analytics(
             return f"{base_url}{separator}utm={utm_param}"
         
         # Determine URLs for all platforms with UTM
+        # Support both NEW and OLD field names for backward compatibility
         if qr_code.get('landing_page_type') == 'single':
-            base_url = qr_code.get('single_url', '')
+            base_url = qr_code.get('landing_page_single') or qr_code.get('single_url', '')
             utm_url_web = add_utm_to_url(base_url, utm_value)
             utm_url_ios = utm_url_web  # Same URL for single mode
             utm_url_android = utm_url_web  # Same URL for single mode
         else:
-            # Different URLs for each platform
-            utm_url_ios = add_utm_to_url(qr_code.get('ios_url', ''), utm_value)
-            utm_url_android = add_utm_to_url(qr_code.get('android_url', ''), utm_value)
-            utm_url_web = add_utm_to_url(qr_code.get('web_url', qr_code.get('single_url', '')), utm_value)
+            # Different URLs for each platform - check NEW field names first, then OLD
+            utm_url_ios = add_utm_to_url(
+                qr_code.get('landing_page_ios') or qr_code.get('ios_url', ''), 
+                utm_value
+            )
+            utm_url_android = add_utm_to_url(
+                qr_code.get('landing_page_android') or qr_code.get('android_url', ''), 
+                utm_value
+            )
+            utm_url_web = add_utm_to_url(
+                qr_code.get('landing_page_desktop') or qr_code.get('landing_page_mobile') or qr_code.get('web_url') or qr_code.get('landing_page_single') or qr_code.get('single_url', ''), 
+                utm_value
+            )
         
         analytics = {
             "qr_code_id": qr_code_id,
