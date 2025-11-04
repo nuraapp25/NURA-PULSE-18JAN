@@ -251,9 +251,10 @@ function HotspotPlanning() {
           <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1 ml-6 list-disc">
             <li>Converts UTC time to IST automatically</li>
             <li>Analyzes 6 time slots: Morning Rush, Mid-Morning, Afternoon, Evening Rush, Night, Late Night</li>
-            <li>Finds up to 5 optimal hotspot locations per time slot using CELF + 1-Swap algorithm</li>
+            <li>Finds up to <strong>10 optimal hotspot locations</strong> per time slot using CELF + 1-Swap algorithm</li>
             <li>Shows 1km coverage radius for each hotspot (≈5-min pickup at urban speeds)</li>
-            <li><strong>Displays ALL pickup points on Google Maps</strong></li>
+            <li><strong>Displays ALL pickup points</strong> as red dots on Google Maps</li>
+            <li><strong>Shows top 10 hotspots</strong> as blue circles with numbers</li>
           </ul>
         </div>
       </div>
