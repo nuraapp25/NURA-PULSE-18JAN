@@ -1077,22 +1077,37 @@ async def import_leads(
             
             # Get name and phone (required fields)
             name_val = str(row[name_col]) if name_col and pd.notna(row.get(name_col)) else ""
-            phone_val = str(row[phone_col]) if phone_col and pd.notna(row.get(phone_col)) else ""
+            
+            # Handle phone number - convert to int first to avoid .0 issue, then to string
+            phone_val = ""
+            if phone_col and pd.notna(row.get(phone_col)):
+                try:
+                    # Try converting to int first to remove any .0, then to string
+                    phone_val = str(int(float(row[phone_col])))
+                except (ValueError, TypeError):
+                    # If conversion fails, use string directly
+                    phone_val = str(row[phone_col])
             
             # Skip if both name and phone are empty
             if not name_val and not phone_val:
                 continue
             
             # Clean phone number - handle various formats
-            # Remove 'p:' prefix (Google Forms format), spaces, dashes, dots
+            # Remove 'p:' prefix (Google Forms format), spaces, dashes
             phone_val = phone_val.strip()
             phone_val = phone_val.replace('p:', '').replace('p:+', '+')  # Remove p: prefix
-            phone_val = phone_val.replace(' ', '').replace('-', '').replace('.', '')
-            # Remove leading +91 or 91 if present (keep only 10 digits)
-            if phone_val.startswith('+91'):
-                phone_val = phone_val[3:]
-            elif phone_val.startswith('91') and len(phone_val) > 10:
-                phone_val = phone_val[2:]
+            phone_val = phone_val.replace(' ', '').replace('-', '')
+            
+            # Smart removal of +91 or 91 prefix - only if number is longer than 10 digits
+            # This preserves numbers that start with 91 but are actually 10 digits (e.g., 9178822331)
+            phone_digits = ''.join(filter(str.isdigit, phone_val))
+            if len(phone_digits) > 10:
+                # If number has more than 10 digits, take the last 10 digits
+                # This handles +919897721333 or 919897721333 → 9897721333
+                phone_val = phone_digits[-10:]
+            else:
+                # If already 10 digits or less, keep as is
+                phone_val = phone_digits
             
             # Get status from file and match with app's status hierarchy
             file_status = str(row[status_col]) if status_col and pd.notna(row.get(status_col)) else None
