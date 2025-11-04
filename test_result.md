@@ -450,6 +450,18 @@ frontend:
           agent: "main"
           comment: "IMPLEMENTATION COMPLETE: Added calendar date picker and search bar to Telecaller's Desk for enhanced lead filtering. FEATURES: (1) CALENDAR DATE FILTER - Date input with calendar icon at top, filters leads by import_date field, shows selected date in readable format (e.g., '15 Dec 2024'), clear button (X) to reset filter, visual feedback showing filtered date. (2) SEARCH BAR - Search input with search icon, searches across name and phone_number fields, case-insensitive partial matching, real-time filtering as user types, clear button (X) to reset search, shows count of matching leads. (3) FILTER LOGIC - getFilteredLeads() function filters both active and scheduled leads, filters can be combined (date + search work together), smart empty state handling when no matches found. (4) UI/UX - Responsive design for mobile and desktop, proper dark mode support, sticky header keeps filters visible while scrolling, visual indicators for active filters. (5) NO RESULTS STATE - Shows helpful message when filters exclude all leads, provides clear buttons to reset date/search filters. Both filters work independently and in combination. Users can click a date to see that day's leads, or search by name/phone to find specific leads."
 
+  - task: "Telecaller's Desk - Immediate Summary Update & Call Backs Scheduled"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/TelecallerDeskMobile.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "IMPLEMENTATION COMPLETE: Two critical enhancements to Telecaller's Desk summary dashboard. (1) IMMEDIATE SUMMARY UPDATE ON 'CALLING DONE': Optimistic UI update - when 'Calling Done' button pressed, 'Calls Done Today' increments immediately (+1) and 'Calls Pending' decrements (-1) without waiting for backend refresh. Uses setSummaryData to update state instantly. Background refresh still happens but UI responds immediately. Error handling reverts optimistic update on API failure. (2) CALL BACKS SCHEDULED BOX: Added 4th summary card (purple) showing 'Call Backs Scheduled' count. Calculates callback leads by counting statuses starting with 'Call back' (1D/1W/2W/1M) from stage breakdown. 'Calls Pending' now excludes callback leads - only shows non-callback pending calls. Layout changed from 3-column to 2x2 grid (mobile) / 4-column (desktop) for better responsiveness. Cards: Total Leads (blue), Calls Done Today (green), Calls Pending (orange, excluding callbacks), Call Backs Scheduled (purple, callbacks only). User feedback: When telecaller marks call as done, they immediately see the counter update in top display. Callback leads are properly separated from regular pending calls."
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
