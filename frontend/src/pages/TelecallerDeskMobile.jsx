@@ -822,14 +822,27 @@ const TelecallerDeskMobile = () => {
             No leads found
           </h2>
           <p className="text-gray-600 dark:text-gray-400 text-center mb-4">
-            {selectedDate && searchQuery 
+            {summaryFilter && selectedDate && searchQuery 
+              ? `No leads match the filter, date, and search`
+              : summaryFilter && selectedDate 
+              ? `No leads match the filter and date`
+              : summaryFilter && searchQuery
+              ? `No leads match the filter and search`
+              : summaryFilter
+              ? `No ${summaryFilter === 'calls_done' ? 'calls done today' : summaryFilter === 'calls_pending' ? 'pending calls' : summaryFilter === 'callbacks' ? 'call backs scheduled' : 'leads'}`
+              : selectedDate && searchQuery 
               ? `No leads match the date "${new Date(selectedDate).toLocaleDateString('en-GB')}" and search "${searchQuery}"`
               : selectedDate 
               ? `No leads found for date "${new Date(selectedDate).toLocaleDateString('en-GB')}"`
               : `No leads match the search "${searchQuery}"`
             }
           </p>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap justify-center">
+            {summaryFilter && (
+              <Button onClick={() => setSummaryFilter(null)} variant="outline" className="border-blue-500 text-blue-600">
+                Clear Summary Filter
+              </Button>
+            )}
             {selectedDate && (
               <Button onClick={() => setSelectedDate(null)} variant="outline">
                 Clear Date Filter
