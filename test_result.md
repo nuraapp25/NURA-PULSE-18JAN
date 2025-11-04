@@ -496,6 +496,18 @@ agent_communication:
           agent: "main"
           comment: "IMPLEMENTATION COMPLETE: Fixed source filter to use actual import sources instead of stages (S1, S2, S3, S4). ROOT CAUSE: Frontend was extracting unique values from 'stage' field instead of 'source' field for the dropdown. Backend already stores import source in 'source' field (line 1131 in server.py: lead['source'] = row_lead_source or filename). CHANGES: (1) Updated uniqueSources extraction (lines 199-208) to use lead.source field. (2) Updated filter logic (lines 486-492) to filter by lead.source with case-insensitive comparison. (3) Updated filter button labels to 'Filter by Import Source' and 'All Import Sources'. (4) Updated summary dashboard source filter labels for consistency. Expected behavior: Source filter dropdown now shows actual import sources like 'bhavani', 'ganesh', 'digital leads', or filenames. Filter correctly filters leads by their import source. Backend 'source' field already exists and is populated during import, so no backend changes needed."
 
+  - task: "Driver Onboarding - Phone Number Processing Fix"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "PRODUCTION CRITICAL FIX: Fixed phone number processing in bulk import to correctly handle Indian phone numbers (all 10 digits). TWO ISSUES FIXED: (1) INCORRECT 91 REMOVAL: Old logic removed '91' even when it was part of actual 10-digit number (e.g., 9178822331 incorrectly became 78822331). NEW LOGIC: Extract last 10 digits ONLY if number has MORE than 10 digits (handles +919897721333 or 919897721333 → 9897721333). If already 10 digits, preserve as-is (9178822331 → 9178822331). (2) ZERO APPENDED TO END: Root cause - pandas reads phone numbers as float (9897721333.0), str() converts to '9897721333.0', removing dots resulted in '98977213330'. FIX: Convert to int first to remove .0, then to string (str(int(float(phone)))). CHANGES AT LINES 1081-1110: Added int/float conversion for phone numbers, implemented smart prefix removal using last 10 digits, handles all formats (+91, 91, spaces, dashes, p: prefix). TESTED: All 10 test cases passed including 9178822331 (10 digits starting with 91), float handling, prefix removal. Ready for backend testing with user's Excel file (especially Work India source leads)."
+
 backend:
   - task: "Telecaller's Desk - Status Update Fix"
     implemented: true
