@@ -967,27 +967,75 @@ const TelecallerDeskMobile = () => {
         </div>
       ) : summaryData ? (
         <div className="mb-4 space-y-3">
-          {/* Top 4 Summary Cards - 2x2 grid on mobile, 4 columns on larger screens */}
+          {/* Show All Button (when filter is active) */}
+          {summaryFilter && (
+            <div className="flex justify-center">
+              <Button
+                onClick={() => setSummaryFilter(null)}
+                variant="outline"
+                size="sm"
+                className="bg-white dark:bg-gray-800 border-2 border-blue-500 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+              >
+                Show All Assigned Leads ({summaryData.total_leads})
+              </Button>
+            </div>
+          )}
+          
+          {/* Top 4 Summary Cards - 2x2 grid on mobile, 4 columns on larger screens - NOW CLICKABLE */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
-            <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+            {/* Total Leads Card - Clickable */}
+            <Card 
+              onClick={() => setSummaryFilter(summaryFilter === 'total' ? null : 'total')}
+              className={`cursor-pointer transition-all hover:shadow-lg ${
+                summaryFilter === 'total' 
+                  ? 'bg-blue-100 dark:bg-blue-900/40 border-blue-500 border-2 ring-2 ring-blue-400' 
+                  : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
+              }`}
+            >
               <CardContent className="p-3 text-center">
                 <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                   {summaryData.total_leads}
                 </div>
                 <div className="text-xs text-gray-600 dark:text-gray-400 font-medium">Total Leads</div>
+                {summaryFilter === 'total' && (
+                  <div className="text-xs text-blue-600 dark:text-blue-400 font-semibold mt-1">
+                    ✓ Filtered
+                  </div>
+                )}
               </CardContent>
             </Card>
             
-            <Card className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
+            {/* Calls Done Today Card - Clickable */}
+            <Card 
+              onClick={() => setSummaryFilter(summaryFilter === 'calls_done' ? null : 'calls_done')}
+              className={`cursor-pointer transition-all hover:shadow-lg ${
+                summaryFilter === 'calls_done' 
+                  ? 'bg-green-100 dark:bg-green-900/40 border-green-500 border-2 ring-2 ring-green-400' 
+                  : 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+              }`}
+            >
               <CardContent className="p-3 text-center">
                 <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                   {summaryData.calls_made_today}
                 </div>
                 <div className="text-xs text-gray-600 dark:text-gray-400 font-medium">Calls Done Today</div>
+                {summaryFilter === 'calls_done' && (
+                  <div className="text-xs text-green-600 dark:text-green-400 font-semibold mt-1">
+                    ✓ Filtered
+                  </div>
+                )}
               </CardContent>
             </Card>
             
-            <Card className="bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800">
+            {/* Calls Pending Card - Clickable */}
+            <Card 
+              onClick={() => setSummaryFilter(summaryFilter === 'calls_pending' ? null : 'calls_pending')}
+              className={`cursor-pointer transition-all hover:shadow-lg ${
+                summaryFilter === 'calls_pending' 
+                  ? 'bg-orange-100 dark:bg-orange-900/40 border-orange-500 border-2 ring-2 ring-orange-400' 
+                  : 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800'
+              }`}
+            >
               <CardContent className="p-3 text-center">
                 <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
                   {/* Calculate pending calls excluding callback leads */}
@@ -1005,10 +1053,23 @@ const TelecallerDeskMobile = () => {
                   })()}
                 </div>
                 <div className="text-xs text-gray-600 dark:text-gray-400 font-medium">Calls Pending</div>
+                {summaryFilter === 'calls_pending' && (
+                  <div className="text-xs text-orange-600 dark:text-orange-400 font-semibold mt-1">
+                    ✓ Filtered
+                  </div>
+                )}
               </CardContent>
             </Card>
             
-            <Card className="bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800">
+            {/* Call Backs Scheduled Card - Clickable */}
+            <Card 
+              onClick={() => setSummaryFilter(summaryFilter === 'callbacks' ? null : 'callbacks')}
+              className={`cursor-pointer transition-all hover:shadow-lg ${
+                summaryFilter === 'callbacks' 
+                  ? 'bg-purple-100 dark:bg-purple-900/40 border-purple-500 border-2 ring-2 ring-purple-400' 
+                  : 'bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800'
+              }`}
+            >
               <CardContent className="p-3 text-center">
                 <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                   {/* Count callback leads from stage breakdown */}
@@ -1026,6 +1087,11 @@ const TelecallerDeskMobile = () => {
                   })()}
                 </div>
                 <div className="text-xs text-gray-600 dark:text-gray-400 font-medium">Call Backs Scheduled</div>
+                {summaryFilter === 'callbacks' && (
+                  <div className="text-xs text-purple-600 dark:text-purple-400 font-semibold mt-1">
+                    ✓ Filtered
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
