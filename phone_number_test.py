@@ -226,8 +226,8 @@ class PhoneNumberProcessingTester:
         
         # Test Case 4: Float with .0 (pandas issue)
         # Note: We can't directly test float input via CSV, but we can test the string representation
-        test_cases_4 = ["9897721333.0"]
-        expected_4 = ["9897721333"]  # Should NOT become 98977213330
+        test_cases_4 = ["9897721666.0"]  # Using unique number
+        expected_4 = ["9897721666"]  # Should NOT become 98977216660
         result_4 = self.import_leads_and_check_phones(
             "Test Case 4 - Float with .0", 
             test_cases_4, expected_4
