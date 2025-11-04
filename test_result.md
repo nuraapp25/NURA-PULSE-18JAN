@@ -462,6 +462,18 @@ frontend:
           agent: "main"
           comment: "IMPLEMENTATION COMPLETE: Two critical enhancements to Telecaller's Desk summary dashboard. (1) IMMEDIATE SUMMARY UPDATE ON 'CALLING DONE': Optimistic UI update - when 'Calling Done' button pressed, 'Calls Done Today' increments immediately (+1) and 'Calls Pending' decrements (-1) without waiting for backend refresh. Uses setSummaryData to update state instantly. Background refresh still happens but UI responds immediately. Error handling reverts optimistic update on API failure. (2) CALL BACKS SCHEDULED BOX: Added 4th summary card (purple) showing 'Call Backs Scheduled' count. Calculates callback leads by counting statuses starting with 'Call back' (1D/1W/2W/1M) from stage breakdown. 'Calls Pending' now excludes callback leads - only shows non-callback pending calls. Layout changed from 3-column to 2x2 grid (mobile) / 4-column (desktop) for better responsiveness. Cards: Total Leads (blue), Calls Done Today (green), Calls Pending (orange, excluding callbacks), Call Backs Scheduled (purple, callbacks only). User feedback: When telecaller marks call as done, they immediately see the counter update in top display. Callback leads are properly separated from regular pending calls."
 
+  - task: "Telecaller's Desk - Clickable Summary Cards as Filters"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/TelecallerDeskMobile.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "IMPLEMENTATION COMPLETE: Made all 4 summary cards clickable to work as filters for leads. FEATURES: (1) CLICKABLE CARDS: Each summary card is now clickable with cursor-pointer, hover effects (shadow-lg), active state styling (lighter background, 2px colored border, ring effect). Click card to filter, click again to clear filter. (2) FILTER LOGIC: Total Leads - shows all assigned leads (essentially 'show all'). Calls Done Today - shows only leads called today (last_called date = today). Calls Pending - shows leads not yet called AND not callbacks. Call Backs Scheduled - shows only callback leads (status starts with 'Call back'). (3) VISUAL FEEDBACK: Active filter has enhanced background color, thicker border, ring glow, checkmark '✓ Filtered' text below counter. (4) SHOW ALL BUTTON: When any summary filter active, 'Show All Assigned Leads' button appears above cards. Blue outlined button with total count. Click to clear summary filter. (5) FILTER COMBINATIONS: Summary filter works with date and search filters - all 3 can be active simultaneously. Empty state handling shows appropriate message with clear filter buttons. Lead count display updates to show 'X leads filtered' with filter name. (6) RESPONSIVE: All states work on mobile (2x2 grid) and desktop (4 columns). Smooth transitions and animations. Users can click Total Leads, Calls Done Today, Calls Pending, or Call Backs Scheduled to instantly filter the lead list. Great for telecallers to quickly access specific lead segments."
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
