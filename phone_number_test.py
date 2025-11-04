@@ -84,7 +84,7 @@ class PhoneNumberProcessingTester:
         print(f"\n--- {test_name} ---")
         
         # Create CSV content
-        csv_content = self.create_test_csv(test_cases)
+        csv_content = self.create_test_csv(test_cases, test_name)
         print(f"CSV Content:\n{csv_content}")
         
         # Import leads
