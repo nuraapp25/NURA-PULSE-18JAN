@@ -70,11 +70,13 @@ class PhoneNumberProcessingTester:
             self.log_test("Authentication", False, f"Network error: {e}")
             return False
     
-    def create_test_csv(self, test_cases):
+    def create_test_csv(self, test_cases, test_name):
         """Create CSV content with test phone numbers"""
         csv_content = "Name,Phone Number,Status\n"
         for i, phone in enumerate(test_cases, 1):
-            csv_content += f"Test User {i},{phone},New\n"
+            # Make names unique to avoid any conflicts
+            unique_name = f"PhoneTest_{test_name.replace(' ', '_')}_{i}_{datetime.now().strftime('%H%M%S')}"
+            csv_content += f"{unique_name},{phone},New\n"
         return csv_content
     
     def import_leads_and_check_phones(self, test_name, test_cases, expected_results):
