@@ -94,7 +94,10 @@ const TelecallerDeskMobile = () => {
   const [selectedDate, setSelectedDate] = useState(null); // null means show all dates
   const [searchQuery, setSearchQuery] = useState("");
   
-  // Filter leads based on date and search query
+  // NEW: Summary card filter state
+  const [summaryFilter, setSummaryFilter] = useState(null); // null, 'total', 'calls_done', 'calls_pending', 'callbacks'
+  
+  // Filter leads based on date, search query, and summary card filter
   const getFilteredLeads = (leadsArray) => {
     let filtered = [...leadsArray];
     
@@ -115,6 +118,26 @@ const TelecallerDeskMobile = () => {
         return name.includes(query) || phone.includes(query);
       });
     }
+    
+    // Filter by summary card selection
+    if (summaryFilter === 'calls_done') {
+      // Show leads that have been called today
+      const today = new Date().toISOString().split('T')[0];
+      filtered = filtered.filter(lead => {
+        const lastCalled = lead.last_called ? lead.last_called.split('T')[0] : null;
+        return lastCalled === today;
+      });
+    } else if (summaryFilter === 'calls_pending') {
+      // Show leads that need to be called (not called and not callbacks)
+      filtered = filtered.filter(lead => {
+        const isCallback = lead.status?.startsWith("Call back");
+        return !lead.last_called && !isCallback;
+      });
+    } else if (summaryFilter === 'callbacks') {
+      // Show only callback leads
+      filtered = filtered.filter(lead => lead.status?.startsWith("Call back"));
+    }
+    // summaryFilter === 'total' or null shows all leads (no additional filtering)
     
     return filtered;
   };
