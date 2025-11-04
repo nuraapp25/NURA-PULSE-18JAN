@@ -207,8 +207,8 @@ class PhoneNumberProcessingTester:
         all_tests_passed = all_tests_passed and result_1
         
         # Test Case 2: +91 prefix removal
-        test_cases_2 = ["+919897721333"]
-        expected_2 = ["9897721333"]  # Should remove +91 prefix
+        test_cases_2 = ["+919897721888"]  # Using unique number
+        expected_2 = ["9897721888"]  # Should remove +91 prefix
         result_2 = self.import_leads_and_check_phones(
             "Test Case 2 - +91 prefix removal", 
             test_cases_2, expected_2
