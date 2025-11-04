@@ -245,18 +245,18 @@ class PhoneNumberProcessingTester:
         
         # Comprehensive test with all cases together
         all_test_cases = [
-            "9178822331",      # 10-digit starting with 91
-            "+919897721333",   # +91 prefix
-            "919897721333",    # 91 prefix
-            "9897721333.0",    # Float with .0
-            "9178822331.0"     # 10-digit starting with 91 as float
+            "9178822444",      # 10-digit starting with 91
+            "+919897721444",   # +91 prefix
+            "919897721444",    # 91 prefix (will become same as above after processing)
+            "9897721444.0",    # Float with .0
+            "9178822333.0"     # 10-digit starting with 91 as float
         ]
         all_expected = [
-            "9178822331",      # Should be preserved
-            "9897721333",      # Should remove +91
-            "9897721333",      # Should remove 91
-            "9897721333",      # Should remove .0
-            "9178822331"       # Should be preserved and remove .0
+            "9178822444",      # Should be preserved
+            "9897721444",      # Should remove +91
+            "9897721444",      # Should remove 91 (duplicate will be skipped)
+            "9897721444",      # Should remove .0 (duplicate will be skipped)
+            "9178822333"       # Should be preserved and remove .0
         ]
         
         result_comprehensive = self.import_leads_and_check_phones(
