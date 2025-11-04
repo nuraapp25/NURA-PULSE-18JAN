@@ -360,8 +360,20 @@ function HotspotPlanning() {
               Coverage Map - {selectedSlot}
             </h2>
             
-            <div className="rounded-lg overflow-hidden">
-              <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY}>
+            {loadError && (
+              <div className="text-red-600 p-4 bg-red-50 rounded-lg">
+                Error loading Google Maps. Please check your API key.
+              </div>
+            )}
+            
+            {!isLoaded && !loadError && (
+              <div className="text-gray-600 p-4 bg-gray-50 rounded-lg">
+                Loading map...
+              </div>
+            )}
+            
+            {isLoaded && (
+              <div className="rounded-lg overflow-hidden">
                 <GoogleMap
                   mapContainerStyle={mapContainerStyle}
                   center={mapCenter}
@@ -376,37 +388,59 @@ function HotspotPlanning() {
                     ]
                   }}
                 >
-                  {/* Hotspot Markers and Circles */}
+                  {/* 1km Coverage Circles (Green, Transparent) - Draw first so they're behind */}
                   {selectedSlotData.hotspots?.map((hotspot, idx) => (
-                    <React.Fragment key={`hotspot-${idx}`}>
-                      {/* Hotspot Circle (1km radius) */}
-                      <Circle
-                        center={{ lat: hotspot.lat, lng: hotspot.lon }}
-                        radius={1000}
-                        options={{
-                          fillColor: '#10b981',
-                          fillOpacity: 0.15,
-                          strokeColor: '#10b981',
-                          strokeWeight: 2
+                    <Circle
+                      key={`circle-${idx}`}
+                      center={{ lat: hotspot.lat, lng: hotspot.lon }}
+                      radius={1000}
+                      options={{
+                        fillColor: '#22c55e',
+                        fillOpacity: 0.2,
+                        strokeColor: '#22c55e',
+                        strokeWeight: 2,
+                        strokeOpacity: 0.6
+                      }}
+                    />
+                  ))}
+                  
+                  {/* ALL Pickup Points - RED DOTS */}
+                  {selectedSlotData.geojson?.features
+                    .filter(f => f.properties.type === 'pickup')
+                    .map((feature, idx) => (
+                      <Marker
+                        key={`pickup-${idx}`}
+                        position={{
+                          lat: feature.geometry.coordinates[1],
+                          lng: feature.geometry.coordinates[0]
+                        }}
+                        icon={{
+                          url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
+                            `<svg width="8" height="8" xmlns="http://www.w3.org/2000/svg">
+                              <circle cx="4" cy="4" r="3" fill="#ef4444" opacity="0.7"/>
+                            </svg>`
+                          ),
+                          scaledSize: new window.google.maps.Size(8, 8),
+                          anchor: new window.google.maps.Point(4, 4)
                         }}
                       />
-                      
-                      {/* Hotspot Marker */}
+                    ))
+                  }
+                  
+                  {/* Hotspot Markers - BLUE CIRCLES with numbers */}
+                  {selectedSlotData.hotspots?.map((hotspot, idx) => (
+                    <React.Fragment key={`hotspot-${idx}`}>
                       <Marker
                         position={{ lat: hotspot.lat, lng: hotspot.lon }}
                         icon={{
-                          path: window.google.maps.SymbolPath.CIRCLE,
-                          scale: 15,
-                          fillColor: '#f97316',
-                          fillOpacity: 1,
-                          strokeColor: '#ffffff',
-                          strokeWeight: 3
-                        }}
-                        label={{
-                          text: `${hotspot.rank}`,
-                          color: '#ffffff',
-                          fontSize: '14px',
-                          fontWeight: 'bold'
+                          url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
+                            `<svg width="40" height="40" xmlns="http://www.w3.org/2000/svg">
+                              <circle cx="20" cy="20" r="15" fill="#3b82f6" stroke="white" stroke-width="3"/>
+                              <text x="20" y="26" text-anchor="middle" fill="white" font-size="16" font-weight="bold">${hotspot.rank}</text>
+                            </svg>`
+                          ),
+                          scaledSize: new window.google.maps.Size(40, 40),
+                          anchor: new window.google.maps.Point(20, 20)
                         }}
                         onClick={() => setSelectedHotspot(hotspot)}
                       />
@@ -423,51 +457,30 @@ function HotspotPlanning() {
                             <p className="text-xs text-gray-600 mt-1">
                               Covers {hotspot.covered_count} rides
                             </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {hotspot.lat.toFixed(6)}, {hotspot.lon.toFixed(6)}
+                            </p>
                           </div>
                         </InfoWindow>
                       )}
                     </React.Fragment>
                   ))}
-                  
-                  {/* ALL Pickup Points - NO LIMIT */}
-                  {selectedSlotData.geojson?.features
-                    .filter(f => f.properties.type === 'pickup')
-                    .map((feature, idx) => {
-                      const isCovered = feature.properties.assigned_rank > 0;
-                      return (
-                        <Marker
-                          key={`pickup-${idx}`}
-                          position={{
-                            lat: feature.geometry.coordinates[1],
-                            lng: feature.geometry.coordinates[0]
-                          }}
-                          icon={{
-                            path: window.google.maps.SymbolPath.CIRCLE,
-                            scale: 4,
-                            fillColor: isCovered ? '#3b82f6' : '#ef4444',
-                            fillOpacity: isCovered ? 0.6 : 0.5,
-                            strokeColor: 'transparent'
-                          }}
-                        />
-                      );
-                    })
-                  }
                 </GoogleMap>
-              </LoadScript>
-            </div>
-            
-            <div className="flex gap-4 mt-4 text-sm">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-orange-500"></div>
-                <span className="text-gray-700 dark:text-gray-300">Hotspot Locations</span>
               </div>
+            )}
+            
+            <div className="flex gap-4 mt-4 text-sm flex-wrap">
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                <span className="text-gray-700 dark:text-gray-300">Covered Pickups ({selectedSlotData.covered_rides})</span>
+                <div className="w-4 h-4 rounded-full bg-blue-500 border-2 border-white"></div>
+                <span className="text-gray-700 dark:text-gray-300">Hotspot Locations ({selectedSlotData.hotspots?.length || 0})</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                <span className="text-gray-700 dark:text-gray-300">Uncovered Pickups ({selectedSlotData.rides_count - selectedSlotData.covered_rides})</span>
+                <span className="text-gray-700 dark:text-gray-300">All Pickup Points ({selectedSlotData.rides_count})</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded-full bg-green-500 opacity-40 border border-green-600"></div>
+                <span className="text-gray-700 dark:text-gray-300">1km Coverage Radius</span>
               </div>
             </div>
           </div>
