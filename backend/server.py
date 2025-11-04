@@ -11339,6 +11339,7 @@ async def get_individual_qr_analytics(
                     "user_agent": scan.get("user_agent")
                 }
                 for scan in scans
+                if scan.get("scanned_at") is not None  # Filter out incomplete scans
             ]
         }
         
