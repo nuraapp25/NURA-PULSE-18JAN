@@ -108,6 +108,11 @@ class PhoneNumberProcessingTester:
                     leads_response = requests.get(f"{self.base_url}/driver-onboarding/leads", 
                                                 headers=headers, timeout=10)
                     
+                    print(f"Leads API response status: {leads_response.status_code}")
+                    if leads_response.status_code != 200:
+                        print(f"Leads API error: {leads_response.text}")
+                        return False
+                    
                     if leads_response.status_code == 200:
                         all_leads = leads_response.json()
                         
