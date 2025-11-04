@@ -340,7 +340,16 @@ const TelecallerDeskMobile = () => {
       );
       toast.success("✓ Call marked as done!");
       
-      // Refresh leads and summary
+      // IMMEDIATELY update the summary display (optimistic UI update)
+      if (summaryData) {
+        setSummaryData(prev => ({
+          ...prev,
+          calls_made_today: (prev.calls_made_today || 0) + 1,
+          calls_pending: Math.max(0, (prev.calls_pending || 0) - 1)
+        }));
+      }
+      
+      // Refresh leads and summary (background update)
       if (isAdmin && selectedTelecaller) {
         await fetchLeadsForTelecaller(selectedTelecaller);
         setTimeout(() => fetchSummary(selectedTelecaller), 100);
@@ -351,6 +360,12 @@ const TelecallerDeskMobile = () => {
     } catch (error) {
       console.error("Error marking call done:", error);
       toast.error("Failed to mark call as done");
+      // Revert optimistic update on error
+      if (isAdmin && selectedTelecaller) {
+        fetchSummary(selectedTelecaller);
+      } else {
+        fetchSummary();
+      }
     }
   };
   
