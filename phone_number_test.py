@@ -100,9 +100,11 @@ class PhoneNumberProcessingTester:
             
             if response.status_code == 200:
                 result = response.json()
+                print(f"Import response: {result}")
                 if result.get("success"):
                     imported_count = result.get("imported_count", 0)
-                    print(f"Import successful: {imported_count} leads imported")
+                    duplicate_count = result.get("duplicate_count", 0)
+                    print(f"Import successful: {imported_count} leads imported, {duplicate_count} duplicates skipped")
                     
                     # Now fetch the imported leads to verify phone numbers
                     leads_response = requests.get(f"{self.base_url}/driver-onboarding/leads", 
