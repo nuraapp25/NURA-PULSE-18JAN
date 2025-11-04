@@ -235,8 +235,8 @@ class PhoneNumberProcessingTester:
         all_tests_passed = all_tests_passed and result_4
         
         # Test Case 5: 10-digit starting with 91 as float
-        test_cases_5 = ["9178822331.0"]
-        expected_5 = ["9178822331"]  # Should NOT become 78822331 or 178822331
+        test_cases_5 = ["9178822555.0"]  # Using unique number
+        expected_5 = ["9178822555"]  # Should NOT become 78822555 or 178822555
         result_5 = self.import_leads_and_check_phones(
             "Test Case 5 - 10-digit starting with 91 as float", 
             test_cases_5, expected_5
