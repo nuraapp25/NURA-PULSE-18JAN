@@ -44,6 +44,9 @@ def test_specific_qr():
     # Call analytics endpoint
     response = requests.get(f"{BASE_URL}/qr-codes/{qr_id}/analytics", headers=headers, timeout=10)
     
+    print("Testing CORRECT endpoint with qr_code_id parameter...")
+    response2 = requests.get(f"{BASE_URL}/qr-codes/{qr_id}/analytics", headers=headers, timeout=10)
+    
     if response.status_code == 200:
         try:
             data = response.json()
