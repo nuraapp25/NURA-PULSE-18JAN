@@ -135,16 +135,22 @@ class PhoneNumberProcessingTester:
                         
                         # Verify phone numbers
                         success_count = 0
-                        for i, lead in enumerate(test_leads):
+                        print(f"Verifying {len(test_leads)} imported leads:")
+                        
+                        # Sort test leads by name to match order
+                        test_leads_sorted = sorted(test_leads, key=lambda x: x.get("name", ""))
+                        
+                        for i, lead in enumerate(test_leads_sorted):
                             if i < len(expected_results):
                                 actual_phone = lead.get("phone_number", "")
                                 expected_phone = expected_results[i]
+                                original_input = test_cases[i] if i < len(test_cases) else "Unknown"
                                 
                                 if actual_phone == expected_phone:
-                                    print(f"  ✅ Lead {i+1}: {test_cases[i]} → {actual_phone} (Expected: {expected_phone})")
+                                    print(f"  ✅ Lead {i+1}: {original_input} → {actual_phone} (Expected: {expected_phone})")
                                     success_count += 1
                                 else:
-                                    print(f"  ❌ Lead {i+1}: {test_cases[i]} → {actual_phone} (Expected: {expected_phone})")
+                                    print(f"  ❌ Lead {i+1}: {original_input} → {actual_phone} (Expected: {expected_phone})")
                         
                         # Clean up test leads
                         self.cleanup_test_leads(test_leads)
