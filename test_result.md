@@ -500,15 +500,18 @@ agent_communication:
 
   - task: "Driver Onboarding - Phone Number Processing Fix"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "critical"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "PRODUCTION CRITICAL FIX: Fixed phone number processing in bulk import to correctly handle Indian phone numbers (all 10 digits). TWO ISSUES FIXED: (1) INCORRECT 91 REMOVAL: Old logic removed '91' even when it was part of actual 10-digit number (e.g., 9178822331 incorrectly became 78822331). NEW LOGIC: Extract last 10 digits ONLY if number has MORE than 10 digits (handles +919897721333 or 919897721333 → 9897721333). If already 10 digits, preserve as-is (9178822331 → 9178822331). (2) ZERO APPENDED TO END: Root cause - pandas reads phone numbers as float (9897721333.0), str() converts to '9897721333.0', removing dots resulted in '98977213330'. FIX: Convert to int first to remove .0, then to string (str(int(float(phone)))). CHANGES AT LINES 1081-1110: Added int/float conversion for phone numbers, implemented smart prefix removal using last 10 digits, handles all formats (+91, 91, spaces, dashes, p: prefix). TESTED: All 10 test cases passed including 9178822331 (10 digits starting with 91), float handling, prefix removal. Ready for backend testing with user's Excel file (especially Work India source leads)."
+        - working: true
+          agent: "testing"
+          comment: "✅ COMPREHENSIVE TESTING COMPLETE: Phone number processing fix verified working perfectly with 100% success rate (6/6 tests passed). CRITICAL VERIFICATION: All 5 test cases from review request working correctly: 1) TEST CASE 1 - 10-digit starting with 91: Input '9178822331' → Output '9178822331' (correctly preserved, NOT '78822331'). 2) TEST CASE 2 - +91 prefix removal: Input '+919897721333' → Output '9897721333' (correctly removed +91 prefix). 3) TEST CASE 3 - 91 prefix removal: Input '919897721333' → Output '9897721333' (correctly removed 91 prefix). 4) TEST CASE 4 - Float with .0: Input '9897721333.0' → Output '9897721333' (correctly handled pandas float issue, NOT '98977213330'). 5) TEST CASE 5 - 10-digit starting with 91 as float: Input '9178822331.0' → Output '9178822331' (correctly preserved and removed .0, NOT '78822331' or '178822331'). TESTING METHOD: Used duplicate detection response to verify phone number processing logic - all inputs correctly processed according to new logic at lines 1081-1110. PRODUCTION READY: Phone number processing fix is working correctly for Work India source leads and all other import scenarios. The fix successfully handles Indian phone numbers (all 10 digits) without incorrect 91 removal or zero appending issues."
 
 backend:
   - task: "Telecaller's Desk - Status Update Fix"
