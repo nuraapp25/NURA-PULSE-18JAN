@@ -421,8 +421,7 @@ function HotspotPlanning() {
                               <circle cx="4" cy="4" r="3" fill="#ef4444" opacity="0.7"/>
                             </svg>`
                           ),
-                          scaledSize: new window.google.maps.Size(8, 8),
-                          anchor: new window.google.maps.Point(4, 4)
+                          anchor: { x: 4, y: 4 }
                         }}
                       />
                     ))
@@ -440,8 +439,7 @@ function HotspotPlanning() {
                               <text x="20" y="26" text-anchor="middle" fill="white" font-size="16" font-weight="bold">${hotspot.rank}</text>
                             </svg>`
                           ),
-                          scaledSize: new window.google.maps.Size(40, 40),
-                          anchor: new window.google.maps.Point(20, 20)
+                          anchor: { x: 20, y: 20 }
                         }}
                         onClick={() => setSelectedHotspot(hotspot)}
                       />
