@@ -198,8 +198,8 @@ class PhoneNumberProcessingTester:
         all_tests_passed = True
         
         # Test Case 1: 10-digit number starting with 91 (should be preserved)
-        test_cases_1 = ["9178822331"]
-        expected_1 = ["9178822331"]  # Should NOT become 78822331
+        test_cases_1 = ["9178822999"]  # Using unique number
+        expected_1 = ["9178822999"]  # Should NOT become 78822999
         result_1 = self.import_leads_and_check_phones(
             "Test Case 1 - 10-digit starting with 91", 
             test_cases_1, expected_1
