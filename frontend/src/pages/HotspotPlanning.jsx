@@ -32,25 +32,25 @@ const createHotspotIcon = (rank) => {
   return new L.DivIcon({
     html: `
       <div style="
-        width: 40px;
-        height: 40px;
+        width: 28px;
+        height: 28px;
         border-radius: 50%;
         background: #3b82f6;
-        border: 3px solid white;
+        border: 2px solid white;
         display: flex;
         align-items: center;
         justify-content: center;
         color: white;
         font-weight: bold;
-        font-size: 16px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        font-size: 13px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
       ">
         ${rank}
       </div>
     `,
     className: '',
-    iconSize: [40, 40],
-    iconAnchor: [20, 20],
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
   });
 };
 
