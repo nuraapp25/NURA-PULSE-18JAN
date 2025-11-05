@@ -426,14 +426,14 @@ function HotspotPlanning() {
                   />
                 ))}
                 
-                {/* ALL Pickup Points - RED DOTS */}
+                {/* ALL Pickup Points - PURPLE DOTS */}
                 {selectedSlotData.geojson?.features
                   .filter(f => f.properties.type === 'pickup')
                   .map((feature, idx) => (
                     <Marker
                       key={`pickup-${idx}`}
                       position={[feature.geometry.coordinates[1], feature.geometry.coordinates[0]]}
-                      icon={redIcon}
+                      icon={purpleIcon}
                     />
                   ))
                 }
