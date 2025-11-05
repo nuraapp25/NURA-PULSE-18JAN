@@ -6566,7 +6566,8 @@ async def analyze_hotspot_placement(
                 'covered_rides': result['covered_rides'],
                 'coverage_percentage': result['coverage_percentage'],
                 'hotspots': result['hotspots'],
-                'geojson': result['geojson']
+                'geojson': result['geojson'],
+                'detailed_assignments': result.get('detailed_assignments', [])
             }
             
             logger.info(f"{slot_name}: {result['covered_rides']}/{result['total_rides']} rides covered ({result['coverage_percentage']}%)")
