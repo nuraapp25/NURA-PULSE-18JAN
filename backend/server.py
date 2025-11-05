@@ -6668,6 +6668,21 @@ async def analyze_and_save_hotspot(
 @api_router.get("/hotspot-planning/library")
 async def get_hotspot_library(
     current_user: User = Depends(get_current_user)
+):
+    """Get all saved hotspot analyses from library"""
+    try:
+        analyses_collection = db["hotspot_analyses"]
+        analyses = await analyses_collection.find(
+            {"uploaded_by": current_user.id}
+        ).sort("created_at", -1).to_list(length=100)
+        
+        return {
+            "success": True,
+            "analyses": analyses
+        }
+    except Exception as e:
+        logger.error(f"Failed to fetch library: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch library")
 
 
 @api_router.post("/hotspot-planning/download-csv/{slot_name}")
