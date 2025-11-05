@@ -1387,11 +1387,11 @@ const PaymentReconciliation = () => {
                     <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-full p-0">
+                <PopoverContent className="w-full p-0" onWheel={(e) => e.stopPropagation()}>
                   <Command>
                     <CommandInput placeholder="Search vehicle..." />
                     <CommandEmpty>No vehicle found.</CommandEmpty>
-                    <CommandGroup className="max-h-64 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-gray-100">
+                    <CommandGroup className="max-h-64 overflow-y-auto overscroll-contain [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-gray-100">
                       {vehiclesList.map((vehicle) => (
                         <CommandItem
                           key={vehicle}
