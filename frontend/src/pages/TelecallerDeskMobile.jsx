@@ -928,7 +928,7 @@ const TelecallerDeskMobile = () => {
           </div>
           {selectedDate && (
             <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-              Showing leads from {new Date(selectedDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+              Showing leads assigned on {new Date(selectedDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
             </p>
           )}
         </div>
