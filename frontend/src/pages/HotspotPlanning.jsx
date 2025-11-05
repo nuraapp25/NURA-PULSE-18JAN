@@ -390,119 +390,76 @@ function HotspotPlanning() {
             </div>
           </div>
 
-          {/* Google Map */}
+          {/* Map with Leaflet (OpenStreetMap) */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
               <MapPin className="w-5 h-5" />
               Coverage Map - {selectedSlot}
             </h2>
             
-            {loadError && (
-              <div className="text-red-600 p-4 bg-red-50 rounded-lg">
-                Error loading Google Maps. Please check your API key.
-              </div>
-            )}
-            
-            {!isLoaded && !loadError && (
-              <div className="text-gray-600 p-4 bg-gray-50 rounded-lg">
-                Loading map...
-              </div>
-            )}
-            
-            {isLoaded && (
-              <div className="rounded-lg overflow-hidden">
-                <GoogleMap
-                  mapContainerStyle={mapContainerStyle}
-                  center={mapCenter}
-                  zoom={12}
-                  options={{
-                    styles: [
-                      {
-                        featureType: "poi",
-                        elementType: "labels",
-                        stylers: [{ visibility: "off" }]
-                      }
-                    ]
-                  }}
-                >
-                  {/* 1km Coverage Circles (Green, Transparent) - Draw first so they're behind */}
-                  {selectedSlotData.hotspots?.map((hotspot, idx) => (
-                    <Circle
-                      key={`circle-${idx}`}
-                      center={{ lat: hotspot.lat, lng: hotspot.lon }}
-                      radius={1000}
-                      options={{
-                        fillColor: '#22c55e',
-                        fillOpacity: 0.2,
-                        strokeColor: '#22c55e',
-                        strokeWeight: 2,
-                        strokeOpacity: 0.6
-                      }}
+            <div className="rounded-lg overflow-hidden" style={{ height: '600px' }}>
+              <MapContainer
+                center={mapCenter}
+                zoom={mapZoom}
+                style={{ height: '100%', width: '100%' }}
+                key={`map-${selectedSlot}`}
+              >
+                <TileLayer
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+                
+                {/* 1km Coverage Circles (Green, Transparent) - Draw first */}
+                {selectedSlotData.hotspots?.map((hotspot, idx) => (
+                  <Circle
+                    key={`circle-${idx}`}
+                    center={[hotspot.lat, hotspot.lon]}
+                    radius={1000}
+                    pathOptions={{
+                      fillColor: '#22c55e',
+                      fillOpacity: 0.2,
+                      color: '#22c55e',
+                      weight: 2,
+                      opacity: 0.6
+                    }}
+                  />
+                ))}
+                
+                {/* ALL Pickup Points - RED DOTS */}
+                {selectedSlotData.geojson?.features
+                  .filter(f => f.properties.type === 'pickup')
+                  .map((feature, idx) => (
+                    <Marker
+                      key={`pickup-${idx}`}
+                      position={[feature.geometry.coordinates[1], feature.geometry.coordinates[0]]}
+                      icon={redIcon}
                     />
-                  ))}
-                  
-                  {/* ALL Pickup Points - RED DOTS */}
-                  {selectedSlotData.geojson?.features
-                    .filter(f => f.properties.type === 'pickup')
-                    .map((feature, idx) => (
-                      <Marker
-                        key={`pickup-${idx}`}
-                        position={{
-                          lat: feature.geometry.coordinates[1],
-                          lng: feature.geometry.coordinates[0]
-                        }}
-                        icon={{
-                          url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
-                            `<svg width="8" height="8" xmlns="http://www.w3.org/2000/svg">
-                              <circle cx="4" cy="4" r="3" fill="#ef4444" opacity="0.7"/>
-                            </svg>`
-                          ),
-                          anchor: { x: 4, y: 4 }
-                        }}
-                      />
-                    ))
-                  }
-                  
-                  {/* Hotspot Markers - BLUE CIRCLES with numbers */}
-                  {selectedSlotData.hotspots?.map((hotspot, idx) => (
-                    <React.Fragment key={`hotspot-${idx}`}>
-                      <Marker
-                        position={{ lat: hotspot.lat, lng: hotspot.lon }}
-                        icon={{
-                          url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
-                            `<svg width="40" height="40" xmlns="http://www.w3.org/2000/svg">
-                              <circle cx="20" cy="20" r="15" fill="#3b82f6" stroke="white" stroke-width="3"/>
-                              <text x="20" y="26" text-anchor="middle" fill="white" font-size="16" font-weight="bold">${hotspot.rank}</text>
-                            </svg>`
-                          ),
-                          anchor: { x: 20, y: 20 }
-                        }}
-                        onClick={() => setSelectedHotspot(hotspot)}
-                      />
-                      
-                      {/* InfoWindow for selected hotspot */}
-                      {selectedHotspot?.rank === hotspot.rank && (
-                        <InfoWindow
-                          position={{ lat: hotspot.lat, lng: hotspot.lon }}
-                          onCloseClick={() => setSelectedHotspot(null)}
-                        >
-                          <div className="p-2">
-                            <h3 className="font-bold text-base">Hotspot #{hotspot.rank}</h3>
-                            <p className="text-sm">{hotspot.locality || 'Unknown'}</p>
-                            <p className="text-xs text-gray-600 mt-1">
-                              Covers {hotspot.covered_count} rides
-                            </p>
-                            <p className="text-xs text-gray-500 mt-1">
-                              {hotspot.lat.toFixed(6)}, {hotspot.lon.toFixed(6)}
-                            </p>
-                          </div>
-                        </InfoWindow>
-                      )}
-                    </React.Fragment>
-                  ))}
-                </GoogleMap>
-              </div>
-            )}
+                  ))
+                }
+                
+                {/* Hotspot Markers - BLUE CIRCLES with numbers */}
+                {selectedSlotData.hotspots?.map((hotspot, idx) => (
+                  <Marker
+                    key={`hotspot-${idx}`}
+                    position={[hotspot.lat, hotspot.lon]}
+                    icon={createHotspotIcon(hotspot.rank)}
+                  >
+                    <Popup>
+                      <div className="p-2">
+                        <h3 className="font-bold text-base">Hotspot #{hotspot.rank}</h3>
+                        <p className="text-sm">{hotspot.locality || 'Unknown'}</p>
+                        <p className="text-xs text-gray-600 mt-1">
+                          Covers {hotspot.covered_count} rides
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {hotspot.lat.toFixed(6)}, {hotspot.lon.toFixed(6)}
+                        </p>
+                      </div>
+                    </Popup>
+                  </Marker>
+                ))}
+              </MapContainer>
+            </div>
             
             <div className="flex gap-4 mt-4 text-sm flex-wrap">
               <div className="flex items-center gap-2">
