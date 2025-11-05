@@ -286,6 +286,20 @@ def optimize_hotspots(df: pd.DataFrame, N: int = 10, h3_res: int = 9,
     # Extract pickup_point if available
     pickup_points = df["pickup_point"].tolist() if "pickup_point" in df.columns else [None] * len(pts)
     
+    # Extract drop coordinates if available
+    drop_coords = []
+    drop_points = []
+    if "drop_lat" in df.columns and "drop_lon" in df.columns:
+        for _, row in df.iterrows():
+            if pd.notna(row.get("drop_lat")) and pd.notna(row.get("drop_lon")):
+                drop_coords.append((float(row["drop_lat"]), float(row["drop_lon"])))
+            else:
+                drop_coords.append(None)
+        drop_points = df["drop_point"].tolist() if "drop_point" in df.columns else [None] * len(pts)
+    else:
+        drop_coords = [None] * len(pts)
+        drop_points = [None] * len(pts)
+    
     # Generate candidates
     if use_h3:
         cand = generate_candidates_h3(pts, res=h3_res)
