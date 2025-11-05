@@ -423,7 +423,22 @@ function HotspotPlanning() {
                       weight: 2,
                       opacity: 0.6
                     }}
-                  />
+                  >
+                    <Tooltip direction="top" offset={[0, -10]} opacity={0.9}>
+                      <div className="text-xs">
+                        <div className="font-bold text-green-700">Hotspot #{hotspot.rank} Coverage</div>
+                        <div className="text-gray-700 mt-1">
+                          📍 {hotspot.locality || 'Unknown location'}
+                        </div>
+                        <div className="text-gray-600 mt-1">
+                          ✓ {hotspot.covered_count} rides covered
+                        </div>
+                        <div className="text-gray-500 text-[10px] mt-1">
+                          1km radius
+                        </div>
+                      </div>
+                    </Tooltip>
+                  </Circle>
                 ))}
                 
                 {/* ALL Pickup Points - PURPLE DOTS */}
