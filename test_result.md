@@ -2021,3 +2021,74 @@ agent_communication:
     - agent: "testing"
       message: "✅ CRITICAL QR CODE PRODUCTION FIXES TESTING COMPLETE: Both production issues RESOLVED with 85% overall success rate (17/20 tests passed). ISSUE 1 - FIXED: Batch QR codes with device-specific URLs now work perfectly. Testing verified: 1) Batch creation successful with multi-URL type (iOS/Android/Mobile/Desktop). 2) Database stores QR codes with NEW field names (landing_page_ios, landing_page_android, landing_page_mobile, landing_page_desktop) matching scan endpoint expectations. 3) QR scanning works correctly - NO 'QR code not found' errors. 4) All 9 device-specific redirect tests passed (iOS→App Store, Android→Play Store, Desktop→Desktop URL). 5) Analytics recorded properly. Minor fix applied: added 'unique_short_code' field for backward compatibility. ISSUE 2 - FIXED: Campaign deletion now works with proper permission checks and comprehensive logging. Testing verified: 1) Unpublished campaigns delete successfully without force flag. 2) Published campaigns correctly reject deletion without force (400 error with clear message). 3) Master admin can force delete published campaigns with force=true. 4) Enhanced logging working - backend shows detailed audit trail (campaign name, user role, counts, scans deleted). 5) All scans deleted when campaign deleted (confirmed in logs). 6) Response includes qr_codes_deleted and scans_deleted counts. PRODUCTION IMPACT: Both critical production issues are RESOLVED and production-ready. QR codes work correctly, campaign deletion has proper controls and audit logging."
 
+
+# ====================================================================================================
+# Payment Reconciliation Platform Display & Google Sheets Sync Fixes - Dec 2024
+# ====================================================================================================
+
+user_problem_statement: "Payment Reconciliation Feature Issues: 1) Platform field entered in driver details dropdown not displaying in main table, 2) Google Sheets sync needs Platform column added between Vehicle Number and Mode columns, 3) Dropdown scrolling not easy to use."
+
+frontend:
+  - task: "Payment Reconciliation - Platform Display Fix"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/PaymentReconciliation.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+          agent: "user"
+          comment: "USER REPORTED ISSUE: Platform selected in driver details dropdown is not appearing in the main payment reconciliation table below. Backend is saving platform correctly, but frontend mapping is missing the platform field when processing extracted data."
+        - working: "NA"
+          agent: "main"
+          comment: "FIX IMPLEMENTED: Added platform field to processedData mapping (line 400). Frontend was not mapping the platform field from backend response even though backend was returning it correctly. CHANGES: Modified response.data.extracted_data.map() to include 'platform: item.platform || selectedPlatform || N/A'. Now platform data flows correctly: Driver Dialog → Backend → MongoDB → Frontend Table Display. Ready for testing."
+
+  - task: "Payment Reconciliation - Dropdown Scrolling Enhancement"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/PaymentReconciliation.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+          agent: "user"
+          comment: "USER REPORTED ISSUE: Dropdown scrolling is not easy to scroll in Payment Reconciliation. Driver and Vehicle dropdowns use Command/Popover with good scrolling, but Platform dropdown uses regular Select component without proper scrolling styles."
+        - working: "NA"
+          agent: "main"
+          comment: "FIX IMPLEMENTED: Added proper scrollbar styling to Platform SelectContent component (line 1425). Applied same styling used for Driver/Vehicle dropdowns: 'max-h-64 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-gray-100'. This ensures consistent scrolling experience across all three dropdowns with visible, styled scrollbars. Ready for testing."
+
+appscript:
+  - task: "Payment Reconciliation - Google Sheets AppScript V2"
+    implemented: true
+    working: "NA"
+    file: "/app/PAYMENT_RECONCILIATION_APPSCRIPT_V2.gs"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "user"
+          comment: "USER REQUESTED: When syncing data to Google Sheets, the Platform column needs to be added between Vehicle Number and Mode columns. Current AppScript template doesn't match actual payment screenshot data structure."
+        - working: "NA"
+          agent: "main"
+          comment: "NEW APPSCRIPT CREATED: Created PAYMENT_RECONCILIATION_APPSCRIPT_V2.gs with updated column structure matching actual payment data. Column Order: A:Record ID, B:Driver, C:Vehicle Number, D:PLATFORM (NEW POSITION - between Vehicle and Date), E:Date, F:Time, G:Description, H:Amount, I:Payment Mode, J:Distance, K:Duration, L:Pickup KM, M:Drop KM, N:Pickup Location, O:Drop Location, P:Screenshot, Q:Status, R:Created At. Backend sync endpoint already sends platform field correctly (line 5849 in server.py). Updated AppScript properly handles all payment screenshot fields including platform in correct position. Includes setup instructions and manual test functions. Ready for user to deploy to Google Sheets."
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 0
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Payment Reconciliation - Platform Display Fix"
+    - "Payment Reconciliation - Dropdown Scrolling Enhancement"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+    - agent: "main"
+      message: "PAYMENT RECONCILIATION FIXES IMPLEMENTED: (1) PLATFORM DISPLAY: Added platform field to processedData mapping so platform selected in driver dialog now displays in table. Backend was correctly saving/returning platform but frontend wasn't mapping it. (2) DROPDOWN SCROLLING: Enhanced platform dropdown with proper scrollbar styling matching driver/vehicle dropdowns for consistent UX. (3) GOOGLE SHEETS SYNC: Created new PAYMENT_RECONCILIATION_APPSCRIPT_V2.gs with Platform column in correct position (Column D, between Vehicle and Date) matching actual payment screenshot data structure. Backend sync already sends platform correctly. All fixes ready for testing."
