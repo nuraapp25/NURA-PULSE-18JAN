@@ -16,11 +16,11 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
-// Custom icons for pickup points (red)
-const redIcon = new L.Icon({
+// Custom icons for pickup points (purple)
+const purpleIcon = new L.Icon({
   iconUrl: 'data:image/svg+xml;base64,' + btoa(`
     <svg width="10" height="10" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="5" cy="5" r="4" fill="#ef4444" opacity="0.8"/>
+      <circle cx="5" cy="5" r="4" fill="#a855f7" opacity="0.8"/>
     </svg>
   `),
   iconSize: [10, 10],
