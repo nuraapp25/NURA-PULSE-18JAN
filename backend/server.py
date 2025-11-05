@@ -6561,8 +6561,19 @@ async def analyze_hotspot_placement(
                 continue
             
             # Run hotspot optimization
+            # Build column list dynamically based on what's available
+            cols_to_pass = ['lat', 'lon', 'weight']
+            if 'pickup_point' in slot_df.columns:
+                cols_to_pass.append('pickup_point')
+            if 'drop_lat' in slot_df.columns:
+                cols_to_pass.append('drop_lat')
+            if 'drop_lon' in slot_df.columns:
+                cols_to_pass.append('drop_lon')
+            if 'drop_point' in slot_df.columns:
+                cols_to_pass.append('drop_point')
+                
             result = optimize_hotspots(
-                df=slot_df[['lat', 'lon', 'weight'] + (['pickup_point'] if 'pickup_point' in slot_df.columns else [])],
+                df=slot_df[cols_to_pass],
                 N=10,  # Changed from 5 to 10 hotspots
                 h3_res=9,
                 use_h3=True
