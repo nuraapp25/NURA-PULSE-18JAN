@@ -266,11 +266,10 @@ metadata:
 
 test_plan:
   current_focus:
-    - "QR Code Batch Field Name Mismatch Fix"
-    - "Campaign Deletion Enhanced Logging"
+    - "Driver Onboarding Bulk Export API - Excel File Generation"
   stuck_tasks: []
   test_all: false
-  test_priority: "critical_first"
+  test_priority: "high_first"
 
 agent_communication:
     - agent: "testing"
