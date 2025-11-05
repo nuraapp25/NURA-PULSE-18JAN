@@ -182,29 +182,47 @@ function HotspotPlanning() {
     toast.success('Coordinates copied to clipboard');
   };
 
-  const downloadReport = () => {
-    if (!selectedSlotData) return;
+  const downloadReport = async () => {
+    if (!selectedSlotData || !analysisResult) {
+      toast.error('No analysis data available');
+      return;
+    }
     
-    const report = {
-      time_slot: selectedSlot,
-      analysis_date: analysisResult.created_at,
-      metrics: {
-        total_rides: selectedSlotData.rides_count,
-        covered_rides: selectedSlotData.covered_rides,
-        coverage_percentage: selectedSlotData.coverage_percentage
-      },
-      hotspots: selectedSlotData.hotspots
-    };
-    
-    const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `hotspot-report-${selectedSlot.replace(/\s+/g, '-')}.json`;
-    link.click();
-    URL.revokeObjectURL(url);
-    
-    toast.success('JSON report downloaded');
+    try {
+      toast.info('Generating Excel report...');
+      
+      // Use the same endpoint as CSV download for consistency
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API}/api/hotspot-planning/download-csv/${encodeURIComponent(selectedSlot)}`,
+        { time_slots: analysisResult.time_slots },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: 'blob'
+        }
+      );
+      
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Get filename from header or use default
+      const contentDisposition = response.headers['content-disposition'];
+      const filenameMatch = contentDisposition && contentDisposition.match(/filename="?(.+)"?/);
+      const filename = filenameMatch ? filenameMatch[1] : `hotspot_report_${selectedSlot.replace(/\s+/g, '_')}.csv`;
+      
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('✅ Report downloaded successfully!');
+    } catch (error) {
+      console.error('Report download error:', error);
+      toast.error(error.response?.data?.detail || 'Failed to download report');
+    }
   };
 
   const downloadHotspotCSV = async () => {
