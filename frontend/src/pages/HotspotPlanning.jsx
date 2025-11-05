@@ -590,11 +590,18 @@ function HotspotPlanning() {
               </h2>
               <div className="flex gap-2">
                 <button
+                  onClick={downloadHotspotCSV}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  Download Hotspots
+                </button>
+                <button
                   onClick={downloadReport}
                   className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
                 >
                   <Download className="w-4 h-4" />
-                  Download Report
+                  Download Json
                 </button>
               </div>
             </div>
