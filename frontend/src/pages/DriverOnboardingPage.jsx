@@ -1445,7 +1445,7 @@ const DriverOnboardingPage = () => {
       toast.info("📊 Starting bulk export... This may take a few moments for large datasets.");
       
       const response = await axios.post(
-        `${API}/driver-onboarding/bulk-export`,
+        `${API}/api/driver-onboarding/bulk-export`,
         {},
         {
           headers: { 'Authorization': `Bearer ${token}` },
