@@ -1156,6 +1156,7 @@ async def import_leads(
                 "docs_collection": "Pending",
                 "customer_readiness": "Not Ready",
                 "assigned_telecaller": str(row[poc_col]) if poc_col and pd.notna(row.get(poc_col)) else None,
+                "assigned_date": import_date if (poc_col and pd.notna(row.get(poc_col))) else None,  # Set assigned date if telecaller assigned
                 "telecaller_notes": str(row[telecaller_notes_col]) if telecaller_notes_col and pd.notna(row.get(telecaller_notes_col)) else None,
                 "notes": str(row[remarks_col]) if remarks_col and pd.notna(row.get(remarks_col)) else None,
                 "created_at": import_date,
