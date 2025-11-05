@@ -1476,6 +1476,64 @@ const PaymentReconciliation = () => {
           </div>
           </DialogContent>
         </Dialog>
+        
+        {/* Create Folder Dialog */}
+        <Dialog open={showCreateFolderDialog} onOpenChange={setShowCreateFolderDialog}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Create New Folder</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="new-folder-month">Month *</Label>
+                <Select value={newFolderMonth} onValueChange={setNewFolderMonth}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select month..." />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-64 overflow-y-auto">
+                    {months.map((month) => (
+                      <SelectItem key={month.value} value={month.value}>
+                        {month.fullName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="new-folder-year">Year *</Label>
+                <Select value={newFolderYear} onValueChange={setNewFolderYear}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select year..." />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-64 overflow-y-auto">
+                    {years.map((year) => (
+                      <SelectItem key={year.value} value={year.value}>
+                        {year.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {newFolderMonth && newFolderYear && (
+                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <p className="text-sm text-blue-800 dark:text-blue-300">
+                    <strong>Folder name:</strong> {months.find(m => m.value === newFolderMonth)?.label} {newFolderYear}
+                  </p>
+                </div>
+              )}
+              
+              <Button 
+                onClick={handleCreateFolder}
+                className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+                disabled={!newFolderMonth || !newFolderYear || creatingFolder}
+              >
+                {creatingFolder ? "Creating..." : "Create Folder"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   };
