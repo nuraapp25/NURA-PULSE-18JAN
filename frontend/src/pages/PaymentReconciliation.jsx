@@ -398,6 +398,7 @@ const PaymentReconciliation = () => {
           id: item.id,
           driver: item.driver === "N/A" ? selectedDriver : item.driver,
           vehicle: item.vehicle === "N/A" ? selectedVehicle : item.vehicle,
+          platform: item.platform || selectedPlatform || "N/A",
           description: item.description,
           date: item.date,
           time: item.time,
