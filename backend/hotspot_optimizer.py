@@ -374,6 +374,52 @@ def optimize_hotspots(df: pd.DataFrame, N: int = 10, h3_res: int = 9,
         "features": features
     }
     
+    # Create detailed assignments with distances for CSV export
+    detailed_assignments = []
+    for i, (lat, lon) in enumerate(pts):
+        assigned_rank = int(assignment[i])
+        row_data = {
+            "pickup_lat": float(lat),
+            "pickup_lon": float(lon),
+            "assigned_hotspot_rank": assigned_rank
+        }
+        
+        # Add pickup_point if available
+        if pickup_points[i] is not None:
+            row_data["pickup_point"] = str(pickup_points[i])
+        
+        # Find assigned hotspot details
+        if assigned_rank > 0:
+            assigned_hotspot = next((h for h in hotspots if h["rank"] == assigned_rank), None)
+            if assigned_hotspot:
+                row_data["assigned_hotspot_locality"] = assigned_hotspot["locality"]
+                row_data["assigned_hotspot_lat"] = assigned_hotspot["lat"]
+                row_data["assigned_hotspot_lon"] = assigned_hotspot["lon"]
+                
+                # Calculate haversine distance
+                from math import radians, sin, cos, sqrt, atan2
+                R = 6371000  # Earth radius in meters
+                lat1, lon1 = radians(lat), radians(lon)
+                lat2, lon2 = radians(assigned_hotspot["lat"]), radians(assigned_hotspot["lon"])
+                dlat = lat2 - lat1
+                dlon = lon2 - lon1
+                a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+                c = 2 * atan2(sqrt(a), sqrt(1-a))
+                distance = R * c
+                row_data["distance_from_hotspot_m"] = round(distance, 2)
+            else:
+                row_data["assigned_hotspot_locality"] = None
+                row_data["assigned_hotspot_lat"] = None
+                row_data["assigned_hotspot_lon"] = None
+                row_data["distance_from_hotspot_m"] = None
+        else:
+            row_data["assigned_hotspot_locality"] = None
+            row_data["assigned_hotspot_lat"] = None
+            row_data["assigned_hotspot_lon"] = None
+            row_data["distance_from_hotspot_m"] = None
+        
+        detailed_assignments.append(row_data)
+    
     total_rides = int(len(pts))
     covered_rides = int(covered_mask.sum())
     coverage_percentage = (covered_rides / total_rides * 100) if total_rides > 0 else 0.0
@@ -383,5 +429,6 @@ def optimize_hotspots(df: pd.DataFrame, N: int = 10, h3_res: int = 9,
         "total_rides": total_rides,
         "covered_rides": covered_rides,
         "coverage_percentage": round(coverage_percentage, 2),
-        "geojson": geojson
+        "geojson": geojson,
+        "detailed_assignments": detailed_assignments
     }
