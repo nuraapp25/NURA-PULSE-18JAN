@@ -114,16 +114,69 @@ class ProductionBulkExportTester:
             self.log_test("Bulk Export - Authentication Check", False, "No authentication token available")
             return False
         
+        # First, let's check how many leads are in the database
+        print("Checking lead count in production database...")
+        leads_response = self.make_request("GET", "/driver-onboarding/leads", timeout=30)
+        
+        if leads_response and leads_response.status_code == 200:
+            try:
+                leads_data = leads_response.json()
+                if isinstance(leads_data, dict) and 'leads' in leads_data:
+                    sample_leads = leads_data['leads']
+                    self.log_test("Production Database - Sample Leads", True, 
+                                f"Successfully retrieved sample of {len(sample_leads)} leads from production")
+                elif isinstance(leads_data, list):
+                    sample_leads = leads_data
+                    self.log_test("Production Database - Sample Leads", True, 
+                                f"Successfully retrieved sample of {len(sample_leads)} leads from production")
+                else:
+                    self.log_test("Production Database - Sample Leads", False, 
+                                f"Unexpected response format: {type(leads_data)}")
+            except json.JSONDecodeError:
+                self.log_test("Production Database - Sample Leads", False, 
+                            "Invalid JSON response from leads endpoint")
+        else:
+            error_msg = "Network error" if not leads_response else f"Status {leads_response.status_code}"
+            self.log_test("Production Database - Sample Leads", False, 
+                        f"Could not retrieve sample leads: {error_msg}")
+        
         # Test the bulk export endpoint with extended timeout (5 minutes)
         print("Calling POST /api/driver-onboarding/bulk-export (timeout: 5 minutes)...")
         response = self.make_request("POST", "/driver-onboarding/bulk-export", timeout=300)
         
         if not response:
-            self.log_test("Bulk Export - Network Request", False, "Network error or timeout during bulk export")
+            self.log_test("Bulk Export - Network Request", False, "Network error or timeout during bulk export (5 min timeout)")
+            
+            # Try with shorter timeout to see if it's a timeout issue
+            print("Retrying with 30 second timeout to diagnose...")
+            quick_response = self.make_request("POST", "/driver-onboarding/bulk-export", timeout=30)
+            if quick_response:
+                if quick_response.status_code == 503:
+                    self.log_test("Bulk Export - Service Availability", False, 
+                                "Service returns 503 - Server overloaded or export process exceeds timeout limits")
+                    print("🔍 DIAGNOSIS: The bulk export endpoint is returning HTTP 503 Service Unavailable.")
+                    print("   This typically indicates:")
+                    print("   • Server timeout due to large dataset export (30,000+ leads)")
+                    print("   • Server resource exhaustion during export processing")
+                    print("   • Proxy/gateway timeout limits exceeded")
+                    print("   • Backend service temporarily overloaded")
+                else:
+                    self.log_test("Bulk Export - Service Response", False, 
+                                f"Service responds with {quick_response.status_code} but times out on full export")
             return False
         
         # Check status code
-        if response.status_code != 200:
+        if response.status_code == 503:
+            self.log_test("Bulk Export - HTTP Status", False, 
+                        "HTTP 503 Service Unavailable - Export process likely exceeds server timeout limits for large dataset")
+            
+            print("🔍 DETAILED DIAGNOSIS:")
+            print("   • Production database likely contains large dataset (30,000+ leads)")
+            print("   • Bulk export process exceeds server/proxy timeout configurations")
+            print("   • Server resources may be insufficient for large Excel generation")
+            print("   • Recommendation: Increase server timeouts or implement chunked export")
+            return False
+        elif response.status_code != 200:
             self.log_test("Bulk Export - HTTP Status", False, 
                         f"Expected HTTP 200, got {response.status_code}", response.text)
             return False
