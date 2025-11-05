@@ -1,57 +1,83 @@
 <analysis>
-The AI engineer's primary focus was debugging and enhancing the Nura Pulse application, particularly the QR Code Manager functionality in a Kubernetes-deployed environment. Key challenges involved resolving URL discrepancies (Kubernetes /api prefix, dynamic host generation), fixing a mismatch between frontend and backend field names for QR code creation and scanning, and ensuring accurate scan data recording and display in analytics. The engineer meticulously analyzed logs, backend Pydantic models, and frontend components to identify root causes. Multiple iterations were required to address issues like duplicate API endpoints and an environment/database mismatch where the preview environment was used for debugging while the user reported issues in production. The final major fix involved correcting an analytics endpoint to retrieve scan data using the updated field names, ensuring detailed scan analytics were displayed.
+The AI engineer's work spanned multiple modules of the Nura Pulse application, primarily driven by user feedback and bug reports. Initially, the focus was on concluding QR Code Manager fixes, particularly validating analytics and locking the module from further changes. Subsequent tasks involved critical bug fixes in Driver Onboarding (phone number parsing logic, addressing / prefixes and extraneous '0's), and extensive feature development and fixes in Telecaller's Desk (adding calendar/search, dynamic summary cards, clickable filters). A significant portion addressed Hotspot Planning, involving switching from OpenStreetMap to Google Maps (then back to OpenStreetMap due to API issues), refining map visualization (hotspot count, marker colors/sizes, tooltips), and implementing detailed CSV reports with geocoded locality data. Challenges included MongoDB  serialization, Google Maps API key loading, and refining geocoding granularity. The engineer also resolved a missing Nov 2025 folder in Payment Reconciliation and fixed dropdown scrolling in driver details. The work concluded with investigating platform display and Google Sheets sync in Payment Reconciliation.
 </analysis>
 
 <product_requirements>
-The Nura Pulse application is a role-based business dashboard managing driver leads, telecaller operations, hotspot analysis, battery consumption, and QR Code campaigns. The primary problem being solved is efficient management and tracking of QR code-based campaigns for driver onboarding and other marketing efforts, requiring robust analytics.
+The Nura Pulse application is a role-based business dashboard for managing driver leads, telecaller operations, hotspot analysis, battery consumption, and QR Code campaigns, aimed at efficient management and tracking with robust analytics.
 
 **Implemented Features**:
-*   **Driver Onboarding**: Manages leads with improved bulk import, column mapping, and duplicate detection.
-*   **Telecaller's Desk**: Mobile-friendly interface for telecallers with  and call tracking.
-*   **QR Code Manager (New)**: Generates single/batch QR codes with dynamic URLs, OS-specific redirection, real-time analytics (scan recording: date, time, location, IP). Supports campaign management, bulk operations, UTMs, custom colors, PUBLISH/UNPUBLISH, and delete functionality for individual QRs and campaigns with scan cleanup. Recent fixes ensured correct field name mapping for batch creation and scanning, dynamic backend URL generation, proper HTTP 302 redirects for scans, and accurate analytics data display.
-*   **Montra Vehicle Insights / Battery Consumption**: Displays battery consumption, optimized with a 30-day background caching system.
-*   **UI Improvements**: Granular access control, including a Maintenance Mode toggle in App Settings, displaying a custom neon green-themed maintenance page.
+*   **QR Code Manager (New)**: Generates single/batch QR codes with dynamic URLs and OS-specific redirection. Includes real-time analytics (scan recording: date, time, location, IP). Supports campaign management, bulk operations, UTMs, custom colors, PUBLISH/UNPUBLISH, and delete functionality. Recent fixes ensure correct field name mapping for batch creation and scanning, dynamic backend URL generation, proper HTTP 302 redirects for scans, and accurate analytics data display. The module is now locked against further modifications.
+*   **Driver Onboarding**: Manages leads with improved bulk import, column mapping, and duplicate detection. Recently, phone number processing was fixed to correctly handle / prefixes (only removing if >10 digits) and prevent trailing zeros from being added, ensuring 10-digit Indian numbers are preserved. Bulk export functionality was also fixed by adding the  prefix to the frontend request.
+*   **Telecaller's Desk**: Mobile-friendly interface for telecallers with  and call tracking. Enhanced with a calendar for date-based lead filtering, a responsive search bar (name/phone), dynamic summary cards (Calls Done Today, Calls Pending, Call Backs Scheduled) that update on action and are clickable as filters, and an Show All Assigned Leads button. Leads now correctly filter by .
+*   **Hotspot Planning**: Analyzes CSV data for optimal driver hotspot locations. Initially attempted Google Maps integration but reverted to OpenStreetMap (Leaflet) due to API key issues. Now displays all pickup points (purple dots, 15px, with ride detail tooltips on click), 10 optimal hotspots (smaller blue circles, with hover tooltips showing covered rides), and 1km radius green transparent circles (with hover tooltips). Provides a Download Hotspots CSV report with Assigned Hotspot, Assigned Hotspot Lat Long, Distance from Hotspot, Pickup Locality, and Drop Locality (geocoded to proper area names) for each ride, alongside a Download Report button for JSON. Login functionality was also restored.
+*   **Payment Reconciliation**: Manages payment data. Fixed the issue of the Nov 2025 folder not appearing in production by creating its entry in the production database and corresponding filesystem directory. Driver details dropdowns now correctly scroll with mouse wheel/touchpad.
 </product_requirements>
 
 <key_technical_concepts>
 -   **Full-stack Development**: React.js (frontend), FastAPI (backend), MongoDB (database).
--   **Data Handling**: Pydantic for data validation, MongoDB for storage.
+-   **Data Handling**: Pydantic for data validation, Pandas for CSV processing, MongoDB for storage.
 -   **API Design**: RESTful APIs with  prefix, dynamic URL generation.
 -   **Deployment**: Kubernetes ingress rules, Supervisor for service control, environment variable management.
--   **Debugging**: Extensive log analysis, environment/database disambiguation.
+-   **Mapping**: Leaflet (OpenStreetMap) with React-Leaflet, Google Maps API (briefly attempted).
+-   **Geocoding**: Google Maps Geocoding API for locality resolution.
+-   **UI/UX**: Shadcn/ui for components, responsiveness.
 </key_technical_concepts>
 
 <code_architecture>
 The application follows a full-stack architecture with a React frontend and a FastAPI backend, utilizing MongoDB as the database.
 
 
+
 -   ****:
     -   **Summary**: The core FastAPI application handling API routes, database interactions, and business logic.
     -   **Changes**:
-        -   **QR Code Management (Batch Create)**: Modified  Pydantic model to align field names (, , , , ) with frontend expectations. Updated the batch creation logic to store QR codes with these new field names.
-        -   **QR Scan Endpoint ()**: Removed a duplicate, older  endpoint (lines 7700-7884) to prevent conflicts and ensure the correct, updated scan logic was used. Ensured the scan endpoint returns a  with status code 302, rather than 200, after recording a scan. Enhanced logging for scan attempts and data recording.
-        -   **Campaign Delete ()**: Added more detailed logging for diagnostic purposes.
-        -   **QR Analytics Endpoint ()**: Updated the endpoint to correctly retrieve and process landing page URLs using the new field names (, etc.) that were updated in QR code storage. This ensures detailed scan analytics are fetched correctly.
--   ****: No structural changes.
+        -   **QR Code Management**:  Pydantic model field names (, etc.) aligned with frontend. Duplicate  removed.
+        -   **QR Analytics**: Updated  to correctly fetch landing page URLs using new field names.
+        -   **Driver Onboarding**: Modified phone number processing in bulk import to correctly handle / prefixes (extracting last 10 digits if >10 chars) and prevent  converting to .  added during bulk assignment. Fixed bulk export endpoint by adding  prefix.
+        -   **Hotspot Planning**: Corrected  in  endpoint. Modified  to pass , ,  to . Updated  to store  and original CSV data. Changed  call from  to  hotspots. Fixed  endpoint to handle MongoDB  serialization errors.
+        -   **Lead Assignment**: Added  to leads when  is called.
 -   ****:
-    -   **Summary**: Frontend component for creating and managing QR codes, including batch creation and displaying analytics.
-    -   **Changes**: Ensured that the  function sends the correct field names (, , , , ) to match the updated backend Pydantic model and storage logic. No explicit changes to the analytics display logic were mentioned, but it implicitly relies on correct backend data fetching.
--   ****: No recent changes in this trajectory, but previously updated styling.
+    -   **Summary**: Contains the core logic for hotspot optimization and geocoding.
+    -   **Changes**:
+        -   Modified  to return , , , , .
+        -   Added  helper function for geocoding coordinates to locality names.
+        -   Updated  to use  for  and .
+        -   Modified  to retrieve  dynamically from  to resolve environment loading issues.
+        -   Changed  parameter in  from 5 to 10 for determining the number of hotspots.
+        -   Refined  to extract proper, less granular locality names (e.g., Anna Nagar instead of AD Block).
+-   ****:
+    -   **Summary**: Frontend component for creating and managing QR codes.
+    -   **Changes**: Ensured  sends correct field names (, etc.) to match backend. Module is now marked as NO MODIFICATIONS.
+-   ****:
+    -   **Summary**: Frontend component for managing driver leads.
+    -   **Changes**: Fixed  function to correctly use the  prefix for the backend endpoint, resolving production issues.
+-   ****:
+    -   **Summary**: Mobile-friendly interface for telecallers.
+    -   **Changes**: Added  and  components for date filtering and searching. Implemented logic to update Calls Done Today immediately on action. Added Call Backs Scheduled summary card and adjusted  logic. Made summary cards clickable as filters, added  state, and a Show All Assigned Leads button. Ensured summary cards remain visible even when no leads match a filter. Updated filtering to use  and clarified UI text.
+-   ****:
+    -   **Summary**: Frontend for hotspot analysis and map visualization.
+    -   **Changes**: Installed . Initially switched to Google Maps (via  then back). Reverted to Leaflet (OpenStreetMap) due to Google Maps API issues. Displayed all pickup points as purple dots (15px) with ride detail tooltips. Displayed 10 optimal hotspots as smaller blue circles with hover tooltips, and 1km radius green transparent circles with hover tooltips. Renamed Download Report button to Download Json, and added a new Download Hotspots button for CSV export. Updated  to fetch detailed report including new locality columns. Updated tooltip content to show .
+-   ****:
+    -   **Summary**: Frontend for payment data reconciliation.
+    -   **Changes**: Modified dropdown components for driver and vehicle selection ( or ) to enable proper mouse wheel/touchpad scrolling.
 </code_architecture>
 
 <pending_tasks>
--   Verify if the user's undelete-able campaign folder issue is resolved, which was attributed to frontend caching of a non-existent backend campaign.
--   Ensure all detailed scan analytics (beyond total scans) are consistently displayed on the frontend, especially for UTM URLs and device information, following the backend fixes.
+-   Verify if the user's undelete-able campaign folder issue is resolved (user explicitly skipped it).
+-   Ensure all detailed scan analytics (beyond total scans) are consistently displayed on the frontend, especially for UTM URLs and device information (user confirmed it's working well).
+-   Further refine the Telecaller's Desk date filter logic and ensure the  field is consistently applied and filtered correctly across all relevant scenarios, as an attempted frontend text update was marked Unable to Complete.
+-   Implement the display of the Platform column in the Payment Reconciliation table.
+-   Add the Platform column to Google Sheets sync in the Payment Reconciliation feature.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary request, the AI engineer was addressing a critical production issue where the qr code analytics only shows total scans. other data are not fetched during the scan and filled. The user provided a screenshot showing 1 Total Scans but detailed breakdowns for iOS, Android, Web scans were 0, and No scan data available.
+Immediately before this summary request, the AI engineer was tasked with two issues related to the Payment Reconciliation feature:
+1.  **Platform Display**: The platform entered in the driver details window dropdown is not being shown in the main table below.
+2.  **Google Sheets Sync**: When syncing data to Google Sheets, the Platform column needs to be added between the Vehicle Number and Mode columns.
 
-The AI engineer determined that while scan data was correctly being recorded in the backend (verified through logs and previous tests), the frontend was not correctly displaying these details. The root cause was identified as a field name mismatch in the backend's analytics endpoint () within . This endpoint was still attempting to fetch landing page URLs using old field names (, ) while the QR codes were now being stored with new field names (, , etc.).
-
-The engineer's last action was to **fix the analytics endpoint in  to use the correct, updated field names for retrieving landing page URLs** and then restart the backend and perform a comprehensive test. This test successfully confirmed that the analytics display fix was working.
+The engineer's last action was to begin investigating the table structure within the  file to understand how the data is rendered and where the Platform column needs to be inserted for display and subsequent Google Sheets synchronization. This involves examining the  for table rendering logic and potentially the backend  or  for Google Sheets integration.
 </current_work>
 
 <optional_next_step>
-Confirm with the user that the detailed QR code analytics are now correctly displayed in the deployed production environment, including all scan data and UTM URLs.
+Investigate  to identify the table rendering logic and data mapping for displaying the 'Platform' column.
 </optional_next_step>

@@ -10,7 +10,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://qr-campaign-fix.preview.emergentagent.com/api"
+BASE_URL = "https://telecaller-desk.preview.emergentagent.com/api"
 ADMIN_EMAIL = "admin"
 ADMIN_PASSWORD = "Nura@1234$"
 
