@@ -496,6 +496,16 @@ function HotspotPlanning() {
                     position={[hotspot.lat, hotspot.lon]}
                     icon={createHotspotIcon(hotspot.rank)}
                   >
+                    {/* Tooltip on hover */}
+                    <Tooltip direction="top" offset={[0, -14]} opacity={0.95} permanent={false}>
+                      <div className="text-xs font-semibold">
+                        <div className="text-blue-700">Hotspot #{hotspot.rank}</div>
+                        <div className="text-gray-700 mt-0.5">{hotspot.locality || 'Unknown'}</div>
+                        <div className="text-green-600 mt-0.5">✓ {hotspot.covered_count} rides</div>
+                      </div>
+                    </Tooltip>
+                    
+                    {/* Popup on click */}
                     <Popup>
                       <div className="p-2">
                         <h3 className="font-bold text-base">Hotspot #{hotspot.rank}</h3>
