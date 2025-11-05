@@ -1,0 +1,249 @@
+var HEADER_ROW = 1;
+
+var COLUMNS = {
+  ID: 1,
+  DRIVER: 2,
+  PLATFORM: 3,
+  VEHICLE: 4,
+  DATE: 5,
+  TIME: 6,
+  DESCRIPTION: 7,
+  AMOUNT: 8,
+  PAYMENT_MODE: 9,
+  DISTANCE: 10,
+  DURATION: 11,
+  PICKUP_KM: 12,
+  DROP_KM: 13,
+  PICKUP_LOCATION: 14,
+  DROP_LOCATION: 15,
+  SCREENSHOT: 16,
+  STATUS: 17,
+  CREATED_AT: 18
+};
+
+function doPost(e) {
+  try {
+    var data = JSON.parse(e.postData.contents);
+    var records = data.data || [];
+    var monthYear = data.month_year || '';
+    if (!monthYear) {
+      monthYear = 'Unknown';
+    }
+    
+    Logger.log('Received records for ' + monthYear);
+    
+    var sheet = getOrCreateSheet(monthYear);
+    var result = syncRecordsToSheet(sheet, records);
+    
+    return createResponse(true, 'Synced successfully', result);
+    
+  } catch (error) {
+    Logger.log('Error: ' + error.toString());
+    return createResponse(false, error.toString());
+  }
+}
+
+function doGet(e) {
+  var response = {
+    success: true,
+    message: 'Active',
+    timestamp: new Date().toISOString()
+  };
+  
+  return ContentService.createTextOutput(JSON.stringify(response))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function syncRecordsToSheet(sheet, records) {
+  try {
+    ensureHeaders(sheet);
+    
+    var created = 0;
+    var updated = 0;
+    var errors = [];
+    
+    for (var i = 0; i < records.length; i++) {
+      var record = records[i];
+      try {
+        var existingRow = findRowByID(sheet, record.id);
+        
+        if (existingRow > 0) {
+          updateRow(sheet, existingRow, record);
+          updated = updated + 1;
+        } else {
+          appendRow(sheet, record);
+          created = created + 1;
+        }
+      } catch (err) {
+        errors.push('Error: ' + err.toString());
+      }
+    }
+    
+    return {
+      created: created,
+      updated: updated,
+      total: records.length
+    };
+    
+  } catch (error) {
+    Logger.log('Sync error: ' + error.toString());
+    throw error;
+  }
+}
+
+function getOrCreateSheet(monthYear) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(monthYear);
+  
+  if (!sheet) {
+    sheet = ss.insertSheet(monthYear);
+  }
+  
+  return sheet;
+}
+
+function ensureHeaders(sheet) {
+  var headers = sheet.getRange(HEADER_ROW, 1, 1, 18).getValues()[0];
+  
+  if (!headers[0]) {
+    var headerRow = [
+      'Record ID',
+      'Driver Name',
+      'Platform',
+      'Vehicle Number',
+      'Date',
+      'Time',
+      'Description',
+      'Amount',
+      'Payment Mode',
+      'Distance',
+      'Duration',
+      'Pickup KM',
+      'Drop KM',
+      'Pickup Location',
+      'Drop Location',
+      'Screenshot',
+      'Status',
+      'Created At'
+    ];
+    
+    sheet.getRange(HEADER_ROW, 1, 1, 18).setValues([headerRow]);
+    sheet.getRange(HEADER_ROW, 1, 1, 18).setFontWeight('bold');
+    sheet.getRange(HEADER_ROW, 1, 1, 18).setBackground('#4285F4');
+    sheet.getRange(HEADER_ROW, 1, 1, 18).setFontColor('#FFFFFF');
+    sheet.setFrozenRows(HEADER_ROW);
+    sheet.autoResizeColumns(1, 18);
+  }
+}
+
+function findRowByID(sheet, id) {
+  var lastRow = sheet.getLastRow();
+  if (lastRow <= HEADER_ROW) {
+    return -1;
+  }
+  
+  var idColumn = sheet.getRange(HEADER_ROW + 1, COLUMNS.ID, lastRow - HEADER_ROW, 1).getValues();
+  
+  for (var i = 0; i < idColumn.length; i++) {
+    if (idColumn[i][0] === id) {
+      return i + HEADER_ROW + 1;
+    }
+  }
+  
+  return -1;
+}
+
+function updateRow(sheet, row, record) {
+  var values = [[
+    record.id || '',
+    record.driver || 'N/A',
+    record.platform || 'N/A',
+    record.vehicle || 'N/A',
+    record.date || 'N/A',
+    record.time || 'N/A',
+    record.description || 'Auto',
+    record.amount || '0',
+    record.payment_mode || 'N/A',
+    record.distance || 'N/A',
+    record.duration || 'N/A',
+    record.pickup_km || 'N/A',
+    record.drop_km || 'N/A',
+    record.pickup_location || 'N/A',
+    record.drop_location || 'N/A',
+    record.screenshot_filename || 'N/A',
+    record.status || 'pending',
+    new Date().toISOString()
+  ]];
+  
+  sheet.getRange(row, 1, 1, 18).setValues(values);
+}
+
+function appendRow(sheet, record) {
+  var values = [
+    record.id || '',
+    record.driver || 'N/A',
+    record.platform || 'N/A',
+    record.vehicle || 'N/A',
+    record.date || 'N/A',
+    record.time || 'N/A',
+    record.description || 'Auto',
+    record.amount || '0',
+    record.payment_mode || 'N/A',
+    record.distance || 'N/A',
+    record.duration || 'N/A',
+    record.pickup_km || 'N/A',
+    record.drop_km || 'N/A',
+    record.pickup_location || 'N/A',
+    record.drop_location || 'N/A',
+    record.screenshot_filename || 'N/A',
+    record.status || 'pending',
+    new Date().toISOString()
+  ];
+  
+  sheet.appendRow(values);
+}
+
+function createResponse(success, message, data) {
+  var response = {
+    success: success,
+    message: message,
+    timestamp: new Date().toISOString()
+  };
+  
+  if (data) {
+    for (var key in data) {
+      if (data.hasOwnProperty(key)) {
+        response[key] = data[key];
+      }
+    }
+  }
+  
+  return ContentService.createTextOutput(JSON.stringify(response))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function testSync() {
+  var testRecord = {
+    id: 'test123',
+    driver: 'Test Driver',
+    platform: 'Rapido',
+    vehicle: 'TN01AB1234',
+    date: '15/11/2025',
+    time: '10:30 AM',
+    description: 'Auto',
+    amount: '150',
+    payment_mode: 'Cash',
+    distance: '5.2',
+    duration: '25',
+    pickup_km: 'N/A',
+    drop_km: 'N/A',
+    pickup_location: 'Anna Nagar',
+    drop_location: 'T Nagar',
+    screenshot_filename: 'test.jpg',
+    status: 'pending'
+  };
+  
+  var sheet = getOrCreateSheet('Nov 2025');
+  var result = syncRecordsToSheet(sheet, [testRecord]);
+  Logger.log('Test complete');
+}
