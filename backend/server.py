@@ -6554,7 +6554,7 @@ async def analyze_hotspot_placement(
             # Run hotspot optimization
             result = optimize_hotspots(
                 df=slot_df[['lat', 'lon', 'weight'] + (['pickup_point'] if 'pickup_point' in slot_df.columns else [])],
-                N=5,
+                N=10,  # Changed from 5 to 10 hotspots
                 h3_res=9,
                 use_h3=True
             )
