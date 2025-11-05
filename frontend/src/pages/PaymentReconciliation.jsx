@@ -278,6 +278,26 @@ const PaymentReconciliation = () => {
       setLoadingData(false);
     }
   };
+  
+  const handleCreateFolder = async () => {
+    if (!newFolderMonth || !newFolderYear) {
+      toast.error("Please select both month and year");
+      return;
+    }
+    
+    setCreatingFolder(true);
+    try {
+      await handleCreateNewFolder(newFolderMonth, newFolderYear);
+      setShowCreateFolderDialog(false);
+      setNewFolderMonth("");
+      setNewFolderYear("");
+    } catch (error) {
+      console.error("Error creating folder:", error);
+      toast.error("Failed to create folder");
+    } finally {
+      setCreatingFolder(false);
+    }
+  };
 
   const loadExistingFolders = async () => {
     try {
