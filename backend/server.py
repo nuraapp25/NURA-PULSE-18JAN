@@ -1344,13 +1344,19 @@ async def bulk_export_leads(current_user: User = Depends(get_current_user)):
             
             # Auto-adjust column widths
             worksheet = writer.sheets['Driver Leads']
+            from openpyxl.utils import get_column_letter
             for idx, col in enumerate(df.columns, 1):
-                max_length = max(
-                    df[col].astype(str).apply(len).max(),
-                    len(col)
-                )
-                adjusted_width = min(max_length + 2, 50)
-                worksheet.column_dimensions[chr(64 + idx)].width = adjusted_width
+                try:
+                    max_length = max(
+                        df[col].astype(str).apply(len).max(),
+                        len(col)
+                    )
+                    adjusted_width = min(max_length + 2, 50)
+                    col_letter = get_column_letter(idx)
+                    worksheet.column_dimensions[col_letter].width = adjusted_width
+                except Exception as e:
+                    logger.warning(f"Could not adjust width for column {col}: {e}")
+                    continue
         
         output.seek(0)
         
