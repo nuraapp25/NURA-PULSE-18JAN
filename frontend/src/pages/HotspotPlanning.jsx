@@ -429,13 +429,42 @@ function HotspotPlanning() {
                 {/* ALL Pickup Points - PURPLE DOTS */}
                 {selectedSlotData.geojson?.features
                   .filter(f => f.properties.type === 'pickup')
-                  .map((feature, idx) => (
-                    <Marker
-                      key={`pickup-${idx}`}
-                      position={[feature.geometry.coordinates[1], feature.geometry.coordinates[0]]}
-                      icon={purpleIcon}
-                    />
-                  ))
+                  .map((feature, idx) => {
+                    const coords = feature.geometry.coordinates;
+                    const props = feature.properties;
+                    return (
+                      <Marker
+                        key={`pickup-${idx}`}
+                        position={[coords[1], coords[0]]}
+                        icon={purpleIcon}
+                      >
+                        <Popup>
+                          <div className="p-2 min-w-[200px]">
+                            <h3 className="font-bold text-sm text-purple-600 mb-2">Pickup Point</h3>
+                            <div className="text-xs space-y-1">
+                              <p>
+                                <span className="font-semibold">Location:</span> {coords[1].toFixed(6)}, {coords[0].toFixed(6)}
+                              </p>
+                              {props.assigned_rank > 0 ? (
+                                <p>
+                                  <span className="font-semibold">Assigned to:</span> <span className="text-blue-600">Hotspot #{props.assigned_rank}</span>
+                                </p>
+                              ) : (
+                                <p className="text-red-600">
+                                  <span className="font-semibold">Status:</span> Not covered (beyond 1km)
+                                </p>
+                              )}
+                              {props.distance_to_hotspot && (
+                                <p>
+                                  <span className="font-semibold">Distance:</span> {props.distance_to_hotspot.toFixed(0)}m from nearest hotspot
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </Popup>
+                      </Marker>
+                    );
+                  })
                 }
                 
                 {/* Hotspot Markers - BLUE CIRCLES with numbers */}
