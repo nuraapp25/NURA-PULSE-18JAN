@@ -6453,6 +6453,9 @@ async def analyze_hotspot_placement(
         lon_col = next((c for c in df.columns if ('long' in c.lower() or 'lon' in c.lower()) and 'pickup' in c.lower()), None)
         time_col = next((c for c in df.columns if any(t in c.lower() for t in ['createdat', 'time', 'timestamp', 'datetime'])), None)
         pickup_point_col = next((c for c in df.columns if 'pickuppoint' in c.lower().replace('_', '').replace(' ', '')), None)
+        drop_lat_col = next((c for c in df.columns if 'lat' in c.lower() and 'drop' in c.lower()), None)
+        drop_lon_col = next((c for c in df.columns if ('long' in c.lower() or 'lon' in c.lower()) and 'drop' in c.lower()), None)
+        drop_point_col = next((c for c in df.columns if 'droppoint' in c.lower().replace('_', '').replace(' ', '')), None)
         
         if not lat_col or not lon_col:
             raise HTTPException(status_code=400, detail="Missing pickup latitude/longitude columns")
@@ -6464,6 +6467,12 @@ async def analyze_hotspot_placement(
         }
         if pickup_point_col:
             rename_dict[pickup_point_col] = 'pickup_point'
+        if drop_lat_col:
+            rename_dict[drop_lat_col] = 'drop_lat'
+        if drop_lon_col:
+            rename_dict[drop_lon_col] = 'drop_lon'
+        if drop_point_col:
+            rename_dict[drop_point_col] = 'drop_point'
             
         df = df.rename(columns=rename_dict)
         
