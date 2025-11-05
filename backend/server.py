@@ -2398,10 +2398,16 @@ async def bulk_assign_telecaller(
     if not telecaller:
         raise HTTPException(status_code=404, detail="Telecaller not found")
     
-    # Update all matching leads
+    # Update all matching leads with assigned telecaller and assignment date
+    from datetime import datetime, timezone
     result = await db.driver_leads.update_many(
         {"id": {"$in": lead_ids}},
-        {"$set": {"assigned_telecaller": telecaller_email}}
+        {
+            "$set": {
+                "assigned_telecaller": telecaller_email,
+                "assigned_date": datetime.now(timezone.utc).isoformat()
+            }
+        }
     )
     
     # Get updated leads for sync
