@@ -439,24 +439,31 @@ function HotspotPlanning() {
                         icon={purpleIcon}
                       >
                         <Popup>
-                          <div className="p-2 min-w-[200px]">
-                            <h3 className="font-bold text-sm text-purple-600 mb-2">Pickup Point</h3>
-                            <div className="text-xs space-y-1">
-                              <p>
-                                <span className="font-semibold">Location:</span> {coords[1].toFixed(6)}, {coords[0].toFixed(6)}
+                          <div className="p-2 min-w-[220px]">
+                            <h3 className="font-bold text-sm text-purple-600 mb-2">🟣 Pickup Point</h3>
+                            <div className="text-xs space-y-1.5">
+                              {props.pickup_point && (
+                                <p className="font-semibold text-gray-800 border-b pb-1">
+                                  📍 {props.pickup_point}
+                                </p>
+                              )}
+                              <p className="text-gray-600">
+                                <span className="font-semibold">Coordinates:</span><br/>
+                                {coords[1].toFixed(6)}, {coords[0].toFixed(6)}
                               </p>
                               {props.assigned_rank > 0 ? (
                                 <p>
-                                  <span className="font-semibold">Assigned to:</span> <span className="text-blue-600">Hotspot #{props.assigned_rank}</span>
+                                  <span className="font-semibold">Assigned to:</span><br/>
+                                  <span className="text-blue-600 font-semibold">Hotspot #{props.assigned_rank}</span>
                                 </p>
                               ) : (
-                                <p className="text-red-600">
-                                  <span className="font-semibold">Status:</span> Not covered (beyond 1km)
+                                <p className="text-red-600 font-semibold">
+                                  ❌ Not covered (beyond 1km)
                                 </p>
                               )}
                               {props.distance_to_hotspot && (
                                 <p>
-                                  <span className="font-semibold">Distance:</span> {props.distance_to_hotspot.toFixed(0)}m from nearest hotspot
+                                  <span className="font-semibold">Distance:</span> {props.distance_to_hotspot.toFixed(0)}m
                                 </p>
                               )}
                             </div>
