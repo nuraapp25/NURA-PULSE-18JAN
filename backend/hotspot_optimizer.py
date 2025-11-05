@@ -263,7 +263,7 @@ def optimize_hotspots(df: pd.DataFrame, N: int = 10, h3_res: int = 9,
     Main function to optimize hotspot locations for a given time slot.
     
     Args:
-        df: DataFrame with columns ['lat', 'lon', 'weight']
+        df: DataFrame with columns ['lat', 'lon', 'weight'] and optionally ['pickup_point']
         N: Number of hotspots to find (default: 10)
         h3_res: H3 resolution (8-10 typical)
         use_h3: Whether to use H3 for candidate generation
@@ -282,6 +282,9 @@ def optimize_hotspots(df: pd.DataFrame, N: int = 10, h3_res: int = 9,
     
     pts = df[["lat", "lon"]].to_numpy(dtype=float)
     weights = df["weight"].to_numpy(dtype=float)
+    
+    # Extract pickup_point if available
+    pickup_points = df["pickup_point"].tolist() if "pickup_point" in df.columns else [None] * len(pts)
     
     # Generate candidates
     if use_h3:
