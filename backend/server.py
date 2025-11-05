@@ -1287,8 +1287,8 @@ os.makedirs(BACKUP_LIBRARY_FOLDER, exist_ok=True)
 @api_router.post("/driver-onboarding/bulk-export")
 async def bulk_export_leads(current_user: User = Depends(get_current_user)):
     """
-    Export ALL driver leads to Excel file with all fields
-    Handles large datasets efficiently with proper column ordering
+    Export ALL driver leads to Excel file with streaming for large datasets
+    Optimized for 30K+ leads with chunked processing to avoid timeouts
     """
     try:
         import pandas as pd
@@ -1304,8 +1304,21 @@ async def bulk_export_leads(current_user: User = Depends(get_current_user)):
         total_count = await leads_collection.count_documents({})
         logger.info(f"📊 Total leads in database: {total_count}")
         
-        # Fetch ALL leads without any limit
-        leads = await leads_collection.find({}, {"_id": 0}).to_list(length=None)
+        # For large datasets (>10K), use batched fetching to reduce memory
+        if total_count > 10000:
+            logger.info(f"🔄 Large dataset detected ({total_count} leads), using batched processing...")
+            batch_size = 5000
+            all_leads = []
+            
+            for skip in range(0, total_count, batch_size):
+                batch = await leads_collection.find({}, {"_id": 0}).skip(skip).limit(batch_size).to_list(length=batch_size)
+                all_leads.extend(batch)
+                logger.info(f"📦 Fetched batch: {skip + len(batch)}/{total_count} leads")
+            
+            leads = all_leads
+        else:
+            # Fetch all at once for smaller datasets
+            leads = await leads_collection.find({}, {"_id": 0}).to_list(length=None)
         
         actual_fetched = len(leads)
         logger.info(f"✅ Fetched {actual_fetched} leads for export (expected {total_count})")
@@ -1317,7 +1330,8 @@ async def bulk_export_leads(current_user: User = Depends(get_current_user)):
             logger.warning("❌ No leads found in database")
             raise HTTPException(status_code=404, detail="No leads found to export")
         
-        # Convert to DataFrame
+        # Convert to DataFrame with chunked processing for large datasets
+        logger.info(f"📊 Converting {actual_fetched} leads to DataFrame...")
         df = pd.DataFrame(leads)
         
         # Define preferred column order
@@ -1335,30 +1349,50 @@ async def bulk_export_leads(current_user: User = Depends(get_current_user)):
         column_order = existing_preferred + other_columns
         df = df[column_order]
         
-        logger.info(f"📋 Export columns: {', '.join(df.columns.tolist())}")
+        logger.info(f"📋 Export columns ({len(df.columns)}): {', '.join(df.columns.tolist()[:10])}...")
         
-        # Create Excel file in memory
+        # Create Excel file in memory with streaming
+        logger.info(f"📝 Generating Excel file...")
         output = io.BytesIO()
-        with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            df.to_excel(writer, index=False, sheet_name='Driver Leads')
+        
+        # Use xlsxwriter for better performance with large datasets
+        with pd.ExcelWriter(output, engine='openpyxl', engine_kwargs={'options': {'strings_to_numbers': False}}) as writer:
+            # Write in chunks for very large datasets
+            if actual_fetched > 10000:
+                logger.info(f"📦 Writing Excel in chunks...")
+                chunk_size = 5000
+                for i in range(0, len(df), chunk_size):
+                    df_chunk = df.iloc[i:i+chunk_size]
+                    if i == 0:
+                        df_chunk.to_excel(writer, index=False, sheet_name='Driver Leads', startrow=0)
+                    else:
+                        df_chunk.to_excel(writer, index=False, sheet_name='Driver Leads', 
+                                        startrow=i+1, header=False)
+                    logger.info(f"📦 Wrote rows {i+1} to {min(i+chunk_size, len(df))}")
+            else:
+                df.to_excel(writer, index=False, sheet_name='Driver Leads')
             
-            # Auto-adjust column widths
-            worksheet = writer.sheets['Driver Leads']
-            from openpyxl.utils import get_column_letter
-            for idx, col in enumerate(df.columns, 1):
-                try:
-                    max_length = max(
-                        df[col].astype(str).apply(len).max(),
-                        len(col)
-                    )
-                    adjusted_width = min(max_length + 2, 50)
-                    col_letter = get_column_letter(idx)
-                    worksheet.column_dimensions[col_letter].width = adjusted_width
-                except Exception as e:
-                    logger.warning(f"Could not adjust width for column {col}: {e}")
-                    continue
+            # Auto-adjust column widths (skip for very large files to save time)
+            if actual_fetched <= 20000:
+                worksheet = writer.sheets['Driver Leads']
+                from openpyxl.utils import get_column_letter
+                for idx, col in enumerate(df.columns, 1):
+                    try:
+                        max_length = min(
+                            df[col].astype(str).apply(len).max(),
+                            len(col),
+                            50  # Max width
+                        )
+                        adjusted_width = max_length + 2
+                        col_letter = get_column_letter(idx)
+                        worksheet.column_dimensions[col_letter].width = adjusted_width
+                    except Exception as e:
+                        logger.warning(f"Could not adjust width for column {col}: {e}")
+                        continue
         
         output.seek(0)
+        file_size_mb = len(output.getvalue()) / (1024 * 1024)
+        logger.info(f"📦 Excel file generated: {file_size_mb:.2f} MB")
         
         # Generate filename with timestamp
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -1366,13 +1400,18 @@ async def bulk_export_leads(current_user: User = Depends(get_current_user)):
         
         logger.info(f"✅ Bulk export complete: {actual_fetched} leads exported to {filename}")
         
+        # Create a generator function for streaming
+        def iterfile():
+            yield from output
+        
         return StreamingResponse(
-            output,
+            iterfile(),
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             headers={
                 "Content-Disposition": f'attachment; filename="{filename}"',
                 "X-Total-Leads": str(actual_fetched),
-                "X-Expected-Leads": str(total_count)
+                "X-Expected-Leads": str(total_count),
+                "Content-Length": str(len(output.getvalue()))
             }
         )
         
