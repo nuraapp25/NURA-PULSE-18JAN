@@ -778,8 +778,16 @@ const PaymentReconciliation = () => {
         {/* Existing Folders - Grid View */}
         {existingFolders.length > 0 && (
           <Card className="dark:bg-gray-800 dark:border-gray-700">
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="dark:text-white">Your Folders</CardTitle>
+              <Button
+                onClick={() => setShowCreateFolderDialog(true)}
+                variant="outline"
+                size="sm"
+                className="text-green-600 border-green-600 hover:bg-green-50 dark:text-green-400 dark:border-green-600 dark:hover:bg-green-900/20"
+              >
+                + Create Folder
+              </Button>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
