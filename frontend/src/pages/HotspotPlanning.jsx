@@ -1,11 +1,58 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Upload, MapPin, Clock, TrendingUp, Users, Download, Library, Copy } from 'lucide-react';
-import { GoogleMap, useJsApiLoader, Marker, Circle, InfoWindow } from '@react-google-maps/api';
+import { MapContainer, TileLayer, Marker, Circle, Popup } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import { toast } from 'sonner';
 
 const API = process.env.REACT_APP_BACKEND_URL || '';
-const GOOGLE_MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY || process.env.VITE_GOOGLE_MAPS_API_KEY || 'AIzaSyBSkRVGAnQUQY6NFklYVQQfqUBxWX1CU2c';
+
+// Fix Leaflet default marker icon issue
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+});
+
+// Custom icons for pickup points (red)
+const redIcon = new L.Icon({
+  iconUrl: 'data:image/svg+xml;base64,' + btoa(`
+    <svg width="10" height="10" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="5" cy="5" r="4" fill="#ef4444" opacity="0.8"/>
+    </svg>
+  `),
+  iconSize: [10, 10],
+  iconAnchor: [5, 5],
+});
+
+// Custom icon generator for hotspots (blue circles with numbers)
+const createHotspotIcon = (rank) => {
+  return new L.DivIcon({
+    html: `
+      <div style="
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #3b82f6;
+        border: 3px solid white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 16px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      ">
+        ${rank}
+      </div>
+    `,
+    className: '',
+    iconSize: [40, 40],
+    iconAnchor: [20, 20],
+  });
+};
 
 // Time slot definitions matching backend
 const TIME_SLOTS = [
@@ -17,12 +64,6 @@ const TIME_SLOTS = [
   { name: "Late Night", label: "10PM-1AM", color: "bg-teal-400" }
 ];
 
-const mapContainerStyle = {
-  width: '100%',
-  height: '600px',
-  borderRadius: '0.5rem'
-};
-
 function HotspotPlanning() {
   const [file, setFile] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
@@ -30,15 +71,10 @@ function HotspotPlanning() {
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [library, setLibrary] = useState([]);
   const [showLibrary, setShowLibrary] = useState(false);
-  const [mapCenter, setMapCenter] = useState({ lat: 13.0827, lng: 80.2707 }); // Chennai
-  const [selectedHotspot, setSelectedHotspot] = useState(null);
+  const [mapCenter, setMapCenter] = useState([13.0827, 80.2707]); // Chennai [lat, lng]
+  const [mapZoom, setMapZoom] = useState(12);
 
   const selectedSlotData = analysisResult?.time_slots?.[selectedSlot];
-
-  // Load Google Maps API
-  const { isLoaded, loadError } = useJsApiLoader({
-    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
-  });
 
   useEffect(() => {
     fetchLibrary();
@@ -48,7 +84,7 @@ function HotspotPlanning() {
   useEffect(() => {
     if (selectedSlotData?.hotspots?.length > 0) {
       const firstHotspot = selectedSlotData.hotspots[0];
-      setMapCenter({ lat: firstHotspot.lat, lng: firstHotspot.lon });
+      setMapCenter([firstHotspot.lat, firstHotspot.lon]);
     }
   }, [selectedSlotData]);
 
