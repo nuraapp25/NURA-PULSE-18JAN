@@ -204,7 +204,49 @@ function HotspotPlanning() {
     link.click();
     URL.revokeObjectURL(url);
     
-    toast.success('Report downloaded');
+    toast.success('JSON report downloaded');
+  };
+
+  const downloadHotspotCSV = async () => {
+    if (!selectedSlotData || !analysisResult) {
+      toast.error('No analysis data available');
+      return;
+    }
+    
+    try {
+      toast.info('Generating detailed CSV...');
+      
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API}/api/hotspot-planning/download-csv/${encodeURIComponent(selectedSlot)}`,
+        { time_slots: analysisResult.time_slots },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: 'blob'
+        }
+      );
+      
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Get filename from header or use default
+      const contentDisposition = response.headers['content-disposition'];
+      const filenameMatch = contentDisposition && contentDisposition.match(/filename="?(.+)"?/);
+      const filename = filenameMatch ? filenameMatch[1] : `hotspot_coverage_${selectedSlot.replace(/\s+/g, '_')}.csv`;
+      
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('✅ Hotspot CSV downloaded with coverage details!');
+    } catch (error) {
+      console.error('CSV download error:', error);
+      toast.error(error.response?.data?.detail || 'Failed to download CSV');
+    }
   };
 
   return (
