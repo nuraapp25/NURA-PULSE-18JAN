@@ -69,6 +69,12 @@ const PaymentReconciliation = () => {
   // Popover states for searchable dropdowns
   const [driverPopoverOpen, setDriverPopoverOpen] = useState(false);
   const [vehiclePopoverOpen, setVehiclePopoverOpen] = useState(false);
+  
+  // Create folder dialog states
+  const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false);
+  const [newFolderMonth, setNewFolderMonth] = useState("");
+  const [newFolderYear, setNewFolderYear] = useState("");
+  const [creatingFolder, setCreatingFolder] = useState(false);
 
   const months = [
     { value: "01", label: "Jan", fullName: "January" },
