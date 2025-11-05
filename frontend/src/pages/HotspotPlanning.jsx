@@ -19,12 +19,12 @@ L.Icon.Default.mergeOptions({
 // Custom icons for pickup points (purple)
 const purpleIcon = new L.Icon({
   iconUrl: 'data:image/svg+xml;base64,' + btoa(`
-    <svg width="10" height="10" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="5" cy="5" r="4" fill="#a855f7" opacity="0.8"/>
+    <svg width="15" height="15" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="7.5" cy="7.5" r="6" fill="#a855f7" opacity="0.8"/>
     </svg>
   `),
-  iconSize: [10, 10],
-  iconAnchor: [5, 5],
+  iconSize: [15, 15],
+  iconAnchor: [7.5, 7.5],
 });
 
 // Custom icon generator for hotspots (blue circles with numbers)
