@@ -6452,15 +6452,20 @@ async def analyze_hotspot_placement(
         lat_col = next((c for c in df.columns if 'lat' in c.lower() and 'pickup' in c.lower()), None)
         lon_col = next((c for c in df.columns if ('long' in c.lower() or 'lon' in c.lower()) and 'pickup' in c.lower()), None)
         time_col = next((c for c in df.columns if any(t in c.lower() for t in ['createdat', 'time', 'timestamp', 'datetime'])), None)
+        pickup_point_col = next((c for c in df.columns if 'pickuppoint' in c.lower().replace('_', '').replace(' ', '')), None)
         
         if not lat_col or not lon_col:
             raise HTTPException(status_code=400, detail="Missing pickup latitude/longitude columns")
         
         # Rename columns
-        df = df.rename(columns={
+        rename_dict = {
             lat_col: 'lat',
             lon_col: 'lon'
-        })
+        }
+        if pickup_point_col:
+            rename_dict[pickup_point_col] = 'pickup_point'
+            
+        df = df.rename(columns=rename_dict)
         
         if time_col:
             df = df.rename(columns={time_col: 'timestamp'})
