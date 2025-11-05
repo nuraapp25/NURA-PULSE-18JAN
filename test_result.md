@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "CRITICAL: Test QR Code Analytics Display - User reports scan data not showing in production. QR codes work (scans and redirects properly) but analytics data is not displaying. Need to see detailed scan records with Date/Time, QR Code, Device & Browser, Location, IP Address, and UTM URLs for Google Analytics tracking."
+user_problem_statement: "Test Driver Onboarding Bulk Export API endpoint thoroughly. Endpoint: POST /api/driver-onboarding/bulk-export. Expected to return Excel file with proper headers and all leads from database."
 
 backend:
   - task: "QR Code Analytics Display Fix - Scan Details & UTM URLs"
