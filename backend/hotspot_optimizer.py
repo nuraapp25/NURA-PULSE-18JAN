@@ -428,6 +428,12 @@ def optimize_hotspots(df: pd.DataFrame, N: int = 10, h3_res: int = 9,
     
     # Create detailed assignments with distances for CSV export
     detailed_assignments = []
+    
+    # Geocode unique coordinates to minimize API calls
+    logger.info(f"Geocoding {len(pts)} pickup locations...")
+    pickup_locality_cache = {}
+    drop_locality_cache = {}
+    
     for i, (lat, lon) in enumerate(pts):
         assigned_rank = int(assignment[i])
         row_data = {
@@ -439,6 +445,31 @@ def optimize_hotspots(df: pd.DataFrame, N: int = 10, h3_res: int = 9,
         # Add pickup_point if available
         if pickup_points[i] is not None:
             row_data["pickup_point"] = str(pickup_points[i])
+        
+        # Add pickup locality (with caching)
+        coord_key = f"{lat:.5f},{lon:.5f}"
+        if coord_key not in pickup_locality_cache:
+            pickup_locality_cache[coord_key] = get_locality_from_coords(lat, lon)
+        row_data["pickup_locality"] = pickup_locality_cache[coord_key]
+        
+        # Add drop coordinates and locality if available
+        if drop_coords[i] is not None:
+            drop_lat, drop_lon = drop_coords[i]
+            row_data["drop_lat"] = float(drop_lat)
+            row_data["drop_lon"] = float(drop_lon)
+            
+            if drop_points[i] is not None:
+                row_data["drop_point"] = str(drop_points[i])
+            
+            # Add drop locality (with caching)
+            drop_coord_key = f"{drop_lat:.5f},{drop_lon:.5f}"
+            if drop_coord_key not in drop_locality_cache:
+                drop_locality_cache[drop_coord_key] = get_locality_from_coords(drop_lat, drop_lon)
+            row_data["drop_locality"] = drop_locality_cache[drop_coord_key]
+        else:
+            row_data["drop_lat"] = None
+            row_data["drop_lon"] = None
+            row_data["drop_locality"] = None
         
         # Find assigned hotspot details
         if assigned_rank > 0:
@@ -471,6 +502,8 @@ def optimize_hotspots(df: pd.DataFrame, N: int = 10, h3_res: int = 9,
             row_data["distance_from_hotspot_m"] = None
         
         detailed_assignments.append(row_data)
+    
+    logger.info(f"Geocoded {len(pickup_locality_cache)} unique pickup locations and {len(drop_locality_cache)} unique drop locations")
     
     total_rides = int(len(pts))
     covered_rides = int(covered_mask.sum())
