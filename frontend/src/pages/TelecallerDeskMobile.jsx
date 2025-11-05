@@ -101,10 +101,10 @@ const TelecallerDeskMobile = () => {
   const getFilteredLeads = (leadsArray) => {
     let filtered = [...leadsArray];
     
-    // Filter by selected date (check import_date field)
+    // Filter by selected date (check assigned_date field)
     if (selectedDate) {
       filtered = filtered.filter(lead => {
-        const leadDate = lead.import_date ? lead.import_date.split('T')[0] : null;
+        const leadDate = lead.assigned_date ? lead.assigned_date.split('T')[0] : null;
         return leadDate === selectedDate;
       });
     }
