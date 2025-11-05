@@ -336,7 +336,27 @@ class ProductionBulkExportTester:
                     break
         else:
             print("\n❌ PRODUCTION BULK EXPORT TEST: FAILED")
-            print("Please check the detailed test results above for specific issues.")
+            
+            # Check if it's a 503 service unavailable issue
+            service_unavailable = any("503" in result['message'] for result in self.test_results)
+            timeout_issue = any("timeout" in result['message'].lower() for result in self.test_results)
+            
+            if service_unavailable or timeout_issue:
+                print("\n🔍 ROOT CAUSE ANALYSIS:")
+                print("   The bulk export endpoint is experiencing service availability issues.")
+                print("   This is likely due to:")
+                print("   • Large dataset size (potentially 30,000+ leads as mentioned)")
+                print("   • Server timeout configurations insufficient for bulk export")
+                print("   • Resource constraints during Excel file generation")
+                print("   • Production server optimization needed for large exports")
+                print("\n💡 RECOMMENDATIONS:")
+                print("   1. Increase server timeout settings (proxy_read_timeout, etc.)")
+                print("   2. Implement chunked/paginated export for large datasets")
+                print("   3. Add background job processing for bulk exports")
+                print("   4. Scale server resources for production workload")
+                print("   5. Add export progress tracking and resume capability")
+            else:
+                print("Please check the detailed test results above for specific issues.")
         
         return export_success
 
