@@ -32,14 +32,18 @@ def get_locality_from_coords(lat: float, lon: float) -> Optional[str]:
     Get locality name from coordinates using Google Maps Geocoding API
     Returns None if geocoding fails
     """
-    if not GOOGLE_MAPS_API_KEY:
+    # Get API key dynamically (in case it's loaded after module import)
+    api_key = os.environ.get('GOOGLE_MAPS_API_KEY', '')
+    
+    if not api_key:
+        logger.warning(f"No Google Maps API key found, skipping geocoding")
         return None
         
     try:
         url = f"https://maps.googleapis.com/maps/api/geocode/json"
         params = {
             "latlng": f"{lat},{lon}",
-            "key": GOOGLE_MAPS_API_KEY,
+            "key": api_key,
             "result_type": "locality|sublocality|neighborhood"
         }
         
@@ -57,6 +61,8 @@ def get_locality_from_coords(lat: float, lon: float) -> Optional[str]:
                         return component.get("long_name")
                     if "neighborhood" in component.get("types", []):
                         return component.get("long_name")
+            elif data.get("status") != "OK":
+                logger.warning(f"Geocoding API error: {data.get('status')} - {data.get('error_message', 'No message')}")
         return None
     except Exception as e:
         logger.warning(f"Geocoding failed for ({lat}, {lon}): {str(e)}")
