@@ -24,9 +24,6 @@ EARTH_RADIUS_M = 6371000.0
 R_METERS = 1000.0
 R_RADIANS = R_METERS / EARTH_RADIUS_M
 
-# Google Maps API key
-GOOGLE_MAPS_API_KEY = os.environ.get('GOOGLE_MAPS_API_KEY', '')
-
 def get_locality_from_coords(lat: float, lon: float) -> Optional[str]:
     """
     Get locality name from coordinates using Google Maps Geocoding API
