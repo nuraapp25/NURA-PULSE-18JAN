@@ -1288,54 +1288,92 @@ os.makedirs(BACKUP_LIBRARY_FOLDER, exist_ok=True)
 async def bulk_export_leads(current_user: User = Depends(get_current_user)):
     """
     Export ALL driver leads to Excel file with all fields
-    Handles large datasets (16,731+ leads) efficiently
+    Handles large datasets efficiently with proper column ordering
     """
     try:
         import pandas as pd
         from datetime import datetime
         import io
         
-        logger.info(f"Starting bulk export for user {current_user.email}")
+        logger.info(f"🔄 Starting bulk export for user {current_user.email}")
         
-        # Fetch all leads from database
+        # Fetch all leads from database - NO LIMIT
         leads_collection = db['driver_leads']
+        
+        # Count total first
+        total_count = await leads_collection.count_documents({})
+        logger.info(f"📊 Total leads in database: {total_count}")
+        
+        # Fetch ALL leads without any limit
         leads = await leads_collection.find({}, {"_id": 0}).to_list(length=None)
         
-        total_leads = len(leads)
-        logger.info(f"Fetched {total_leads} leads for export")
+        actual_fetched = len(leads)
+        logger.info(f"✅ Fetched {actual_fetched} leads for export (expected {total_count})")
+        
+        if actual_fetched != total_count:
+            logger.warning(f"⚠️ Mismatch: Expected {total_count} but fetched {actual_fetched}")
         
         if not leads:
+            logger.warning("❌ No leads found in database")
             raise HTTPException(status_code=404, detail="No leads found to export")
         
         # Convert to DataFrame
         df = pd.DataFrame(leads)
         
+        # Define preferred column order
+        preferred_columns = [
+            'id', 'name', 'phone_number', 'email', 'vehicle', 
+            'stage', 'status', 'source', 'remarks',
+            'current_location', 'experience', 'assigned_telecaller',
+            'last_called', 'callback_date', 'assigned_date',
+            'import_date', 'created_at', 'updated_at'
+        ]
+        
+        # Reorder columns (keeping any extra columns at the end)
+        existing_preferred = [col for col in preferred_columns if col in df.columns]
+        other_columns = [col for col in df.columns if col not in preferred_columns]
+        column_order = existing_preferred + other_columns
+        df = df[column_order]
+        
+        logger.info(f"📋 Export columns: {', '.join(df.columns.tolist())}")
+        
         # Create Excel file in memory
         output = io.BytesIO()
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
             df.to_excel(writer, index=False, sheet_name='Driver Leads')
+            
+            # Auto-adjust column widths
+            worksheet = writer.sheets['Driver Leads']
+            for idx, col in enumerate(df.columns, 1):
+                max_length = max(
+                    df[col].astype(str).apply(len).max(),
+                    len(col)
+                )
+                adjusted_width = min(max_length + 2, 50)
+                worksheet.column_dimensions[chr(64 + idx)].width = adjusted_width
         
         output.seek(0)
         
         # Generate filename with timestamp
-        timestamp = datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"driver_leads_export_{timestamp}.xlsx"
         
-        logger.info(f"Bulk export complete: {total_leads} leads exported")
+        logger.info(f"✅ Bulk export complete: {actual_fetched} leads exported to {filename}")
         
         return StreamingResponse(
             output,
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             headers={
-                "Content-Disposition": f"attachment; filename={filename}",
-                "X-Total-Leads": str(total_leads)
+                "Content-Disposition": f'attachment; filename="{filename}"',
+                "X-Total-Leads": str(actual_fetched),
+                "X-Expected-Leads": str(total_count)
             }
         )
         
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Bulk export failed: {str(e)}")
+        logger.error(f"❌ Bulk export failed: {str(e)}")
         import traceback
         logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Bulk export failed: {str(e)}")
