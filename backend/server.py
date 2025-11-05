@@ -6648,6 +6648,104 @@ async def analyze_and_save_hotspot(
 @api_router.get("/hotspot-planning/library")
 async def get_hotspot_library(
     current_user: User = Depends(get_current_user)
+
+
+@api_router.post("/hotspot-planning/download-csv/{slot_name}")
+async def download_hotspot_csv(
+    slot_name: str,
+    analysis_data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Download detailed CSV with hotspot assignments for a specific time slot"""
+    try:
+        import pandas as pd
+        from io import BytesIO
+        
+        logger.info(f"Generating hotspot CSV download for slot: {slot_name}")
+        
+        # Get the slot data
+        slot_data = analysis_data.get('time_slots', {}).get(slot_name, {})
+        
+        if slot_data.get('status') != 'success':
+            raise HTTPException(status_code=404, detail=f"No successful analysis found for slot: {slot_name}")
+        
+        # Get detailed assignments
+        detailed_assignments = slot_data.get('detailed_assignments', [])
+        
+        if not detailed_assignments:
+            raise HTTPException(status_code=404, detail="No detailed assignment data available")
+        
+        # Create DataFrame
+        df = pd.DataFrame(detailed_assignments)
+        
+        # Rename columns for user-friendly export
+        column_mapping = {
+            'pickup_point': 'Pickup Point',
+            'pickup_lat': 'Pickup Lat',
+            'pickup_lon': 'Pickup Long',
+            'assigned_hotspot_rank': 'Hotspot Rank',
+            'assigned_hotspot_locality': 'Assigned Hotspot',
+            'assigned_hotspot_lat': 'Hotspot Lat',
+            'assigned_hotspot_lon': 'Hotspot Long',
+            'distance_from_hotspot_m': 'Distance from Hotspot (m)'
+        }
+        
+        # Only rename columns that exist
+        df = df.rename(columns={k: v for k, v in column_mapping.items() if k in df.columns})
+        
+        # Add combined "Assigned Hotspot Lat Long" column
+        if 'Hotspot Lat' in df.columns and 'Hotspot Long' in df.columns:
+            df['Assigned Hotspot Lat Long'] = df.apply(
+                lambda row: f"{row['Hotspot Lat']},{row['Hotspot Long']}" if pd.notna(row['Hotspot Lat']) else None,
+                axis=1
+            )
+        
+        # Reorder columns for better readability
+        preferred_order = [
+            'Pickup Point',
+            'Pickup Lat', 
+            'Pickup Long',
+            'Assigned Hotspot',
+            'Assigned Hotspot Lat Long',
+            'Distance from Hotspot (m)',
+            'Hotspot Rank'
+        ]
+        
+        # Keep only columns that exist
+        final_columns = [col for col in preferred_order if col in df.columns]
+        remaining_columns = [col for col in df.columns if col not in final_columns]
+        df = df[final_columns + remaining_columns]
+        
+        # Create CSV in memory
+        output = BytesIO()
+        df.to_csv(output, index=False)
+        output.seek(0)
+        
+        # Generate filename
+        filename = f"hotspot_coverage_{slot_name.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+        
+        logger.info(f"CSV generated: {len(df)} rows, filename: {filename}")
+        
+        return StreamingResponse(
+            output,
+            media_type="text/csv",
+            headers={
+                "Content-Disposition": f"attachment; filename={filename}"
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to generate hotspot CSV: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Failed to generate CSV: {str(e)}")
+
+
+@api_router.get("/hotspot-planning/library")
+async def get_hotspot_library(
+    current_user: User = Depends(get_current_user)
 ):
     """Get all saved hotspot analyses"""
     try:
