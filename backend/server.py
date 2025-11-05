@@ -6728,8 +6728,13 @@ async def download_hotspot_csv(
         # Reorder columns for better readability
         preferred_order = [
             'Pickup Point',
+            'Pickup Locality',
             'Pickup Lat', 
             'Pickup Long',
+            'Drop Point',
+            'Drop Locality',
+            'Drop Lat',
+            'Drop Long',
             'Assigned Hotspot',
             'Assigned Hotspot Lat Long',
             'Distance from Hotspot (m)',
