@@ -24,6 +24,44 @@ EARTH_RADIUS_M = 6371000.0
 R_METERS = 1000.0
 R_RADIANS = R_METERS / EARTH_RADIUS_M
 
+# Google Maps API key
+GOOGLE_MAPS_API_KEY = os.environ.get('GOOGLE_MAPS_API_KEY', '')
+
+def get_locality_from_coords(lat: float, lon: float) -> Optional[str]:
+    """
+    Get locality name from coordinates using Google Maps Geocoding API
+    Returns None if geocoding fails
+    """
+    if not GOOGLE_MAPS_API_KEY:
+        return None
+        
+    try:
+        url = f"https://maps.googleapis.com/maps/api/geocode/json"
+        params = {
+            "latlng": f"{lat},{lon}",
+            "key": GOOGLE_MAPS_API_KEY,
+            "result_type": "locality|sublocality|neighborhood"
+        }
+        
+        response = requests.get(url, params=params, timeout=5)
+        if response.status_code == 200:
+            data = response.json()
+            if data.get("status") == "OK" and data.get("results"):
+                # Get the first result
+                result = data["results"][0]
+                # Extract locality from address components
+                for component in result.get("address_components", []):
+                    if "locality" in component.get("types", []):
+                        return component.get("long_name")
+                    if "sublocality" in component.get("types", []):
+                        return component.get("long_name")
+                    if "neighborhood" in component.get("types", []):
+                        return component.get("long_name")
+        return None
+    except Exception as e:
+        logger.warning(f"Geocoding failed for ({lat}, {lon}): {str(e)}")
+        return None
+
 # Time slot definitions
 TIME_SLOTS = [
     {"name": "Morning Rush", "label": "6AM-9AM", "start": 6, "end": 9},
