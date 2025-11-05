@@ -6673,7 +6673,8 @@ async def get_hotspot_library(
     try:
         analyses_collection = db["hotspot_analyses"]
         analyses = await analyses_collection.find(
-            {"uploaded_by": current_user.id}
+            {"uploaded_by": current_user.id},
+            {"_id": 0}  # Exclude MongoDB ObjectId from results
         ).sort("created_at", -1).to_list(length=100)
         
         return {
