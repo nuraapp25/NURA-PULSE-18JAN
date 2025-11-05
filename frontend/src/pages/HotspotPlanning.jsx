@@ -289,7 +289,7 @@ function HotspotPlanning() {
             <li>Analyzes 6 time slots: Morning Rush, Mid-Morning, Afternoon, Evening Rush, Night, Late Night</li>
             <li>Finds up to <strong>10 optimal hotspot locations</strong> per time slot using CELF + 1-Swap algorithm</li>
             <li>Shows 1km coverage radius for each hotspot (≈5-min pickup at urban speeds)</li>
-            <li><strong>🔴 Red dots</strong> - ALL pickup points displayed on map</li>
+            <li><strong>🟣 Purple dots</strong> - ALL pickup points displayed on map</li>
             <li><strong>🔵 Blue circles</strong> - Top 10 hotspots with rank numbers</li>
             <li><strong>🟢 Green circles</strong> - 1km coverage radius (transparent)</li>
           </ul>
