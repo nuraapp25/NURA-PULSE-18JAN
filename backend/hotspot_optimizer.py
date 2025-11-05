@@ -351,17 +351,22 @@ def optimize_hotspots(df: pd.DataFrame, N: int = 10, h3_res: int = 9,
     
     # Add pickup points
     for i, (lat, lon) in enumerate(pts):
+        props = {
+            "type": "pickup",
+            "assigned_rank": int(assignment[i]),
+            "weight": float(weights[i])
+        }
+        # Add pickup_point if available
+        if pickup_points[i] is not None:
+            props["pickup_point"] = str(pickup_points[i])
+            
         features.append({
             "type": "Feature",
             "geometry": {
                 "type": "Point",
                 "coordinates": [float(lon), float(lat)]
             },
-            "properties": {
-                "type": "pickup",
-                "assigned_rank": int(assignment[i]),
-                "weight": float(weights[i])
-            }
+            "properties": props
         })
     
     geojson = {
