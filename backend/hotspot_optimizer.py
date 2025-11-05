@@ -27,7 +27,7 @@ R_RADIANS = R_METERS / EARTH_RADIUS_M
 def get_locality_from_coords(lat: float, lon: float) -> Optional[str]:
     """
     Get locality name from coordinates using Google Maps Geocoding API
-    Returns None if geocoding fails
+    Returns proper locality/area name (not building blocks)
     """
     # Get API key dynamically (in case it's loaded after module import)
     api_key = os.environ.get('GOOGLE_MAPS_API_KEY', '')
@@ -41,23 +41,37 @@ def get_locality_from_coords(lat: float, lon: float) -> Optional[str]:
         params = {
             "latlng": f"{lat},{lon}",
             "key": api_key,
-            "result_type": "locality|sublocality|neighborhood"
+            # Don't restrict result_type - get all components
         }
         
         response = requests.get(url, params=params, timeout=5)
         if response.status_code == 200:
             data = response.json()
             if data.get("status") == "OK" and data.get("results"):
-                # Get the first result
-                result = data["results"][0]
-                # Extract locality from address components
-                for component in result.get("address_components", []):
-                    if "locality" in component.get("types", []):
-                        return component.get("long_name")
-                    if "sublocality" in component.get("types", []):
-                        return component.get("long_name")
-                    if "neighborhood" in component.get("types", []):
-                        return component.get("long_name")
+                # Try multiple results to find best locality match
+                for result in data["results"][:3]:  # Check first 3 results
+                    components = result.get("address_components", [])
+                    
+                    # Priority order for locality extraction:
+                    # 1. sublocality_level_1 (e.g., "Anna Nagar")
+                    # 2. sublocality (e.g., "Velachery")
+                    # 3. locality (e.g., "Chennai")
+                    # 4. administrative_area_level_3 (e.g., district level)
+                    
+                    for priority_type in ["sublocality_level_1", "sublocality_level_2", "sublocality", "locality", "administrative_area_level_3"]:
+                        for component in components:
+                            types = component.get("types", [])
+                            if priority_type in types:
+                                locality_name = component.get("long_name", "")
+                                
+                                # Filter out block/building names (usually short and contain "Block", "Flat", etc.)
+                                if locality_name and not any(keyword in locality_name.upper() for keyword in 
+                                    ["BLOCK", "FLAT", "FLOOR", "WING", "TOWER", "BUILDING", "PHASE", "PLOT"]):
+                                    # Also filter out very short names (likely codes)
+                                    if len(locality_name) > 2:
+                                        logger.info(f"Geocoded ({lat}, {lon}) -> {locality_name} (type: {priority_type})")
+                                        return locality_name
+            
             elif data.get("status") != "OK":
                 logger.warning(f"Geocoding API error: {data.get('status')} - {data.get('error_message', 'No message')}")
         return None
