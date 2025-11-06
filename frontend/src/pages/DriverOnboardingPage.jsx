@@ -2823,7 +2823,7 @@ const DriverOnboardingPage = () => {
                   >
                     <Users className="w-3 h-3 mr-1" />
                     Filter by Telecaller
-                    {telecallerFilter && ` (${telecallers.find(t => t.email === telecallerFilter)?.name || telecallerFilter})`}
+                    {telecallerFilter && (telecallerFilter === "UNASSIGNED" ? " (Unassigned)" : ` (${telecallers.find(t => t.email === telecallerFilter)?.name || telecallerFilter})`)}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-56 dark:bg-gray-800 dark:border-gray-700">
