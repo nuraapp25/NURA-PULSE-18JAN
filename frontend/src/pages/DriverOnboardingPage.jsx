@@ -3723,7 +3723,7 @@ const DriverOnboardingPage = () => {
             </Button>
             <Button
               onClick={handleBulkAssignLeads}
-              disabled={!selectedTelecallerForAssignment || !assignmentDate || assigning}
+              disabled={!selectedTelecallerForAssignment || assigning}
               className="bg-green-600 hover:bg-green-700"
             >
               {assigning ? (
@@ -3732,7 +3732,7 @@ const DriverOnboardingPage = () => {
                   Assigning...
                 </>
               ) : (
-                `Assign ${selectedLeadIds.length} Lead(s)`
+                `Assign ${selectedLeadIds.length} Lead(s) for Today`
               )}
             </Button>
           </DialogFooter>
