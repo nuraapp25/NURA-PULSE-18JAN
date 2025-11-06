@@ -3820,6 +3820,69 @@ const DriverOnboardingPage = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Reassign to Date Dialog */}
+      <Dialog open={isReassignDateDialogOpen} onOpenChange={setIsReassignDateDialogOpen}>
+        <DialogContent className="sm:max-w-md dark:bg-gray-900 dark:border-gray-700">
+          <DialogHeader>
+            <DialogTitle className="dark:text-white">Reassign Leads to Different Date</DialogTitle>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Change the assigned date for {selectedLeadIds.length} selected lead(s)
+            </p>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+              <p className="text-sm text-blue-800 dark:text-blue-200">
+                ℹ️ This will change when these leads appear in the telecaller's daily view. The leads will show up on the new date you select.
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="reassign-date" className="dark:text-gray-300">
+                Select New Assignment Date *
+              </Label>
+              <Input
+                id="reassign-date"
+                type="date"
+                value={reassignDate}
+                onChange={(e) => setReassignDate(e.target.value)}
+                className="dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+              />
+              {reassignDate && (
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                  Leads will be assigned to: <strong>{new Date(reassignDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</strong>
+                </p>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsReassignDateDialogOpen(false);
+                setReassignDate("");
+              }}
+              className="dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+              disabled={reassigning}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleReassignToDate}
+              disabled={!reassignDate || reassigning}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {reassigning ? (
+                <>
+                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                  Reassigning...
+                </>
+              ) : (
+                `Reassign ${selectedLeadIds.length} Lead(s)`
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Bulk Import Dialog */}
       <Dialog open={bulkImportDialogOpen} onOpenChange={(open) => {
         setBulkImportDialogOpen(open);
