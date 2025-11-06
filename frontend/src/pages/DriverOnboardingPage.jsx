@@ -3699,14 +3699,14 @@ const DriverOnboardingPage = () => {
                   <SelectValue placeholder="Choose a telecaller..." />
                 </SelectTrigger>
                 <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
-                  {telecallers.filter(t => t.status === "active").map((telecaller) => (
+                  {telecallers.map((telecaller) => (
                     <SelectItem key={telecaller.id} value={telecaller.email}>
                       {telecaller.name} ({telecaller.email})
                     </SelectItem>
                   ))}
-                  {telecallers.filter(t => t.status === "active").length === 0 && (
+                  {telecallers.length === 0 && (
                     <div className="px-2 py-4 text-sm text-gray-500 text-center">
-                      No active telecallers found
+                      No telecallers found
                     </div>
                   )}
                 </SelectContent>
