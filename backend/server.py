@@ -1355,8 +1355,8 @@ async def bulk_export_leads(current_user: User = Depends(get_current_user)):
         logger.info(f"📝 Generating Excel file...")
         output = io.BytesIO()
         
-        # Use xlsxwriter for better performance with large datasets
-        with pd.ExcelWriter(output, engine='openpyxl', engine_kwargs={'options': {'strings_to_numbers': False}}) as writer:
+        # Use openpyxl for Excel generation
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
             # Write in chunks for very large datasets
             if actual_fetched > 10000:
                 logger.info(f"📦 Writing Excel in chunks...")
