@@ -345,6 +345,18 @@ frontend:
           agent: "main"
           comment: "PRODUCTION FIX: Enhanced Delete All functionality with robust error handling. Changes: 1) Added loading state during deletion to prevent UI freeze, 2) Individual campaign deletion with try-catch for each (one failure doesn't stop others), 3) Success/fail counters showing partial success, 4) Console logging for each deletion attempt, 5) Clear error messages indicating permission issues (master admin required for published campaigns). Applied to both handleDeleteAllCampaigns and handleDeleteSelectedCampaigns functions."
 
+  - task: "Driver Onboarding - Bulk Export Button Frontend Testing"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/pages/DriverOnboardingPage.jsx"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "🚨 CRITICAL FRONTEND ISSUE IDENTIFIED: Driver Onboarding Bulk Export button testing revealed multiple issues. BACKEND API FIXED: Fixed critical backend bug in bulk export endpoint - removed incompatible 'engine_kwargs' parameter causing 'Workbook.__init__() got an unexpected keyword argument options' error. Backend API now working correctly (verified via curl - successfully exports 17,114 leads to 2.5MB Excel file). FRONTEND ISSUES IDENTIFIED: 1) LOGIN AUTHENTICATION FAILURE: Frontend login form not working properly - credentials admin@nurapulse.com/admin123 fail to authenticate through UI (though API login works via curl). 2) BULK EXPORT BUTTON ACCESS: Unable to reach Driver Onboarding page due to authentication issues, preventing frontend button testing. 3) API URL BUG FIXED: Corrected duplicate '/api/api/' in frontend bulk export URL to '/api/'. TESTING RESULTS: ✅ Backend bulk export API working (POST /api/driver-onboarding/bulk-export returns 200, proper Excel file, correct headers), ❌ Frontend login preventing access to test bulk export button functionality, ❌ Unable to verify button states, toast messages, or download behavior through UI. RECOMMENDATION: Main agent should investigate frontend authentication issues preventing login, then retest bulk export button functionality once login is resolved."
+
 metadata:
   created_by: "main_agent"
   version: "2.0"
