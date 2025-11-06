@@ -1393,6 +1393,55 @@ const DriverOnboardingPage = () => {
     }
   };
 
+  // Reassign leads to a different date
+  const handleReassignToDate = async () => {
+    if (selectedLeadIds.length === 0) {
+      toast.error("Please select at least one lead");
+      return;
+    }
+    
+    if (!reassignDate) {
+      toast.error("Please select a date");
+      return;
+    }
+
+    setReassigning(true);
+    try {
+      const token = localStorage.getItem("token");
+      await axios.patch(
+        `${API}/driver-onboarding/reassign-date`,
+        {
+          lead_ids: selectedLeadIds,
+          new_date: reassignDate
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      // Update leads in memory
+      const updatedLeads = leads.map(lead => {
+        if (selectedLeadIds.includes(lead.id)) {
+          return {
+            ...lead,
+            assigned_date: new Date(reassignDate).toISOString()
+          };
+        }
+        return lead;
+      });
+      
+      setLeads(updatedLeads);
+      setFilteredLeads(updatedLeads);
+      
+      toast.success(`Successfully reassigned ${selectedLeadIds.length} lead(s) to ${new Date(reassignDate).toLocaleDateString()}`);
+      setSelectedLeadIds([]);
+      setIsReassignDateDialogOpen(false);
+      setReassignDate("");
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to reassign leads");
+    } finally {
+      setReassigning(false);
+    }
+  };
+
   // Bulk lead unassignment
   const handleUnassignLeads = async () => {
     if (selectedLeadIds.length === 0) {
