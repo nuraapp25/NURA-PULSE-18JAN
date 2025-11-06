@@ -2512,6 +2512,73 @@ async def bulk_assign_telecaller(
     }
 
 
+@api_router.patch("/driver-onboarding/reassign-date")
+async def reassign_leads_to_date(
+    request: Request,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Reassign selected leads to a different date
+    Updates the assigned_date field for bulk operations
+    """
+    try:
+        data = await request.json()
+        lead_ids = data.get("lead_ids", [])
+        new_date = data.get("new_date")
+        
+        if not lead_ids:
+            raise HTTPException(status_code=400, detail="No lead IDs provided")
+        
+        if not new_date:
+            raise HTTPException(status_code=400, detail="No date provided")
+        
+        # Parse and validate the date
+        from datetime import datetime, timezone
+        try:
+            # Parse the date string (expecting YYYY-MM-DD format)
+            parsed_date = datetime.fromisoformat(new_date)
+            # Convert to ISO string with UTC timezone
+            new_date_iso = parsed_date.replace(tzinfo=timezone.utc).isoformat()
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
+        
+        # Update all matching leads with new assigned date
+        result = await db.driver_leads.update_many(
+            {"id": {"$in": lead_ids}},
+            {
+                "$set": {
+                    "assigned_date": new_date_iso
+                }
+            }
+        )
+        
+        # Get updated leads for sync
+        updated_leads = await db.driver_leads.find(
+            {"id": {"$in": lead_ids}},
+            {"_id": 0}
+        ).to_list(length=None)
+        
+        # Sync to Google Sheets
+        try:
+            sync_all_records('leads', updated_leads)
+        except Exception as e:
+            logger.error(f"Failed to sync to Google Sheets: {str(e)}")
+        
+        logger.info(f"Reassigned {result.modified_count} leads to date {new_date}")
+        
+        return {
+            "success": True,
+            "message": f"Successfully reassigned {result.modified_count} lead(s) to {parsed_date.strftime('%B %d, %Y')}",
+            "modified_count": result.modified_count
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error reassigning leads to date: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @api_router.patch("/driver-onboarding/leads-bulk/status")
 async def bulk_update_lead_status(bulk_data: BulkLeadStatusUpdate, current_user: User = Depends(get_current_user)):
     """Bulk update lead status for multiple leads"""
