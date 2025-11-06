@@ -349,7 +349,8 @@ const DriverOnboardingPage = () => {
       const response = await axios.get(`${API}/users/telecallers`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setTelecallers(response.data.filter(t => t.status === "active"));
+      // Backend already filters for active telecallers (status !== "deleted")
+      setTelecallers(response.data);
     } catch (error) {
       console.error("Failed to fetch telecallers");
     }
