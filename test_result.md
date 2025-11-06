@@ -365,6 +365,7 @@ metadata:
 
 test_plan:
   current_focus:
+    - "Driver Onboarding - Bulk Export Button Frontend Testing"
     - "Battery Audit Optimization for Production"
     - "Morning Charge Audit Optimization for Production"
     - "QR Code Delete All - Enhanced Error Handling"
