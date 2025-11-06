@@ -231,6 +231,11 @@ const DriverOnboardingPage = () => {
   const [isUnassignDialogOpen, setIsUnassignDialogOpen] = useState(false);
   const [selectedTelecallerForAssignment, setSelectedTelecallerForAssignment] = useState("");
   
+  // Reassign to date dialog
+  const [isReassignDateDialogOpen, setIsReassignDateDialogOpen] = useState(false);
+  const [reassignDate, setReassignDate] = useState("");
+  const [reassigning, setReassigning] = useState(false);
+  
   // Loading progress state
   const [loadingProgress, setLoadingProgress] = useState(0);
   
