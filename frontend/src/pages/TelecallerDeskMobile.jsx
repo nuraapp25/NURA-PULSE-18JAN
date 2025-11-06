@@ -1165,6 +1165,112 @@ const TelecallerDeskMobile = () => {
         </div>
       ) : null}
 
+      {/* Pending from Previous Days - Only shown when date is selected */}
+      {selectedDate && getPendingFromPreviousDays().length > 0 && (
+        <div className="mb-6">
+          <button
+            onClick={() => setShowPendingLeads(!showPendingLeads)}
+            className="w-full flex items-center justify-between p-3 bg-orange-50 dark:bg-orange-900/20 border-2 border-orange-200 dark:border-orange-800 rounded-lg mb-3"
+          >
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Pending from Previous Days ({getPendingFromPreviousDays().length})
+              </h2>
+              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                Unfinished leads from before {new Date(selectedDate).toLocaleDateString()}
+              </p>
+            </div>
+            {showPendingLeads ? (
+              <ChevronUp className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+            ) : (
+              <ChevronDown className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+            )}
+          </button>
+
+          {showPendingLeads && (
+            <div className="space-y-3">
+              {getPendingFromPreviousDays().map((lead, index) => (
+                <Card
+                  key={lead.id}
+                  className="relative overflow-hidden border-2 border-orange-200 dark:border-orange-800 hover:shadow-md transition-shadow"
+                >
+                  {/* Overdue Tag */}
+                  <div className="absolute top-0 right-0 bg-orange-500 text-white text-xs font-semibold px-3 py-1 rounded-bl-lg">
+                    Pending
+                  </div>
+
+                  <CardContent className="p-4">
+                    {/* Lead Info */}
+                    <div className="mb-3">
+                      <div className="flex items-start justify-between mb-2">
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white pr-20">
+                          {index + 1}. {lead.name}
+                        </h3>
+                      </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                        {lead.phone_number}
+                      </p>
+                      <p className="text-xs text-orange-600 dark:text-orange-400">
+                        Assigned: {lead.assigned_date ? new Date(lead.assigned_date).toLocaleDateString() : 'N/A'}
+                      </p>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="space-y-2">
+                      {/* Current Status Badge */}
+                      <div className="flex items-center justify-between py-2 px-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                        <span className="text-xs text-gray-600 dark:text-gray-400">Current Status:</span>
+                        <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                          {lead.status || "New"}
+                        </Badge>
+                      </div>
+                      
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          onClick={() => handleCall(lead)}
+                          className="flex-1 min-w-[100px] bg-green-500 hover:bg-green-600 text-white"
+                          size="sm"
+                        >
+                          <Phone className="w-4 h-4 mr-1" />
+                          Call
+                        </Button>
+                        <Button
+                          onClick={() => handleWhatsApp(lead)}
+                          className="flex-1 min-w-[100px] bg-green-500 hover:bg-green-600 text-white"
+                          size="sm"
+                        >
+                          <MessageCircle className="w-4 h-4 mr-1" />
+                          WhatsApp
+                        </Button>
+                        <Button
+                          onClick={() => openStatusDialog(lead)}
+                          variant="outline"
+                          className="flex-1 min-w-[100px] border-blue-500 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                          size="sm"
+                        >
+                          <CheckCircle className="w-4 h-4 mr-1" />
+                          Update Status
+                        </Button>
+                      </div>
+
+                      {/* View Details Button */}
+                      <Button
+                        onClick={() => openLeadDetails(lead)}
+                        variant="ghost"
+                        className="w-full"
+                        size="sm"
+                      >
+                        View Full Details
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Active Leads List - Collapsible */}
       {activeLeads.length > 0 && (
         <div className="mb-6">
