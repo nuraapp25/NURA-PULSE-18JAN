@@ -2748,16 +2748,6 @@ const DriverOnboardingPage = () => {
                 <span className="hidden sm:inline">Unassign Telecaller ({selectedLeadIds.length})</span>
                 <span className="sm:hidden">Unassign ({selectedLeadIds.length})</span>
               </Button>
-              <Button
-                onClick={() => setIsReassignDateDialogOpen(true)}
-                variant="outline"
-                size="sm"
-                className="border-blue-500 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-sm"
-              >
-                <Calendar size={14} className="mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Reassign to Date ({selectedLeadIds.length})</span>
-                <span className="sm:hidden">Reassign ({selectedLeadIds.length})</span>
-              </Button>
             </>
           )}
         </div>
