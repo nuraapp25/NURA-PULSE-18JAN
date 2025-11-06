@@ -520,7 +520,13 @@ const DriverOnboardingPage = () => {
     
     // Telecaller filter
     if (telecallerFilter) {
-      filtered = filtered.filter(lead => lead.assigned_telecaller === telecallerFilter);
+      if (telecallerFilter === "UNASSIGNED") {
+        // Show only leads that have no telecaller assigned
+        filtered = filtered.filter(lead => !lead.assigned_telecaller || lead.assigned_telecaller === "");
+      } else {
+        // Show leads assigned to specific telecaller
+        filtered = filtered.filter(lead => lead.assigned_telecaller === telecallerFilter);
+      }
     }
     
     // Status filter
