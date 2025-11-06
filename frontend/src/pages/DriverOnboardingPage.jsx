@@ -3710,18 +3710,19 @@ const DriverOnboardingPage = () => {
 
       {/* Assign Leads Dialog */}
       <Dialog open={isAssignDialogOpen} onOpenChange={setIsAssignDialogOpen}>
-        <DialogContent className="dark:bg-gray-800">
+        <DialogContent className="dark:bg-gray-800 max-w-lg">
           <DialogHeader>
             <DialogTitle className="dark:text-white">Assign Leads to Telecaller</DialogTitle>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Assign {selectedLeadIds.length} selected lead(s) to a telecaller
+              Assign {selectedLeadIds.length} selected lead(s) to a telecaller for a specific date
             </p>
           </DialogHeader>
           <div className="space-y-4 py-4">
+            {/* Telecaller Selection */}
             <div>
               <div className="flex items-center justify-between mb-2">
                 <Label htmlFor="telecaller-select" className="dark:text-gray-300">
-                  Select Telecaller
+                  Select Telecaller *
                 </Label>
                 <Button
                   type="button"
@@ -3756,6 +3757,63 @@ const DriverOnboardingPage = () => {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Assignment Date Selection */}
+            <div>
+              <Label className="dark:text-gray-300 mb-2 block">
+                Assignment Date *
+              </Label>
+              <div className="space-y-3">
+                {/* Quick Action Buttons */}
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setAssignmentDate(new Date().toISOString().split('T')[0])}
+                    className={`${assignmentDate === new Date().toISOString().split('T')[0] ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : ''}`}
+                  >
+                    <CalendarIcon className="w-4 h-4 mr-2" />
+                    Assign for Today
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      const tomorrow = new Date();
+                      tomorrow.setDate(tomorrow.getDate() + 1);
+                      setAssignmentDate(tomorrow.toISOString().split('T')[0]);
+                    }}
+                    className={`${assignmentDate === new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split('T')[0] ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : ''}`}
+                  >
+                    <CalendarIcon className="w-4 h-4 mr-2" />
+                    Assign for Tomorrow
+                  </Button>
+                </div>
+
+                {/* Custom Date Picker */}
+                <div>
+                  <Label htmlFor="assignment-date" className="text-xs text-gray-600 dark:text-gray-400 mb-1 block">
+                    Or choose a custom date:
+                  </Label>
+                  <Input
+                    id="assignment-date"
+                    type="date"
+                    value={assignmentDate}
+                    onChange={(e) => setAssignmentDate(e.target.value)}
+                    className="dark:bg-gray-700 dark:border-gray-600"
+                  />
+                </div>
+
+                {/* Selected Date Preview */}
+                {assignmentDate && (
+                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                    <p className="text-sm text-blue-800 dark:text-blue-200">
+                      <strong>Assignment Date:</strong> {new Date(assignmentDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
           <DialogFooter>
             <Button
@@ -3763,6 +3821,7 @@ const DriverOnboardingPage = () => {
               onClick={() => {
                 setIsAssignDialogOpen(false);
                 setSelectedTelecallerForAssignment("");
+                setAssignmentDate("");
               }}
               className="dark:border-gray-600"
               disabled={assigning}
@@ -3771,7 +3830,7 @@ const DriverOnboardingPage = () => {
             </Button>
             <Button
               onClick={handleBulkAssignLeads}
-              disabled={!selectedTelecallerForAssignment || assigning}
+              disabled={!selectedTelecallerForAssignment || !assignmentDate || assigning}
               className="bg-green-600 hover:bg-green-700"
             >
               {assigning ? (
