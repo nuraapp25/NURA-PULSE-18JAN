@@ -1535,8 +1535,15 @@ const DriverOnboardingPage = () => {
       
       // Get filename from Content-Disposition header or use default
       const contentDisposition = response.headers['content-disposition'];
-      const filenameMatch = contentDisposition && contentDisposition.match(/filename="?(.+)"?/);
-      const filename = filenameMatch ? filenameMatch[1] : `driver_leads_export_${new Date().toISOString().split('T')[0]}.xlsx`;
+      let filename = 'driver leads export.xlsx';
+      
+      if (contentDisposition) {
+        // Try to extract filename from Content-Disposition header
+        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1].replace(/['"]/g, '');
+        }
+      }
       
       link.setAttribute('download', filename);
       document.body.appendChild(link);
