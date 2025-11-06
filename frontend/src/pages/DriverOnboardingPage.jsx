@@ -2842,6 +2842,13 @@ const DriverOnboardingPage = () => {
                     >
                       All Telecallers
                     </Button>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start text-sm bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400"
+                      onClick={() => setTelecallerFilter("UNASSIGNED")}
+                    >
+                      Unassigned Leads
+                    </Button>
                     {telecallers.map((telecaller) => (
                       <Button
                         key={telecaller.id}
