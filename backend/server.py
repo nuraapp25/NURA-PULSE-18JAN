@@ -1394,9 +1394,8 @@ async def bulk_export_leads(current_user: User = Depends(get_current_user)):
         file_size_mb = len(output.getvalue()) / (1024 * 1024)
         logger.info(f"📦 Excel file generated: {file_size_mb:.2f} MB")
         
-        # Generate filename with timestamp
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"driver_leads_export_{timestamp}.xlsx"
+        # Generate filename without underscores
+        filename = "driver leads export.xlsx"
         
         logger.info(f"✅ Bulk export complete: {actual_fetched} leads exported to {filename}")
         
