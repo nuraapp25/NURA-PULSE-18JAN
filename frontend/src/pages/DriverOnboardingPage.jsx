@@ -1353,30 +1353,26 @@ const DriverOnboardingPage = () => {
       toast.error("Please select a telecaller");
       return;
     }
-    
-    if (!assignmentDate) {
-      toast.error("Please select an assignment date");
-      return;
-    }
 
     setAssigning(true);
     try {
       const token = localStorage.getItem("token");
+      // Always use today's date for assignment
+      const todayDate = new Date().toISOString().split('T')[0];
+      
       await axios.patch(
         `${API}/driver-onboarding/bulk-assign`,
         {
           lead_ids: selectedLeadIds,
           telecaller_email: selectedTelecallerForAssignment,
-          assignment_date: assignmentDate
+          assignment_date: todayDate
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       // Get telecaller name
       const telecaller = telecallers.find(t => t.email === selectedTelecallerForAssignment);
-      const telecallerName = telecaller ? `${telecaller.first_name} ${telecaller.last_name}`.trim() : selectedTelecallerForAssignment.split('@')[0];
-      
-      const assignmentDateFormatted = new Date(assignmentDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      const telecallerName = telecaller ? telecaller.name : selectedTelecallerForAssignment.split('@')[0];
 
       // Update leads in memory instead of refetching all
       const updatedLeads = leads.map(lead => {
@@ -1385,7 +1381,7 @@ const DriverOnboardingPage = () => {
             ...lead,
             assigned_telecaller: selectedTelecallerForAssignment,
             assigned_telecaller_name: telecallerName,
-            assigned_date: new Date(assignmentDate).toISOString()
+            assigned_date: new Date(todayDate).toISOString()
           };
         }
         return lead;
@@ -1394,11 +1390,10 @@ const DriverOnboardingPage = () => {
       setLeads(updatedLeads);
       setFilteredLeads(updatedLeads);
       
-      toast.success(`Successfully assigned ${selectedLeadIds.length} lead(s) to ${telecallerName} for ${assignmentDateFormatted}`);
+      toast.success(`Successfully assigned ${selectedLeadIds.length} lead(s) to ${telecallerName} for today`);
       setSelectedLeadIds([]);
       setIsAssignDialogOpen(false);
       setSelectedTelecallerForAssignment("");
-      setAssignmentDate("");
     } catch (error) {
       toast.error(error.response?.data?.detail || "Failed to assign leads");
     } finally {
