@@ -89,6 +89,7 @@ const TelecallerDeskMobile = () => {
   const [historyLead, setHistoryLead] = useState(null);
   const [showScheduledLeads, setShowScheduledLeads] = useState(true); // For collapsible section
   const [showActiveLeads, setShowActiveLeads] = useState(true); // For collapsible active leads
+  const [showPendingLeads, setShowPendingLeads] = useState(true); // For pending from previous days
   
   // NEW: Calendar and Search state
   const [selectedDate, setSelectedDate] = useState(null); // null means show all dates
