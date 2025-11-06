@@ -2466,9 +2466,10 @@ async def bulk_assign_telecaller(
     assignment_data: dict,
     current_user: User = Depends(get_current_user)
 ):
-    """Bulk assign telecaller to multiple leads"""
+    """Bulk assign telecaller to multiple leads with specific assignment date"""
     lead_ids = assignment_data.get("lead_ids", [])
     telecaller_email = assignment_data.get("telecaller_email", "")
+    assignment_date = assignment_data.get("assignment_date")  # Optional date from frontend
     
     if not lead_ids or len(lead_ids) == 0:
         raise HTTPException(status_code=400, detail="No leads selected for assignment")
@@ -2481,14 +2482,28 @@ async def bulk_assign_telecaller(
     if not telecaller:
         raise HTTPException(status_code=404, detail="Telecaller not found")
     
-    # Update all matching leads with assigned telecaller and assignment date
+    # Parse assignment date or use current date
     from datetime import datetime, timezone
+    if assignment_date:
+        try:
+            # Parse the date string (expecting YYYY-MM-DD format from frontend)
+            parsed_date = datetime.fromisoformat(assignment_date)
+            # Convert to ISO string with UTC timezone
+            assignment_date_iso = parsed_date.replace(tzinfo=timezone.utc).isoformat()
+        except ValueError:
+            # Fallback to current date if invalid format
+            assignment_date_iso = datetime.now(timezone.utc).isoformat()
+    else:
+        # Use current date if no date provided
+        assignment_date_iso = datetime.now(timezone.utc).isoformat()
+    
+    # Update all matching leads with assigned telecaller and assignment date
     result = await db.driver_leads.update_many(
         {"id": {"$in": lead_ids}},
         {
             "$set": {
                 "assigned_telecaller": telecaller_email,
-                "assigned_date": datetime.now(timezone.utc).isoformat()
+                "assigned_date": assignment_date_iso
             }
         }
     )
@@ -2504,6 +2519,8 @@ async def bulk_assign_telecaller(
         sync_all_records('leads', updated_leads)
     except Exception as e:
         logger.error(f"Failed to sync to Google Sheets: {str(e)}")
+    
+    logger.info(f"Assigned {result.modified_count} leads to {telecaller['name']} for date {assignment_date_iso}")
     
     return {
         "success": True,
