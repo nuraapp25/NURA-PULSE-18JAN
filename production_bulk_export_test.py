@@ -463,7 +463,7 @@ class ProductionBulkExportTester:
                 failure_times = []
                 for failure in export_failures:
                     timing_data = failure.get("timing_data", {})
-                    if "response_time_seconds" in timing_data:
+                    if timing_data and "response_time_seconds" in timing_data:
                         failure_times.append(timing_data["response_time_seconds"])
                 
                 if failure_times:
