@@ -443,11 +443,12 @@ class ProductionBulkExportTester:
             # If exports succeeded, provide success metrics
             for export in successful_exports:
                 timing_data = export.get("timing_data", {})
-                print(f"   ✅ SUCCESSFUL EXPORT:")
-                print(f"      Leads exported: {timing_data.get('x_total_leads', 'Unknown')}")
-                print(f"      File size: {timing_data.get('file_size_mb', 'Unknown')} MB")
-                print(f"      Processing time: {timing_data.get('response_time', 'Unknown')}")
-                print(f"      Bytes per lead: {timing_data.get('file_size_bytes', 0) // max(self.total_leads, 1)} bytes")
+                if timing_data:
+                    print(f"   ✅ SUCCESSFUL EXPORT:")
+                    print(f"      Leads exported: {timing_data.get('x_total_leads', 'Unknown')}")
+                    print(f"      File size: {timing_data.get('file_size_mb', 'Unknown')} MB")
+                    print(f"      Processing time: {timing_data.get('response_time', 'Unknown')}")
+                    print(f"      Bytes per lead: {timing_data.get('file_size_bytes', 0) // max(self.total_leads, 1)} bytes")
         else:
             # If all exports failed, provide failure analysis
             print(f"   ❌ ALL EXPORTS FAILED:")
