@@ -334,81 +334,97 @@ class ProductionBulkExportTester:
         
         return analysis_result
     
-    def run_all_tests(self):
-        """Run all production tests"""
-        print("🚀 Starting Production Environment Testing for Driver Onboarding Bulk Export")
+    def run_comprehensive_analysis(self):
+        """Run complete production bulk export failure analysis"""
+        print("🔍 === PRODUCTION BULK EXPORT FAILURE ANALYSIS ===")
         print(f"🌐 Production URL: {PRODUCTION_BASE_URL}")
-        print(f"👤 Credentials: {PRODUCTION_EMAIL} / {'*' * len(PRODUCTION_PASSWORD)}")
-        print("=" * 80)
+        print(f"👤 Credentials: {PRODUCTION_EMAIL} / {PRODUCTION_PASSWORD}")
+        print(f"🕐 Analysis Start Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         
-        # Test 1: Authentication
-        auth_success = self.test_production_authentication()
-        if not auth_success:
-            print("\n❌ Authentication failed. Cannot proceed with bulk export test.")
-            return False
+        # Step 1: Login
+        print("\n🔐 === STEP 1: LOGIN TO PRODUCTION ===")
+        login_success = self.test_production_authentication()
+        if not login_success:
+            print("❌ Cannot proceed without authentication")
+            return
         
-        # Test 2: Bulk Export
-        export_success = self.test_bulk_export_endpoint()
+        # Step 2: Count leads
+        total_leads = self.test_count_total_leads()
         
-        # Summary
-        print("\n" + "=" * 80)
-        print("📊 PRODUCTION TEST SUMMARY")
-        print("=" * 80)
+        # Step 3: Test bulk export
+        export_result = self.test_bulk_export_endpoint()
         
-        passed_tests = sum(1 for result in self.test_results if result['success'])
-        total_tests = len(self.test_results)
+        # Final Analysis Report
+        print("\n📋 === FINAL DIAGNOSTIC REPORT ===")
+        print(f"🕐 Analysis Completed: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print(f"🌐 Production Environment: {PRODUCTION_BASE_URL}")
+        print(f"📊 Total Leads in Production: {total_leads}")
         
-        print(f"✅ Passed: {passed_tests}/{total_tests} tests")
-        print(f"❌ Failed: {total_tests - passed_tests}/{total_tests} tests")
+        print(f"\n🎯 BULK EXPORT RESULTS:")
+        print(f"   📊 HTTP Status Code: {export_result.get('status_code', 'Unknown')}")
+        print(f"   ⏰ Exact Timeout Duration: {export_result.get('duration', 0):.3f} seconds")
+        print(f"   ✅ Success: {export_result.get('success', False)}")
         
-        if export_success:
-            print("\n🎉 PRODUCTION BULK EXPORT TEST: SUCCESS")
-            print("✅ Login successful with production credentials")
-            print("✅ HTTP 200 from bulk export endpoint")
-            print("✅ Excel file downloads successfully")
-            print("✅ File integrity verified")
-            
-            # Find the lead count from results
-            for result in self.test_results:
-                if "X-Total-Leads header present" in result['message']:
-                    lead_count = result['message'].split(': ')[1].split(' ')[0]
-                    print(f"📊 Production database contains: {lead_count} leads")
-                    break
+        if export_result.get('error_type'):
+            print(f"   🚨 Error Type: {export_result['error_type']}")
+        
+        if export_result.get('error_message'):
+            print(f"   💬 Error Message: {export_result['error_message']}")
+        
+        if export_result.get('file_size_mb'):
+            print(f"   💾 File Size: {export_result['file_size_mb']:.2f} MB")
+        
+        # Response Headers Analysis
+        if export_result.get('headers'):
+            print(f"\n📋 RESPONSE HEADERS:")
+            headers = export_result['headers']
+            for key, value in headers.items():
+                print(f"   {key}: {value}")
+        
+        # Recommendations
+        print(f"\n🔧 RECOMMENDATIONS:")
+        
+        if export_result.get('status_code') == 503:
+            print("   1. 🚀 Scale production server resources (CPU/Memory)")
+            print("   2. ⏰ Increase server timeout limits (300+ seconds)")
+            print("   3. 📦 Implement chunked/paginated export")
+            print("   4. 🔄 Add background job processing for bulk operations")
+            print("   5. 💾 Consider database query optimization")
+        
+        elif export_result.get('status_code') == 504:
+            print("   1. ⏰ Increase gateway timeout configuration")
+            print("   2. 🚀 Optimize backend processing speed")
+            print("   3. 📦 Implement streaming response for large files")
+            print("   4. 🔄 Add progress tracking for long operations")
+        
+        elif export_result.get('status_code') == 500:
+            print("   1. 💾 Increase server memory allocation")
+            print("   2. 🔍 Check application logs for specific errors")
+            print("   3. 📊 Optimize Excel generation process")
+            print("   4. 🔄 Implement memory-efficient data processing")
+        
+        elif export_result.get('status_code') == 'TIMEOUT':
+            print("   1. 🌐 Check network connectivity and stability")
+            print("   2. ⏰ Increase client timeout settings")
+            print("   3. 🚀 Investigate server performance issues")
+            print("   4. 📊 Monitor server resource usage during export")
+        
         else:
-            print("\n❌ PRODUCTION BULK EXPORT TEST: FAILED")
-            
-            # Check if it's a 503 service unavailable issue
-            service_unavailable = any("503" in result['message'] for result in self.test_results)
-            timeout_issue = any("timeout" in result['message'].lower() for result in self.test_results)
-            
-            if service_unavailable or timeout_issue:
-                print("\n🔍 ROOT CAUSE ANALYSIS:")
-                print("   The bulk export endpoint is experiencing service availability issues.")
-                print("   This is likely due to:")
-                print("   • Large dataset size (potentially 30,000+ leads as mentioned)")
-                print("   • Server timeout configurations insufficient for bulk export")
-                print("   • Resource constraints during Excel file generation")
-                print("   • Production server optimization needed for large exports")
-                print("\n💡 RECOMMENDATIONS:")
-                print("   1. Increase server timeout settings (proxy_read_timeout, etc.)")
-                print("   2. Implement chunked/paginated export for large datasets")
-                print("   3. Add background job processing for bulk exports")
-                print("   4. Scale server resources for production workload")
-                print("   5. Add export progress tracking and resume capability")
-            else:
-                print("Please check the detailed test results above for specific issues.")
+            print("   1. 🔍 Investigate specific error details")
+            print("   2. 📊 Check server logs and monitoring")
+            print("   3. 🚀 Verify server configuration and resources")
         
-        return export_success
+        print(f"\n📈 SUMMARY:")
+        print(f"   🎯 Issue: Production bulk export failing")
+        print(f"   📊 Dataset Size: {total_leads} leads")
+        print(f"   ⏰ Failure Time: {export_result.get('duration', 0):.3f} seconds")
+        print(f"   🔍 Root Cause: {export_result.get('error_type', 'Unknown')}")
+        print(f"   🚨 Priority: CRITICAL - Production functionality impacted")
 
 def main():
-    """Main function to run production tests"""
+    """Main function to run production analysis"""
     tester = ProductionBulkExportTester()
-    success = tester.run_all_tests()
-    
-    if success:
-        sys.exit(0)
-    else:
-        sys.exit(1)
+    tester.run_comprehensive_analysis()
 
 if __name__ == "__main__":
     main()
