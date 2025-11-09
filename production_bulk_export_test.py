@@ -333,59 +333,6 @@ class ProductionBulkExportTester:
             analysis_result["error_type"] = f"HTTP {response.status_code}"
         
         return analysis_result
-        
-        # Try to open and verify Excel file
-        try:
-            excel_data = io.BytesIO(response.content)
-            df = pd.read_excel(excel_data)
-            
-            row_count = len(df)
-            column_count = len(df.columns)
-            
-            self.log_test("Bulk Export - Excel File Integrity", True, 
-                        f"Excel file can be opened: {row_count:,} rows, {column_count} columns")
-            
-            # Verify expected columns are present
-            expected_columns = ['id', 'name', 'phone_number', 'email', 'status', 'stage']
-            missing_columns = [col for col in expected_columns if col not in df.columns]
-            
-            if not missing_columns:
-                self.log_test("Bulk Export - Column Structure", True, 
-                            f"All expected columns present: {', '.join(expected_columns)}")
-            else:
-                self.log_test("Bulk Export - Column Structure", False, 
-                            f"Missing expected columns: {missing_columns}")
-            
-            # Verify row count matches header
-            if total_leads and row_count == total_leads:
-                self.log_test("Bulk Export - Row Count Verification", True, 
-                            f"Excel row count ({row_count:,}) matches X-Total-Leads header ({total_leads:,})")
-            elif total_leads:
-                self.log_test("Bulk Export - Row Count Verification", False, 
-                            f"Excel row count ({row_count:,}) doesn't match X-Total-Leads header ({total_leads:,})")
-            else:
-                self.log_test("Bulk Export - Row Count Verification", True, 
-                            f"Excel contains {row_count:,} rows (header not available for comparison)")
-            
-            # Sample data quality check
-            if row_count > 0:
-                sample_row = df.iloc[0]
-                name_sample = str(sample_row.get('name', ''))
-                phone_sample = str(sample_row.get('phone_number', ''))
-                
-                if name_sample and name_sample != 'nan' and phone_sample and phone_sample != 'nan':
-                    self.log_test("Bulk Export - Data Quality Sample", True, 
-                                f"Sample data looks valid - Name: '{name_sample}', Phone: '{phone_sample}'")
-                else:
-                    self.log_test("Bulk Export - Data Quality Sample", False, 
-                                f"Sample data appears invalid - Name: '{name_sample}', Phone: '{phone_sample}'")
-            
-            return True
-            
-        except Exception as e:
-            self.log_test("Bulk Export - Excel File Integrity", False, 
-                        f"Cannot open Excel file: {str(e)}")
-            return False
     
     def run_all_tests(self):
         """Run all production tests"""
