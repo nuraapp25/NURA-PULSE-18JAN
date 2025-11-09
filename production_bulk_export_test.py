@@ -512,7 +512,8 @@ class ProductionBulkExportTester:
         for result in self.test_results:
             if test_name in result["test"]:
                 timing_data = result.get("timing_data", {})
-                return timing_data.get("response_time", "Unknown") or timing_data.get("login_time", "Unknown") or timing_data.get("query_time", "Unknown")
+                if timing_data:
+                    return timing_data.get("response_time", "Unknown") or timing_data.get("login_time", "Unknown") or timing_data.get("query_time", "Unknown")
         return "Unknown"
 
 def main():
