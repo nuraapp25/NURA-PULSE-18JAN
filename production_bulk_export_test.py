@@ -89,7 +89,7 @@ class ProductionBulkExportTester:
             print(f"💥 UNEXPECTED ERROR after {duration:.3f} seconds: {e}")
             return None, duration
     
-    def test_production_authentication(self):
+    def test_production_login(self):
         """Test 1: Production Authentication"""
         print("\n=== Testing Production Authentication ===")
         
