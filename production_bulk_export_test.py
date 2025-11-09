@@ -394,16 +394,21 @@ class ProductionBulkExportTester:
                 count = failure_points.count(point)
                 print(f"   {point}: {count} occurrences")
         
-        # Specific analysis for 503 errors
+        # Specific analysis for 503 and 502 errors
         service_unavailable_count = sum(1 for result in self.test_results 
                                       if result.get("response_data", {}).get("status_code") == 503)
+        bad_gateway_count = sum(1 for result in self.test_results 
+                              if result.get("response_data", {}).get("status_code") == 502)
         
-        if service_unavailable_count > 0:
-            print(f"\n🔴 SERVICE UNAVAILABLE ANALYSIS:")
-            print(f"   503 errors occurred: {service_unavailable_count} times")
-            print(f"   Root cause: Production server resource exhaustion")
-            print(f"   Issue occurs even with small dataset ({self.total_leads} leads)")
-            print(f"   Server cannot handle bulk Excel generation process")
+        if service_unavailable_count > 0 or bad_gateway_count > 0:
+            print(f"\n🔴 SERVER ERROR ANALYSIS:")
+            if service_unavailable_count > 0:
+                print(f"   503 Service Unavailable errors: {service_unavailable_count} times")
+            if bad_gateway_count > 0:
+                print(f"   502 Bad Gateway errors: {bad_gateway_count} times")
+            print(f"   Root cause: Production server infrastructure issues")
+            print(f"   Dataset size: {self.total_leads} leads (33K+ records)")
+            print(f"   Server cannot handle bulk Excel generation for large datasets")
     
     def generate_final_report(self):
         """Generate comprehensive final report with exact numerical limits"""
