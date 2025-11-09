@@ -44,13 +44,16 @@ class ProductionBulkExportTester:
         if not success and response_data:
             print(f"   Response: {response_data}")
     
-    def make_request(self, method, endpoint, data=None, files=None, use_auth=True, timeout=300):
-        """Make HTTP request with proper headers and extended timeout for bulk operations"""
+    def make_request_with_timing(self, method, endpoint, data=None, files=None, use_auth=True, timeout=300):
+        """Make HTTP request with precise timing measurement and comprehensive error handling"""
         url = f"{self.base_url}{endpoint}"
         headers = {}
         
         if use_auth and self.token:
             headers["Authorization"] = f"Bearer {self.token}"
+        
+        # Record precise start time
+        start_time = time.time()
         
         try:
             if method.upper() == "GET":
