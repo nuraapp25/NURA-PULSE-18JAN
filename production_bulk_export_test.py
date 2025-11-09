@@ -67,17 +67,27 @@ class ProductionBulkExportTester:
             else:
                 raise ValueError(f"Unsupported HTTP method: {method}")
             
-            print(f"DEBUG: {method} {url} -> Status: {response.status_code}")
-            return response
-        except requests.exceptions.Timeout:
-            print(f"Request timeout for {method} {url} (timeout: {timeout}s)")
-            return None
+            end_time = time.time()
+            duration = end_time - start_time
+            
+            print(f"⏱️  {method} {url} -> Status: {response.status_code}, Duration: {duration:.3f}s")
+            return response, duration
+            
+        except requests.exceptions.Timeout as e:
+            end_time = time.time()
+            duration = end_time - start_time
+            print(f"⏰ TIMEOUT after {duration:.3f} seconds: {e}")
+            return None, duration
         except requests.exceptions.RequestException as e:
-            print(f"Request error for {method} {url}: {e}")
-            return None
+            end_time = time.time()
+            duration = end_time - start_time
+            print(f"🚨 REQUEST ERROR after {duration:.3f} seconds: {e}")
+            return None, duration
         except Exception as e:
-            print(f"Unexpected error for {method} {url}: {e}")
-            return None
+            end_time = time.time()
+            duration = end_time - start_time
+            print(f"💥 UNEXPECTED ERROR after {duration:.3f} seconds: {e}")
+            return None, duration
     
     def test_production_authentication(self):
         """Test 1: Production Authentication"""
