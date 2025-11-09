@@ -204,7 +204,7 @@ class ProductionBulkExportTester:
         print(f"⏱️  EXACT DURATION: {duration:.3f} seconds")
         
         # Analyze response
-        if not response:
+        if response is None:
             self.log_test("Bulk Export Endpoint", False, 
                         f"❌ TIMEOUT/ERROR - Failed after {duration:.3f} seconds")
             
