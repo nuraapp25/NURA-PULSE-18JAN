@@ -116,11 +116,28 @@ class ProductionBulkExportTester:
             timing = f"{end_time - start_time:.3f}s"
             
             if response.status_code == 200:
-                leads = response.json()
-                if isinstance(leads, list):
-                    self.total_leads = len(leads)
+                response_data = response.json()
+                
+                # Handle paginated response format
+                if isinstance(response_data, dict) and "leads" in response_data:
+                    leads = response_data["leads"]
+                    self.total_leads = response_data.get("total", len(leads))
                     
                     # Sample some lead data for verification
+                    sample_leads = leads[:3] if leads else []
+                    sample_info = []
+                    for lead in sample_leads:
+                        if isinstance(lead, dict):
+                            sample_info.append({
+                                "name": lead.get("name", "Unknown"),
+                                "phone": lead.get("phone_number", "Unknown"),
+                                "status": lead.get("status", "Unknown")
+                            })
+                elif isinstance(response_data, list):
+                    # Handle direct list response
+                    leads = response_data
+                    self.total_leads = len(leads)
+                    
                     sample_leads = leads[:3] if leads else []
                     sample_info = []
                     for lead in sample_leads:
