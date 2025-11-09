@@ -343,7 +343,7 @@ class ProductionBulkExportTester:
         
         # Step 1: Login
         print("\n🔐 === STEP 1: LOGIN TO PRODUCTION ===")
-        login_success = self.test_production_authentication()
+        login_success = self.test_production_login()
         if not login_success:
             print("❌ Cannot proceed without authentication")
             return
