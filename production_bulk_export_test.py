@@ -98,7 +98,7 @@ class ProductionBulkExportTester:
             "password": PRODUCTION_PASSWORD
         }
         
-        response = self.make_request("POST", "/auth/login", login_data, use_auth=False)
+        response, duration = self.make_request_with_timing("POST", "/auth/login", login_data, use_auth=False)
         
         if not response:
             self.log_test("Production Authentication", False, "Network error during login")
