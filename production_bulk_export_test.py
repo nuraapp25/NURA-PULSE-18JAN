@@ -1,25 +1,24 @@
 #!/usr/bin/env python3
 """
-Production Bulk Export Failure Analysis
-Comprehensive diagnosis of bulk export failure in production environment
-URL: https://pulse.nuraemobility.co.in
+Progressive Load Testing for Production Bulk Export API
+Tests the EXACT maximum export capacity by testing incrementally
+
+Production URL: https://pulse.nuraemobility.co.in
 Credentials: admin / Nura@1234$
 
-OBJECTIVE: Determine the EXACT reason why bulk export is failing
+Objective: Find the EXACT maximum export capacity by testing incrementally
 """
 
 import requests
 import json
-import sys
-import pandas as pd
-import io
 import time
+import sys
 from datetime import datetime
 
 # Production Configuration
-PRODUCTION_BASE_URL = "https://pulse.nuraemobility.co.in/api"
-PRODUCTION_EMAIL = "admin"
-PRODUCTION_PASSWORD = "Nura@1234$"
+PRODUCTION_URL = "https://pulse.nuraemobility.co.in/api"
+ADMIN_EMAIL = "admin"
+ADMIN_PASSWORD = "Nura@1234$"
 
 class ProductionBulkExportTester:
     def __init__(self):
