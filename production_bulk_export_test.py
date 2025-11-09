@@ -139,7 +139,26 @@ class ProductionBulkExportTester:
         if response.status_code == 200:
             try:
                 leads = response.json()
-                total_leads = len(leads)
+                print(f"🔍 DEBUG: Response type: {type(leads)}")
+                print(f"🔍 DEBUG: Response content: {str(leads)[:200]}...")
+                
+                if isinstance(leads, list):
+                    total_leads = len(leads)
+                elif isinstance(leads, dict):
+                    # Handle case where response is wrapped in an object
+                    if 'leads' in leads:
+                        leads = leads['leads']
+                        total_leads = len(leads)
+                    elif 'data' in leads:
+                        leads = leads['data']
+                        total_leads = len(leads)
+                    else:
+                        # Count might be in the response
+                        total_leads = leads.get('count', 0)
+                        leads = []
+                else:
+                    total_leads = 0
+                    leads = []
                 
                 self.log_test("Count Total Leads", True, 
                             f"✅ Retrieved {total_leads} leads from production database, Duration: {duration:.3f}s")
