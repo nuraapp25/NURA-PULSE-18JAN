@@ -147,11 +147,13 @@ class ProductionBulkExportTester:
                 print(f"📈 Total Leads in Production: {total_leads}")
                 
                 # Sample lead data for analysis
-                if leads:
+                if leads and len(leads) > 0:
                     sample_lead = leads[0]
                     print(f"📋 Sample Lead Structure: {list(sample_lead.keys())}")
                     print(f"🏷️  Sample Lead Status: {sample_lead.get('status', 'Unknown')}")
                     print(f"📅 Sample Lead Date: {sample_lead.get('import_date', 'Unknown')}")
+                else:
+                    print("📋 No sample lead data available")
                 
                 return total_leads
                 
