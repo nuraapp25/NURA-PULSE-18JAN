@@ -117,17 +117,22 @@ class ProductionBulkExportTester:
             
             if response.status_code == 200:
                 leads = response.json()
-                self.total_leads = len(leads)
-                
-                # Sample some lead data for verification
-                sample_leads = leads[:3] if leads else []
-                sample_info = []
-                for lead in sample_leads:
-                    sample_info.append({
-                        "name": lead.get("name", "Unknown"),
-                        "phone": lead.get("phone_number", "Unknown"),
-                        "status": lead.get("status", "Unknown")
-                    })
+                if isinstance(leads, list):
+                    self.total_leads = len(leads)
+                    
+                    # Sample some lead data for verification
+                    sample_leads = leads[:3] if leads else []
+                    sample_info = []
+                    for lead in sample_leads:
+                        if isinstance(lead, dict):
+                            sample_info.append({
+                                "name": lead.get("name", "Unknown"),
+                                "phone": lead.get("phone_number", "Unknown"),
+                                "status": lead.get("status", "Unknown")
+                            })
+                else:
+                    self.total_leads = 0
+                    sample_info = []
                 
                 self.log_test(
                     "Database Count Verification", 
