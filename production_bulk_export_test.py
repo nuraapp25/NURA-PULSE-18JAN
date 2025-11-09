@@ -124,140 +124,215 @@ class ProductionBulkExportTester:
                         f"Login failed with status {response.status_code}", response.text)
             return False
     
-    def test_bulk_export_endpoint(self):
-        """Test 2: Driver Onboarding Bulk Export Endpoint"""
-        print("\n=== Testing Driver Onboarding Bulk Export Endpoint ===")
+    def test_count_total_leads(self):
+        """Test Step 2: Count Total Leads in production database"""
+        print("\n📊 === STEP 2: COUNT TOTAL LEADS ===")
         
-        if not self.token:
-            self.log_test("Bulk Export - Authentication Check", False, "No authentication token available")
-            return False
-        
-        # First, let's check how many leads are in the database
-        print("Checking lead count in production database...")
-        leads_response = self.make_request("GET", "/driver-onboarding/leads", timeout=30)
-        
-        if leads_response and leads_response.status_code == 200:
-            try:
-                leads_data = leads_response.json()
-                if isinstance(leads_data, dict) and 'leads' in leads_data:
-                    sample_leads = leads_data['leads']
-                    self.log_test("Production Database - Sample Leads", True, 
-                                f"Successfully retrieved sample of {len(sample_leads)} leads from production")
-                elif isinstance(leads_data, list):
-                    sample_leads = leads_data
-                    self.log_test("Production Database - Sample Leads", True, 
-                                f"Successfully retrieved sample of {len(sample_leads)} leads from production")
-                else:
-                    self.log_test("Production Database - Sample Leads", False, 
-                                f"Unexpected response format: {type(leads_data)}")
-            except json.JSONDecodeError:
-                self.log_test("Production Database - Sample Leads", False, 
-                            "Invalid JSON response from leads endpoint")
-        else:
-            error_msg = "Network error" if not leads_response else f"Status {leads_response.status_code}"
-            self.log_test("Production Database - Sample Leads", False, 
-                        f"Could not retrieve sample leads: {error_msg}")
-        
-        # Test the bulk export endpoint with extended timeout (5 minutes)
-        print("Calling POST /api/driver-onboarding/bulk-export (timeout: 5 minutes)...")
-        response = self.make_request("POST", "/driver-onboarding/bulk-export", timeout=300)
+        response, duration = self.make_request_with_timing("GET", "/driver-onboarding/leads")
         
         if not response:
-            self.log_test("Bulk Export - Network Request", False, "Network error or timeout during bulk export (5 min timeout)")
-            
-            # Try with shorter timeout to see if it's a timeout issue
-            print("Retrying with 30 second timeout to diagnose...")
-            quick_response = self.make_request("POST", "/driver-onboarding/bulk-export", timeout=30)
-            if quick_response:
-                if quick_response.status_code == 503:
-                    self.log_test("Bulk Export - Service Availability", False, 
-                                "Service returns 503 - Server overloaded or export process exceeds timeout limits")
-                    print("🔍 DIAGNOSIS: The bulk export endpoint is returning HTTP 503 Service Unavailable.")
-                    print("   This typically indicates:")
-                    print("   • Server timeout due to large dataset export (30,000+ leads)")
-                    print("   • Server resource exhaustion during export processing")
-                    print("   • Proxy/gateway timeout limits exceeded")
-                    print("   • Backend service temporarily overloaded")
-                else:
-                    self.log_test("Bulk Export - Service Response", False, 
-                                f"Service responds with {quick_response.status_code} but times out on full export")
-            return False
+            self.log_test("Count Total Leads", False, f"Network/timeout error after {duration:.3f}s")
+            return 0
         
-        # Check status code
-        if response.status_code == 503:
-            self.log_test("Bulk Export - HTTP Status", False, 
-                        "HTTP 503 Service Unavailable - Export process likely exceeds server timeout limits for large dataset")
-            
-            print("🔍 DETAILED DIAGNOSIS:")
-            print("   • Production database likely contains large dataset (30,000+ leads)")
-            print("   • Bulk export process exceeds server/proxy timeout configurations")
-            print("   • Server resources may be insufficient for large Excel generation")
-            print("   • Recommendation: Increase server timeouts or implement chunked export")
-            return False
-        elif response.status_code != 200:
-            self.log_test("Bulk Export - HTTP Status", False, 
-                        f"Expected HTTP 200, got {response.status_code}", response.text)
-            return False
+        print(f"📊 HTTP Status Code: {response.status_code}")
         
-        self.log_test("Bulk Export - HTTP Status", True, "HTTP 200 response received")
-        
-        # Check Content-Type header
-        content_type = response.headers.get('Content-Type', '')
-        expected_content_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        
-        if expected_content_type in content_type:
-            self.log_test("Bulk Export - Content Type", True, 
-                        f"Correct Content-Type: {content_type}")
-        else:
-            self.log_test("Bulk Export - Content Type", False, 
-                        f"Expected Excel content type, got: {content_type}")
-            return False
-        
-        # Check Content-Disposition header
-        content_disposition = response.headers.get('Content-Disposition', '')
-        if 'attachment' in content_disposition and 'filename=' in content_disposition:
-            filename = content_disposition.split('filename=')[1].strip('"')
-            self.log_test("Bulk Export - Content Disposition", True, 
-                        f"File download header present: {filename}")
-        else:
-            self.log_test("Bulk Export - Content Disposition", False, 
-                        f"Missing or invalid Content-Disposition header: {content_disposition}")
-        
-        # Check X-Total-Leads header
-        total_leads_header = response.headers.get('X-Total-Leads', '')
-        if total_leads_header:
+        if response.status_code == 200:
             try:
-                total_leads = int(total_leads_header)
-                self.log_test("Bulk Export - X-Total-Leads Header", True, 
-                            f"X-Total-Leads header present: {total_leads} leads")
+                leads = response.json()
+                total_leads = len(leads)
                 
-                # Report the total number of leads in production database
-                print(f"\n🔢 PRODUCTION DATABASE LEAD COUNT: {total_leads}")
+                self.log_test("Count Total Leads", True, 
+                            f"✅ Retrieved {total_leads} leads from production database, Duration: {duration:.3f}s")
                 
-                # Check if it's approximately 30,000 as user mentioned
-                if 25000 <= total_leads <= 35000:
-                    self.log_test("Bulk Export - Lead Count Verification", True, 
-                                f"Lead count ({total_leads}) is within expected range (25,000-35,000)")
-                else:
-                    self.log_test("Bulk Export - Lead Count Verification", False, 
-                                f"Lead count ({total_leads}) is outside expected range (25,000-35,000)")
-            except ValueError:
-                self.log_test("Bulk Export - X-Total-Leads Header", False, 
-                            f"Invalid X-Total-Leads header value: {total_leads_header}")
-                total_leads = None
+                print(f"📈 Total Leads in Production: {total_leads}")
+                
+                # Sample lead data for analysis
+                if leads:
+                    sample_lead = leads[0]
+                    print(f"📋 Sample Lead Structure: {list(sample_lead.keys())}")
+                    print(f"🏷️  Sample Lead Status: {sample_lead.get('status', 'Unknown')}")
+                    print(f"📅 Sample Lead Date: {sample_lead.get('import_date', 'Unknown')}")
+                
+                return total_leads
+                
+            except json.JSONDecodeError:
+                self.log_test("Count Total Leads", False, "Invalid JSON response", response.text)
+                return 0
         else:
-            self.log_test("Bulk Export - X-Total-Leads Header", False, 
-                        "X-Total-Leads header missing")
-            total_leads = None
+            self.log_test("Count Total Leads", False, 
+                        f"❌ Failed to get leads - Status: {response.status_code}, Duration: {duration:.3f}s", 
+                        response.text)
+            return 0
+
+    def test_bulk_export_endpoint(self):
+        """Test Step 3: Test Bulk Export Endpoint with comprehensive analysis"""
+        print("\n📦 === STEP 3: TEST BULK EXPORT ENDPOINT ===")
         
-        # Check file size and content
-        content_length = len(response.content)
-        if content_length > 0:
-            self.log_test("Bulk Export - File Download", True, 
-                        f"Excel file downloaded successfully ({content_length:,} bytes)")
+        print("🚀 Starting bulk export request...")
+        print(f"🎯 Target URL: {self.base_url}/driver-onboarding/bulk-export")
+        print(f"⏰ Timeout set to: 300 seconds")
+        
+        # Record start time for precise measurement
+        start_timestamp = datetime.now()
+        print(f"🕐 Start Time: {start_timestamp.strftime('%Y-%m-%d %H:%M:%S.%f')}")
+        
+        response, duration = self.make_request_with_timing("POST", "/driver-onboarding/bulk-export", timeout=300)
+        
+        end_timestamp = datetime.now()
+        print(f"🕐 End Time: {end_timestamp.strftime('%Y-%m-%d %H:%M:%S.%f')}")
+        print(f"⏱️  EXACT DURATION: {duration:.3f} seconds")
+        
+        # Analyze response
+        if not response:
+            self.log_test("Bulk Export Endpoint", False, 
+                        f"❌ TIMEOUT/ERROR - Failed after {duration:.3f} seconds")
+            
+            print(f"🚨 BULK EXPORT FAILURE ANALYSIS:")
+            print(f"   ⏰ Timeout Duration: {duration:.3f} seconds")
+            print(f"   🔍 Failure Type: Network timeout or connection error")
+            print(f"   📊 Expected Response: Excel file download")
+            print(f"   💥 Actual Result: Request timeout/failure")
+            
+            return {
+                "status_code": "TIMEOUT",
+                "duration": duration,
+                "error_type": "Network timeout or connection error",
+                "success": False
+            }
+        
+        # Response received - analyze details
+        print(f"📊 HTTP Status Code: {response.status_code}")
+        print(f"📋 Response Headers:")
+        for header, value in response.headers.items():
+            print(f"   {header}: {value}")
+        
+        # Analyze response based on status code
+        analysis_result = {
+            "status_code": response.status_code,
+            "duration": duration,
+            "headers": dict(response.headers),
+            "success": False
+        }
+        
+        if response.status_code == 200:
+            # Success case
+            content_type = response.headers.get('Content-Type', '')
+            content_length = response.headers.get('Content-Length', 'Unknown')
+            content_disposition = response.headers.get('Content-Disposition', '')
+            
+            if 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' in content_type:
+                file_size_mb = len(response.content) / (1024 * 1024) if response.content else 0
+                
+                self.log_test("Bulk Export Endpoint", True, 
+                            f"✅ SUCCESS - Excel file received, Size: {file_size_mb:.2f}MB, Duration: {duration:.3f}s")
+                
+                print(f"🎉 BULK EXPORT SUCCESS:")
+                print(f"   📊 Status Code: 200 OK")
+                print(f"   📄 Content-Type: {content_type}")
+                print(f"   📏 Content-Length: {content_length}")
+                print(f"   📎 Content-Disposition: {content_disposition}")
+                print(f"   💾 File Size: {file_size_mb:.2f} MB")
+                print(f"   ⏱️  Response Time: {duration:.3f} seconds")
+                
+                analysis_result["success"] = True
+                analysis_result["file_size_mb"] = file_size_mb
+                analysis_result["content_type"] = content_type
+                
+            else:
+                # 200 but wrong content type
+                try:
+                    error_data = response.json()
+                    self.log_test("Bulk Export Endpoint", False, 
+                                f"❌ 200 but wrong content type - Duration: {duration:.3f}s", error_data)
+                    analysis_result["error_data"] = error_data
+                except:
+                    self.log_test("Bulk Export Endpoint", False, 
+                                f"❌ 200 but unexpected response - Duration: {duration:.3f}s", response.text[:500])
+                    analysis_result["error_text"] = response.text[:500]
+        
+        elif response.status_code == 503:
+            # Service Unavailable
+            try:
+                error_data = response.json()
+                error_message = error_data.get('detail', 'Service temporarily unavailable')
+            except:
+                error_message = response.text
+            
+            self.log_test("Bulk Export Endpoint", False, 
+                        f"❌ 503 SERVICE UNAVAILABLE - Duration: {duration:.3f}s", error_message)
+            
+            print(f"🚨 503 SERVICE UNAVAILABLE ANALYSIS:")
+            print(f"   ⏰ Response Time: {duration:.3f} seconds")
+            print(f"   🔍 Error Type: Service temporarily unavailable")
+            print(f"   💬 Error Message: {error_message}")
+            print(f"   🎯 Root Cause: Server resource exhaustion or overload")
+            print(f"   🔧 Likely Issue: Production server cannot handle large dataset export")
+            
+            analysis_result["error_message"] = error_message
+            analysis_result["error_type"] = "Service Unavailable - Resource exhaustion"
+        
+        elif response.status_code == 504:
+            # Gateway Timeout
+            try:
+                error_data = response.json()
+                error_message = error_data.get('detail', 'Gateway timeout')
+            except:
+                error_message = response.text
+            
+            self.log_test("Bulk Export Endpoint", False, 
+                        f"❌ 504 GATEWAY TIMEOUT - Duration: {duration:.3f}s", error_message)
+            
+            print(f"🚨 504 GATEWAY TIMEOUT ANALYSIS:")
+            print(f"   ⏰ Response Time: {duration:.3f} seconds")
+            print(f"   🔍 Error Type: Gateway timeout")
+            print(f"   💬 Error Message: {error_message}")
+            print(f"   🎯 Root Cause: Upstream server timeout")
+            print(f"   🔧 Likely Issue: Backend processing time exceeds gateway timeout")
+            
+            analysis_result["error_message"] = error_message
+            analysis_result["error_type"] = "Gateway Timeout - Processing time exceeded"
+        
+        elif response.status_code == 500:
+            # Internal Server Error
+            try:
+                error_data = response.json()
+                error_message = error_data.get('detail', 'Internal server error')
+            except:
+                error_message = response.text
+            
+            self.log_test("Bulk Export Endpoint", False, 
+                        f"❌ 500 INTERNAL SERVER ERROR - Duration: {duration:.3f}s", error_message)
+            
+            print(f"🚨 500 INTERNAL SERVER ERROR ANALYSIS:")
+            print(f"   ⏰ Response Time: {duration:.3f} seconds")
+            print(f"   🔍 Error Type: Internal server error")
+            print(f"   💬 Error Message: {error_message}")
+            print(f"   🎯 Root Cause: Application error or memory issue")
+            print(f"   🔧 Likely Issue: Memory exhaustion during Excel generation")
+            
+            analysis_result["error_message"] = error_message
+            analysis_result["error_type"] = "Internal Server Error - Application/memory issue"
+        
         else:
-            self.log_test("Bulk Export - File Download", False, "Empty file downloaded")
-            return False
+            # Other status codes
+            try:
+                error_data = response.json()
+                error_message = error_data.get('detail', f'HTTP {response.status_code}')
+            except:
+                error_message = response.text
+            
+            self.log_test("Bulk Export Endpoint", False, 
+                        f"❌ HTTP {response.status_code} - Duration: {duration:.3f}s", error_message)
+            
+            print(f"🚨 HTTP {response.status_code} ERROR ANALYSIS:")
+            print(f"   ⏰ Response Time: {duration:.3f} seconds")
+            print(f"   🔍 Error Type: HTTP {response.status_code}")
+            print(f"   💬 Error Message: {error_message}")
+            
+            analysis_result["error_message"] = error_message
+            analysis_result["error_type"] = f"HTTP {response.status_code}"
+        
+        return analysis_result
         
         # Try to open and verify Excel file
         try:
