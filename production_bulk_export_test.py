@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 """
-Production Environment Testing for Driver Onboarding Bulk Export
-Tests the specific production endpoint at https://pulse.nuraemobility.co.in
+Production Bulk Export Failure Analysis
+Comprehensive diagnosis of bulk export failure in production environment
+URL: https://pulse.nuraemobility.co.in
+Credentials: admin / Nura@1234$
+
+OBJECTIVE: Determine the EXACT reason why bulk export is failing
 """
 
 import requests
@@ -9,6 +13,7 @@ import json
 import sys
 import pandas as pd
 import io
+import time
 from datetime import datetime
 
 # Production Configuration
