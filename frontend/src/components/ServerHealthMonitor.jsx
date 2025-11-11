@@ -74,23 +74,7 @@ const ServerHealthMonitor = () => {
     return () => clearInterval(interval);
   }, [checkServerHealth]);
 
-  // Track awake duration
-  useEffect(() => {
-    if (serverStatus === 'online' && serverWakeTime) {
-      const interval = setInterval(() => {
-        setAwakeDuration((prev) => prev + 1);
-      }, 1000);
-      
-      return () => clearInterval(interval);
-    }
-  }, [serverStatus, serverWakeTime]);
-
-  // Format time
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
+  // No awake duration tracking needed
 
   if (serverStatus === 'checking') {
     return null; // Don't show anything during initial check
