@@ -1423,6 +1423,140 @@ async def bulk_export_leads(current_user: User = Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=f"Bulk export failed: {str(e)}")
 
 
+@api_router.post("/driver-onboarding/batch-export-zip")
+async def batch_export_leads_as_zip(current_user: User = Depends(get_current_user)):
+    """
+    Export ALL leads in batches as a ZIP file containing multiple Excel files
+    Each Excel file contains up to 1000 leads
+    Designed to work within production memory constraints
+    """
+    try:
+        import pandas as pd
+        from datetime import datetime
+        import io
+        import zipfile
+        from openpyxl.utils import get_column_letter
+        
+        logger.info(f"🔄 Starting batched ZIP export for user {current_user.email}")
+        
+        # Fetch all leads from database
+        leads_collection = db['driver_leads']
+        
+        # Count total leads
+        total_count = await leads_collection.count_documents({})
+        logger.info(f"📊 Total leads in database: {total_count}")
+        
+        if total_count == 0:
+            raise HTTPException(status_code=404, detail="No leads found to export")
+        
+        # Define batch size (1000 leads per Excel file)
+        BATCH_SIZE = 1000
+        total_batches = (total_count + BATCH_SIZE - 1) // BATCH_SIZE
+        
+        logger.info(f"📦 Creating {total_batches} Excel files with {BATCH_SIZE} leads each")
+        
+        # Define preferred column order
+        preferred_columns = [
+            'id', 'name', 'phone_number', 'email', 'vehicle', 
+            'stage', 'status', 'source', 'remarks',
+            'current_location', 'experience', 'assigned_telecaller',
+            'last_called', 'callback_date', 'assigned_date',
+            'import_date', 'created_at', 'updated_at'
+        ]
+        
+        # Create ZIP file in memory
+        zip_buffer = io.BytesIO()
+        
+        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+            # Process leads in batches
+            for batch_num in range(total_batches):
+                skip = batch_num * BATCH_SIZE
+                
+                # Fetch batch
+                batch_leads = await leads_collection.find(
+                    {}, 
+                    {"_id": 0}
+                ).skip(skip).limit(BATCH_SIZE).to_list(length=BATCH_SIZE)
+                
+                actual_batch_size = len(batch_leads)
+                logger.info(f"📦 Processing batch {batch_num + 1}/{total_batches} ({actual_batch_size} leads)")
+                
+                # Convert to DataFrame
+                df = pd.DataFrame(batch_leads)
+                
+                # Reorder columns
+                existing_preferred = [col for col in preferred_columns if col in df.columns]
+                other_columns = [col for col in df.columns if col not in preferred_columns]
+                column_order = existing_preferred + other_columns
+                df = df[column_order]
+                
+                # Create Excel file in memory for this batch
+                excel_buffer = io.BytesIO()
+                
+                with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
+                    df.to_excel(writer, index=False, sheet_name='Driver Leads')
+                    
+                    # Auto-adjust column widths (only for small batches to save time)
+                    if actual_batch_size <= 1000:
+                        worksheet = writer.sheets['Driver Leads']
+                        for idx, col in enumerate(df.columns, 1):
+                            try:
+                                max_length = min(
+                                    df[col].astype(str).apply(len).max(),
+                                    len(col),
+                                    50
+                                )
+                                adjusted_width = max_length + 2
+                                col_letter = get_column_letter(idx)
+                                worksheet.column_dimensions[col_letter].width = adjusted_width
+                            except Exception:
+                                continue
+                
+                # Add Excel file to ZIP with proper naming
+                excel_buffer.seek(0)
+                start_row = skip + 1
+                end_row = skip + actual_batch_size
+                filename = f"driver_leads_batch_{batch_num + 1}_rows_{start_row}-{end_row}.xlsx"
+                
+                zip_file.writestr(filename, excel_buffer.getvalue())
+                
+                logger.info(f"✅ Added {filename} to ZIP ({actual_batch_size} leads)")
+        
+        # Prepare ZIP for download
+        zip_buffer.seek(0)
+        zip_size_mb = len(zip_buffer.getvalue()) / (1024 * 1024)
+        
+        logger.info(f"📦 ZIP file created: {zip_size_mb:.2f} MB with {total_batches} Excel files")
+        logger.info(f"✅ Batched export complete: {total_count} leads in {total_batches} files")
+        
+        # Generate filename with timestamp
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        zip_filename = f"driver_leads_batched_{timestamp}.zip"
+        
+        # Create generator for streaming
+        def iterfile():
+            yield from zip_buffer
+        
+        return StreamingResponse(
+            iterfile(),
+            media_type="application/zip",
+            headers={
+                "Content-Disposition": f'attachment; filename="{zip_filename}"',
+                "X-Total-Leads": str(total_count),
+                "X-Total-Files": str(total_batches),
+                "X-Batch-Size": str(BATCH_SIZE)
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Batched ZIP export failed: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Batched export failed: {str(e)}")
+
+
 @api_router.post("/driver-onboarding/bulk-import")
 async def bulk_import_leads(
     file: UploadFile = File(...),
