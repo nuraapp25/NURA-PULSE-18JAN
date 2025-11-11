@@ -2407,9 +2407,12 @@ async def get_status_summary(
     # Populate counts from aggregation results
     total_leads = 0
     for result in aggregated_results:
-        stage = result['_id'].get('stage', 'S1')
+        stage_full = result['_id'].get('stage', 'S1')
         status = result['_id'].get('status', 'New')
         count = result['count']
+        
+        # Extract stage key (S1, S2, S3, S4) from full stage name (e.g., "S1 - Filtering")
+        stage = stage_full.split(' ')[0] if stage_full else 'S1'
         
         if stage in summary and status in summary[stage]:
             summary[stage][status] = count
