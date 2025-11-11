@@ -131,8 +131,8 @@ const ServerHealthMonitor = () => {
 
   if (serverStatus === 'offline') {
     return (
-      <div className="fixed top-4 right-4 z-50 max-w-md">
-        <Alert className={`${isNearShutdown ? 'bg-red-500' : 'bg-orange-500'} text-white border-0 shadow-2xl`}>
+      <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 max-w-md">
+        <Alert className="bg-orange-500 text-white border-0 shadow-2xl">
           <AlertCircle className="h-5 w-5 text-white" />
           <AlertDescription className="ml-2">
             <div className="space-y-2">
@@ -141,12 +141,11 @@ const ServerHealthMonitor = () => {
               </div>
               
               <div className="text-sm">
-                The preview server has gone to sleep due to inactivity.
+                The preview server has gone to sleep due to inactivity. Make any request to wake it up.
               </div>
               
-              <div className="flex items-center space-x-2 text-sm">
-                <Clock className="w-4 h-4" />
-                <span>Offline for: {formatTime(offlineDuration)}</span>
+              <div className="text-xs opacity-90 mt-2">
+                💡 Tip: For 24/7 availability, deploy your app (costs 50 credits/month)
               </div>
             </div>
           </AlertDescription>
