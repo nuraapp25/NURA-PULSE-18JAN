@@ -86,16 +86,16 @@ const ServerHealthMonitor = () => {
     return () => clearInterval(interval);
   }, [checkServerHealth]);
 
-  // Track offline duration
+  // Track awake duration
   useEffect(() => {
-    if (serverStatus === 'offline') {
+    if (serverStatus === 'online' && serverWakeTime) {
       const interval = setInterval(() => {
-        setOfflineDuration((prev) => prev + 1);
+        setAwakeDuration((prev) => prev + 1);
       }, 1000);
       
       return () => clearInterval(interval);
     }
-  }, [serverStatus]);
+  }, [serverStatus, serverWakeTime]);
 
   // Format time
   const formatTime = (seconds) => {
