@@ -30,13 +30,6 @@ const ServerHealthMonitor = () => {
         const wasOffline = serverStatus === 'offline';
         setServerStatus('online');
         setLastCheckTime(new Date());
-        setIsWakingUp(false);
-        
-        // Set server wake time when it comes online from offline state
-        if (wasOffline || !serverWakeTime) {
-          setServerWakeTime(new Date());
-          setAwakeDuration(0);
-        }
         
         // Hide notification after 3 seconds if server comes back online
         if (wasOffline) {
