@@ -1502,6 +1502,67 @@ const DriverOnboardingPage = () => {
     }
   };
   
+  // Handle Batched Export as ZIP
+  const handleBatchExportZip = async () => {
+    setBatchExporting(true);
+    try {
+      const token = localStorage.getItem("token");
+      toast.info("📦 Preparing batched export... Creating ZIP file with multiple Excel files (1000 leads each).");
+      
+      const response = await axios.post(
+        `${API}/driver-onboarding/batch-export-zip`,
+        {},
+        {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+          },
+          responseType: 'blob',
+          timeout: 300000, // 5 minutes timeout
+          onDownloadProgress: (progressEvent) => {
+            if (progressEvent.total) {
+              const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+              console.log(`Download progress: ${percentCompleted}%`);
+            }
+          }
+        }
+      );
+
+      // Get total leads and files from headers
+      const totalLeads = response.headers['x-total-leads'] || 'unknown';
+      const totalFiles = response.headers['x-total-files'] || 'unknown';
+      const batchSize = response.headers['x-batch-size'] || '1000';
+
+      // Get filename from Content-Disposition header or use default
+      const contentDisposition = response.headers['content-disposition'];
+      let filename = 'driver leads batched export.zip';
+      
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1].replace(/['"]/g, '');
+        }
+      }
+
+      // Create download link
+      const blob = new Blob([response.data], { type: 'application/zip' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      toast.success(`✅ Successfully exported ${totalLeads} leads in ${totalFiles} Excel files (${batchSize} leads per file)! ZIP file downloaded.`);
+    } catch (error) {
+      console.error("Batched export error:", error);
+      toast.error(error.response?.data?.detail || "Failed to export leads in batches. Please try again.");
+    } finally {
+      setBatchExporting(false);
+    }
+  };
+  
   // Parse Excel file and show column mapping
   const handleFileUpload = async (file) => {
     if (!file) return;
