@@ -97,7 +97,7 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen flex bg-gray-50 dark:bg-gray-900">
+    <div className="h-screen flex bg-gray-50 dark:bg-gray-900 overflow-hidden">
       {/* Sidebar */}
       <aside className={`
         fixed lg:static inset-y-0 left-0 z-50
@@ -106,7 +106,7 @@ const Dashboard = () => {
         transform transition-all duration-300 ease-in-out
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
-        <div className="h-full flex flex-col overflow-hidden">
+        <div className="h-full flex flex-col">
           {/* Logo & Collapse Button */}
           <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
             <div className="flex items-center justify-between">
