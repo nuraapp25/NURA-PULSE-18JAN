@@ -388,6 +388,7 @@ const DriverOnboardingPage = () => {
 
   useEffect(() => {
     fetchLeads();
+    fetchStatusSummary();
     fetchTelecallers();
   }, []);
   
