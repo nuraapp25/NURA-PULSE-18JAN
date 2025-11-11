@@ -8,7 +8,7 @@ import json
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://telecaller-desk.preview.emergentagent.com/api"
+BASE_URL = "https://telecaller-hub-4.preview.emergentagent.com/api"
 MASTER_ADMIN_EMAIL = "admin"
 MASTER_ADMIN_PASSWORD = "Nura@1234$"
 CSV_FILE_PATH = "/tmp/Book2.csv"

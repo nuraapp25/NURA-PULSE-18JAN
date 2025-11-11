@@ -1,83 +1,75 @@
 <analysis>
-The AI engineer's work spanned multiple modules of the Nura Pulse application, primarily driven by user feedback and bug reports. Initially, the focus was on concluding QR Code Manager fixes, particularly validating analytics and locking the module from further changes. Subsequent tasks involved critical bug fixes in Driver Onboarding (phone number parsing logic, addressing / prefixes and extraneous '0's), and extensive feature development and fixes in Telecaller's Desk (adding calendar/search, dynamic summary cards, clickable filters). A significant portion addressed Hotspot Planning, involving switching from OpenStreetMap to Google Maps (then back to OpenStreetMap due to API issues), refining map visualization (hotspot count, marker colors/sizes, tooltips), and implementing detailed CSV reports with geocoded locality data. Challenges included MongoDB  serialization, Google Maps API key loading, and refining geocoding granularity. The engineer also resolved a missing Nov 2025 folder in Payment Reconciliation and fixed dropdown scrolling in driver details. The work concluded with investigating platform display and Google Sheets sync in Payment Reconciliation.
+The AI engineer's work involved an iterative, problem-solving approach across various Nura Pulse application modules. Initial efforts focused on Payment Reconciliation, addressing critical frontend display issues (Platform column, dropdown scrolling), backend data consistency (Nov 2025 folder), and Google Sheets integration, including resolving complex AppScript syntax challenges. A significant portion involved refining Driver Onboarding, fixing persistent bulk export issues (Excel column width, filename, infrastructure timeouts), implementing a sophisticated date-wise lead assignment system, and dynamically fetching telecallers from user management. Furthermore, a server health monitor component was introduced to provide real-time server status feedback. The process highlighted the distinction between application code fixes and production infrastructure limitations, leading to the development of a batched export feature. The work concludes with diagnosing a dashboard update issue in Driver Onboarding.
 </analysis>
 
 <product_requirements>
-The Nura Pulse application is a role-based business dashboard for managing driver leads, telecaller operations, hotspot analysis, battery consumption, and QR Code campaigns, aimed at efficient management and tracking with robust analytics.
+The Nura Pulse application is a comprehensive, role-based business dashboard designed for efficient management and robust analytics across various operational areas. These include driver lead management, telecaller operations, hotspot analysis, battery consumption tracking, and QR Code campaign management.
 
-**Implemented Features**:
-*   **QR Code Manager (New)**: Generates single/batch QR codes with dynamic URLs and OS-specific redirection. Includes real-time analytics (scan recording: date, time, location, IP). Supports campaign management, bulk operations, UTMs, custom colors, PUBLISH/UNPUBLISH, and delete functionality. Recent fixes ensure correct field name mapping for batch creation and scanning, dynamic backend URL generation, proper HTTP 302 redirects for scans, and accurate analytics data display. The module is now locked against further modifications.
-*   **Driver Onboarding**: Manages leads with improved bulk import, column mapping, and duplicate detection. Recently, phone number processing was fixed to correctly handle / prefixes (only removing if >10 digits) and prevent trailing zeros from being added, ensuring 10-digit Indian numbers are preserved. Bulk export functionality was also fixed by adding the  prefix to the frontend request.
-*   **Telecaller's Desk**: Mobile-friendly interface for telecallers with  and call tracking. Enhanced with a calendar for date-based lead filtering, a responsive search bar (name/phone), dynamic summary cards (Calls Done Today, Calls Pending, Call Backs Scheduled) that update on action and are clickable as filters, and an Show All Assigned Leads button. Leads now correctly filter by .
-*   **Hotspot Planning**: Analyzes CSV data for optimal driver hotspot locations. Initially attempted Google Maps integration but reverted to OpenStreetMap (Leaflet) due to API key issues. Now displays all pickup points (purple dots, 15px, with ride detail tooltips on click), 10 optimal hotspots (smaller blue circles, with hover tooltips showing covered rides), and 1km radius green transparent circles (with hover tooltips). Provides a Download Hotspots CSV report with Assigned Hotspot, Assigned Hotspot Lat Long, Distance from Hotspot, Pickup Locality, and Drop Locality (geocoded to proper area names) for each ride, alongside a Download Report button for JSON. Login functionality was also restored.
-*   **Payment Reconciliation**: Manages payment data. Fixed the issue of the Nov 2025 folder not appearing in production by creating its entry in the production database and corresponding filesystem directory. Driver details dropdowns now correctly scroll with mouse wheel/touchpad.
+**Implemented Features include:**
+*   **QR Code Manager (New)**: Facilitates dynamic QR code generation, campaign management, and real-time analytics. Recent fixes ensure correct field mapping, dynamic backend URLs, and accurate analytics. This module is currently locked against further changes.
+*   **Driver Onboarding**: Manages driver leads with enhanced bulk import/export capabilities, including corrected phone number parsing, accurate Excel file generation (fixed column width, filename format), and robust handling of large datasets (batched export). A new date-wise lead assignment system allows telecallers to view leads specific to a date, incorporating Unassigned lead filtering and a simplified assignment dialog.
+*   **Telecaller's Desk**: A mobile-friendly interface for telecallers, now featuring calendar-based lead filtering, dynamic summary cards, and clickable filters. It now intelligently displays leads assigned for a specific date alongside scheduled callbacks and pending leads from previous days.
+*   **Hotspot Planning**: Analyzes CSV data to identify optimal driver hotspot locations. It utilizes OpenStreetMap for visualization, displaying pickup points, optimal hotspots with radii, and tooltips. It provides detailed CSV reports incorporating geocoded locality data.
+*   **Payment Reconciliation**: Manages payment data with improved dropdown scrolling functionality (wheel/touchpad support), ensures the correct display of the Platform column in the table, and integrates with Google Sheets via a robust, custom Apps Script. Frontend functionality to create new monthly folders was also added, alongside a fix for database inconsistencies to ensure  folder visibility.
+*   **Server Health Monitor**: A new frontend component centrally positioned to provide real-time server online/offline status, particularly useful for preview environments with inactivity-based sleep.
 </product_requirements>
 
 <key_technical_concepts>
 -   **Full-stack Development**: React.js (frontend), FastAPI (backend), MongoDB (database).
--   **Data Handling**: Pydantic for data validation, Pandas for CSV processing, MongoDB for storage.
--   **API Design**: RESTful APIs with  prefix, dynamic URL generation.
--   **Deployment**: Kubernetes ingress rules, Supervisor for service control, environment variable management.
--   **Mapping**: Leaflet (OpenStreetMap) with React-Leaflet, Google Maps API (briefly attempted).
--   **Geocoding**: Google Maps Geocoding API for locality resolution.
--   **UI/UX**: Shadcn/ui for components, responsiveness.
+-   **Data Handling**: Pydantic, Pandas,  (Excel), file streaming.
+-   **API Design**: RESTful APIs,  prefix, environment variable management.
+-   **Deployment**: Kubernetes ingress rules, Supervisor, infrastructure timeouts.
+-   **Mapping**: Leaflet (OpenStreetMap).
+-   **Geocoding**: Google Maps Geocoding API.
+-   **UI/UX**: Shadcn/ui, custom scrolling, visual feedback.
+-   **Google Apps Script**: For Google Sheets integration and data synchronization.
 </key_technical_concepts>
 
 <code_architecture>
-The application follows a full-stack architecture with a React frontend and a FastAPI backend, utilizing MongoDB as the database.
+The application utilizes a full-stack architecture comprising a React frontend, a FastAPI backend, and MongoDB for data persistence.
 
 
 
--   ****:
-    -   **Summary**: The core FastAPI application handling API routes, database interactions, and business logic.
-    -   **Changes**:
-        -   **QR Code Management**:  Pydantic model field names (, etc.) aligned with frontend. Duplicate  removed.
-        -   **QR Analytics**: Updated  to correctly fetch landing page URLs using new field names.
-        -   **Driver Onboarding**: Modified phone number processing in bulk import to correctly handle / prefixes (extracting last 10 digits if >10 chars) and prevent  converting to .  added during bulk assignment. Fixed bulk export endpoint by adding  prefix.
-        -   **Hotspot Planning**: Corrected  in  endpoint. Modified  to pass , ,  to . Updated  to store  and original CSV data. Changed  call from  to  hotspots. Fixed  endpoint to handle MongoDB  serialization errors.
-        -   **Lead Assignment**: Added  to leads when  is called.
--   ****:
-    -   **Summary**: Contains the core logic for hotspot optimization and geocoding.
-    -   **Changes**:
-        -   Modified  to return , , , , .
-        -   Added  helper function for geocoding coordinates to locality names.
-        -   Updated  to use  for  and .
-        -   Modified  to retrieve  dynamically from  to resolve environment loading issues.
-        -   Changed  parameter in  from 5 to 10 for determining the number of hotspots.
-        -   Refined  to extract proper, less granular locality names (e.g., Anna Nagar instead of AD Block).
--   ****:
-    -   **Summary**: Frontend component for creating and managing QR codes.
-    -   **Changes**: Ensured  sends correct field names (, etc.) to match backend. Module is now marked as NO MODIFICATIONS.
--   ****:
-    -   **Summary**: Frontend component for managing driver leads.
-    -   **Changes**: Fixed  function to correctly use the  prefix for the backend endpoint, resolving production issues.
--   ****:
-    -   **Summary**: Mobile-friendly interface for telecallers.
-    -   **Changes**: Added  and  components for date filtering and searching. Implemented logic to update Calls Done Today immediately on action. Added Call Backs Scheduled summary card and adjusted  logic. Made summary cards clickable as filters, added  state, and a Show All Assigned Leads button. Ensured summary cards remain visible even when no leads match a filter. Updated filtering to use  and clarified UI text.
--   ****:
-    -   **Summary**: Frontend for hotspot analysis and map visualization.
-    -   **Changes**: Installed . Initially switched to Google Maps (via  then back). Reverted to Leaflet (OpenStreetMap) due to Google Maps API issues. Displayed all pickup points as purple dots (15px) with ride detail tooltips. Displayed 10 optimal hotspots as smaller blue circles with hover tooltips, and 1km radius green transparent circles with hover tooltips. Renamed Download Report button to Download Json, and added a new Download Hotspots button for CSV export. Updated  to fetch detailed report including new locality columns. Updated tooltip content to show .
--   ****:
-    -   **Summary**: Frontend for payment data reconciliation.
-    -   **Changes**: Modified dropdown components for driver and vehicle selection ( or ) to enable proper mouse wheel/touchpad scrolling.
+**Key Files and Changes:**
+*   ****:
+    *   **Summary**: The central FastAPI application managing API routes and core business logic.
+    *   **Changes**: Throughout the trajectory, this file received numerous updates. It was modified to handle  serialization for Hotspot Planning, correctly process phone numbers and  in Driver Onboarding, and ensure  field is saved for Payment Reconciliation. New endpoints were added for  lead management and a  for large datasets using file streaming. A  endpoint was implemented for server status monitoring.
+*   ****:
+    *   **Summary**: The main React component responsible for global application structure and routing.
+    *   **Changes**: Integrated the  component to display real-time server status, initially in the top-right, then centered at the top as per user request.
+*   ****:
+    *   **Summary**: Frontend component for managing driver leads, including import, export, and assignment.
+    *   **Changes**: Significant modifications include fixes for bulk export (correcting Excel column width calculation, accurate filename extraction, and handling large exports), implementing a Download all leads in batches button, and redesigning the lead assignment dialog. The assignment logic was updated for date-wise visibility, including an Unassigned filter option and removing cumbersome calendar views. Telecaller lists are now fetched from user management.
+*   ****:
+    *   **Summary**: The mobile-optimized interface for telecallers to manage assigned leads.
+    *   **Changes**: Enhanced filtering logic to show leads for a selected date, include scheduled callbacks, and display a Pending from Previous Days section. Dynamic summary cards were also made clickable.
+*   ****:
+    *   **Summary**: Frontend component for payment data reconciliation.
+    *   **Changes**: Addressed dropdown scrolling issues by applying appropriate CSS and event handling. Ensured the Platform column is correctly displayed in the table by fixing its mapping from the backend response. A UI button and associated logic for creating new monthly folders were added.
+*   ****:
+    *   **Summary**: A new React component created to monitor and display the backend server's health status.
+    *   **Changes**: Designed to poll the backend  endpoint. Initially included shutdown timers and wake-up buttons, which were later removed to simplify the UI based on user feedback. Its display was moved to the top-center of the page.
+*   ** (and related  files)**:
+    *   **Summary**: Various iterations of Google Apps Script code for syncing payment reconciliation data to Google Sheets.
+    *   **Changes**: Multiple versions were created to overcome syntax errors, character encoding issues, and ensure compatibility with the Google Apps Script environment. The final clean version correctly maps the Platform column into Google Sheets after Driver Name.
 </code_architecture>
 
 <pending_tasks>
 -   Verify if the user's undelete-able campaign folder issue is resolved (user explicitly skipped it).
 -   Ensure all detailed scan analytics (beyond total scans) are consistently displayed on the frontend, especially for UTM URLs and device information (user confirmed it's working well).
--   Further refine the Telecaller's Desk date filter logic and ensure the  field is consistently applied and filtered correctly across all relevant scenarios, as an attempted frontend text update was marked Unable to Complete.
--   Implement the display of the Platform column in the Payment Reconciliation table.
--   Add the Platform column to Google Sheets sync in the Payment Reconciliation feature.
+-   **Address the production environment issues**:  folder visibility, and bulk export timeouts (requires Emergent support intervention).
+-   **Change Ravindran's role** in the production environment to admin or Telecaller+Ops (requires direct database modification or Admin UI access in production).
+-   **Fix Status Summary Dashboard** not updating after new leads import in Driver Onboarding.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary request, the AI engineer was tasked with two issues related to the Payment Reconciliation feature:
-1.  **Platform Display**: The platform entered in the driver details window dropdown is not being shown in the main table below.
-2.  **Google Sheets Sync**: When syncing data to Google Sheets, the Platform column needs to be added between the Vehicle Number and Mode columns.
+Immediately before this summary request, the AI engineer was addressing an issue in the Driver Onboarding application where the Status Summary Dashboard was not correctly updating its figures after new leads were imported.
 
-The engineer's last action was to begin investigating the table structure within the  file to understand how the data is rendered and where the Platform column needs to be inserted for display and subsequent Google Sheets synchronization. This involves examining the  for table rendering logic and potentially the backend  or  for Google Sheets integration.
+The engineer's analysis focused on the  file, specifically examining the  function, which is responsible for processing newly uploaded lead data. The current understanding is that while  successfully calls  to refresh the main list of driver leads displayed in the table, it **does not** subsequently invoke . The  function is specifically designed to retrieve and update the aggregated data shown in the Status Summary Dashboard.
+
+Therefore, the dashboard's failure to reflect recently imported leads is directly attributable to the omission of the  call within the lead import workflow. The last action was the identification of this missing call, setting the stage for its inclusion to ensure dashboard synchronization with imported data.
 </current_work>
 
 <optional_next_step>
-Investigate  to identify the table rendering logic and data mapping for displaying the 'Platform' column.
+Call  after  in the  function within .
 </optional_next_step>

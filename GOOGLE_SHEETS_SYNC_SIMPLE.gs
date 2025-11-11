@@ -1,5 +1,5 @@
 // ========== CONFIGURATION ==========
-var API_BASE_URL = "https://telecaller-desk.preview.emergentagent.com";
+var API_BASE_URL = "https://telecaller-hub-4.preview.emergentagent.com";
 var BEARER_TOKEN = "YOUR_TOKEN_HERE";
 
 // ========== MAIN FUNCTIONS ==========
