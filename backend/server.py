@@ -57,6 +57,25 @@ app = FastAPI()
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
+# Health check endpoint (outside /api prefix for monitoring)
+@app.get("/health")
+async def health_check():
+    """Simple health check endpoint to monitor server status"""
+    return {
+        "status": "healthy",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "service": "Nura Pulse API"
+    }
+
+@api_router.get("/health")
+async def api_health_check():
+    """Health check endpoint under /api prefix"""
+    return {
+        "status": "healthy",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "service": "Nura Pulse API"
+    }
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
