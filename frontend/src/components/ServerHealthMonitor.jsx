@@ -109,21 +109,12 @@ const ServerHealthMonitor = () => {
   }
 
   if (serverStatus === 'online' && !showNotification) {
-    // Show server online with awake time - centered at top
+    // Minimal indicator when server is online - centered at top
     return (
       <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50">
-        <div className="bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg flex items-center space-x-3 text-sm">
+        <div className="bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg flex items-center space-x-2 text-sm">
           <CheckCircle className="w-4 h-4" />
           <span className="font-medium">Server Online</span>
-          {awakeDuration > 0 && (
-            <>
-              <span className="text-white/70">•</span>
-              <div className="flex items-center space-x-1">
-                <Clock className="w-3 h-3" />
-                <span>Awake: {formatTime(awakeDuration)}</span>
-              </div>
-            </>
-          )}
         </div>
       </div>
     );
