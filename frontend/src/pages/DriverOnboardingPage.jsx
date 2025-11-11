@@ -1967,6 +1967,17 @@ const DriverOnboardingPage = () => {
             <span className="sm:hidden">{bulkExporting ? "Exp..." : "Export"}</span>
           </Button>
           <Button
+            onClick={handleBatchExportZip}
+            variant="outline"
+            className="border-blue-600 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-sm"
+            size="sm"
+            disabled={batchExporting}
+          >
+            <Archive size={16} className="mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">{batchExporting ? "Creating ZIP..." : "Download All in Batches"}</span>
+            <span className="sm:hidden">{batchExporting ? "Zip..." : "Batches"}</span>
+          </Button>
+          <Button
             onClick={() => setBulkImportDialogOpen(true)}
             variant="outline"
             className="border-orange-600 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20 text-sm"
