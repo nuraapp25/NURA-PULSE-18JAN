@@ -620,6 +620,7 @@ const DriverOnboardingPage = () => {
       setSelectedFile(null);
       setDuplicateData(null);
       await fetchLeads(); // This will also update last sync time
+      await fetchStatusSummary(); // Update status summary dashboard
     } catch (error) {
       toast.error(error.response?.data?.detail || "Failed to import leads");
     } finally {
