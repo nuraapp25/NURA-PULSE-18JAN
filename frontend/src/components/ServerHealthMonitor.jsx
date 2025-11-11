@@ -104,22 +104,26 @@ const ServerHealthMonitor = () => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Calculate time until shutdown
-  const timeUntilShutdown = Math.max(0, SHUTDOWN_WARNING_TIME - offlineDuration);
-  const minutesUntilShutdown = Math.floor(timeUntilShutdown / 60);
-  const isNearShutdown = timeUntilShutdown < 5 * 60; // Less than 5 minutes
-
   if (serverStatus === 'checking') {
     return null; // Don't show anything during initial check
   }
 
   if (serverStatus === 'online' && !showNotification) {
-    // Minimal indicator when server is online - centered at top
+    // Show server online with awake time - centered at top
     return (
       <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50">
-        <div className="bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg flex items-center space-x-2 text-sm">
+        <div className="bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg flex items-center space-x-3 text-sm">
           <CheckCircle className="w-4 h-4" />
-          <span>Server Online</span>
+          <span className="font-medium">Server Online</span>
+          {awakeDuration > 0 && (
+            <>
+              <span className="text-white/70">•</span>
+              <div className="flex items-center space-x-1">
+                <Clock className="w-3 h-3" />
+                <span>Awake: {formatTime(awakeDuration)}</span>
+              </div>
+            </>
+          )}
         </div>
       </div>
     );
