@@ -8,12 +8,12 @@ import { API } from '@/App';
 const ServerHealthMonitor = () => {
   const [serverStatus, setServerStatus] = useState('checking'); // 'online', 'offline', 'checking'
   const [lastCheckTime, setLastCheckTime] = useState(null);
-  const [offlineDuration, setOfflineDuration] = useState(0);
+  const [awakeDuration, setAwakeDuration] = useState(0);
   const [showNotification, setShowNotification] = useState(false);
   const [isWakingUp, setIsWakingUp] = useState(false);
+  const [serverWakeTime, setServerWakeTime] = useState(null);
   
   const HEALTH_CHECK_INTERVAL = 30000; // Check every 30 seconds
-  const SHUTDOWN_WARNING_TIME = 30 * 60; // 30 minutes in seconds
   const HEALTH_CHECK_TIMEOUT = 5000; // 5 seconds timeout for health check
 
   // Function to check server health
