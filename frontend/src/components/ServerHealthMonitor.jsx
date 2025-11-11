@@ -137,41 +137,6 @@ const ServerHealthMonitor = () => {
                 <Clock className="w-4 h-4" />
                 <span>Offline for: {formatTime(offlineDuration)}</span>
               </div>
-              
-              {timeUntilShutdown > 0 && (
-                <div className={`text-sm font-semibold ${isNearShutdown ? 'animate-pulse' : ''}`}>
-                  ⏰ Auto-shutdown in: {minutesUntilShutdown} minutes
-                </div>
-              )}
-              
-              {timeUntilShutdown === 0 && (
-                <div className="text-sm font-bold animate-pulse">
-                  🔴 Server may have shut down!
-                </div>
-              )}
-              
-              <Button
-                onClick={wakeUpServer}
-                disabled={isWakingUp}
-                size="sm"
-                className="w-full bg-white text-orange-600 hover:bg-gray-100 mt-2"
-              >
-                {isWakingUp ? (
-                  <>
-                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                    Waking up server...
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="w-4 h-4 mr-2" />
-                    Wake Up Server
-                  </>
-                )}
-              </Button>
-              
-              <div className="text-xs mt-2 opacity-90">
-                Click "Wake Up Server" to reactivate. This may take 30-60 seconds.
-              </div>
             </div>
           </AlertDescription>
         </Alert>
