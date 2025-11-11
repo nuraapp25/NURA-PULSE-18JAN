@@ -93,29 +93,11 @@ const ServerHealthMonitor = () => {
 
   if (serverStatus === 'offline') {
     return (
-      <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 max-w-md">
-        <Alert className="bg-orange-500 text-white border-0 shadow-2xl">
-          <AlertCircle className="h-5 w-5 text-white" />
-          <AlertDescription className="ml-2">
-            <div className="space-y-2">
-              <div className="font-bold text-lg flex items-center space-x-2">
-                <span>⚠️ Server Sleeping</span>
-              </div>
-              
-              <div className="text-sm">
-                The preview server has gone to sleep due to inactivity.
-              </div>
-              
-              <div className="text-sm mt-1">
-                <strong>Action:</strong> Make any request to wake it up (may take 10-30 seconds)
-              </div>
-              
-              <div className="text-xs opacity-90 mt-2 pt-2 border-t border-white/20">
-                💡 Tip: For 24/7 availability, deploy your app (50 credits/month)
-              </div>
-            </div>
-          </AlertDescription>
-        </Alert>
+      <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50">
+        <div className="bg-orange-500 text-white px-4 py-2 rounded-lg shadow-lg flex items-center space-x-2 text-sm">
+          <AlertCircle className="w-4 h-4" />
+          <span className="font-medium">Server Sleeping</span>
+        </div>
       </div>
     );
   }
