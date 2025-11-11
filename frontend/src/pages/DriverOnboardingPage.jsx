@@ -188,6 +188,7 @@ const DriverOnboardingPage = () => {
   
   // Bulk Export/Import and Backup Library states
   const [bulkExporting, setBulkExporting] = useState(false);
+  const [batchExporting, setBatchExporting] = useState(false);
   const [bulkImporting, setBulkImporting] = useState(false);
   const [bulkImportFile, setBulkImportFile] = useState(null);
   const [bulkImportDialogOpen, setBulkImportDialogOpen] = useState(false);
