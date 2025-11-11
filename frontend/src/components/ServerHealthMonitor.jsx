@@ -41,10 +41,8 @@ const ServerHealthMonitor = () => {
       setServerStatus('offline');
       setLastCheckTime(new Date());
       setShowNotification(true);
-      setServerWakeTime(null);
-      setAwakeDuration(0);
     }
-  }, [serverStatus, serverWakeTime]);
+  }, [serverStatus]);
 
   // Function to wake up server (makes a request to trigger wake)
   const wakeUpServer = async () => {
