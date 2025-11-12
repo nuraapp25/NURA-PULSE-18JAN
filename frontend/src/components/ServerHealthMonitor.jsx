@@ -42,24 +42,7 @@ const ServerHealthMonitor = () => {
     }
   }, [serverStatus]);
 
-  // Function to wake up server (makes a request to trigger wake)
-  const wakeUpServer = async () => {
-    setIsWakingUp(true);
-    try {
-      // Make multiple requests to different endpoints to wake up the server
-      const wakeRequests = [
-        axios.get(`${API}/health`, { timeout: 10000 }),
-        axios.get(`${API}/`, { timeout: 10000 }),
-      ];
-      
-      await Promise.race(wakeRequests);
-      await checkServerHealth();
-    } catch (error) {
-      console.log('Wake up in progress...');
-      // Continue checking health
-      setTimeout(checkServerHealth, 5000);
-    }
-  };
+  // Server wake up happens automatically on next health check
 
   // Initial health check and set up interval
   useEffect(() => {
