@@ -773,7 +773,8 @@ from app_models import (
     DriverLead, DriverLeadUpdate, BulkLeadStatusUpdate, BulkLeadDelete,
     QRCode, QRCodeCreate, QRCodeUpdate, QRScan,
     TelecallerProfile, TelecallerProfileCreate, TelecallerProfileUpdate,
-    LeadAssignment, LeadReassignment, LeadDeassignment, BulkAssignFromSheets
+    LeadAssignment, LeadReassignment, LeadDeassignment, BulkAssignFromSheets,
+    VehicleServiceRequest, VehicleServiceRequestCreate, VehicleServiceRequestUpdate
 )
 
 # Payment Reconciliation
