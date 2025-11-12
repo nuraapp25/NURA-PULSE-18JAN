@@ -104,6 +104,14 @@ const MontraVehicle = () => {
       color: "bg-yellow-500",
       description: "Charging patterns and efficiency",
       route: "/dashboard/montra-vehicle/charging"
+    },
+    {
+      id: "service-requests",
+      title: "Vehicle Service Request",
+      icon: Wrench,
+      color: "bg-teal-500",
+      description: "Manage vehicle repair and service requests",
+      route: "/dashboard/montra-vehicle/service-requests"
     }
   ];
 
