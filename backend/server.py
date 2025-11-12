@@ -5530,6 +5530,382 @@ async def get_morning_charge_audit(current_user: User = Depends(get_current_user
         raise HTTPException(status_code=500, detail=f"Error generating morning charge audit: {str(e)}")
 
 
+# ==================== Vehicle Service Request ====================
+
+@api_router.get("/montra-vehicle/service-requests")
+async def get_service_requests(
+    skip: int = Query(0, description="Number of records to skip"),
+    limit: int = Query(50, description="Number of records to return"),
+    search: Optional[str] = Query(None, description="Search by VIN or vehicle name"),
+    repair_type: Optional[str] = Query(None, description="Filter by repair type"),
+    repair_status: Optional[str] = Query(None, description="Filter by repair status"),
+    start_date: Optional[str] = Query(None, description="Filter by repair start date (YYYY-MM-DD)"),
+    end_date: Optional[str] = Query(None, description="Filter by repair end date (YYYY-MM-DD)"),
+    current_user: User = Depends(get_current_user)
+):
+    """Get all service requests with filters and pagination"""
+    try:
+        # Build query
+        query = {}
+        
+        if search:
+            query["$or"] = [
+                {"vin": {"$regex": search, "$options": "i"}},
+                {"vehicle_name": {"$regex": search, "$options": "i"}}
+            ]
+        
+        if repair_type:
+            query["repair_type"] = repair_type
+        
+        if repair_status:
+            query["repair_status"] = repair_status
+        
+        if start_date:
+            query["repair_start_date"] = {"$gte": datetime.fromisoformat(start_date)}
+        
+        if end_date:
+            query["repair_end_date"] = {"$lte": datetime.fromisoformat(end_date)}
+        
+        # Get total count
+        total = await db.vehicle_service_requests.count_documents(query)
+        
+        # Get requests
+        requests = await db.vehicle_service_requests.find(query).sort("request_timestamp", -1).skip(skip).limit(limit).to_list(length=limit)
+        
+        return {
+            "success": True,
+            "requests": requests,
+            "total": total,
+            "page": (skip // limit) + 1 if limit > 0 else 1,
+            "total_pages": (total + limit - 1) // limit if limit > 0 else 1
+        }
+    
+    except Exception as e:
+        logger.error(f"Error fetching service requests: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error fetching service requests: {str(e)}")
+
+
+@api_router.get("/montra-vehicle/service-requests/{request_id}")
+async def get_service_request(
+    request_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get single service request by ID"""
+    try:
+        request = await db.vehicle_service_requests.find_one({"id": request_id})
+        
+        if not request:
+            raise HTTPException(status_code=404, detail="Service request not found")
+        
+        return {
+            "success": True,
+            "request": request
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching service request: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error fetching service request: {str(e)}")
+
+
+def calculate_repair_time_days(start_date: datetime, end_date: datetime) -> float:
+    """Calculate repair time in days"""
+    if not start_date or not end_date:
+        return 0
+    
+    delta = end_date - start_date
+    return round(delta.total_seconds() / (24 * 3600), 2)
+
+
+def calculate_downtime_hours(start_date: datetime, end_date: datetime) -> float:
+    """
+    Calculate service vehicle downtime in hours (6AM-11PM driving hours only)
+    Formula: Sum of driving hours (6AM-11PM) missed during service period
+    """
+    if not start_date or not end_date:
+        return 0
+    
+    total_downtime = 0
+    current_date = start_date
+    
+    while current_date.date() <= end_date.date():
+        # Define driving window: 6 AM to 11 PM (17 hours total)
+        day_start = current_date.replace(hour=6, minute=0, second=0, microsecond=0)
+        day_end = current_date.replace(hour=23, minute=0, second=0, microsecond=0)
+        
+        # Determine actual start and end for this day
+        if current_date.date() == start_date.date():
+            # First day: start from repair_start_date if after 6 AM
+            actual_start = max(start_date, day_start)
+        else:
+            actual_start = day_start
+        
+        if current_date.date() == end_date.date():
+            # Last day: end at repair_end_date if before 11 PM
+            actual_end = min(end_date, day_end)
+        else:
+            actual_end = day_end
+        
+        # Calculate hours for this day (only if within driving window)
+        if actual_start < day_end and actual_end > day_start:
+            # Clamp to driving window
+            actual_start = max(actual_start, day_start)
+            actual_end = min(actual_end, day_end)
+            
+            hours = (actual_end - actual_start).total_seconds() / 3600
+            total_downtime += hours
+        
+        # Move to next day
+        current_date = (current_date + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+    
+    return round(total_downtime, 2)
+
+
+@api_router.post("/montra-vehicle/service-requests")
+async def create_service_request(
+    request_data: VehicleServiceRequestCreate,
+    current_user: User = Depends(get_current_user)
+):
+    """Create new service request"""
+    from app_models import VehicleServiceRequest
+    
+    try:
+        # Create request object
+        service_request = VehicleServiceRequest(
+            **request_data.dict(),
+            request_reported_by=current_user.email
+        )
+        
+        # Auto-calculate repair_time_days and downtime_hours
+        if request_data.repair_start_date and request_data.repair_end_date:
+            service_request.repair_time_days = calculate_repair_time_days(
+                request_data.repair_start_date,
+                request_data.repair_end_date
+            )
+            service_request.service_vehicle_downtime_hours = calculate_downtime_hours(
+                request_data.repair_start_date,
+                request_data.repair_end_date
+            )
+        
+        # Insert into database
+        await db.vehicle_service_requests.insert_one(service_request.dict())
+        
+        return {
+            "success": True,
+            "message": "Service request created successfully",
+            "request_id": service_request.id,
+            "request": service_request.dict()
+        }
+    
+    except Exception as e:
+        logger.error(f"Error creating service request: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error creating service request: {str(e)}")
+
+
+@api_router.patch("/montra-vehicle/service-requests/{request_id}")
+async def update_service_request(
+    request_id: str,
+    update_data: VehicleServiceRequestUpdate,
+    current_user: User = Depends(get_current_user)
+):
+    """Update existing service request"""
+    try:
+        # Get existing request
+        existing = await db.vehicle_service_requests.find_one({"id": request_id})
+        
+        if not existing:
+            raise HTTPException(status_code=404, detail="Service request not found")
+        
+        # Prepare update data
+        update_dict = {k: v for k, v in update_data.dict().items() if v is not None}
+        update_dict["updated_at"] = datetime.now(timezone.utc)
+        
+        # Recalculate repair_time_days and downtime_hours if dates changed
+        start_date = update_data.repair_start_date or existing.get("repair_start_date")
+        end_date = update_data.repair_end_date or existing.get("repair_end_date")
+        
+        if start_date and end_date:
+            # Convert strings to datetime if needed
+            if isinstance(start_date, str):
+                start_date = datetime.fromisoformat(start_date)
+            if isinstance(end_date, str):
+                end_date = datetime.fromisoformat(end_date)
+            
+            update_dict["repair_time_days"] = calculate_repair_time_days(start_date, end_date)
+            update_dict["service_vehicle_downtime_hours"] = calculate_downtime_hours(start_date, end_date)
+        
+        # Update in database
+        await db.vehicle_service_requests.update_one(
+            {"id": request_id},
+            {"$set": update_dict}
+        )
+        
+        # Get updated request
+        updated = await db.vehicle_service_requests.find_one({"id": request_id})
+        
+        return {
+            "success": True,
+            "message": "Service request updated successfully",
+            "request": updated
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating service request: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error updating service request: {str(e)}")
+
+
+@api_router.delete("/montra-vehicle/service-requests/{request_id}")
+async def delete_service_request(
+    request_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Delete service request"""
+    try:
+        # Check if request exists
+        existing = await db.vehicle_service_requests.find_one({"id": request_id})
+        
+        if not existing:
+            raise HTTPException(status_code=404, detail="Service request not found")
+        
+        # Delete from database
+        await db.vehicle_service_requests.delete_one({"id": request_id})
+        
+        return {
+            "success": True,
+            "message": "Service request deleted successfully"
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting service request: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error deleting service request: {str(e)}")
+
+
+@api_router.post("/montra-vehicle/service-requests/upload-image")
+async def upload_service_request_image(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user)
+):
+    """Upload image for service request"""
+    import shutil
+    from pathlib import Path
+    
+    try:
+        # Create directory if it doesn't exist
+        upload_dir = Path("/app/backend/uploaded_files/vehicle_service_images")
+        upload_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Generate unique filename
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        file_extension = file.filename.split(".")[-1] if "." in file.filename else "jpg"
+        unique_filename = f"{timestamp}_{str(uuid.uuid4())[:8]}.{file_extension}"
+        file_path = upload_dir / unique_filename
+        
+        # Save file
+        with file_path.open("wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        # Return relative path
+        relative_path = f"vehicle_service_images/{unique_filename}"
+        
+        return {
+            "success": True,
+            "message": "Image uploaded successfully",
+            "file_path": relative_path,
+            "filename": unique_filename
+        }
+    
+    except Exception as e:
+        logger.error(f"Error uploading image: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error uploading image: {str(e)}")
+
+
+@api_router.get("/montra-vehicle/service-requests/image-folders")
+async def get_image_folders(
+    current_user: User = Depends(get_current_user)
+):
+    """Get list of image folders"""
+    from pathlib import Path
+    
+    try:
+        upload_dir = Path("/app/backend/uploaded_files/vehicle_service_images")
+        
+        if not upload_dir.exists():
+            return {
+                "success": True,
+                "folders": [],
+                "message": "No image folders found"
+            }
+        
+        # Get all files
+        files = []
+        for file_path in upload_dir.glob("*"):
+            if file_path.is_file():
+                stat = file_path.stat()
+                files.append({
+                    "name": file_path.name,
+                    "size": stat.st_size,
+                    "modified": datetime.fromtimestamp(stat.st_mtime).isoformat(),
+                    "path": f"vehicle_service_images/{file_path.name}"
+                })
+        
+        # Sort by modified date (newest first)
+        files.sort(key=lambda x: x["modified"], reverse=True)
+        
+        return {
+            "success": True,
+            "files": files,
+            "count": len(files)
+        }
+    
+    except Exception as e:
+        logger.error(f"Error fetching image folders: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error fetching image folders: {str(e)}")
+
+
+@api_router.get("/montra-vehicle/vins")
+async def get_vehicle_vins(
+    current_user: User = Depends(get_current_user)
+):
+    """Get list of VINs and vehicle names from Montra Vehicle data"""
+    try:
+        # Get unique vehicles from montra_vehicles collection
+        pipeline = [
+            {
+                "$group": {
+                    "_id": "$Vehicle ID",
+                    "vehicle_name": {"$first": "$Vehicle ID"}
+                }
+            },
+            {"$sort": {"_id": 1}}
+        ]
+        
+        vehicles = await db.montra_vehicles.aggregate(pipeline).to_list(None)
+        
+        # Format response
+        vehicle_list = [
+            {
+                "vin": vehicle["_id"],
+                "vehicle_name": vehicle["vehicle_name"]
+            }
+            for vehicle in vehicles if vehicle["_id"]
+        ]
+        
+        return {
+            "success": True,
+            "vehicles": vehicle_list,
+            "count": len(vehicle_list)
+        }
+    
+    except Exception as e:
+        logger.error(f"Error fetching VINs: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error fetching VINs: {str(e)}")
+
+
 @api_router.get("/admin/files/get-drivers-vehicles")
 async def get_drivers_and_vehicles(
     month: str = Query(..., description="Month name (e.g., Sep)"),
