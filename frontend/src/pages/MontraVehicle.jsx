@@ -66,14 +66,6 @@ const MontraVehicle = () => {
       route: "/dashboard/montra-vehicle/morning-charge-audit"
     },
     {
-      id: "service-requests",
-      title: "Vehicle Service Request",
-      icon: Database,
-      color: "bg-teal-500",
-      description: "Manage vehicle repair and service requests",
-      route: "/dashboard/montra-vehicle/service-requests"
-    },
-    {
       id: "performance",
       title: "Performance Metrics",
       icon: TrendingUp,
