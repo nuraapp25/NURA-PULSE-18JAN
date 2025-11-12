@@ -143,6 +143,89 @@ class VehicleRecordCreate(BaseModel):
     notes: Optional[str] = None
 
 
+# ==================== Vehicle Service Request ====================
+
+class VehicleServiceRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    vin: str  # Vehicle Identification Number
+    vehicle_name: str
+    request_timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    
+    # Repair Details
+    repair_type: str  # Dropdown: Accident, Parts Replacement, etc.
+    repair_sub_type: str  # Dropdown: Battery, Charger, Fork Bend, etc.
+    description: str  # Long text up to 10000 words
+    
+    # Dates
+    repair_start_date: Optional[datetime] = None
+    repair_end_date: Optional[datetime] = None
+    
+    # Costs & Time
+    repair_cost: Optional[float] = None
+    repair_time_days: Optional[float] = None  # Auto-calculated
+    service_vehicle_downtime_hours: Optional[float] = None  # Auto-calculated
+    
+    # Status & Responsibility
+    repair_status: str = "Pending"  # Pending, In Progress, Completed, etc.
+    liability: Optional[str] = None  # Driver, NURA, Manufacturer, Customer
+    liability_POC: Optional[str] = None  # Point of Contact
+    
+    # Service Provider & Recovery
+    repair_service_provider: Optional[str] = None
+    recovery_amount: Optional[float] = None
+    recovery_provider: Optional[str] = None
+    
+    # Media & Meta
+    vehicle_images: List[str] = []  # Array of image URLs/paths
+    request_reported_by: Optional[str] = None  # User email/name
+    comments: Optional[str] = None
+    
+    # Timestamps
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class VehicleServiceRequestCreate(BaseModel):
+    vin: str
+    vehicle_name: str
+    repair_type: str
+    repair_sub_type: str
+    description: str
+    repair_start_date: Optional[datetime] = None
+    repair_end_date: Optional[datetime] = None
+    repair_cost: Optional[float] = None
+    repair_status: str = "Pending"
+    liability: Optional[str] = None
+    liability_POC: Optional[str] = None
+    repair_service_provider: Optional[str] = None
+    recovery_amount: Optional[float] = None
+    recovery_provider: Optional[str] = None
+    vehicle_images: List[str] = []
+    request_reported_by: Optional[str] = None
+    comments: Optional[str] = None
+
+
+class VehicleServiceRequestUpdate(BaseModel):
+    vin: Optional[str] = None
+    vehicle_name: Optional[str] = None
+    repair_type: Optional[str] = None
+    repair_sub_type: Optional[str] = None
+    description: Optional[str] = None
+    repair_start_date: Optional[datetime] = None
+    repair_end_date: Optional[datetime] = None
+    repair_cost: Optional[float] = None
+    repair_status: Optional[str] = None
+    liability: Optional[str] = None
+    liability_POC: Optional[str] = None
+    repair_service_provider: Optional[str] = None
+    recovery_amount: Optional[float] = None
+    recovery_provider: Optional[str] = None
+    vehicle_images: Optional[List[str]] = None
+    comments: Optional[str] = None
+
+
 # ==================== Driver Leads (Enhanced) ====================
 
 class DriverLead(BaseModel):
