@@ -5870,41 +5870,114 @@ async def get_image_folders(
 
 @api_router.get("/montra-vehicle/vins")
 async def get_vehicle_vins(
+    month: Optional[str] = Query(None, description="Month name (e.g., Nov)"),
+    year: Optional[str] = Query(None, description="Year (e.g., 2025)"),
     current_user: User = Depends(get_current_user)
 ):
-    """Get list of VINs and vehicle names from Montra Vehicle data"""
+    """Get list of vehicle names from Vehicles List.xlsx file"""
+    import pandas as pd
+    
     try:
-        # Get unique vehicles from montra_vehicles collection
-        pipeline = [
-            {
-                "$group": {
-                    "_id": "$Vehicle ID",
-                    "vehicle_name": {"$first": "$Vehicle ID"}
-                }
-            },
-            {"$sort": {"_id": 1}}
-        ]
+        # If no month/year provided, use current month/year
+        if not month or not year:
+            from datetime import datetime
+            now = datetime.now()
+            month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+            month = month_names[now.month - 1]
+            year = str(now.year)
         
-        vehicles = await db.montra_vehicles.aggregate(pipeline).to_list(None)
+        # Ensure month name is title case
+        month = month.capitalize()
         
-        # Format response
-        vehicle_list = [
-            {
-                "vin": vehicle["_id"],
-                "vehicle_name": vehicle["vehicle_name"]
+        # Tab name format: "Nov 2025", "Dec 2025", etc.
+        tab_name = f"{month} {year}"
+        
+        logger.info(f"Looking for vehicles in tab '{tab_name}' from Vehicles List.xlsx")
+        
+        # Find the Vehicles List.xlsx file
+        files = await db.admin_files.find({}).to_list(1000)
+        
+        vehicles_file = None
+        for file in files:
+            filename = file.get("original_filename", "")
+            if filename == "Vehicles List.xlsx":
+                vehicles_file = file
+                break
+        
+        vehicle_list = []
+        
+        if vehicles_file:
+            file_path = vehicles_file.get("file_path")
+            if file_path and os.path.exists(file_path):
+                try:
+                    # Read specific sheet/tab by name (header=None to not treat B1 as column names)
+                    df = pd.read_excel(file_path, sheet_name=tab_name, header=None)
+                    # Read from Column B (index 1), skip first row (B1 which has headers)
+                    if len(df.columns) > 1:
+                        vehicles = df.iloc[1:, 1].dropna().astype(str).tolist()  # Start from row 1 (B2), column 1 (B)
+                        vehicles = [name.strip() for name in vehicles if name.strip() and name.strip().lower() not in ['nan', 'name', 'vehicle number', 'vehicle', 'registration number', 'vehicles']]
+                        
+                        # Format for dropdown
+                        vehicle_list = [
+                            {
+                                "vin": vehicle,
+                                "vehicle_name": vehicle
+                            }
+                            for vehicle in vehicles
+                        ]
+                        
+                        logger.info(f"Loaded {len(vehicle_list)} vehicles from tab '{tab_name}' Column B of Vehicles List.xlsx")
+                    else:
+                        logger.warning(f"Vehicles file tab '{tab_name}' does not have Column B")
+                except Exception as e:
+                    logger.error(f"Error parsing vehicles file tab '{tab_name}': {str(e)}")
+                    # If tab doesn't exist, try to get from any available tab
+                    try:
+                        # Get all sheet names
+                        excel_file = pd.ExcelFile(file_path)
+                        sheet_names = excel_file.sheet_names
+                        
+                        # Try the first sheet as fallback
+                        if sheet_names:
+                            df = pd.read_excel(file_path, sheet_name=sheet_names[0], header=None)
+                            if len(df.columns) > 1:
+                                vehicles = df.iloc[1:, 1].dropna().astype(str).tolist()
+                                vehicles = [name.strip() for name in vehicles if name.strip() and name.strip().lower() not in ['nan', 'name', 'vehicle number', 'vehicle', 'registration number', 'vehicles']]
+                                
+                                vehicle_list = [
+                                    {
+                                        "vin": vehicle,
+                                        "vehicle_name": vehicle
+                                    }
+                                    for vehicle in vehicles
+                                ]
+                                logger.info(f"Loaded {len(vehicle_list)} vehicles from first sheet '{sheet_names[0]}' as fallback")
+                    except Exception as fallback_error:
+                        logger.error(f"Fallback parsing also failed: {str(fallback_error)}")
+        else:
+            logger.warning("Vehicles List.xlsx file not found in admin files")
+        
+        # If no vehicles found, return empty list with message
+        if not vehicle_list:
+            logger.warning(f"No vehicles found for tab '{tab_name}'. Please upload Vehicles List.xlsx with monthly tabs.")
+            return {
+                "success": True,
+                "vehicles": [],
+                "count": 0,
+                "message": f"No vehicles found for {tab_name}. Please upload Vehicles List.xlsx with monthly tabs."
             }
-            for vehicle in vehicles if vehicle["_id"]
-        ]
         
         return {
             "success": True,
             "vehicles": vehicle_list,
-            "count": len(vehicle_list)
+            "count": len(vehicle_list),
+            "month": month,
+            "year": year
         }
     
     except Exception as e:
-        logger.error(f"Error fetching VINs: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error fetching VINs: {str(e)}")
+        logger.error(f"Error fetching vehicles: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error fetching vehicles: {str(e)}")
 
 
 @api_router.get("/admin/files/get-drivers-vehicles")
