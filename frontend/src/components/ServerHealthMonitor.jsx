@@ -7,11 +7,13 @@ const ServerHealthMonitor = () => {
   const [serverStatus, setServerStatus] = useState('checking'); // 'online', 'offline', 'checking'
   const [lastCheckTime, setLastCheckTime] = useState(null);
   const [showNotification, setShowNotification] = useState(false);
+  const [failedChecks, setFailedChecks] = useState(0); // Track consecutive failures
   
   const HEALTH_CHECK_INTERVAL = 30000; // Check every 30 seconds
-  const HEALTH_CHECK_TIMEOUT = 5000; // 5 seconds timeout for health check
+  const HEALTH_CHECK_TIMEOUT = 10000; // 10 seconds timeout for health check
+  const FAILED_CHECKS_THRESHOLD = 3; // Mark as offline after 3 consecutive failures
 
-  // Function to check server health
+  // Function to check server health with retry logic
   const checkServerHealth = useCallback(async () => {
     try {
       const controller = new AbortController();
@@ -28,6 +30,7 @@ const ServerHealthMonitor = () => {
         const wasOffline = serverStatus === 'offline';
         setServerStatus('online');
         setLastCheckTime(new Date());
+        setFailedChecks(0); // Reset failed checks counter
         
         // Hide notification after 3 seconds if server comes back online
         if (wasOffline) {
@@ -36,11 +39,22 @@ const ServerHealthMonitor = () => {
       }
     } catch (error) {
       console.warn('Server health check failed:', error.message);
-      setServerStatus('offline');
-      setLastCheckTime(new Date());
-      setShowNotification(true);
+      
+      // Increment failed checks
+      const newFailedChecks = failedChecks + 1;
+      setFailedChecks(newFailedChecks);
+      
+      // Only mark as offline after multiple consecutive failures
+      if (newFailedChecks >= FAILED_CHECKS_THRESHOLD) {
+        setServerStatus('offline');
+        setLastCheckTime(new Date());
+        setShowNotification(true);
+      } else {
+        // Keep status as online, just log the failure
+        console.log(`Health check failed (${newFailedChecks}/${FAILED_CHECKS_THRESHOLD})`);
+      }
     }
-  }, [serverStatus]);
+  }, [serverStatus, failedChecks]);
 
   // Server wake up happens automatically on next health check
 
