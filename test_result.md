@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Test Driver Onboarding Bulk Export API endpoint thoroughly. Endpoint: POST /api/driver-onboarding/bulk-export. Expected to return Excel file with proper headers and all leads from database."
+user_problem_statement: "Add VEHICLE DOCUMENTS mini-app to Montra Vehicle dashboard as 11th section. Features: vehicle document management with file uploads (RC Book, Insurance Doc, Sales Invoice, Purchase Order), CRUD operations, VIN dropdown from Vehicles List.xlsx, view/edit dialog, delete for admins only."
 
 backend:
   - task: "Driver Onboarding Bulk Export API - Excel File Generation"
