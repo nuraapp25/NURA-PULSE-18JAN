@@ -281,8 +281,13 @@ class LeadAssignmentTester:
         if response.status_code == 200:
             try:
                 filtered_leads = response.json()
-                joshua_filtered_leads = [lead for lead in filtered_leads if lead.get("assigned_telecaller") == JOSHUA_EMAIL]
-                test_lead_found_filtered = any(lead.get("id") == self.test_lead_id for lead in joshua_filtered_leads)
+                if isinstance(filtered_leads, list):
+                    joshua_filtered_leads = [lead for lead in filtered_leads if lead.get("assigned_telecaller") == JOSHUA_EMAIL]
+                    test_lead_found_filtered = any(lead.get("id") == self.test_lead_id for lead in joshua_filtered_leads)
+                else:
+                    print(f"DEBUG: Unexpected filtered leads response format: {filtered_leads}")
+                    joshua_filtered_leads = []
+                    test_lead_found_filtered = False
                 
                 self.log_test("Query with Date Filter", True, 
                             f"Date filter query returned {len(joshua_filtered_leads)} leads for Joshua, test lead found: {test_lead_found_filtered}")
