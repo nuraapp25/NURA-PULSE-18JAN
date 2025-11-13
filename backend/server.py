@@ -3004,7 +3004,7 @@ async def bulk_assign_telecaller(
     """Bulk assign telecaller to multiple leads with specific assignment date"""
     lead_ids = assignment_data.get("lead_ids", [])
     telecaller_email = assignment_data.get("telecaller_email", "")
-    assignment_date = assignment_data.get("assignment_date")  # Optional date from frontend
+    assignment_date = assignment_data.get("assignment_date")  # YYYY-MM-DD format from frontend
     
     if not lead_ids or len(lead_ids) == 0:
         raise HTTPException(status_code=400, detail="No leads selected for assignment")
@@ -3012,25 +3012,33 @@ async def bulk_assign_telecaller(
     if not telecaller_email:
         raise HTTPException(status_code=400, detail="No telecaller selected")
     
-    # Verify telecaller exists
-    telecaller = await db.telecaller_profiles.find_one({"email": telecaller_email})
-    if not telecaller:
-        raise HTTPException(status_code=404, detail="Telecaller not found")
+    if not assignment_date:
+        raise HTTPException(status_code=400, detail="No assignment date provided")
     
-    # Parse assignment date or use current date
-    from datetime import datetime, timezone
-    if assignment_date:
-        try:
-            # Parse the date string (expecting YYYY-MM-DD format from frontend)
-            parsed_date = datetime.fromisoformat(assignment_date)
-            # Convert to ISO string with UTC timezone
-            assignment_date_iso = parsed_date.replace(tzinfo=timezone.utc).isoformat()
-        except ValueError:
-            # Fallback to current date if invalid format
-            assignment_date_iso = datetime.now(timezone.utc).isoformat()
-    else:
-        # Use current date if no date provided
-        assignment_date_iso = datetime.now(timezone.utc).isoformat()
+    # Verify telecaller exists in USERS collection (not telecaller_profiles)
+    telecaller = await db.users.find_one({
+        "email": telecaller_email,
+        "account_type": "telecaller"
+    })
+    if not telecaller:
+        raise HTTPException(status_code=404, detail="Telecaller not found in users")
+    
+    # Get telecaller name
+    telecaller_name = f"{telecaller.get('first_name', '')} {telecaller.get('last_name', '')}".strip()
+    
+    # Parse assignment date and convert to IST
+    from datetime import datetime
+    import pytz
+    try:
+        # Parse YYYY-MM-DD format
+        parsed_date = datetime.strptime(assignment_date, "%Y-%m-%d")
+        # Set to start of day in IST
+        ist = pytz.timezone('Asia/Kolkata')
+        assigned_datetime_ist = ist.localize(parsed_date.replace(hour=0, minute=0, second=0))
+        # Store as ISO string
+        assignment_date_iso = assigned_datetime_ist.isoformat()
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format. Expected YYYY-MM-DD")
     
     # Update all matching leads with assigned telecaller and assignment date
     result = await db.driver_leads.update_many(
@@ -3038,6 +3046,7 @@ async def bulk_assign_telecaller(
         {
             "$set": {
                 "assigned_telecaller": telecaller_email,
+                "assigned_telecaller_name": telecaller_name,
                 "assigned_date": assignment_date_iso
             }
         }
@@ -3055,11 +3064,11 @@ async def bulk_assign_telecaller(
     except Exception as e:
         logger.error(f"Failed to sync to Google Sheets: {str(e)}")
     
-    logger.info(f"Assigned {result.modified_count} leads to {telecaller['name']} for date {assignment_date_iso}")
+    logger.info(f"Assigned {result.modified_count} leads to {telecaller_name} ({telecaller_email}) for date {assignment_date}")
     
     return {
         "success": True,
-        "message": f"Successfully assigned {result.modified_count} lead(s) to {telecaller['name']}",
+        "message": f"Successfully assigned {result.modified_count} lead(s) to {telecaller_name}",
         "modified_count": result.modified_count
     }
 
