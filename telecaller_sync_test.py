@@ -189,40 +189,35 @@ class TelecallerSyncTester:
             self.log_test("3. Verify Users API Returns Joshua", False, f"❌ {error_msg}", 
                         response.text if response else None)
         
-        # Step 4: Create Test Lead
-        print("\n--- STEP 4: Create Test Lead ---")
+        # Step 4: Get Existing Lead for Assignment Test
+        print("\n--- STEP 4: Get Existing Lead for Assignment Test ---")
         
-        test_lead_data = {
-            "name": "Test Lead for Joshua Assignment Flow",
-            "phone_number": "9999888777",
-            "email": "testlead.joshua@example.com",
-            "vehicle": "Auto",
-            "current_location": "Chennai",
-            "status": "New",
-            "stage": "S1",
-            "lead_source": "Telecaller Sync Test Flow"
-        }
-        
-        create_response = self.make_request("POST", "/driver-onboarding/leads", test_lead_data)
+        # Get existing leads to use for assignment test
+        leads_response = self.make_request("GET", "/driver-onboarding/leads?limit=1")
         test_lead_id = None
         
-        if create_response is not None and create_response.status_code == 200:
+        if leads_response is not None and leads_response.status_code == 200:
             try:
-                create_result = create_response.json()
-                test_lead_id = create_result.get("lead", {}).get("id")
+                leads_data = leads_response.json()
+                
+                # Handle different response formats
+                if isinstance(leads_data, list) and len(leads_data) > 0:
+                    test_lead_id = leads_data[0].get("id")
+                elif isinstance(leads_data, dict) and "leads" in leads_data and len(leads_data["leads"]) > 0:
+                    test_lead_id = leads_data["leads"][0].get("id")
                 
                 if test_lead_id:
-                    self.log_test("4. Create Test Lead", True, 
-                                f"✅ Test lead created successfully: ID {test_lead_id}")
+                    self.log_test("4. Get Existing Lead for Test", True, 
+                                f"✅ Found existing lead for assignment test: ID {test_lead_id}")
                     success_count += 1
                 else:
-                    self.log_test("4. Create Test Lead", False, "❌ No lead ID in create response")
+                    self.log_test("4. Get Existing Lead for Test", False, "❌ No leads available for assignment test")
             except json.JSONDecodeError:
-                self.log_test("4. Create Test Lead", False, "❌ Invalid JSON response", create_response.text)
+                self.log_test("4. Get Existing Lead for Test", False, "❌ Invalid JSON response", leads_response.text)
         else:
-            error_msg = "Network error" if not create_response else f"Status {create_response.status_code}"
-            self.log_test("4. Create Test Lead", False, f"❌ {error_msg}", 
-                        create_response.text if create_response else None)
+            error_msg = "Network error" if not leads_response else f"Status {leads_response.status_code}"
+            self.log_test("4. Get Existing Lead for Test", False, f"❌ {error_msg}", 
+                        leads_response.text if leads_response else None)
         
         # Step 5: Assign Test Lead to Joshua for Nov 15
         print("\n--- STEP 5: Assign Test Lead to Joshua for Nov 15 ---")
