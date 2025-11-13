@@ -9304,7 +9304,8 @@ Case Test 6,9876540006,interested"""
             self.test_montra_feed_corrected_functionality,
             self.test_mini_apps_endpoints,
             self.test_delete_endpoint_fix,
-            self.test_battery_charge_audit_endpoint
+            self.test_battery_charge_audit_endpoint,
+            self.test_vehicle_documents_comprehensive
         ]
         
         all_tests = critical_tests + priority_tests + additional_tests
