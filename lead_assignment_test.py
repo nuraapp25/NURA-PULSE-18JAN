@@ -295,11 +295,16 @@ class LeadAssignmentTester:
         if response.status_code == 200:
             try:
                 filtered_leads = response.json()
-                if isinstance(filtered_leads, list):
+                # Handle the actual response format: {"leads": [...], "total": N}
+                if isinstance(filtered_leads, dict) and "leads" in filtered_leads:
+                    leads_list = filtered_leads["leads"]
+                    joshua_filtered_leads = [lead for lead in leads_list if lead.get("assigned_telecaller") == JOSHUA_EMAIL]
+                    test_lead_found_filtered = any(lead.get("id") == self.test_lead_id for lead in joshua_filtered_leads)
+                elif isinstance(filtered_leads, list):
                     joshua_filtered_leads = [lead for lead in filtered_leads if lead.get("assigned_telecaller") == JOSHUA_EMAIL]
                     test_lead_found_filtered = any(lead.get("id") == self.test_lead_id for lead in joshua_filtered_leads)
                 else:
-                    print(f"DEBUG: Unexpected filtered leads response format: {filtered_leads}")
+                    print(f"DEBUG: Unexpected filtered leads response format: {type(filtered_leads)}")
                     joshua_filtered_leads = []
                     test_lead_found_filtered = False
                 
