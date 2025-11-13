@@ -720,7 +720,7 @@ const TelecallerDeskNew = () => {
                   </CardContent>
                 </Card>
               ) : (
-                filteredAssignedLeads.map(renderLeadCard)
+                filteredAssignedLeads.map(lead => renderLeadCard(lead, false))
               )}
             </div>
             
