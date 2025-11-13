@@ -134,10 +134,10 @@ class LeadAssignmentTester:
         if response.status_code == 200:
             try:
                 data = response.json()
-                if "lead" in data and "id" in data["lead"]:
-                    self.test_lead_id = data["lead"]["id"]
+                if "lead_id" in data:
+                    self.test_lead_id = data["lead_id"]
                     self.log_test("Create Test Lead", True, 
-                                f"Created test lead: {data['lead']['name']} (ID: {self.test_lead_id})")
+                                f"Created test lead: {test_lead_data['name']} (ID: {self.test_lead_id})")
                     return True
                 else:
                     self.log_test("Create Test Lead", False, "No lead ID in response", data)
