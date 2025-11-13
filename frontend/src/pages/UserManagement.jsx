@@ -302,25 +302,64 @@ const UserManagement = () => {
     }
   };
 
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [importData, setImportData] = useState(null);
+  const [duplicateInfo, setDuplicateInfo] = useState(null);
+
   const handleImportUsers = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
 
     try {
       const fileContent = await file.text();
-      const importData = JSON.parse(fileContent);
+      const parsedData = JSON.parse(fileContent);
 
-      if (!importData.encrypted_data || !importData.encryption_key) {
+      if (!parsedData.encrypted_data || !parsedData.encryption_key) {
         toast.error("Invalid import file format");
         return;
       }
 
+      // Check for duplicates first
+      const token = localStorage.getItem("token");
+      const checkResponse = await axios.post(
+        `${API}/users/import/check-duplicates`,
+        {
+          encrypted_data: parsedData.encrypted_data,
+          encryption_key: parsedData.encryption_key
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+
+      setImportData(parsedData);
+
+      if (checkResponse.data.duplicates_found) {
+        // Show dialog to ask user what to do
+        setDuplicateInfo(checkResponse.data);
+        setImportDialogOpen(true);
+      } else {
+        // No duplicates, import directly
+        await performImport(parsedData, "skip");
+      }
+      
+      // Reset file input
+      event.target.value = null;
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to process import file");
+      event.target.value = null;
+    }
+  };
+
+  const performImport = async (data, duplicateAction) => {
+    try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
         `${API}/users/import`,
         {
-          encrypted_data: importData.encrypted_data,
-          encryption_key: importData.encryption_key
+          encrypted_data: data.encrypted_data,
+          encryption_key: data.encryption_key,
+          duplicate_action: duplicateAction
         },
         {
           headers: { Authorization: `Bearer ${token}` }
@@ -328,17 +367,18 @@ const UserManagement = () => {
       );
 
       toast.success(
-        `Successfully imported ${response.data.imported} users. ${response.data.skipped} users skipped (already exist).`
+        `Successfully imported ${response.data.imported} users. ${response.data.skipped} skipped. ${response.data.replaced || 0} replaced.`
       );
       
       // Refresh user list
       fetchData();
       
-      // Reset file input
-      event.target.value = null;
+      // Close dialog
+      setImportDialogOpen(false);
+      setImportData(null);
+      setDuplicateInfo(null);
     } catch (error) {
       toast.error(error.response?.data?.detail || "Failed to import users");
-      event.target.value = null;
     }
   };
 
