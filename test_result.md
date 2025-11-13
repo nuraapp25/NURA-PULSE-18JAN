@@ -545,14 +545,14 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Callback Date Calculation in Lead Update"
-    - "Lead Sorting Logic - New Leads First"
-    - "Show Status History Button Inside Dialog"
-    - "Relative Time Display for Last Called"
-    - "Active and Scheduled Leads Separation"
+    - "QR Code Duplicate Scan Prevention Fix"
+    - "Bulk Import Error - Empty Phone Number Handling"
+    - "Battery Audit Endpoint - 30 Day Filter & Cache Integration"
+    - "Morning Charge Audit Endpoint - 30 Day Filter & Cache Integration"
+    - "Manual Cache Refresh API Endpoint"
   stuck_tasks: []
   test_all: false
-  test_priority: "high_first"
+  test_priority: "critical_first"
 
 agent_communication:
     - agent: "main"
