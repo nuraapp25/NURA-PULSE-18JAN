@@ -147,6 +147,7 @@ const TelecallerDeskMobile = () => {
   
   // Filter leads based on date, search query, and summary card filter
   const getFilteredLeads = (leadsArray) => {
+    console.log("🔎 Filtering", leadsArray.length, "leads. Selected date:", selectedDate);
     let filtered = [...leadsArray];
     
     // Filter by selected date - show leads assigned on that date + callback leads scheduled for that date
@@ -155,11 +156,14 @@ const TelecallerDeskMobile = () => {
         const leadAssignedDate = lead.assigned_date ? lead.assigned_date.split('T')[0] : null;
         const leadCallbackDate = lead.callback_date ? lead.callback_date.split('T')[0] : null;
         
+        console.log(`  Lead "${lead.name}": assigned_date=${leadAssignedDate}, callback_date=${leadCallbackDate}, selected=${selectedDate}`);
+        
         // Show lead if:
         // 1. It was assigned on the selected date, OR
         // 2. It has a callback scheduled for the selected date
         return leadAssignedDate === selectedDate || leadCallbackDate === selectedDate;
       });
+      console.log("✅ After date filter:", filtered.length, "leads");
     }
     
     // Filter by search query (phone number or name)
