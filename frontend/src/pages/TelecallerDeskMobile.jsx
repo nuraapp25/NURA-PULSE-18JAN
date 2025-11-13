@@ -127,10 +127,18 @@ const TelecallerDeskMobile = () => {
   
   // Count leads for each date
   const getLeadCountForDate = (dateStr) => {
+    const today = new Date().toISOString().split('T')[0];
     return leads.filter(lead => {
       const leadAssignedDate = lead.assigned_date ? lead.assigned_date.split('T')[0] : null;
       const leadCallbackDate = lead.callback_date ? lead.callback_date.split('T')[0] : null;
-      return leadAssignedDate === dateStr || leadCallbackDate === dateStr;
+      
+      // Count lead if:
+      // 1. Assigned on this date, OR
+      // 2. Has callback on this date, OR  
+      // 3. Has no assigned_date AND we're counting today (legacy leads)
+      return leadAssignedDate === dateStr || 
+             leadCallbackDate === dateStr ||
+             (!leadAssignedDate && dateStr === today);
     }).length;
   };
   
