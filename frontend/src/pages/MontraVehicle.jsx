@@ -112,6 +112,14 @@ const MontraVehicle = () => {
       color: "bg-teal-500",
       description: "Manage vehicle repair and service requests",
       route: "/dashboard/montra-vehicle/service-requests"
+    },
+    {
+      id: "vehicle-documents",
+      title: "VEHICLE DOCUMENTS",
+      icon: FileUp,
+      color: "bg-cyan-500",
+      description: "Manage vehicle documentation and records",
+      route: "/dashboard/montra-vehicle/vehicle-documents"
     }
   ];
 
