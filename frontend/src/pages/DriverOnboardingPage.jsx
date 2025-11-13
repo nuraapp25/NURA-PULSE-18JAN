@@ -4162,7 +4162,7 @@ const DriverOnboardingPage = () => {
                 <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
                   {telecallers.map((telecaller) => (
                     <SelectItem key={telecaller.id} value={telecaller.id}>
-                      {telecaller.name}
+                      {telecaller.name.split(' ')[0]}
                     </SelectItem>
                   ))}
                   {telecallers.length === 0 && (
