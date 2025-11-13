@@ -1530,6 +1530,129 @@ BACKUP_LIBRARY_FOLDER = "driver_onboarding_backups"
 os.makedirs(BACKUP_LIBRARY_FOLDER, exist_ok=True)
 
 
+@api_router.post("/driver-onboarding/check-duplicate")
+async def check_duplicate_lead(
+    phone_number: str = Body(..., embed=True),
+    current_user: User = Depends(get_current_user)
+):
+    """Check if a lead with the given phone number already exists"""
+    try:
+        # Normalize phone number (last 10 digits)
+        normalized_phone = phone_number[-10:] if len(phone_number) >= 10 else phone_number
+        
+        # Check for duplicate
+        existing_lead = await db.driver_leads.find_one({"phone_number": normalized_phone})
+        
+        if existing_lead:
+            return {
+                "success": True,
+                "duplicate_found": True,
+                "existing_lead": {
+                    "name": existing_lead.get("name"),
+                    "phone_number": existing_lead.get("phone_number"),
+                    "email": existing_lead.get("email"),
+                    "status": existing_lead.get("status"),
+                    "stage": existing_lead.get("stage"),
+                    "source": existing_lead.get("source")
+                }
+            }
+        else:
+            return {
+                "success": True,
+                "duplicate_found": False
+            }
+    
+    except Exception as e:
+        logger.error(f"Error checking duplicate: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error checking duplicate: {str(e)}")
+
+
+@api_router.post("/driver-onboarding/create-lead")
+async def create_single_lead(
+    name: str = Body(...),
+    phone_number: str = Body(...),
+    email: Optional[str] = Body(None),
+    source: Optional[str] = Body("Manual Entry"),
+    current_location: Optional[str] = Body(None),
+    experience: Optional[str] = Body(None),
+    monthly_salary: Optional[str] = Body(None),
+    has_driving_license: str = Body("no"),
+    driving_license_no: Optional[str] = Body(None),
+    has_badge: str = Body("no"),
+    badge_no: Optional[str] = Body(None),
+    duplicate_action: str = Body("skip"),
+    current_user: User = Depends(get_current_user)
+):
+    """Create a single driver lead manually"""
+    try:
+        # Normalize phone number (last 10 digits)
+        normalized_phone = phone_number[-10:] if len(phone_number) >= 10 else phone_number
+        
+        # Check for duplicate
+        existing_lead = await db.driver_leads.find_one({"phone_number": normalized_phone})
+        
+        if existing_lead and duplicate_action == "skip":
+            return {
+                "success": False,
+                "message": "Lead with this phone number already exists",
+                "duplicate": True
+            }
+        
+        # Generate unique ID
+        lead_id = str(uuid.uuid4())
+        
+        # Prepare lead data
+        lead_data = {
+            "id": lead_id,
+            "name": name,
+            "phone_number": normalized_phone,
+            "email": email,
+            "source": source or "Manual Entry",
+            "current_location": current_location,
+            "experience": experience,
+            "monthly_salary": monthly_salary,
+            "has_driving_license": has_driving_license,
+            "driving_license_no": driving_license_no if has_driving_license == "yes" else None,
+            "has_badge": has_badge,
+            "badge_no": badge_no if has_badge == "yes" else None,
+            "status": "New",
+            "stage": "S1",
+            "import_date": datetime.now(timezone.utc).strftime('%Y-%m-%d'),
+            "created_at": datetime.now(timezone.utc),
+            "updated_at": datetime.now(timezone.utc),
+            "remarks": "",
+            "remarks_history": [],
+            "status_history": [{
+                "status": "New",
+                "stage": "S1",
+                "changed_by": current_user.email,
+                "changed_at": datetime.now(timezone.utc)
+            }]
+        }
+        
+        if existing_lead and duplicate_action == "replace":
+            # Update existing lead
+            await db.driver_leads.update_one(
+                {"phone_number": normalized_phone},
+                {"$set": lead_data}
+            )
+            message = "Lead updated successfully (replaced existing)"
+        else:
+            # Insert new lead
+            await db.driver_leads.insert_one(lead_data)
+            message = "Lead created successfully"
+        
+        return {
+            "success": True,
+            "message": message,
+            "lead_id": lead_id
+        }
+    
+    except Exception as e:
+        logger.error(f"Error creating lead: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error creating lead: {str(e)}")
+
+
 @api_router.post("/driver-onboarding/bulk-export")
 async def bulk_export_leads(current_user: User = Depends(get_current_user)):
     """
