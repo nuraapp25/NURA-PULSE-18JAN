@@ -199,29 +199,41 @@ const TelecallerDeskNew = () => {
   
   // Count leads for a specific date
   const getLeadCountForDate = (dateStr) => {
-    return allLeads.filter(lead => {
+    const count = allLeads.filter(lead => {
       // Check assigned_date
       if (lead.assigned_date) {
         try {
           const assignedDate = parseISO(lead.assigned_date);
-          if (format(assignedDate, 'yyyy-MM-dd') === dateStr) {
+          const formattedDate = format(assignedDate, 'yyyy-MM-dd');
+          if (formattedDate === dateStr) {
             return true;
           }
-        } catch {}
+        } catch (e) {
+          console.log("Error parsing assigned_date:", lead.assigned_date, e);
+        }
       }
       
       // Check callback_date
       if (lead.callback_date) {
         try {
           const callbackDate = parseISO(lead.callback_date);
-          if (format(callbackDate, 'yyyy-MM-dd') === dateStr) {
+          const formattedDate = format(callbackDate, 'yyyy-MM-dd');
+          if (formattedDate === dateStr) {
             return true;
           }
-        } catch {}
+        } catch (e) {
+          console.log("Error parsing callback_date:", lead.callback_date, e);
+        }
       }
       
       return false;
     }).length;
+    
+    if (count > 0) {
+      console.log(`📊 Date ${dateStr}: ${count} leads`);
+    }
+    
+    return count;
   };
   
   // Calculate statistics
