@@ -2256,10 +2256,11 @@ async def bulk_import_leads(
         
         return {
             "success": True,
-            "message": "Import completed successfully. New leads added.",
+            "message": f"Import completed successfully. {inserted_count} new leads added, {updated_count} existing leads updated.",
             "backup_created": backup_filename if current_leads else None,
             "new_leads_count": inserted_count,
-            "duplicates_skipped": duplicates_skipped,
+            "updated_leads_count": updated_count,
+            "duplicates_updated": duplicates_updated,
             "total_leads_now": total_leads_now,
             "telecaller_assignments": {
                 "leads_assigned": leads_with_assignments,
