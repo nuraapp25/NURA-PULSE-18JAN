@@ -394,6 +394,28 @@ const TelecallerDeskNew = () => {
     }
   };
   
+  // Mark lead as called now (with UI feedback)
+  const markAsCalledNow = async (leadId) => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.post(
+        `${API}/driver-onboarding/leads/${leadId}/mark-called`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      toast.success("Lead marked as called");
+      
+      // Refresh leads
+      const email = isAdmin ? selectedTelecaller : user?.email;
+      await fetchAllLeads(email);
+      await fetchLeadsForDate(email);
+    } catch (error) {
+      console.error("Error marking as called:", error);
+      toast.error("Failed to mark as called");
+    }
+  };
+  
   // Render lead card
   const renderLeadCard = (lead, showCallTimestamp = false) => (
     <Card key={lead.id} className="mb-3 dark:bg-gray-800">
