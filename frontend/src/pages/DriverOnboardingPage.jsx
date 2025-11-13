@@ -1509,7 +1509,7 @@ const DriverOnboardingPage = () => {
             ...lead,
             assigned_telecaller: telecaller.email,
             assigned_telecaller_name: telecaller.name,
-            assigned_date: new Date(todayDate).toISOString()
+            assigned_date: new Date(assignmentDate).toISOString()
           };
         }
         return lead;
@@ -1519,10 +1519,12 @@ const DriverOnboardingPage = () => {
       setFilteredLeads(updatedLeads);
       
       const displayName = telecaller.name ? telecaller.name.split(' ')[0] : telecaller.email?.split('@')[0] || 'telecaller';
-      toast.success(`Successfully assigned ${selectedLeadIds.length} lead(s) to ${displayName} for today`);
+      const formattedDate = format(new Date(assignmentDate), 'MMM dd, yyyy');
+      toast.success(`Successfully assigned ${selectedLeadIds.length} lead(s) to ${displayName} for ${formattedDate}`);
       setSelectedLeadIds([]);
       setIsAssignDialogOpen(false);
       setSelectedTelecallerForAssignment("");
+      setAssignmentDate("");
     } catch (error) {
       toast.error(error.response?.data?.detail || "Failed to assign leads");
     } finally {
