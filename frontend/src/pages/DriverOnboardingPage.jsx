@@ -4215,7 +4215,7 @@ const DriverOnboardingPage = () => {
             </Button>
             <Button
               onClick={handleBulkAssignLeads}
-              disabled={!selectedTelecallerForAssignment || assigning}
+              disabled={!selectedTelecallerForAssignment || !assignmentDate || assigning}
               className="bg-green-600 hover:bg-green-700"
             >
               {assigning ? (
