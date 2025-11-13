@@ -754,22 +754,43 @@ const TelecallerDeskNew = () => {
               )}
             </div>
             
+            {/* Visual Separator */}
+            <div className="my-8 border-t-4 border-green-500 dark:border-green-600"></div>
+            
             {/* Calling Done Section */}
-            <div>
-              <h2 className="text-lg font-semibold text-green-700 dark:text-green-400 mb-3">
-                Calling Done ({filteredCallingDoneLeads.length})
-              </h2>
-              {filteredCallingDoneLeads.length === 0 ? (
-                <Card className="dark:bg-gray-800">
-                  <CardContent className="p-6 text-center">
-                    <CheckCircle className="w-12 h-12 mx-auto text-gray-400 mb-2" />
-                    <p className="text-gray-600 dark:text-gray-400">
-                      No calls completed yet for this date
-                    </p>
-                  </CardContent>
-                </Card>
-              ) : (
-                filteredCallingDoneLeads.map(lead => renderLeadCard(lead, true))
+            <div id="calling-done-section" className="scroll-mt-4">
+              <div 
+                className="flex items-center justify-between mb-3 cursor-pointer p-3 bg-green-50 dark:bg-green-900/20 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
+                onClick={() => setIsCallingDoneExpanded(!isCallingDoneExpanded)}
+              >
+                <h2 className="text-lg font-semibold text-green-700 dark:text-green-400 flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5" />
+                  Calling Done ({filteredCallingDoneLeads.length})
+                </h2>
+                {isCallingDoneExpanded ? (
+                  <ChevronUp className="w-5 h-5 text-green-700 dark:text-green-400" />
+                ) : (
+                  <ChevronDown className="w-5 h-5 text-green-700 dark:text-green-400" />
+                )}
+              </div>
+              
+              {isCallingDoneExpanded && (
+                <>
+                  {filteredCallingDoneLeads.length === 0 ? (
+                    <Card className="dark:bg-gray-800">
+                      <CardContent className="p-6 text-center">
+                        <CheckCircle className="w-12 h-12 mx-auto text-gray-400 mb-2" />
+                        <p className="text-gray-600 dark:text-gray-400">
+                          No calls completed yet for this date
+                        </p>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <div className="space-y-3">
+                      {filteredCallingDoneLeads.map(lead => renderLeadCard(lead, true))}
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </>
