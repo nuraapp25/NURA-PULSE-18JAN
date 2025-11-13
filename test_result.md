@@ -351,6 +351,18 @@ backend:
           comment: "PRODUCTION FIX: Optimized morning-charge-audit endpoint for production scale. Changes: 1) Added data existence check before processing, 2) Limited to last 90 days to prevent timeouts, 3) Implemented aggregation pipeline with field projection (reduces payload), 4) Added better field name handling for multiple formats (Vehicle ID vs vehicle_id), 5) Returns helpful message when no data found. Now successfully retrieves data in production."
 
 frontend:
+  - task: "Vehicle Documents - Frontend Page & Integration"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/VehicleDocuments.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "IMPLEMENTATION COMPLETE: Created Vehicle Documents frontend page with full CRUD functionality. FEATURES: 1) LIST VIEW - Table displaying id, vehicle_name, vin with View/Edit buttons, search functionality across VIN/vehicle name/vehicle number, pagination support. 2) ADD NEW VEHICLE - Form dialog with VIN dropdown (populated from Vehicles List.xlsx), vehicle number and name inputs, 4 file upload inputs (RC Book pdf/png, Insurance Doc pdf/png, Sales Invoice pdf/word, Purchase Order pdf/word), registration details (number, expiry date), insurance expiry date, vehicle details (model number, cost, manufacturer, purchase date, description, manufacturer details), comments textarea. 3) VIEW/EDIT DIALOG - Display all document details with formatted dates, buttons to view uploaded files (opens in new tab), edit button transitions to edit mode with pre-filled form, delete button (visible only for admin/master_admin). 4) FILE HANDLING - Upload files via POST /api/vehicle-documents/upload-file, view files via GET /api/vehicle-documents/file/{path}, file type indicators and view buttons. 5) INTEGRATION - Added 11th widget to MontraVehicle.jsx dashboard (VEHICLE DOCUMENTS with FileUp icon, cyan color), added route in App.js (/dashboard/montra-vehicle/vehicle-documents). UI follows existing design patterns from VehicleServiceRequest page. Ready for frontend E2E testing."
+  
   - task: "QR Code Delete All - Enhanced Error Handling"
     implemented: true
     working: "NA"
