@@ -257,8 +257,16 @@ const UserManagement = () => {
   const handleExportUsers = async () => {
     try {
       const token = localStorage.getItem("token");
+      
+      // Prepare request params
+      const params = {};
+      if (selectedUsers.length > 0) {
+        params.user_ids = selectedUsers.join(',');
+      }
+      
       const response = await axios.get(`${API}/users/export`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
+        params
       });
 
       // Create export file with both encrypted data and key
@@ -274,13 +282,21 @@ const UserManagement = () => {
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `users_export_${new Date().toISOString().split('T')[0]}.json`;
+      const filename = selectedUsers.length > 0 
+        ? `users_export_selected_${new Date().toISOString().split('T')[0]}.json`
+        : `users_export_all_${new Date().toISOString().split('T')[0]}.json`;
+      link.download = filename;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
       toast.success(`Successfully exported ${response.data.count} users with encrypted passwords`);
+      
+      // Clear selection after export
+      if (selectedUsers.length > 0) {
+        setSelectedUsers([]);
+      }
     } catch (error) {
       toast.error(error.response?.data?.detail || "Failed to export users");
     }
