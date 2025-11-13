@@ -1474,11 +1474,15 @@ const DriverOnboardingPage = () => {
       return;
     }
 
+    // Validate assignment date
+    if (!assignmentDate) {
+      toast.error("Please select an assignment date");
+      return;
+    }
+
     setAssigning(true);
     try {
       const token = localStorage.getItem("token");
-      // Always use today's date for assignment
-      const todayDate = new Date().toISOString().split('T')[0];
       
       // Find telecaller by ID to get email and name
       const telecaller = telecallers.find(t => t.id === selectedTelecallerForAssignment);
@@ -1493,7 +1497,7 @@ const DriverOnboardingPage = () => {
         {
           lead_ids: selectedLeadIds,
           telecaller_email: telecaller.email,
-          assignment_date: todayDate
+          assignment_date: assignmentDate
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
