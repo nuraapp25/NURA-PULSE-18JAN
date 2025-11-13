@@ -963,8 +963,8 @@ const TelecallerDeskMobile = () => {
               </Button>
             )}
             {selectedDate && (
-              <Button onClick={() => setSelectedDate(null)} variant="outline">
-                Clear Date Filter
+              <Button onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])} variant="outline">
+                Reset to Today
               </Button>
             )}
             {searchQuery && (
