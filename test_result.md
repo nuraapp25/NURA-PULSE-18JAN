@@ -545,12 +545,12 @@ metadata:
 
 test_plan:
   current_focus:
-    - "QR Code Duplicate Scan Prevention Fix"
-    - "Bulk Import Error - Empty Phone Number Handling"
-    - "Battery Audit Endpoint - 30 Day Filter & Cache Integration"
-    - "Morning Charge Audit Endpoint - 30 Day Filter & Cache Integration"
-    - "Manual Cache Refresh API Endpoint"
-  stuck_tasks: []
+    - "Complete Lead Assignment Flow Testing"
+    - "Telecaller's Desk - Calendar Date Filter & Search Bar"
+    - "Telecaller's Desk - Immediate Summary Update & Call Backs Scheduled"
+    - "Telecaller's Desk - Clickable Summary Cards as Filters"
+  stuck_tasks:
+    - "Complete Lead Assignment Flow Testing"
   test_all: false
   test_priority: "critical_first"
 
