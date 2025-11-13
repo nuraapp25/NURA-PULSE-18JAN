@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Phone, MessageCircle, CheckCircle, RefreshCw, AlertCircle, User, History, ChevronDown, ChevronUp, Calendar, Search, X } from "lucide-react";
+import { Phone, MessageCircle, CheckCircle, RefreshCw, AlertCircle, User, History, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Calendar, Search, X } from "lucide-react";
 import LeadDetailsDialog from "@/components/LeadDetailsDialog";
 
 // Status options grouped by stage
