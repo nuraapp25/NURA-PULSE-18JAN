@@ -283,13 +283,15 @@ const TelecallerDeskNew = () => {
   }, [selectedDate]);
   
   // Handle View Desk button click (admin only)
-  const handleViewDesk = () => {
+  const handleViewDesk = async () => {
     if (!selectedTelecaller) {
       toast.error("Please select a telecaller first");
       return;
     }
-    fetchAllLeads(selectedTelecaller); // Fetch all leads for counting
-    fetchLeadsForDate(selectedTelecaller);
+    
+    // Fetch all leads first for counting, then fetch filtered leads
+    await fetchAllLeads(selectedTelecaller);
+    await fetchLeadsForDate(selectedTelecaller);
   };
   
   // Filter leads by search query
