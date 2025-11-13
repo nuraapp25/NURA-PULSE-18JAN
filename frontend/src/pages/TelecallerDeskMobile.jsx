@@ -318,11 +318,19 @@ const TelecallerDeskMobile = () => {
     }
   };
   
-  // Handle telecaller selection change
+  // Handle telecaller selection change (just update state, don't fetch yet)
   const handleTelecallerChange = (telecallerEmail) => {
     setSelectedTelecaller(telecallerEmail);
-    fetchLeadsForTelecaller(telecallerEmail);
-    setTimeout(() => fetchSummary(telecallerEmail), 100);
+  };
+  
+  // Handle "View Desk" button click
+  const handleViewDesk = () => {
+    if (!selectedTelecaller) {
+      toast.error("Please select a telecaller first");
+      return;
+    }
+    fetchLeadsForTelecaller(selectedTelecaller);
+    setTimeout(() => fetchSummary(selectedTelecaller), 100);
   };
 
   const fetchLeads = async () => {
