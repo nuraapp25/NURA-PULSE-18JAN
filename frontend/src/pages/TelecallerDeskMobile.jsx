@@ -98,9 +98,6 @@ const TelecallerDeskMobile = () => {
   // NEW: Summary card filter state
   const [summaryFilter, setSummaryFilter] = useState(null); // null, 'total', 'calls_done', 'calls_pending', 'callbacks'
   
-  // Date selector scroll state
-  const [dateScrollIndex, setDateScrollIndex] = useState(0);
-  
   // Generate date range (7 days before to 14 days after today)
   const generateDateRange = () => {
     const dates = [];
@@ -117,6 +114,16 @@ const TelecallerDeskMobile = () => {
   };
   
   const dateRange = generateDateRange();
+  
+  // Calculate initial scroll index to center on today (index 7 in the array)
+  const getInitialScrollIndex = () => {
+    const todayIndex = 7; // Today is at index 7 (after 7 days before)
+    // Center it by positioning it at index 2 of the visible 5 dates
+    return Math.max(0, todayIndex - 2);
+  };
+  
+  // Date selector scroll state - start with today centered
+  const [dateScrollIndex, setDateScrollIndex] = useState(getInitialScrollIndex());
   
   // Count leads for each date
   const getLeadCountForDate = (dateStr) => {
