@@ -266,12 +266,16 @@ const TelecallerDeskNew = () => {
   
   // Initial load
   useEffect(() => {
-    if (isAdmin) {
-      fetchTelecallers();
-    } else {
-      fetchAllLeads(user?.email); // Fetch all leads for counting
-      fetchLeadsForDate(user?.email);
-    }
+    const loadData = async () => {
+      if (isAdmin) {
+        await fetchTelecallers();
+      } else {
+        await fetchAllLeads(user?.email); // Fetch all leads for counting
+        await fetchLeadsForDate(user?.email);
+      }
+    };
+    
+    loadData();
   }, []);
   
   // Refetch when date changes
