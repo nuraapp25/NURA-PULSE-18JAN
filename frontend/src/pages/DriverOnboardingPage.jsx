@@ -1590,6 +1590,7 @@ const DriverOnboardingPage = () => {
       setIsAssignDialogOpen(false);
       setSelectedTelecallerForAssignment("");
       setAssignmentDate("");
+      setAssignmentDateScrollIndex(0);
     } catch (error) {
       toast.error(error.response?.data?.detail || "Failed to assign leads");
     } finally {
