@@ -389,16 +389,14 @@ frontend:
 
 metadata:
   created_by: "main_agent"
-  version: "2.0"
+  version: "3.0"
   test_sequence: 0
   run_ui: false
 
 test_plan:
   current_focus:
-    - "Driver Onboarding - Bulk Export Button Frontend Testing"
-    - "Battery Audit Optimization for Production"
-    - "Morning Charge Audit Optimization for Production"
-    - "QR Code Delete All - Enhanced Error Handling"
+    - "Vehicle Documents - Backend API Endpoints"
+    - "Vehicle Documents - Frontend Page & Integration"
   stuck_tasks: []
   test_all: false
   test_priority: "critical_first"
