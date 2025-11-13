@@ -395,13 +395,18 @@ const TelecallerDeskNew = () => {
   };
   
   // Render lead card
-  const renderLeadCard = (lead) => (
+  const renderLeadCard = (lead, showCallTimestamp = false) => (
     <Card key={lead.id} className="mb-3 dark:bg-gray-800">
       <CardContent className="p-4">
         <div className="flex justify-between items-start mb-2">
           <div>
             <h3 className="font-semibold text-lg dark:text-white">{lead.name}</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">{lead.phone_number}</p>
+            {showCallTimestamp && lead.last_called && (
+              <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                ✓ Called at {formatDateDDMMYYYY(lead.last_called)} {format(parseISO(lead.last_called), 'HH:mm:ss')}
+              </p>
+            )}
           </div>
           <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
             {lead.status || "New"}
@@ -422,7 +427,7 @@ const TelecallerDeskNew = () => {
         <div className="flex gap-2">
           <Button
             onClick={() => handleCall(lead)}
-            className="flex-1 bg-green-600 hover:bg-green-700"
+            className="flex-1 bg-blue-600 hover:bg-blue-700"
             size="sm"
           >
             <Phone className="w-4 h-4 mr-2" />
@@ -430,12 +435,22 @@ const TelecallerDeskNew = () => {
           </Button>
           <Button
             onClick={() => handleWhatsApp(lead)}
-            className="flex-1 bg-blue-600 hover:bg-blue-700"
+            className="flex-1 bg-green-600 hover:bg-green-700"
             size="sm"
           >
             <MessageCircle className="w-4 h-4 mr-2" />
             WhatsApp
           </Button>
+          {!showCallTimestamp && (
+            <Button
+              onClick={() => markAsCalledNow(lead.id)}
+              className="flex-1 bg-orange-600 hover:bg-orange-700"
+              size="sm"
+            >
+              <CheckCircle className="w-4 h-4 mr-2" />
+              Mark as Called
+            </Button>
+          )}
           <Button
             onClick={() => {
               setSelectedLead(lead);
@@ -446,7 +461,7 @@ const TelecallerDeskNew = () => {
             size="sm"
           >
             <CheckCircle className="w-4 h-4 mr-2" />
-            Update
+            Status
           </Button>
         </div>
       </CardContent>
