@@ -3461,6 +3461,26 @@ const DriverOnboardingPage = () => {
               />
             </div>
 
+            {/* Status */}
+            <div>
+              <Label className="dark:text-gray-300">Status</Label>
+              <Select
+                value={newLeadForm.status}
+                onValueChange={(value) => setNewLeadForm({...newLeadForm, status: value})}
+              >
+                <SelectTrigger className="dark:bg-gray-700 dark:text-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {S1_STATUSES.map((status) => (
+                    <SelectItem key={status.value} value={status.value}>
+                      {status.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* Current Location */}
             <div>
               <Label className="dark:text-gray-300">Current Location</Label>
