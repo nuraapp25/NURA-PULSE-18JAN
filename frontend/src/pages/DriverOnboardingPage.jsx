@@ -2919,14 +2919,22 @@ const DriverOnboardingPage = () => {
                 <span className="sm:hidden">Clear</span>
               </Button>
               <Button
-                onClick={() => setIsAssignDialogOpen(true)}
+                onClick={handleAssignButtonClick}
                 variant="outline"
                 size="sm"
-                className="border-green-500 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 text-sm"
+                className={`${
+                  hasAssignedLeads() 
+                    ? 'border-orange-500 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20' 
+                    : 'border-green-500 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20'
+                } text-sm`}
               >
                 <Users size={14} className="mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Assign Leads to Telecaller ({selectedLeadIds.length})</span>
-                <span className="sm:hidden">Assign ({selectedLeadIds.length})</span>
+                <span className="hidden sm:inline">
+                  {hasAssignedLeads() ? 'Re-assign Telecaller' : 'Assign Leads to Telecaller'} ({selectedLeadIds.length})
+                </span>
+                <span className="sm:hidden">
+                  {hasAssignedLeads() ? 'Re-assign' : 'Assign'} ({selectedLeadIds.length})
+                </span>
               </Button>
               <Button
                 onClick={() => setIsUnassignDialogOpen(true)}
