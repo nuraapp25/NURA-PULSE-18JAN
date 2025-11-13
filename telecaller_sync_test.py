@@ -325,15 +325,18 @@ class TelecallerSyncTester:
             self.log_test("6. Query Leads for Joshua", False, f"❌ {error_msg}", 
                         response.text if response else None)
         
-        # Cleanup: Delete the test lead
-        if test_lead_id:
-            print("\n--- CLEANUP: Deleting Test Lead ---")
-            delete_response = self.make_request("DELETE", f"/driver-onboarding/leads/{test_lead_id}")
+        # Cleanup: Unassign the test lead from Joshua
+        if test_lead_id and joshua_telecaller_id:
+            print("\n--- CLEANUP: Unassigning Test Lead from Joshua ---")
+            deassign_data = {
+                "lead_ids": [test_lead_id]
+            }
+            deassign_response = self.make_request("POST", "/telecallers/deassign-leads", deassign_data)
             
-            if delete_response is not None and delete_response.status_code == 200:
-                print("✅ Test lead deleted successfully")
+            if deassign_response is not None and deassign_response.status_code == 200:
+                print("✅ Test lead unassigned successfully")
             else:
-                print("⚠️  Failed to delete test lead - manual cleanup may be required")
+                print("⚠️  Failed to unassign test lead - manual cleanup may be required")
         
         return success_count, total_tests
     
