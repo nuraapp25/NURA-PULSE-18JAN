@@ -819,18 +819,33 @@ const TelecallerDeskMobile = () => {
           {/* Telecaller Selector for Admins */}
           {isAdmin && telecallers.length > 0 && (
             <div className="mb-3">
-              <Select value={selectedTelecaller} onValueChange={handleTelecallerChange}>
-                <SelectTrigger className="w-full dark:bg-gray-800 dark:border-gray-700">
-                  <SelectValue placeholder="Select a telecaller" />
-                </SelectTrigger>
-                <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
-                  {telecallers.map((telecaller) => (
-                    <SelectItem key={telecaller.email} value={telecaller.email}>
-                      {telecaller.first_name} {telecaller.last_name} ({telecaller.email})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex gap-2">
+                <Select value={selectedTelecaller || ""} onValueChange={handleTelecallerChange}>
+                  <SelectTrigger className="flex-1 dark:bg-gray-800 dark:border-gray-700">
+                    <SelectValue placeholder="Select a telecaller" />
+                  </SelectTrigger>
+                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                    {telecallers.map((telecaller) => (
+                      <SelectItem key={telecaller.email} value={telecaller.email}>
+                        {telecaller.name ? telecaller.name.split(' ')[0] : telecaller.first_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  onClick={handleViewDesk}
+                  disabled={!selectedTelecaller}
+                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                >
+                  <User className="w-4 h-4 mr-2" />
+                  View Desk
+                </Button>
+              </div>
+              {selectedTelecaller && (
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                  Viewing desk for: {telecallers.find(t => t.email === selectedTelecaller)?.name || selectedTelecaller}
+                </p>
+              )}
             </div>
           )}
           
