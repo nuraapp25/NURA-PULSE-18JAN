@@ -747,6 +747,147 @@ async def get_stats(current_user: User = Depends(get_current_user)):
     }
 
 
+@api_router.get("/users/export")
+async def export_users(current_user: User = Depends(get_current_user)):
+    """Export all users with encrypted passwords (master admin only)"""
+    from cryptography.fernet import Fernet
+    import json
+    import base64
+    
+    if current_user.account_type != "master_admin":
+        raise HTTPException(status_code=403, detail="Only master admin can export users")
+    
+    try:
+        # Fetch all users from database
+        users = await db.users.find({}).to_list(None)
+        
+        # Get passwords from user_credentials collection
+        export_data = []
+        for user in users:
+            # Get hashed password
+            credential = await db.user_credentials.find_one({"user_id": user["id"]})
+            
+            user_data = {
+                "id": user.get("id"),
+                "first_name": user.get("first_name"),
+                "last_name": user.get("last_name"),
+                "email": user.get("email"),
+                "account_type": user.get("account_type"),
+                "status": user.get("status"),
+                "created_at": user.get("created_at"),
+                "is_temp_password": user.get("is_temp_password", False),
+                "telecaller_id": user.get("telecaller_id"),
+                "hashed_password": credential.get("hashed_password") if credential else None
+            }
+            export_data.append(user_data)
+        
+        # Generate encryption key
+        encryption_key = Fernet.generate_key()
+        cipher = Fernet(encryption_key)
+        
+        # Encrypt the data
+        json_data = json.dumps(export_data, default=str)
+        encrypted_data = cipher.encrypt(json_data.encode())
+        
+        # Encode for transmission
+        encrypted_b64 = base64.b64encode(encrypted_data).decode()
+        key_b64 = base64.b64encode(encryption_key).decode()
+        
+        return {
+            "success": True,
+            "encrypted_data": encrypted_b64,
+            "encryption_key": key_b64,
+            "count": len(export_data),
+            "exported_at": datetime.now(timezone.utc).isoformat(),
+            "message": "Users exported successfully. Save both the data and encryption key securely."
+        }
+    
+    except Exception as e:
+        logger.error(f"Error exporting users: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error exporting users: {str(e)}")
+
+
+@api_router.post("/users/import")
+async def import_users(
+    encrypted_data: str = Body(...),
+    encryption_key: str = Body(...),
+    current_user: User = Depends(get_current_user)
+):
+    """Import users from encrypted export file (master admin only)"""
+    from cryptography.fernet import Fernet
+    import json
+    import base64
+    
+    if current_user.account_type != "master_admin":
+        raise HTTPException(status_code=403, detail="Only master admin can import users")
+    
+    try:
+        # Decode encryption key and data
+        key = base64.b64decode(encryption_key.encode())
+        encrypted_bytes = base64.b64decode(encrypted_data.encode())
+        
+        # Decrypt data
+        cipher = Fernet(key)
+        decrypted_data = cipher.decrypt(encrypted_bytes)
+        users_data = json.loads(decrypted_data.decode())
+        
+        imported_count = 0
+        skipped_count = 0
+        errors = []
+        
+        for user_data in users_data:
+            try:
+                # Check if user already exists
+                existing_user = await db.users.find_one({"email": user_data["email"]})
+                
+                if existing_user:
+                    skipped_count += 1
+                    continue
+                
+                # Prepare user document
+                user_doc = {
+                    "id": user_data["id"],
+                    "first_name": user_data["first_name"],
+                    "last_name": user_data.get("last_name"),
+                    "email": user_data["email"],
+                    "account_type": user_data["account_type"],
+                    "status": user_data.get("status", "active"),
+                    "created_at": user_data.get("created_at"),
+                    "is_temp_password": user_data.get("is_temp_password", False),
+                    "telecaller_id": user_data.get("telecaller_id")
+                }
+                
+                # Insert user
+                await db.users.insert_one(user_doc)
+                
+                # Insert password credential if exists
+                if user_data.get("hashed_password"):
+                    credential_doc = {
+                        "user_id": user_data["id"],
+                        "hashed_password": user_data["hashed_password"]
+                    }
+                    await db.user_credentials.insert_one(credential_doc)
+                
+                imported_count += 1
+                
+            except Exception as e:
+                errors.append(f"Error importing {user_data.get('email', 'unknown')}: {str(e)}")
+                logger.error(f"Error importing user {user_data.get('email')}: {str(e)}")
+        
+        return {
+            "success": True,
+            "imported": imported_count,
+            "skipped": skipped_count,
+            "total": len(users_data),
+            "errors": errors,
+            "message": f"Successfully imported {imported_count} users. {skipped_count} users skipped (already exist)."
+        }
+    
+    except Exception as e:
+        logger.error(f"Error importing users: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error importing users: {str(e)}")
+
+
 @api_router.post("/users/sync-to-sheets")
 async def sync_all_users_to_sheets(current_user: User = Depends(get_current_user)):
     """Manually sync all users to Google Sheets (master admin and admin only)"""
