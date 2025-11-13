@@ -816,10 +816,56 @@ async def export_users(
         raise HTTPException(status_code=500, detail=f"Error exporting users: {str(e)}")
 
 
+@api_router.post("/users/import/check-duplicates")
+async def check_import_duplicates(
+    encrypted_data: str = Body(...),
+    encryption_key: str = Body(...),
+    current_user: User = Depends(get_current_user)
+):
+    """Check for duplicate users before importing (master admin only)"""
+    from cryptography.fernet import Fernet
+    import json
+    import base64
+    
+    if current_user.account_type != "master_admin":
+        raise HTTPException(status_code=403, detail="Only master admin can check duplicates")
+    
+    try:
+        # Decode encryption key and data
+        key = base64.b64decode(encryption_key.encode())
+        encrypted_bytes = base64.b64decode(encrypted_data.encode())
+        
+        # Decrypt data
+        cipher = Fernet(key)
+        decrypted_data = cipher.decrypt(encrypted_bytes)
+        users_data = json.loads(decrypted_data.decode())
+        
+        # Check for duplicates
+        duplicate_emails = []
+        for user_data in users_data:
+            existing_user = await db.users.find_one({"email": user_data["email"]})
+            if existing_user:
+                duplicate_emails.append(user_data["email"])
+        
+        return {
+            "success": True,
+            "duplicates_found": len(duplicate_emails) > 0,
+            "duplicate_count": len(duplicate_emails),
+            "duplicate_emails": duplicate_emails,
+            "total_users": len(users_data),
+            "new_users": len(users_data) - len(duplicate_emails)
+        }
+    
+    except Exception as e:
+        logger.error(f"Error checking duplicates: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error checking duplicates: {str(e)}")
+
+
 @api_router.post("/users/import")
 async def import_users(
     encrypted_data: str = Body(...),
     encryption_key: str = Body(...),
+    duplicate_action: str = Body("skip", description="Action for duplicates: 'skip' or 'replace'"),
     current_user: User = Depends(get_current_user)
 ):
     """Import users from encrypted export file (master admin only)"""
