@@ -196,6 +196,33 @@ const TelecallerDeskNew = () => {
     }
   };
   
+  // Count leads for a specific date
+  const getLeadCountForDate = (dateStr) => {
+    return allLeads.filter(lead => {
+      // Check assigned_date
+      if (lead.assigned_date) {
+        try {
+          const assignedDate = parseISO(lead.assigned_date);
+          if (format(assignedDate, 'yyyy-MM-dd') === dateStr) {
+            return true;
+          }
+        } catch {}
+      }
+      
+      // Check callback_date
+      if (lead.callback_date) {
+        try {
+          const callbackDate = parseISO(lead.callback_date);
+          if (format(callbackDate, 'yyyy-MM-dd') === dateStr) {
+            return true;
+          }
+        } catch {}
+      }
+      
+      return false;
+    }).length;
+  };
+  
   // Calculate statistics
   const calculateStats = (assigned, callbacks) => {
     const allLeads = [...assigned, ...callbacks];
