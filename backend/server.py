@@ -7545,6 +7545,276 @@ async def get_sheets_last_sync_time(current_user: User = Depends(get_current_use
         raise HTTPException(status_code=500, detail="Failed to get last sync time")
 
 
+
+
+# ==================== Vehicle Documents ====================
+
+@api_router.post("/vehicle-documents/upload-file")
+async def upload_vehicle_document_file(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user)
+):
+    """Upload document file for vehicle documents (pdf/png/word)"""
+    import shutil
+    from pathlib import Path
+    
+    try:
+        # Create directory if it doesn't exist
+        upload_dir = Path("/app/backend/uploaded_files/Vehicle_Docs")
+        upload_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Generate unique filename
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        file_extension = file.filename.split(".")[-1] if "." in file.filename else "pdf"
+        unique_filename = f"{timestamp}_{str(uuid.uuid4())[:8]}.{file_extension}"
+        file_path = upload_dir / unique_filename
+        
+        # Save file
+        with file_path.open("wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        # Return relative path
+        relative_path = f"Vehicle_Docs/{unique_filename}"
+        
+        return {
+            "success": True,
+            "message": "File uploaded successfully",
+            "file_path": relative_path,
+            "filename": unique_filename
+        }
+    
+    except Exception as e:
+        logger.error(f"Error uploading file: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error uploading file: {str(e)}")
+
+
+@api_router.get("/vehicle-documents")
+async def get_vehicle_documents(
+    skip: int = Query(0, description="Number of records to skip"),
+    limit: int = Query(50, description="Number of records to return"),
+    search: Optional[str] = Query(None, description="Search by VIN or vehicle name"),
+    current_user: User = Depends(get_current_user)
+):
+    """Get all vehicle documents with pagination and search"""
+    from app_models import VehicleDocument
+    
+    try:
+        # Build query
+        query = {}
+        
+        if search:
+            query["$or"] = [
+                {"vin": {"$regex": search, "$options": "i"}},
+                {"vehicle_name": {"$regex": search, "$options": "i"}},
+                {"vehicle_number": {"$regex": search, "$options": "i"}}
+            ]
+        
+        # Get total count
+        total = await db.vehicle_documents.count_documents(query)
+        
+        # Get documents
+        documents = await db.vehicle_documents.find(query).sort("created_at", -1).skip(skip).limit(limit).to_list(length=limit)
+        
+        return {
+            "success": True,
+            "documents": documents,
+            "total": total,
+            "page": (skip // limit) + 1 if limit > 0 else 1,
+            "total_pages": (total + limit - 1) // limit if limit > 0 else 1
+        }
+    
+    except Exception as e:
+        logger.error(f"Error fetching vehicle documents: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error fetching vehicle documents: {str(e)}")
+
+
+@api_router.get("/vehicle-documents/{document_id}")
+async def get_vehicle_document(
+    document_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get single vehicle document by ID"""
+    from app_models import VehicleDocument
+    
+    try:
+        document = await db.vehicle_documents.find_one({"id": document_id})
+        
+        if not document:
+            raise HTTPException(status_code=404, detail="Vehicle document not found")
+        
+        return {
+            "success": True,
+            "document": document
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching vehicle document: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error fetching vehicle document: {str(e)}")
+
+
+@api_router.post("/vehicle-documents")
+async def create_vehicle_document(
+    document_data: dict = Body(...),
+    current_user: User = Depends(get_current_user)
+):
+    """Create a new vehicle document"""
+    from app_models import VehicleDocument, VehicleDocumentCreate
+    
+    try:
+        # Parse dates if provided
+        if document_data.get("registration_expiry_date"):
+            document_data["registration_expiry_date"] = datetime.fromisoformat(document_data["registration_expiry_date"].replace("Z", "+00:00"))
+        
+        if document_data.get("insurance_expiry_date"):
+            document_data["insurance_expiry_date"] = datetime.fromisoformat(document_data["insurance_expiry_date"].replace("Z", "+00:00"))
+        
+        if document_data.get("purchase_date"):
+            document_data["purchase_date"] = datetime.fromisoformat(document_data["purchase_date"].replace("Z", "+00:00"))
+        
+        # Create document
+        new_document = VehicleDocument(
+            **document_data,
+            created_by=current_user.id,
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc)
+        )
+        
+        # Insert into database
+        result = await db.vehicle_documents.insert_one(new_document.model_dump(by_alias=True))
+        
+        logger.info(f"Created vehicle document {new_document.id} for VIN {new_document.vin}")
+        
+        return {
+            "success": True,
+            "message": "Vehicle document created successfully",
+            "document_id": new_document.id,
+            "document": new_document.model_dump(by_alias=True)
+        }
+    
+    except Exception as e:
+        logger.error(f"Error creating vehicle document: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error creating vehicle document: {str(e)}")
+
+
+@api_router.put("/vehicle-documents/{document_id}")
+async def update_vehicle_document(
+    document_id: str,
+    update_data: dict = Body(...),
+    current_user: User = Depends(get_current_user)
+):
+    """Update an existing vehicle document"""
+    from app_models import VehicleDocumentUpdate
+    
+    try:
+        # Check if document exists
+        existing_document = await db.vehicle_documents.find_one({"id": document_id})
+        if not existing_document:
+            raise HTTPException(status_code=404, detail="Vehicle document not found")
+        
+        # Parse dates if provided
+        if update_data.get("registration_expiry_date"):
+            update_data["registration_expiry_date"] = datetime.fromisoformat(update_data["registration_expiry_date"].replace("Z", "+00:00"))
+        
+        if update_data.get("insurance_expiry_date"):
+            update_data["insurance_expiry_date"] = datetime.fromisoformat(update_data["insurance_expiry_date"].replace("Z", "+00:00"))
+        
+        if update_data.get("purchase_date"):
+            update_data["purchase_date"] = datetime.fromisoformat(update_data["purchase_date"].replace("Z", "+00:00"))
+        
+        # Add updated_at timestamp
+        update_data["updated_at"] = datetime.now(timezone.utc)
+        
+        # Update document
+        result = await db.vehicle_documents.update_one(
+            {"id": document_id},
+            {"$set": update_data}
+        )
+        
+        if result.modified_count == 0:
+            logger.warning(f"No changes made to vehicle document {document_id}")
+        
+        # Fetch updated document
+        updated_document = await db.vehicle_documents.find_one({"id": document_id})
+        
+        logger.info(f"Updated vehicle document {document_id}")
+        
+        return {
+            "success": True,
+            "message": "Vehicle document updated successfully",
+            "document": updated_document
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating vehicle document: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error updating vehicle document: {str(e)}")
+
+
+@api_router.delete("/vehicle-documents/{document_id}")
+async def delete_vehicle_document(
+    document_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Delete a vehicle document (only for master admins and admins)"""
+    try:
+        # Check permissions
+        if current_user.account_type not in ["master_admin", "admin"]:
+            raise HTTPException(
+                status_code=403,
+                detail="Only master admins and admins can delete vehicle documents"
+            )
+        
+        # Check if document exists
+        existing_document = await db.vehicle_documents.find_one({"id": document_id})
+        if not existing_document:
+            raise HTTPException(status_code=404, detail="Vehicle document not found")
+        
+        # Delete document
+        result = await db.vehicle_documents.delete_one({"id": document_id})
+        
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Vehicle document not found")
+        
+        logger.info(f"Deleted vehicle document {document_id} by {current_user.email}")
+        
+        return {
+            "success": True,
+            "message": "Vehicle document deleted successfully"
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting vehicle document: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error deleting vehicle document: {str(e)}")
+
+
+@api_router.get("/vehicle-documents/file/{file_path:path}")
+async def get_vehicle_document_file(
+    file_path: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get vehicle document file"""
+    from pathlib import Path
+    
+    try:
+        # Construct full file path
+        full_path = Path(f"/app/backend/uploaded_files/{file_path}")
+        
+        if not full_path.exists():
+            raise HTTPException(status_code=404, detail="File not found")
+        
+        return FileResponse(full_path)
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error retrieving file: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error retrieving file: {str(e)}")
+
 # ==================== App Initialization ====================
 
 @app.on_event("startup")
