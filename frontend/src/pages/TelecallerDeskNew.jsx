@@ -60,6 +60,7 @@ const TelecallerDeskNew = () => {
   // Core state
   const [assignedLeads, setAssignedLeads] = useState([]);
   const [callbackLeads, setCallbackLeads] = useState([]);
+  const [allLeads, setAllLeads] = useState([]); // All leads for counting
   const [loading, setLoading] = useState(false);
   
   // Admin/telecaller selection
