@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Users, UserPlus, Trash2, Key, RefreshCw, CheckCircle, XCircle, UserCheck, Copy, Mail } from "lucide-react";
+import { Users, UserPlus, Trash2, Key, RefreshCw, CheckCircle, XCircle, UserCheck, Copy, Mail, Download, Upload } from "lucide-react";
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
