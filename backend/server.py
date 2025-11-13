@@ -2225,32 +2225,8 @@ async def bulk_import_leads(
             inserted_count = len(insert_result.inserted_ids)
             logger.info(f"Inserted {inserted_count} new leads")
         
-        # Step 9: Update telecaller profiles with assigned leads
-        updated_telecallers = 0
-        if telecaller_assignments:
-            logger.info(f"Updating {len(telecaller_assignments)} telecaller profiles with assigned leads...")
-            
-            for telecaller_email, lead_ids in telecaller_assignments.items():
-                # Get existing assigned leads (if any) and merge with new assignments
-                existing_telecaller = await telecallers_collection.find_one({"email": telecaller_email})
-                if existing_telecaller:
-                    existing_assigned_leads = existing_telecaller.get('assigned_leads', [])
-                    
-                    # Merge and deduplicate
-                    all_assigned_leads = list(set(existing_assigned_leads + lead_ids))
-                    
-                    # Update telecaller profile
-                    await telecallers_collection.update_one(
-                        {"email": telecaller_email},
-                        {
-                            "$set": {
-                                "assigned_leads": all_assigned_leads,
-                                "last_modified": datetime.now(timezone.utc).isoformat()
-                            }
-                        }
-                    )
-                    updated_telecallers += 1
-                    logger.info(f"Updated telecaller {telecaller_email} with {len(lead_ids)} new assigned leads")
+        # Telecaller assignments are stored directly in leads, no separate profile update needed
+        updated_telecallers = len(telecaller_assignments)
         
         # Get final count
         total_leads_now = await leads_collection.count_documents({})
