@@ -1573,6 +1573,7 @@ async def create_single_lead(
     phone_number: str = Body(...),
     email: Optional[str] = Body(None),
     source: Optional[str] = Body("Manual Entry"),
+    status: str = Body("New"),
     current_location: Optional[str] = Body(None),
     experience: Optional[str] = Body(None),
     monthly_salary: Optional[str] = Body(None),
