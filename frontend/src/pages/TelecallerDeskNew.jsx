@@ -145,6 +145,7 @@ const TelecallerDeskNew = () => {
     
     try {
       const token = localStorage.getItem("token");
+      console.log("🔍 Fetching all leads for counting:", telecallerEmail);
       const response = await axios.get(`${API}/telecaller-desk/leads`, {
         params: {
           telecaller_email: telecallerEmail
@@ -153,16 +154,16 @@ const TelecallerDeskNew = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
+      console.log("📦 All leads response:", response.data);
+      
       if (response.data.success) {
-        // Combine assigned and callback leads for counting
-        const allLeadsList = [
-          ...(response.data.assigned_leads || []),
-          ...(response.data.callback_leads || [])
-        ];
+        // When no date filter, backend returns all leads in assigned_leads
+        const allLeadsList = response.data.assigned_leads || [];
+        console.log("✅ Setting allLeads:", allLeadsList.length, "leads");
         setAllLeads(allLeadsList);
       }
     } catch (error) {
-      console.error("Error fetching all leads:", error);
+      console.error("❌ Error fetching all leads:", error);
     }
   };
   
