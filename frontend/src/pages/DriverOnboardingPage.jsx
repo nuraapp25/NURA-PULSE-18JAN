@@ -4321,6 +4321,51 @@ const DriverOnboardingPage = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Re-assign Confirmation Dialog */}
+      <Dialog open={isReassignConfirmOpen} onOpenChange={setIsReassignConfirmOpen}>
+        <DialogContent className="dark:bg-gray-800">
+          <DialogHeader>
+            <DialogTitle className="dark:text-white">Re-assign Telecaller?</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4 mb-4">
+              <p className="text-sm text-orange-800 dark:text-orange-200 font-medium mb-2">
+                ⚠️ Already Assigned Leads Detected
+              </p>
+              <p className="text-sm text-orange-700 dark:text-orange-300">
+                {getAssignedLeadsInfo().count} out of {getAssignedLeadsInfo().total} selected lead(s) are already assigned to a telecaller.
+              </p>
+            </div>
+            <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
+              Re-assigning will:
+            </p>
+            <ul className="text-sm text-gray-600 dark:text-gray-400 list-disc list-inside space-y-1 ml-2">
+              <li>Override the current telecaller assignment</li>
+              <li>Update the assignment date to your selected date</li>
+              <li>Move the lead to the new telecaller's desk</li>
+            </ul>
+            <p className="text-sm text-gray-700 dark:text-gray-300 mt-4 font-medium">
+              Do you want to proceed with re-assignment?
+            </p>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsReassignConfirmOpen(false)}
+              className="dark:border-gray-600"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={confirmReassignment}
+              className="bg-orange-600 hover:bg-orange-700"
+            >
+              Yes, Re-assign
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Bulk Import Dialog */}
       <Dialog open={bulkImportDialogOpen} onOpenChange={(open) => {
         setBulkImportDialogOpen(open);
