@@ -2056,9 +2056,20 @@ async def bulk_import_leads(
         
         logger.info(f"Found {len(existing_phones)} existing phone numbers")
         
-        # Step 5: Filter out duplicates and prepare new leads
+        # Step 5: Prepare leads for upsert (update existing or insert new)
         new_leads = []
-        duplicates_skipped = 0
+        existing_leads_to_update = []
+        duplicates_updated = 0
+        
+        # Build map of existing leads by phone number
+        existing_leads_map = {}
+        if current_leads:
+            for lead in current_leads:
+                phone = lead.get('phone_number', '')
+                if phone:
+                    normalized_phone = ''.join(filter(str.isdigit, str(phone).strip()))
+                    if normalized_phone:
+                        existing_leads_map[normalized_phone] = lead
         
         for idx, row in df.iterrows():
             # Handle None/null phone numbers safely
@@ -2072,20 +2083,26 @@ async def bulk_import_leads(
                 # Normalize phone number
                 normalized_phone = ''.join(filter(str.isdigit, phone))
                 
-                # Check if duplicate (only if normalized_phone has digits)
-                if normalized_phone and normalized_phone in existing_phones:
-                    duplicates_skipped += 1
-                    logger.info(f"Skipping duplicate phone: {phone}")
-                    continue
-                
-                # Add to existing phones to prevent duplicates within import file
-                if normalized_phone:
-                    existing_phones.add(normalized_phone)
-            
-            # Add to new leads list
-            new_leads.append(row)
+                # Check if this lead already exists
+                if normalized_phone and normalized_phone in existing_leads_map:
+                    # Update existing lead
+                    existing_lead = existing_leads_map[normalized_phone]
+                    row_dict = row.to_dict()
+                    row_dict['id'] = existing_lead['id']  # Keep original ID
+                    existing_leads_to_update.append(row_dict)
+                    duplicates_updated += 1
+                    logger.info(f"Will update existing lead: {phone}")
+                else:
+                    # New lead
+                    new_leads.append(row)
+                    # Add to map to prevent duplicates within import file
+                    if normalized_phone:
+                        existing_leads_map[normalized_phone] = {'phone_number': phone}
+            else:
+                # Lead without phone number - add as new
+                new_leads.append(row)
         
-        logger.info(f"New leads to add: {len(new_leads)}, Duplicates skipped: {duplicates_skipped}")
+        logger.info(f"New leads to add: {len(new_leads)}, Existing leads to update: {duplicates_updated}")
         
         if len(new_leads) == 0:
             logger.info("No new leads to add (all were duplicates)")
