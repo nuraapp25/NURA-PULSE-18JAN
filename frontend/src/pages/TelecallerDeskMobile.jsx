@@ -825,34 +825,89 @@ const TelecallerDeskMobile = () => {
             </div>
           )}
           
-          {/* Date Filter (Calendar) */}
-          <div className="mb-3">
+          {/* Horizontal Scrollable Date Selector */}
+          <div className="mb-4">
             <div className="flex items-center gap-2">
-              <div className="relative flex-1">
-                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-gray-400" />
-                <Input
-                  type="date"
-                  value={selectedDate || ""}
-                  onChange={(e) => setSelectedDate(e.target.value || null)}
-                  className="pl-10 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
-                  placeholder="Filter by date"
-                />
+              {/* Left Arrow */}
+              <Button
+                onClick={scrollDatesLeft}
+                disabled={dateScrollIndex === 0}
+                variant="outline"
+                size="sm"
+                className="p-2 dark:bg-gray-800 dark:border-gray-700"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              
+              {/* Date Cards Container */}
+              <div className="flex-1 overflow-hidden">
+                <div className="flex gap-2">
+                  {dateRange.slice(dateScrollIndex, dateScrollIndex + 5).map((dateStr) => {
+                    const date = new Date(dateStr);
+                    const isSelected = dateStr === selectedDate;
+                    const isToday = dateStr === new Date().toISOString().split('T')[0];
+                    const leadCount = getLeadCountForDate(dateStr);
+                    const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+                    const monthDay = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    
+                    return (
+                      <button
+                        key={dateStr}
+                        onClick={() => setSelectedDate(dateStr)}
+                        className={`flex-1 min-w-[70px] p-2 rounded-lg border-2 transition-all ${
+                          isSelected
+                            ? 'bg-blue-500 border-blue-500 text-white'
+                            : isToday
+                            ? 'bg-green-50 border-green-500 dark:bg-green-900/20'
+                            : 'bg-white border-gray-200 dark:bg-gray-800 dark:border-gray-700'
+                        }`}
+                      >
+                        <div className="text-xs font-medium">{dayName}</div>
+                        <div className={`text-sm font-bold ${isSelected ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
+                          {monthDay}
+                        </div>
+                        <div className={`text-xs mt-1 px-1.5 py-0.5 rounded ${
+                          isSelected 
+                            ? 'bg-white/20 text-white' 
+                            : leadCount > 0 
+                            ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+                            : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
+                        }`}>
+                          {leadCount} {leadCount === 1 ? 'lead' : 'leads'}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-              {selectedDate && (
-                <Button
-                  onClick={() => setSelectedDate(null)}
-                  variant="outline"
-                  size="sm"
-                  className="dark:bg-gray-800 dark:border-gray-700"
-                >
-                  <X className="w-4 h-4" />
-                </Button>
-              )}
+              
+              {/* Right Arrow */}
+              <Button
+                onClick={scrollDatesRight}
+                disabled={dateScrollIndex >= dateRange.length - 5}
+                variant="outline"
+                size="sm"
+                className="p-2 dark:bg-gray-800 dark:border-gray-700"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
             </div>
+            
+            {/* Clear Filter Button */}
             {selectedDate && (
-              <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                Showing leads from {new Date(selectedDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-              </p>
+              <div className="mt-2 flex items-center justify-between">
+                <p className="text-xs text-blue-600 dark:text-blue-400">
+                  Showing leads for {new Date(selectedDate).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                </p>
+                <Button
+                  onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])}
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs"
+                >
+                  Reset to Today
+                </Button>
+              </div>
             )}
           </div>
           
