@@ -889,6 +889,65 @@ const UserManagement = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Import Duplicate Dialog */}
+      <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
+        <DialogContent className="dark:bg-gray-800">
+          <DialogHeader>
+            <DialogTitle className="dark:text-white">Duplicate Users Found</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              {duplicateInfo?.duplicate_count} user(s) already exist in the database.
+            </p>
+            
+            {duplicateInfo?.duplicate_emails && (
+              <div className="max-h-40 overflow-y-auto bg-gray-50 dark:bg-gray-900 p-3 rounded">
+                <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">Duplicate Emails:</p>
+                <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+                  {duplicateInfo.duplicate_emails.map((email, index) => (
+                    <li key={index}>• {email}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-gray-900 dark:text-white">What would you like to do?</p>
+              <div className="flex flex-col space-y-2">
+                <Button
+                  onClick={() => performImport(importData, "replace")}
+                  className="w-full bg-orange-600 hover:bg-orange-700"
+                >
+                  Replace Existing Users
+                </Button>
+                <Button
+                  onClick={() => performImport(importData, "skip")}
+                  className="w-full bg-blue-600 hover:bg-blue-700"
+                >
+                  Skip Duplicates (Import New Only)
+                </Button>
+                <Button
+                  onClick={() => {
+                    setImportDialogOpen(false);
+                    setImportData(null);
+                    setDuplicateInfo(null);
+                  }}
+                  variant="outline"
+                  className="w-full"
+                >
+                  Cancel Import
+                </Button>
+              </div>
+            </div>
+            
+            <div className="text-xs text-gray-500 dark:text-gray-400 pt-2 border-t">
+              <p><strong>Replace:</strong> Updates existing users with imported data</p>
+              <p><strong>Skip:</strong> Keeps existing users, imports only new ones</p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
