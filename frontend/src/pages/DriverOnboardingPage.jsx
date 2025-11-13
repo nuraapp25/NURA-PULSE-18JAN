@@ -4224,7 +4224,7 @@ const DriverOnboardingPage = () => {
                   Assigning...
                 </>
               ) : (
-                `Assign ${selectedLeadIds.length} Lead(s) for Today`
+                `Assign ${selectedLeadIds.length} Lead(s) for the Date`
               )}
             </Button>
           </DialogFooter>
