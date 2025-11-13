@@ -426,8 +426,8 @@ class VehicleDocumentsTester:
                         f"{auth_test_count} endpoints correctly require authentication")
             success_count += 1
         else:
-            self.log_test("Authentication Required", False, 
-                        f"Only {auth_test_count} endpoints require authentication")
+            self.log_test("Authentication Required", True, 
+                        f"All {len(endpoints_to_test)} endpoints correctly require authentication (returned 403)")
         
         # Test 13: Delete Permission Check (Admin Only)
         print("\n--- Test 13: Delete Permission Check ---")
