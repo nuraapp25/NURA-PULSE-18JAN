@@ -3766,6 +3766,75 @@ async def delete_telecaller(telecaller_id: str, current_user: User = Depends(get
     return {"message": "Telecaller profile deleted successfully"}
 
 
+
+@api_router.post("/telecallers/sync-from-users")
+async def sync_telecallers_from_users(current_user: User = Depends(get_current_user)):
+    """Sync telecaller profiles from users collection (Admin only)"""
+    if current_user.account_type not in ["admin", "master_admin"]:
+        raise HTTPException(status_code=403, detail="Only admins can sync telecaller profiles")
+    
+    # Get all telecaller users
+    telecaller_users = await db.users.find(
+        {"account_type": "telecaller"},
+        {"_id": 0}
+    ).to_list(length=None)
+    
+    synced_count = 0
+    created_count = 0
+    updated_count = 0
+    
+    for user in telecaller_users:
+        # Check if telecaller profile exists
+        existing_profile = await db.telecaller_profiles.find_one({"email": user['email']})
+        
+        if not existing_profile:
+            # Create new telecaller profile
+            telecaller_profile = {
+                "id": str(uuid.uuid4()),
+                "name": f"{user.get('first_name', '')} {user.get('last_name', '')}".strip(),
+                "phone_number": "",
+                "email": user['email'],
+                "status": user.get('status', 'active'),
+                "notes": "Auto-synced from User Management",
+                "aadhar_card": "",
+                "pan_card": "",
+                "address_proof": "",
+                "total_assigned_leads": 0,
+                "active_leads": 0,
+                "converted_leads": 0,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "last_modified": datetime.now(timezone.utc).isoformat(),
+                "created_by": current_user.id
+            }
+            
+            await db.telecaller_profiles.insert_one(telecaller_profile)
+            created_count += 1
+            logger.info(f"Created telecaller profile for {user['email']}")
+        else:
+            # Update existing profile name and status if needed
+            update_data = {
+                "name": f"{user.get('first_name', '')} {user.get('last_name', '')}".strip(),
+                "status": user.get('status', 'active'),
+                "last_modified": datetime.now(timezone.utc).isoformat()
+            }
+            
+            await db.telecaller_profiles.update_one(
+                {"email": user['email']},
+                {"$set": update_data}
+            )
+            updated_count += 1
+            logger.info(f"Updated telecaller profile for {user['email']}")
+        
+        synced_count += 1
+    
+    return {
+        "message": f"Successfully synced {synced_count} telecaller(s)",
+        "created": created_count,
+        "updated": updated_count,
+        "total": synced_count
+    }
+
+
 @api_router.post("/telecallers/assign-leads")
 async def assign_leads_to_telecaller(
     assignment: LeadAssignment,
