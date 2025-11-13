@@ -702,6 +702,7 @@ const DriverOnboardingPage = () => {
         phone_number: newLeadForm.phone_number,
         email: newLeadForm.email || null,
         source: newLeadForm.source || "Manual Entry",
+        status: newLeadForm.status || "New",
         current_location: newLeadForm.current_location || null,
         experience: newLeadForm.experience || null,
         monthly_salary: newLeadForm.monthly_salary || null,
