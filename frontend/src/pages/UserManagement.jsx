@@ -517,7 +517,7 @@ const UserManagement = () => {
             className="border-blue-600 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
           >
             <Download size={18} className="mr-2" />
-            Export Users
+            {selectedUsers.length > 0 ? `Export Selected Users (${selectedUsers.length})` : 'Export All Users'}
           </Button>
           
           <label htmlFor="import-users-input">
