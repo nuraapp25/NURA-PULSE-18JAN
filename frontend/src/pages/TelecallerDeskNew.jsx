@@ -310,8 +310,42 @@ const TelecallerDeskNew = () => {
     });
   };
   
-  const filteredAssignedLeads = filterLeadsBySearch(assignedLeads);
-  const filteredCallbackLeads = filterLeadsBySearch(callbackLeads);
+  // Separate leads into called and not called
+  const separateLeadsByCalled = (leads) => {
+    const today = new Date().toISOString().split('T')[0];
+    
+    const notCalled = [];
+    const called = [];
+    
+    leads.forEach(lead => {
+      if (lead.last_called) {
+        try {
+          const callDate = parseISO(lead.last_called);
+          const callDateStr = format(callDate, 'yyyy-MM-dd');
+          
+          // If called today, move to "calling done"
+          if (callDateStr === today) {
+            called.push(lead);
+          } else {
+            notCalled.push(lead);
+          }
+        } catch {
+          notCalled.push(lead);
+        }
+      } else {
+        notCalled.push(lead);
+      }
+    });
+    
+    return { notCalled, called };
+  };
+  
+  const { notCalled: assignedNotCalled, called: assignedCalled } = separateLeadsByCalled(assignedLeads);
+  const { notCalled: callbackNotCalled, called: callbackCalled } = separateLeadsByCalled(callbackLeads);
+  
+  const filteredAssignedLeads = filterLeadsBySearch(assignedNotCalled);
+  const filteredCallbackLeads = filterLeadsBySearch(callbackNotCalled);
+  const filteredCallingDoneLeads = filterLeadsBySearch([...assignedCalled, ...callbackCalled]);
   
   // Format date to DD-MM-YYYY
   const formatDateDDMMYYYY = (isoDate) => {
