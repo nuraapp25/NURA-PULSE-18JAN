@@ -254,6 +254,78 @@ const UserManagement = () => {
     }
   };
 
+  const handleExportUsers = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(`${API}/users/export`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      // Create export file with both encrypted data and key
+      const exportData = {
+        encrypted_data: response.data.encrypted_data,
+        encryption_key: response.data.encryption_key,
+        count: response.data.count,
+        exported_at: response.data.exported_at
+      };
+
+      // Download as JSON file
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `users_export_${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast.success(`Successfully exported ${response.data.count} users with encrypted passwords`);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to export users");
+    }
+  };
+
+  const handleImportUsers = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    try {
+      const fileContent = await file.text();
+      const importData = JSON.parse(fileContent);
+
+      if (!importData.encrypted_data || !importData.encryption_key) {
+        toast.error("Invalid import file format");
+        return;
+      }
+
+      const token = localStorage.getItem("token");
+      const response = await axios.post(
+        `${API}/users/import`,
+        {
+          encrypted_data: importData.encrypted_data,
+          encryption_key: importData.encryption_key
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+
+      toast.success(
+        `Successfully imported ${response.data.imported} users. ${response.data.skipped} users skipped (already exist).`
+      );
+      
+      // Refresh user list
+      fetchData();
+      
+      // Reset file input
+      event.target.value = null;
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to import users");
+      event.target.value = null;
+    }
+  };
+
   const handleApproveReset = async (requestId) => {
     try {
       const token = localStorage.getItem("token");
