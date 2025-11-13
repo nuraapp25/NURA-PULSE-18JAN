@@ -92,7 +92,7 @@ const TelecallerDeskMobile = () => {
   const [showPendingLeads, setShowPendingLeads] = useState(true); // For pending from previous days
   
   // NEW: Calendar and Search state
-  const [selectedDate, setSelectedDate] = useState(null); // null means show all dates
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]); // Default to today's date
   const [searchQuery, setSearchQuery] = useState("");
   
   // NEW: Summary card filter state
