@@ -1624,7 +1624,7 @@ async def create_single_lead(
             "remarks": "",
             "remarks_history": [],
             "status_history": [{
-                "status": "New",
+                "status": status or "New",
                 "stage": "S1",
                 "changed_by": current_user.email,
                 "changed_at": datetime.now(timezone.utc)
