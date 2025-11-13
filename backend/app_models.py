@@ -579,3 +579,84 @@ class ImportStats(BaseModel):
     errors: int
     error_details: Optional[List[str]] = None
 
+
+# ==================== Vehicle Documents ====================
+
+class VehicleDocument(BaseModel):
+    """Vehicle Document Model"""
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    vin: str  # Vehicle Identification Number
+    vehicle_number: str
+    vehicle_name: str  # Derived from Vehicles List.xlsx
+    
+    # Document files (pdf/png/word)
+    rc_book: Optional[str] = None  # RC Book file path
+    insurance_doc: Optional[str] = None  # Insurance Document file path
+    sales_invoice: Optional[str] = None  # Sales Invoice file path
+    purchase_order: Optional[str] = None  # Purchase Order file path
+    
+    # Registration & Insurance Details
+    registration_number: Optional[str] = None
+    registration_expiry_date: Optional[datetime] = None
+    insurance_expiry_date: Optional[datetime] = None
+    
+    # Vehicle Details
+    vehicle_model_number: Optional[str] = None
+    vehicle_description: Optional[str] = None
+    vehicle_cost: Optional[float] = None
+    vehicle_manufacturer: Optional[str] = None
+    manufacturer_details: Optional[str] = None
+    purchase_date: Optional[datetime] = None
+    
+    # Additional Info
+    comments: Optional[str] = None
+    
+    # Metadata
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_by: Optional[str] = None  # user_id
+
+
+class VehicleDocumentCreate(BaseModel):
+    """Model for creating vehicle document"""
+    vin: str
+    vehicle_number: str
+    vehicle_name: str
+    rc_book: Optional[str] = None
+    insurance_doc: Optional[str] = None
+    sales_invoice: Optional[str] = None
+    purchase_order: Optional[str] = None
+    registration_number: Optional[str] = None
+    registration_expiry_date: Optional[datetime] = None
+    insurance_expiry_date: Optional[datetime] = None
+    vehicle_model_number: Optional[str] = None
+    vehicle_description: Optional[str] = None
+    vehicle_cost: Optional[float] = None
+    vehicle_manufacturer: Optional[str] = None
+    manufacturer_details: Optional[str] = None
+    purchase_date: Optional[datetime] = None
+    comments: Optional[str] = None
+
+
+class VehicleDocumentUpdate(BaseModel):
+    """Model for updating vehicle document"""
+    vin: Optional[str] = None
+    vehicle_number: Optional[str] = None
+    vehicle_name: Optional[str] = None
+    rc_book: Optional[str] = None
+    insurance_doc: Optional[str] = None
+    sales_invoice: Optional[str] = None
+    purchase_order: Optional[str] = None
+    registration_number: Optional[str] = None
+    registration_expiry_date: Optional[datetime] = None
+    insurance_expiry_date: Optional[datetime] = None
+    vehicle_model_number: Optional[str] = None
+    vehicle_description: Optional[str] = None
+    vehicle_cost: Optional[float] = None
+    vehicle_manufacturer: Optional[str] = None
+    manufacturer_details: Optional[str] = None
+    purchase_date: Optional[datetime] = None
+    comments: Optional[str] = None
+
