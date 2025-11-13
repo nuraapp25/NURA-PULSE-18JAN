@@ -274,6 +274,7 @@ const TelecallerDeskNew = () => {
       toast.error("Please select a telecaller first");
       return;
     }
+    fetchAllLeads(selectedTelecaller); // Fetch all leads for counting
     fetchLeadsForDate(selectedTelecaller);
   };
   
