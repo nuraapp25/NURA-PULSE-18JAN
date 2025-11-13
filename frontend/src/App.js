@@ -12,7 +12,7 @@ import PaymentReconciliation from "@/pages/PaymentReconciliation";
 import DriverOnboarding from "@/pages/DriverOnboardingPage";
 import TelecallerQueue from "@/pages/TelecallerQueue";
 import TelecallerDesk from "@/pages/TelecallerDesk";
-import TelecallerDeskMobile from "@/pages/TelecallerDeskMobile";
+import TelecallerDeskMobile from "@/pages/TelecallerDeskNew";
 import MontraVehicle from "@/pages/MontraVehicle";
 import VehicleServiceRequest from "@/pages/VehicleServiceRequest";
 import VehicleDocuments from "@/pages/VehicleDocuments";
