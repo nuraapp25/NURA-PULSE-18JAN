@@ -4255,21 +4255,77 @@ const DriverOnboardingPage = () => {
               </Select>
             </div>
 
-            {/* Assignment Date Selection */}
+            {/* Assignment Date Selection - Horizontal Scrollable */}
             <div>
-              <Label htmlFor="assignment-date" className="dark:text-gray-300">
+              <Label className="dark:text-gray-300 mb-2 block">
                 Assignment Date *
               </Label>
-              <Input
-                id="assignment-date"
-                type="date"
-                value={assignmentDate}
-                onChange={(e) => setAssignmentDate(e.target.value)}
-                min={new Date().toISOString().split('T')[0]}
-                className="dark:bg-gray-700 dark:border-gray-600 dark:text-white mt-2"
-              />
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Select the date when the telecaller should call these leads
+              <div className="flex items-center gap-2">
+                {/* Left Arrow */}
+                <Button
+                  type="button"
+                  onClick={scrollAssignmentDatesLeft}
+                  disabled={assignmentDateScrollIndex === 0}
+                  variant="outline"
+                  size="sm"
+                  className="p-2 dark:bg-gray-700 dark:border-gray-600"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                
+                {/* Date Cards Container */}
+                <div className="flex-1 overflow-hidden">
+                  <div className="flex gap-2">
+                    {assignmentDateRange.slice(assignmentDateScrollIndex, assignmentDateScrollIndex + 5).map((dateStr) => {
+                      const date = new Date(dateStr);
+                      const isSelected = dateStr === assignmentDate;
+                      const isToday = dateStr === new Date().toISOString().split('T')[0];
+                      const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+                      const monthDay = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                      
+                      return (
+                        <button
+                          key={dateStr}
+                          type="button"
+                          onClick={() => setAssignmentDate(dateStr)}
+                          className={`flex-1 min-w-[70px] p-2 rounded-lg border-2 transition-all ${
+                            isSelected
+                              ? 'bg-blue-500 border-blue-500 text-white'
+                              : isToday
+                              ? 'bg-green-50 border-green-500 dark:bg-green-900/20'
+                              : 'bg-white border-gray-200 dark:bg-gray-700 dark:border-gray-600'
+                          }`}
+                        >
+                          <div className="text-xs font-medium">{dayName}</div>
+                          <div className={`text-sm font-bold ${isSelected ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
+                            {monthDay}
+                          </div>
+                          {isToday && !isSelected && (
+                            <div className="text-xs text-green-600 dark:text-green-400 mt-1">Today</div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                
+                {/* Right Arrow */}
+                <Button
+                  type="button"
+                  onClick={scrollAssignmentDatesRight}
+                  disabled={assignmentDateScrollIndex >= assignmentDateRange.length - 5}
+                  variant="outline"
+                  size="sm"
+                  className="p-2 dark:bg-gray-700 dark:border-gray-600"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                {assignmentDate 
+                  ? `Selected: ${new Date(assignmentDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}`
+                  : 'Select the date when the telecaller should call these leads'
+                }
               </p>
             </div>
           </div>
