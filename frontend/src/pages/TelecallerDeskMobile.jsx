@@ -335,7 +335,7 @@ const TelecallerDeskMobile = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      const response = await axios.get(`${API}/driver-onboarding/leads?telecaller=${user.id}&skip_pagination=true`, {
+      const response = await axios.get(`${API}/driver-onboarding/leads?telecaller=${user.email}&skip_pagination=true`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       // Handle both response formats
