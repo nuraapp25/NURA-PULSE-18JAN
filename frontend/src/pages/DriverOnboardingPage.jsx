@@ -247,6 +247,7 @@ const DriverOnboardingPage = () => {
   // Bulk lead assignment dialog
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
   const [isUnassignDialogOpen, setIsUnassignDialogOpen] = useState(false);
+  const [isReassignConfirmOpen, setIsReassignConfirmOpen] = useState(false);
   const [selectedTelecallerForAssignment, setSelectedTelecallerForAssignment] = useState("");
   const [assignmentDate, setAssignmentDate] = useState("");
   
