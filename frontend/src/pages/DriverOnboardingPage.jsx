@@ -128,6 +128,9 @@ const DriverOnboardingPage = () => {
   const [loading, setLoading] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [createLeadDialogOpen, setCreateLeadDialogOpen] = useState(false);
+  const [createLeadDuplicateDialogOpen, setCreateLeadDuplicateDialogOpen] = useState(false);
+  const [duplicateLeadInfo, setDuplicateLeadInfo] = useState(null);
   const [bulkStatusDialogOpen, setBulkStatusDialogOpen] = useState(false);
   const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
   const [duplicateData, setDuplicateData] = useState(null);
