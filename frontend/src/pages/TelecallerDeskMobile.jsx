@@ -307,10 +307,13 @@ const TelecallerDeskMobile = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
+      console.log("🔍 Fetching leads for telecaller:", telecallerEmail);
       const response = await axios.get(`${API}/driver-onboarding/leads?telecaller=${telecallerEmail}&skip_pagination=true`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const leadsData = response.data.leads || response.data || [];
+      console.log("📦 Received leads from API:", leadsData.length, "leads");
+      console.log("📋 First lead (if any):", leadsData[0]);
       setLeads(leadsData);
     } catch (error) {
       console.error("Error fetching leads:", error);
