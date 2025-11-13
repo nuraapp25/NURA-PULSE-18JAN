@@ -2122,45 +2122,70 @@ async def bulk_import_leads(
         # Convert new leads list to DataFrame for processing
         df_new = pd.DataFrame(new_leads)
         
-        # Step 6: Process telecaller assignments
-        telecallers_collection = db['telecallers']
+        # Step 6: Process telecaller assignments from USERS collection
+        users_collection = db['users']
         telecaller_assignments = {}
         leads_with_assignments = 0
         
-        if 'assigned_telecaller' in df_new.columns:
-            logger.info("Processing telecaller assignments...")
+        # Process both new leads and existing leads to update
+        all_leads_to_process = new_leads + existing_leads_to_update
+        
+        if 'assigned_telecaller' in df.columns or 'assigned_telecaller' in (all_leads_to_process[0] if all_leads_to_process else {}):
+            logger.info("Processing telecaller assignments from users collection...")
             
-            # Get all active telecallers
-            all_telecallers = await telecallers_collection.find({"is_active": True}).to_list(length=None)
-            telecaller_name_map = {tc['name'].strip().lower(): tc for tc in all_telecallers}
+            # Get all telecaller users
+            all_telecallers = await users_collection.find({"account_type": "telecaller"}).to_list(length=None)
             
-            logger.info(f"Found {len(all_telecallers)} active telecallers in database")
-            
-            # Process each new lead's telecaller assignment
-            for idx, row in df_new.iterrows():
-                assigned_telecaller = row.get('assigned_telecaller')
+            # Build name map with multiple variations
+            telecaller_name_map = {}
+            for tc in all_telecallers:
+                full_name = f"{tc.get('first_name', '')} {tc.get('last_name', '')}".strip()
+                first_name = tc.get('first_name', '').strip()
                 
-                if pd.notna(assigned_telecaller) and str(assigned_telecaller).strip():
+                # Map by full name and first name (lowercase)
+                if full_name:
+                    telecaller_name_map[full_name.lower()] = tc
+                if first_name:
+                    telecaller_name_map[first_name.lower()] = tc
+            
+            logger.info(f"Found {len(all_telecallers)} telecaller users in database")
+            
+            # Process each lead's telecaller assignment
+            for lead_data in all_leads_to_process:
+                if isinstance(lead_data, pd.Series):
+                    lead_dict = lead_data.to_dict()
+                else:
+                    lead_dict = lead_data
+                
+                assigned_telecaller = lead_dict.get('assigned_telecaller')
+                
+                # If telecaller name is empty or NaN, unassign
+                if pd.isna(assigned_telecaller) or not str(assigned_telecaller).strip():
+                    lead_dict['assigned_telecaller'] = None
+                    lead_dict['assigned_telecaller_name'] = None
+                    logger.info(f"Unassigning telecaller for lead {lead_dict.get('id', 'unknown')}")
+                else:
                     telecaller_name = str(assigned_telecaller).strip()
                     telecaller_name_lower = telecaller_name.lower()
                     
                     if telecaller_name_lower in telecaller_name_map:
                         telecaller = telecaller_name_map[telecaller_name_lower]
-                        lead_id = row['id']
+                        lead_id = lead_dict['id']
                         
-                        df_new.at[idx, 'assigned_telecaller'] = telecaller['email']
+                        # Store email for assignment
+                        lead_dict['assigned_telecaller'] = telecaller['email']
+                        lead_dict['assigned_telecaller_name'] = f"{telecaller.get('first_name', '')} {telecaller.get('last_name', '')}".strip()
                         
                         if telecaller['email'] not in telecaller_assignments:
                             telecaller_assignments[telecaller['email']] = []
                         telecaller_assignments[telecaller['email']].append(lead_id)
                         
                         leads_with_assignments += 1
-                        logger.info(f"Assigned lead {lead_id} to telecaller {telecaller['name']}")
+                        logger.info(f"Assigned lead {lead_id} to telecaller {telecaller.get('first_name', '')}")
                     else:
-                        logger.warning(f"Telecaller '{telecaller_name}' not found for lead {row['id']}")
-                        df_new.at[idx, 'assigned_telecaller'] = None
-                else:
-                    df_new.at[idx, 'assigned_telecaller'] = None
+                        logger.warning(f"Telecaller '{telecaller_name}' not found in users - unassigning")
+                        lead_dict['assigned_telecaller'] = None
+                        lead_dict['assigned_telecaller_name'] = None
         
         # Step 7: Convert to list and clean NaN values
         leads_to_insert = df_new.to_dict('records')
