@@ -4336,6 +4336,7 @@ const DriverOnboardingPage = () => {
                 setIsAssignDialogOpen(false);
                 setSelectedTelecallerForAssignment("");
                 setAssignmentDate("");
+                setAssignmentDateScrollIndex(0);
               }}
               className="dark:border-gray-600"
               disabled={assigning}
