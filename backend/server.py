@@ -571,6 +571,33 @@ async def create_user(user_data: UserCreate, current_user: User = Depends(get_cu
     
     await db.users.insert_one(user_dict)
     
+    # If creating a telecaller, automatically create telecaller profile
+    if user_data.account_type == "telecaller":
+        # Check if telecaller profile already exists
+        existing_profile = await db.telecaller_profiles.find_one({"email": user_data.email})
+        
+        if not existing_profile:
+            telecaller_profile = {
+                "id": str(uuid.uuid4()),
+                "name": f"{user_data.first_name} {user_data.last_name}",
+                "phone_number": "",  # Can be updated later
+                "email": user_data.email,
+                "status": "active",  # Admin-created telecallers are active immediately
+                "notes": "Auto-created from User Management",
+                "aadhar_card": "",
+                "pan_card": "",
+                "address_proof": "",
+                "total_assigned_leads": 0,
+                "active_leads": 0,
+                "converted_leads": 0,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "last_modified": datetime.now(timezone.utc).isoformat(),
+                "created_by": current_user.id
+            }
+            
+            await db.telecaller_profiles.insert_one(telecaller_profile)
+            logger.info(f"Auto-created telecaller profile for {user_data.email}")
+    
     # Sync to Google Sheets
     sync_user_to_sheets(user_dict)
     
