@@ -293,13 +293,7 @@ const TelecallerDeskMobile = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       setTelecallers(response.data || []);
-      
-      // Auto-select first telecaller if available
-      if (response.data && response.data.length > 0) {
-        setSelectedTelecaller(response.data[0].email);
-        fetchLeadsForTelecaller(response.data[0].email);
-        setTimeout(() => fetchSummary(response.data[0].email), 100);
-      }
+      // Do NOT auto-select - let admin choose
     } catch (error) {
       console.error("Error fetching telecallers:", error);
       toast.error("Failed to load telecallers");
