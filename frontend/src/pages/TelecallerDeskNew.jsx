@@ -529,6 +529,7 @@ const TelecallerDeskNew = () => {
                   const isToday = dateStr === new Date().toISOString().split('T')[0];
                   const dayName = format(date, 'EEE');
                   const monthDay = format(date, 'MMM d');
+                  const leadCount = getLeadCountForDate(dateStr);
                   
                   return (
                     <button
@@ -545,6 +546,15 @@ const TelecallerDeskNew = () => {
                       <div className="text-xs font-medium">{dayName}</div>
                       <div className={`text-sm font-bold ${isSelected ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
                         {monthDay}
+                      </div>
+                      <div className={`text-xs mt-1 px-1.5 py-0.5 rounded ${
+                        isSelected 
+                          ? 'bg-white/20 text-white' 
+                          : leadCount > 0 
+                          ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+                          : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
+                      }`}>
+                        {leadCount} {leadCount === 1 ? 'lead' : 'leads'}
                       </div>
                     </button>
                   );
