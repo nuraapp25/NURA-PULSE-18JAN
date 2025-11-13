@@ -456,6 +456,34 @@ const UserManagement = () => {
         </div>
         <div className="flex items-center space-x-3">
           <Button
+            onClick={handleExportUsers}
+            variant="outline"
+            className="border-blue-600 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+          >
+            <Download size={18} className="mr-2" />
+            Export Users
+          </Button>
+          
+          <label htmlFor="import-users-input">
+            <Button
+              type="button"
+              variant="outline"
+              className="border-purple-600 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 cursor-pointer"
+              onClick={() => document.getElementById('import-users-input').click()}
+            >
+              <Upload size={18} className="mr-2" />
+              Import Users
+            </Button>
+          </label>
+          <input
+            id="import-users-input"
+            type="file"
+            accept=".json"
+            onChange={handleImportUsers}
+            className="hidden"
+          />
+          
+          <Button
             onClick={handleSyncToSheets}
             variant="outline"
             data-testid="sync-to-sheets-button"
