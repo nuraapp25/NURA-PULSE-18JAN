@@ -748,8 +748,11 @@ async def get_stats(current_user: User = Depends(get_current_user)):
 
 
 @api_router.get("/users/export")
-async def export_users(current_user: User = Depends(get_current_user)):
-    """Export all users with encrypted passwords (master admin only)"""
+async def export_users(
+    user_ids: Optional[str] = Query(None, description="Comma-separated user IDs to export"),
+    current_user: User = Depends(get_current_user)
+):
+    """Export users with encrypted passwords (master admin only)"""
     from cryptography.fernet import Fernet
     import json
     import base64
@@ -758,8 +761,14 @@ async def export_users(current_user: User = Depends(get_current_user)):
         raise HTTPException(status_code=403, detail="Only master admin can export users")
     
     try:
-        # Fetch all users from database
-        users = await db.users.find({}).to_list(None)
+        # Build query
+        query = {}
+        if user_ids:
+            user_id_list = user_ids.split(',')
+            query["id"] = {"$in": user_id_list}
+        
+        # Fetch users from database
+        users = await db.users.find(query).to_list(None)
         
         # Get passwords from user_credentials collection
         export_data = []
