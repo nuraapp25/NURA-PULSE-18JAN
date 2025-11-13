@@ -219,35 +219,51 @@ class TelecallerSyncTester:
             self.log_test("4. Get Existing Lead for Test", False, f"❌ {error_msg}", 
                         leads_response.text if leads_response else None)
         
-        # Step 5: Assign Test Lead to Joshua for Nov 15
-        print("\n--- STEP 5: Assign Test Lead to Joshua for Nov 15 ---")
+        # Step 5: Get Joshua's Telecaller ID and Assign Test Lead
+        print("\n--- STEP 5: Get Joshua's Telecaller ID and Assign Test Lead ---")
         
+        joshua_telecaller_id = None
         if test_lead_id:
-            assignment_data = {
-                "lead_ids": [test_lead_id],
-                "telecaller_email": "praylovemusic@gmail.com",
-                "assigned_date": "2025-11-15"
-            }
+            # First get Joshua's telecaller ID from the telecallers list
+            telecallers_response = self.make_request("GET", "/telecallers")
             
-            assign_response = self.make_request("POST", "/driver-onboarding/leads/assign", assignment_data)
-            
-            if assign_response is not None and assign_response.status_code == 200:
+            if telecallers_response is not None and telecallers_response.status_code == 200:
                 try:
-                    assign_result = assign_response.json()
-                    if assign_result.get("success"):
-                        assigned_count = assign_result.get("assigned_count", 0)
-                        self.log_test("5. Assign Test Lead to Joshua", True, 
-                                    f"✅ Successfully assigned {assigned_count} lead(s) to Joshua for 2025-11-15")
-                        success_count += 1
-                    else:
-                        self.log_test("5. Assign Test Lead to Joshua", False, 
-                                    f"❌ Assignment failed: {assign_result.get('message', 'Unknown error')}")
+                    telecallers = telecallers_response.json()
+                    for telecaller in telecallers:
+                        if telecaller.get("email") == "praylovemusic@gmail.com":
+                            joshua_telecaller_id = telecaller.get("id")
+                            break
                 except json.JSONDecodeError:
-                    self.log_test("5. Assign Test Lead to Joshua", False, "❌ Invalid JSON response", assign_response.text)
+                    pass
+            
+            if joshua_telecaller_id:
+                assignment_data = {
+                    "lead_ids": [test_lead_id],
+                    "telecaller_id": joshua_telecaller_id
+                }
+                
+                assign_response = self.make_request("POST", "/telecallers/assign-leads", assignment_data)
+                
+                if assign_response is not None and assign_response.status_code == 200:
+                    try:
+                        assign_result = assign_response.json()
+                        assigned_count = assign_result.get("assigned_count", 0)
+                        if assigned_count > 0:
+                            self.log_test("5. Assign Test Lead to Joshua", True, 
+                                        f"✅ Successfully assigned {assigned_count} lead(s) to Joshua")
+                            success_count += 1
+                        else:
+                            self.log_test("5. Assign Test Lead to Joshua", False, 
+                                        f"❌ Assignment failed: {assign_result.get('message', 'No leads assigned')}")
+                    except json.JSONDecodeError:
+                        self.log_test("5. Assign Test Lead to Joshua", False, "❌ Invalid JSON response", assign_response.text)
+                else:
+                    error_msg = "Network error" if not assign_response else f"Status {assign_response.status_code}"
+                    self.log_test("5. Assign Test Lead to Joshua", False, f"❌ {error_msg}", 
+                                assign_response.text if assign_response else None)
             else:
-                error_msg = "Network error" if not assign_response else f"Status {assign_response.status_code}"
-                self.log_test("5. Assign Test Lead to Joshua", False, f"❌ {error_msg}", 
-                            assign_response.text if assign_response else None)
+                self.log_test("5. Assign Test Lead to Joshua", False, "❌ Could not find Joshua's telecaller ID")
         else:
             self.log_test("5. Assign Test Lead to Joshua", False, "❌ No test lead ID available for assignment")
         
