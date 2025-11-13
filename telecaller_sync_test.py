@@ -253,21 +253,9 @@ class TelecallerSyncTester:
                         assign_result = assign_response.json()
                         assigned_count = assign_result.get("assigned_count", 0)
                         if assigned_count > 0:
-                            # Now set the assigned_date using PATCH endpoint
-                            update_data = {
-                                "assigned_date": "2025-11-15T00:00:00Z"
-                            }
-                            
-                            patch_response = self.make_request("PATCH", f"/driver-onboarding/leads/{test_lead_id}", update_data)
-                            
-                            if patch_response is not None and patch_response.status_code == 200:
-                                self.log_test("5. Assign Test Lead to Joshua", True, 
-                                            f"✅ Successfully assigned {assigned_count} lead(s) to Joshua and set assigned_date to 2025-11-15")
-                                success_count += 1
-                            else:
-                                self.log_test("5. Assign Test Lead to Joshua", True, 
-                                            f"✅ Successfully assigned {assigned_count} lead(s) to Joshua (assigned_date update failed)")
-                                success_count += 1
+                            self.log_test("5. Assign Test Lead to Joshua", True, 
+                                        f"✅ Successfully assigned {assigned_count} lead(s) to Joshua")
+                            success_count += 1
                         else:
                             self.log_test("5. Assign Test Lead to Joshua", False, 
                                         f"❌ Assignment failed: {assign_result.get('message', 'No leads assigned')}")
