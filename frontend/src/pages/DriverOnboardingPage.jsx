@@ -251,6 +251,35 @@ const DriverOnboardingPage = () => {
   const [selectedTelecallerForAssignment, setSelectedTelecallerForAssignment] = useState("");
   const [assignmentDate, setAssignmentDate] = useState("");
   
+  // Date selector for assignment dialog
+  const [assignmentDateScrollIndex, setAssignmentDateScrollIndex] = useState(0);
+  
+  // Generate date range for assignment (today to 30 days ahead)
+  const generateAssignmentDateRange = () => {
+    const dates = [];
+    const today = new Date();
+    
+    // Today to 30 days ahead
+    for (let i = 0; i <= 30; i++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+      dates.push(date.toISOString().split('T')[0]);
+    }
+    
+    return dates;
+  };
+  
+  const assignmentDateRange = generateAssignmentDateRange();
+  
+  // Scroll functions for assignment date selector
+  const scrollAssignmentDatesLeft = () => {
+    setAssignmentDateScrollIndex(Math.max(0, assignmentDateScrollIndex - 1));
+  };
+  
+  const scrollAssignmentDatesRight = () => {
+    setAssignmentDateScrollIndex(Math.min(assignmentDateRange.length - 5, assignmentDateScrollIndex + 1));
+  };
+  
   // Loading progress state
   const [loadingProgress, setLoadingProgress] = useState(0);
   
