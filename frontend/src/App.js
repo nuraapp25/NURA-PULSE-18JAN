@@ -15,6 +15,7 @@ import TelecallerDesk from "@/pages/TelecallerDesk";
 import TelecallerDeskMobile from "@/pages/TelecallerDeskMobile";
 import MontraVehicle from "@/pages/MontraVehicle";
 import VehicleServiceRequest from "@/pages/VehicleServiceRequest";
+import VehicleDocuments from "@/pages/VehicleDocuments";
 import Files from "@/pages/Files";
 import PaymentScreenshots from "@/pages/PaymentScreenshots";
 import BatteryConsumption from "@/pages/BatteryConsumption";
