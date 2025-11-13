@@ -122,12 +122,10 @@ class LeadAssignmentTester:
             "monthly_salary": "25000",
             "residing_chennai": "Yes",
             "current_location": "Chennai",
-            "lead_source": "Test Assignment",
-            "status": "New",
-            "stage": "S1"
+            "lead_source": "Test Assignment"
         }
         
-        response = self.make_request("POST", "/driver-onboarding/leads", test_lead_data)
+        response = self.make_request("POST", "/driver-onboarding/create-lead", test_lead_data)
         
         if not response:
             self.log_test("Create Test Lead", False, "Network error during lead creation")
