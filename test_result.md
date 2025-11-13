@@ -105,6 +105,18 @@
 user_problem_statement: "Add VEHICLE DOCUMENTS mini-app to Montra Vehicle dashboard as 11th section. Features: vehicle document management with file uploads (RC Book, Insurance Doc, Sales Invoice, Purchase Order), CRUD operations, VIN dropdown from Vehicles List.xlsx, view/edit dialog, delete for admins only."
 
 backend:
+  - task: "Vehicle Documents - Backend API Endpoints"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "IMPLEMENTATION COMPLETE: Created Vehicle Documents backend with full CRUD operations. ENDPOINTS ADDED: 1) POST /api/vehicle-documents/upload-file - Upload document files (pdf/png/word) to Vehicle_Docs folder, 2) GET /api/vehicle-documents - List all vehicle documents with pagination and search, 3) GET /api/vehicle-documents/{id} - Get single document by ID, 4) POST /api/vehicle-documents - Create new vehicle document with file paths, 5) PUT /api/vehicle-documents/{id} - Update existing document, 6) DELETE /api/vehicle-documents/{id} - Delete document (admin/master_admin only), 7) GET /api/vehicle-documents/file/{file_path} - Retrieve uploaded files. FEATURES: File upload handling with unique filenames, date field parsing (registration_expiry_date, insurance_expiry_date, purchase_date), permission checks for delete operation, MongoDB integration with vehicle_documents collection. FILES: /app/backend/server.py (new section added), /app/backend/app_models.py (VehicleDocument, VehicleDocumentCreate, VehicleDocumentUpdate models added). Ready for backend testing."
+  
   - task: "Driver Onboarding Bulk Export API - Excel File Generation"
     implemented: true
     working: true
