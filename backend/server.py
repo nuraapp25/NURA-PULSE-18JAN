@@ -7612,8 +7612,8 @@ async def get_vehicle_documents(
         # Get total count
         total = await db.vehicle_documents.count_documents(query)
         
-        # Get documents
-        documents = await db.vehicle_documents.find(query).sort("created_at", -1).skip(skip).limit(limit).to_list(length=limit)
+        # Get documents (exclude _id field to avoid ObjectId serialization issues)
+        documents = await db.vehicle_documents.find(query, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(length=limit)
         
         return {
             "success": True,
