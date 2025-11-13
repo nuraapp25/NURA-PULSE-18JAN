@@ -2104,19 +2104,20 @@ async def bulk_import_leads(
         
         logger.info(f"New leads to add: {len(new_leads)}, Existing leads to update: {duplicates_updated}")
         
-        if len(new_leads) == 0:
-            logger.info("No new leads to add (all were duplicates)")
+        if len(new_leads) == 0 and len(existing_leads_to_update) == 0:
+            logger.info("No leads to process")
             return {
                 "success": True,
                 "backup_created": backup_filename,
                 "new_leads_count": 0,
-                "duplicates_skipped": duplicates_skipped,
+                "updated_leads_count": 0,
+                "duplicates_updated": 0,
                 "total_leads_now": len(current_leads),
                 "telecaller_assignments": {
                     "leads_assigned": 0,
                     "telecallers_updated": 0
                 },
-                "message": "No new leads added. All entries were duplicates."
+                "message": "No leads to process."
             }
         
         # Convert new leads list to DataFrame for processing
