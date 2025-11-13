@@ -264,12 +264,20 @@ class TelecallerSyncTester:
             try:
                 joshua_leads = response.json()
                 
+                # Handle different response formats
+                if isinstance(joshua_leads, dict) and "leads" in joshua_leads:
+                    leads_list = joshua_leads["leads"]
+                elif isinstance(joshua_leads, list):
+                    leads_list = joshua_leads
+                else:
+                    leads_list = []
+                
                 # Look for our test lead in Joshua's assignments
                 test_lead_found = False
                 assigned_date_correct = False
                 
-                for lead in joshua_leads:
-                    if lead.get("id") == test_lead_id:
+                for lead in leads_list:
+                    if isinstance(lead, dict) and lead.get("id") == test_lead_id:
                         test_lead_found = True
                         assigned_date = lead.get("assigned_date", "")
                         
@@ -286,7 +294,7 @@ class TelecallerSyncTester:
                 
                 if not test_lead_found:
                     self.log_test("6. Query Leads for Joshua", False, 
-                                f"❌ Test lead not found in Joshua's {len(joshua_leads)} assigned leads")
+                                f"❌ Test lead not found in Joshua's {len(leads_list)} assigned leads")
                 
                 # Verify assigned_date field exists
                 if test_lead_found and assigned_date_correct:
@@ -299,6 +307,8 @@ class TelecallerSyncTester:
                 
             except json.JSONDecodeError:
                 self.log_test("6. Query Leads for Joshua", False, "❌ Invalid JSON response", response.text)
+            except Exception as e:
+                self.log_test("6. Query Leads for Joshua", False, f"❌ Error processing response: {e}")
         else:
             error_msg = "Network error" if not response else f"Status {response.status_code}"
             self.log_test("6. Query Leads for Joshua", False, f"❌ {error_msg}", 
