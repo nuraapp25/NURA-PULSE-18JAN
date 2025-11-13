@@ -649,6 +649,104 @@ const DriverOnboardingPage = () => {
     await handleImport(action);
   };
 
+  // Create single lead handlers
+  const handleCreateLeadSubmit = async () => {
+    // Validation
+    if (!newLeadForm.name || !newLeadForm.phone_number) {
+      toast.error("Please fill in all required fields (Name and Phone Number)");
+      return;
+    }
+
+    // Validate phone number format
+    const phoneRegex = /^[0-9]{10}$/;
+    if (!phoneRegex.test(newLeadForm.phone_number)) {
+      toast.error("Please enter a valid 10-digit phone number without prefix");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("token");
+
+      // Check for duplicates first
+      const checkResponse = await axios.post(
+        `${API}/driver-onboarding/check-duplicate`,
+        { phone_number: newLeadForm.phone_number },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (checkResponse.data.duplicate_found) {
+        // Show duplicate dialog
+        setDuplicateLeadInfo(checkResponse.data);
+        setCreateLeadDuplicateDialogOpen(true);
+      } else {
+        // No duplicate, create lead
+        await performCreateLead('skip');
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to check for duplicates");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const performCreateLead = async (duplicateAction) => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("token");
+
+      // Prepare lead data
+      const leadData = {
+        name: newLeadForm.name,
+        phone_number: newLeadForm.phone_number,
+        email: newLeadForm.email || null,
+        source: newLeadForm.source || "Manual Entry",
+        current_location: newLeadForm.current_location || null,
+        experience: newLeadForm.experience || null,
+        monthly_salary: newLeadForm.monthly_salary || null,
+        has_driving_license: newLeadForm.has_driving_license,
+        driving_license_no: newLeadForm.has_driving_license === 'yes' ? newLeadForm.driving_license_no : null,
+        has_badge: newLeadForm.has_badge,
+        badge_no: newLeadForm.has_badge === 'yes' ? newLeadForm.badge_no : null,
+        duplicate_action: duplicateAction
+      };
+
+      const response = await axios.post(
+        `${API}/driver-onboarding/create-lead`,
+        leadData,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      toast.success(response.data.message || "Lead created successfully!");
+      
+      // Reset form and close dialogs
+      setNewLeadForm({
+        name: '',
+        phone_number: '',
+        email: '',
+        source: '',
+        current_location: '',
+        experience: '',
+        monthly_salary: '',
+        has_driving_license: 'no',
+        driving_license_no: '',
+        has_badge: 'no',
+        badge_no: ''
+      });
+      setCreateLeadDialogOpen(false);
+      setCreateLeadDuplicateDialogOpen(false);
+      setDuplicateLeadInfo(null);
+
+      // Refresh leads
+      await fetchLeads();
+      await fetchStatusSummary();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to create lead");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSyncToSheets = async () => {
     setSyncing(true);
     try {
