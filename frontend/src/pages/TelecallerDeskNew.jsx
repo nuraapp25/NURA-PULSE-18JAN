@@ -725,7 +725,7 @@ const TelecallerDeskNew = () => {
             </div>
             
             {/* Callback Leads Section */}
-            <div>
+            <div className="mb-6">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
                 Callbacks for {format(new Date(selectedDate), 'MMM d, yyyy')} ({filteredCallbackLeads.length})
               </h2>
@@ -739,7 +739,26 @@ const TelecallerDeskNew = () => {
                   </CardContent>
                 </Card>
               ) : (
-                filteredCallbackLeads.map(renderLeadCard)
+                filteredCallbackLeads.map(lead => renderLeadCard(lead, false))
+              )}
+            </div>
+            
+            {/* Calling Done Section */}
+            <div>
+              <h2 className="text-lg font-semibold text-green-700 dark:text-green-400 mb-3">
+                Calling Done ({filteredCallingDoneLeads.length})
+              </h2>
+              {filteredCallingDoneLeads.length === 0 ? (
+                <Card className="dark:bg-gray-800">
+                  <CardContent className="p-6 text-center">
+                    <CheckCircle className="w-12 h-12 mx-auto text-gray-400 mb-2" />
+                    <p className="text-gray-600 dark:text-gray-400">
+                      No calls completed yet for this date
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                filteredCallingDoneLeads.map(lead => renderLeadCard(lead, true))
               )}
             </div>
           </>
