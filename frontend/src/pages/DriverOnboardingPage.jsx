@@ -136,6 +136,7 @@ const DriverOnboardingPage = () => {
     phone_number: '',
     email: '',
     source: '',
+    status: 'New',
     current_location: '',
     experience: '',
     monthly_salary: '',
