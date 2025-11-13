@@ -4153,13 +4153,11 @@ const DriverOnboardingPage = () => {
                 onValueChange={setSelectedTelecallerForAssignment}
               >
                 <SelectTrigger id="telecaller-select" className="dark:bg-gray-700 dark:border-gray-600">
-                  <SelectValue placeholder="Choose a telecaller...">
-                    {selectedTelecallerForAssignment && telecallers.find(t => t.email === selectedTelecallerForAssignment)?.name}
-                  </SelectValue>
+                  <SelectValue placeholder="Choose a telecaller..." />
                 </SelectTrigger>
                 <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
                   {telecallers.map((telecaller) => (
-                    <SelectItem key={telecaller.id} value={telecaller.email}>
+                    <SelectItem key={telecaller.id} value={telecaller.id}>
                       {telecaller.name}
                     </SelectItem>
                   ))}
