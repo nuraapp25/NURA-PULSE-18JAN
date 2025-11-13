@@ -2187,21 +2187,42 @@ async def bulk_import_leads(
                         lead_dict['assigned_telecaller'] = None
                         lead_dict['assigned_telecaller_name'] = None
         
-        # Step 7: Convert to list and clean NaN values
-        leads_to_insert = df_new.to_dict('records')
-        for lead in leads_to_insert:
-            for key, value in list(lead.items()):
+        # Step 7: Clean NaN values for all leads
+        def clean_lead_data(lead_dict):
+            cleaned = {}
+            for key, value in lead_dict.items():
                 if pd.isna(value):
-                    lead[key] = None
+                    cleaned[key] = None
+                else:
+                    cleaned[key] = value
+            return cleaned
         
-        # Step 8: INSERT only new leads (don't delete existing)
-        logger.info(f"Inserting {len(leads_to_insert)} new leads...")
-        if leads_to_insert:
+        # Step 8: Update existing leads
+        updated_count = 0
+        if existing_leads_to_update:
+            logger.info(f"Updating {len(existing_leads_to_update)} existing leads...")
+            for lead_data in existing_leads_to_update:
+                lead_dict = clean_lead_data(lead_data)
+                lead_id = lead_dict['id']
+                
+                # Update the lead (overwrite all fields)
+                await leads_collection.update_one(
+                    {"id": lead_id},
+                    {"$set": lead_dict}
+                )
+                updated_count += 1
+            
+            logger.info(f"Updated {updated_count} existing leads")
+        
+        # Step 9: INSERT new leads
+        inserted_count = 0
+        if new_leads:
+            leads_to_insert = [clean_lead_data(lead.to_dict() if isinstance(lead, pd.Series) else lead) for lead in new_leads]
+            logger.info(f"Inserting {len(leads_to_insert)} new leads...")
+            
             insert_result = await leads_collection.insert_many(leads_to_insert)
             inserted_count = len(insert_result.inserted_ids)
             logger.info(f"Inserted {inserted_count} new leads")
-        else:
-            inserted_count = 0
         
         # Step 9: Update telecaller profiles with assigned leads
         updated_telecallers = 0
