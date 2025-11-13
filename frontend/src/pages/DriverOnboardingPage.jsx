@@ -1479,27 +1479,31 @@ const DriverOnboardingPage = () => {
       // Always use today's date for assignment
       const todayDate = new Date().toISOString().split('T')[0];
       
+      // Find telecaller by ID to get email and name
+      const telecaller = telecallers.find(t => t.id === selectedTelecallerForAssignment);
+      if (!telecaller) {
+        toast.error("Telecaller not found");
+        setAssigning(false);
+        return;
+      }
+      
       await axios.patch(
         `${API}/driver-onboarding/bulk-assign`,
         {
           lead_ids: selectedLeadIds,
-          telecaller_email: selectedTelecallerForAssignment,
+          telecaller_email: telecaller.email,
           assignment_date: todayDate
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-
-      // Get telecaller name
-      const telecaller = telecallers.find(t => t.email === selectedTelecallerForAssignment);
-      const telecallerName = telecaller ? telecaller.name : selectedTelecallerForAssignment.split('@')[0];
 
       // Update leads in memory instead of refetching all
       const updatedLeads = leads.map(lead => {
         if (selectedLeadIds.includes(lead.id)) {
           return {
             ...lead,
-            assigned_telecaller: selectedTelecallerForAssignment,
-            assigned_telecaller_name: telecallerName,
+            assigned_telecaller: telecaller.email,
+            assigned_telecaller_name: telecaller.name,
             assigned_date: new Date(todayDate).toISOString()
           };
         }
@@ -1509,7 +1513,7 @@ const DriverOnboardingPage = () => {
       setLeads(updatedLeads);
       setFilteredLeads(updatedLeads);
       
-      toast.success(`Successfully assigned ${selectedLeadIds.length} lead(s) to ${telecallerName} for today`);
+      toast.success(`Successfully assigned ${selectedLeadIds.length} lead(s) to ${telecaller.name} for today`);
       setSelectedLeadIds([]);
       setIsAssignDialogOpen(false);
       setSelectedTelecallerForAssignment("");
