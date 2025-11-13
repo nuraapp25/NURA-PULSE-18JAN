@@ -157,18 +157,14 @@ const TelecallerDeskMobile = () => {
     
     // Filter by selected date - show leads assigned on that date + callback leads scheduled for that date
     if (selectedDate) {
-      const today = new Date().toISOString().split('T')[0];
       filtered = filtered.filter(lead => {
         const leadAssignedDate = lead.assigned_date ? lead.assigned_date.split('T')[0] : null;
         const leadCallbackDate = lead.callback_date ? lead.callback_date.split('T')[0] : null;
         
         // Show lead if:
         // 1. It was assigned on the selected date, OR
-        // 2. It has a callback scheduled for the selected date, OR
-        // 3. It has no assigned_date AND we're viewing today (legacy leads)
-        return leadAssignedDate === selectedDate || 
-               leadCallbackDate === selectedDate ||
-               (!leadAssignedDate && selectedDate === today);
+        // 2. It has a callback scheduled for the selected date
+        return leadAssignedDate === selectedDate || leadCallbackDate === selectedDate;
       });
     }
     
