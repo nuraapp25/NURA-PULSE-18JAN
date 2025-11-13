@@ -168,8 +168,6 @@ function App() {
     <AuthContext.Provider value={{ user, login, logout }}>
       <ThemeContext.Provider value={{ theme, toggleTheme }}>
         <div className="App">
-          {/* Server Health Monitor - Always visible */}
-          <ServerHealthMonitor />
           <BrowserRouter>
             <Routes>
               <Route path="/login" element={!user ? <LoginPage /> : <Navigate to="/dashboard" />} />
