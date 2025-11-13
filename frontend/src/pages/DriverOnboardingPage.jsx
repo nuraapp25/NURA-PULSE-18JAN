@@ -1513,7 +1513,8 @@ const DriverOnboardingPage = () => {
       setLeads(updatedLeads);
       setFilteredLeads(updatedLeads);
       
-      toast.success(`Successfully assigned ${selectedLeadIds.length} lead(s) to ${telecaller.name.split(' ')[0]} for today`);
+      const displayName = telecaller.name ? telecaller.name.split(' ')[0] : telecaller.email?.split('@')[0] || 'telecaller';
+      toast.success(`Successfully assigned ${selectedLeadIds.length} lead(s) to ${displayName} for today`);
       setSelectedLeadIds([]);
       setIsAssignDialogOpen(false);
       setSelectedTelecallerForAssignment("");
