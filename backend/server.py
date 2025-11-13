@@ -3422,6 +3422,88 @@ async def get_telecaller_summary(
         "end_date": end_date
     }
 
+
+
+@api_router.get("/telecaller-desk/leads")
+async def get_telecaller_desk_leads(
+    telecaller_email: str = Query(..., description="Telecaller email"),
+    date: str = Query(None, description="Date in YYYY-MM-DD format"),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get leads for Telecaller's Desk - shows leads assigned for specific date + callback leads
+    Returns two separate lists: assigned_leads and callback_leads
+    """
+    from datetime import datetime
+    import pytz
+    
+    # Verify telecaller exists
+    telecaller = await db.users.find_one({
+        "email": telecaller_email,
+        "account_type": "telecaller"
+    })
+    if not telecaller:
+        raise HTTPException(status_code=404, detail="Telecaller not found")
+    
+    # Get all leads assigned to this telecaller
+    all_leads = await db.driver_leads.find(
+        {"assigned_telecaller": telecaller_email},
+        {"_id": 0}
+    ).to_list(length=10000)
+    
+    # If no date filter, return all leads
+    if not date:
+        return {
+            "success": True,
+            "telecaller_email": telecaller_email,
+            "date_filter": None,
+            "assigned_leads": all_leads,
+            "callback_leads": [],
+            "total_assigned": len(all_leads),
+            "total_callbacks": 0
+        }
+    
+    # Parse the selected date
+    try:
+        selected_date = datetime.strptime(date, "%Y-%m-%d").date()
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format. Expected YYYY-MM-DD")
+    
+    # Filter leads for the selected date
+    assigned_for_date = []
+    callbacks_for_date = []
+    
+    for lead in all_leads:
+        # Check if lead is assigned for this date
+        if lead.get("assigned_date"):
+            try:
+                assigned_dt = datetime.fromisoformat(lead["assigned_date"])
+                if assigned_dt.date() == selected_date:
+                    assigned_for_date.append(lead)
+                    continue  # Don't check callback if already in assigned
+            except:
+                pass
+        
+        # Check if lead has callback for this date
+        if lead.get("callback_date"):
+            try:
+                callback_dt = datetime.fromisoformat(lead["callback_date"])
+                if callback_dt.date() == selected_date:
+                    callbacks_for_date.append(lead)
+            except:
+                pass
+    
+    return {
+        "success": True,
+        "telecaller_email": telecaller_email,
+        "date_filter": date,
+        "assigned_leads": assigned_for_date,
+        "callback_leads": callbacks_for_date,
+        "total_assigned": len(assigned_for_date),
+        "total_callbacks": len(callbacks_for_date)
+    }
+
+
     return {
         "success": True,
         "message": "Call marked as done",
