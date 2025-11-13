@@ -1616,7 +1616,7 @@ async def create_single_lead(
             "driving_license_no": driving_license_no if has_driving_license == "yes" else None,
             "has_badge": has_badge,
             "badge_no": badge_no if has_badge == "yes" else None,
-            "status": "New",
+            "status": status or "New",
             "stage": "S1",
             "import_date": datetime.now(timezone.utc).strftime('%Y-%m-%d'),
             "created_at": datetime.now(timezone.utc),
