@@ -131,6 +131,19 @@ const DriverOnboardingPage = () => {
   const [createLeadDialogOpen, setCreateLeadDialogOpen] = useState(false);
   const [createLeadDuplicateDialogOpen, setCreateLeadDuplicateDialogOpen] = useState(false);
   const [duplicateLeadInfo, setDuplicateLeadInfo] = useState(null);
+  const [newLeadForm, setNewLeadForm] = useState({
+    name: '',
+    phone_number: '',
+    email: '',
+    source: '',
+    current_location: '',
+    experience: '',
+    monthly_salary: '',
+    has_driving_license: 'no',
+    driving_license_no: '',
+    has_badge: 'no',
+    badge_no: ''
+  });
   const [bulkStatusDialogOpen, setBulkStatusDialogOpen] = useState(false);
   const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
   const [duplicateData, setDuplicateData] = useState(null);
