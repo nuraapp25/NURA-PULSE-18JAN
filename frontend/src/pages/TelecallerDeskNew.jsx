@@ -83,6 +83,9 @@ const TelecallerDeskNew = () => {
     callbacks: 0
   });
   
+  // Collapsible sections
+  const [isCallingDoneExpanded, setIsCallingDoneExpanded] = useState(true);
+  
   // Status dialog
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null);
