@@ -7736,7 +7736,7 @@ async def update_vehicle_document(
             logger.warning(f"No changes made to vehicle document {document_id}")
         
         # Fetch updated document
-        updated_document = await db.vehicle_documents.find_one({"id": document_id})
+        updated_document = await db.vehicle_documents.find_one({"id": document_id}, {"_id": 0})
         
         logger.info(f"Updated vehicle document {document_id}")
         
