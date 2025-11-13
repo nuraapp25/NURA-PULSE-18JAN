@@ -2129,7 +2129,7 @@ const DriverOnboardingPage = () => {
             size="sm"
           >
             <Plus size={16} className="mr-1 sm:mr-2" />
-            <span className="hidden sm:inline">+ Create a lead</span>
+            <span className="hidden sm:inline">Create a lead</span>
             <span className="sm:hidden">Create</span>
           </Button>
         </div>
