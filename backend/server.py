@@ -7709,7 +7709,7 @@ async def update_vehicle_document(
     
     try:
         # Check if document exists
-        existing_document = await db.vehicle_documents.find_one({"id": document_id})
+        existing_document = await db.vehicle_documents.find_one({"id": document_id}, {"_id": 0})
         if not existing_document:
             raise HTTPException(status_code=404, detail="Vehicle document not found")
         
@@ -7768,7 +7768,7 @@ async def delete_vehicle_document(
             )
         
         # Check if document exists
-        existing_document = await db.vehicle_documents.find_one({"id": document_id})
+        existing_document = await db.vehicle_documents.find_one({"id": document_id}, {"_id": 0})
         if not existing_document:
             raise HTTPException(status_code=404, detail="Vehicle document not found")
         
