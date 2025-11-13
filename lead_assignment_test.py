@@ -203,12 +203,21 @@ class LeadAssignmentTester:
         if response.status_code == 200:
             try:
                 leads = response.json()
-                print(f"DEBUG: Leads response type: {type(leads)}")
-                if isinstance(leads, list):
+                # Handle the actual response format: {"leads": [...], "total": N}
+                if isinstance(leads, dict) and "leads" in leads:
+                    leads_list = leads["leads"]
+                    joshua_leads = [lead for lead in leads_list if lead.get("assigned_telecaller") == JOSHUA_EMAIL]
+                    test_lead_found = any(lead.get("id") == self.test_lead_id for lead in joshua_leads)
+                    
+                    # Debug: Show all leads assigned to Joshua
+                    print(f"DEBUG: Found {len(joshua_leads)} leads assigned to Joshua:")
+                    for lead in joshua_leads:
+                        print(f"  - {lead.get('name')} (ID: {lead.get('id')}) - Date: {lead.get('assigned_date')}")
+                elif isinstance(leads, list):
                     joshua_leads = [lead for lead in leads if lead.get("assigned_telecaller") == JOSHUA_EMAIL]
                     test_lead_found = any(lead.get("id") == self.test_lead_id for lead in joshua_leads)
                 else:
-                    print(f"DEBUG: Unexpected leads response format: {leads}")
+                    print(f"DEBUG: Unexpected leads response format: {type(leads)}")
                     joshua_leads = []
                     test_lead_found = False
                 
