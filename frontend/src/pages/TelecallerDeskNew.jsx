@@ -256,6 +256,7 @@ const TelecallerDeskNew = () => {
     if (isAdmin) {
       fetchTelecallers();
     } else {
+      fetchAllLeads(user?.email); // Fetch all leads for counting
       fetchLeadsForDate(user?.email);
     }
   }, []);
