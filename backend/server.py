@@ -7637,7 +7637,7 @@ async def get_vehicle_document(
     from app_models import VehicleDocument
     
     try:
-        document = await db.vehicle_documents.find_one({"id": document_id})
+        document = await db.vehicle_documents.find_one({"id": document_id}, {"_id": 0})
         
         if not document:
             raise HTTPException(status_code=404, detail="Vehicle document not found")
