@@ -3401,6 +3401,247 @@ const DriverOnboardingPage = () => {
         </CardContent>
       </Card>
 
+      {/* Create Lead Dialog */}
+      <Dialog open={createLeadDialogOpen} onOpenChange={setCreateLeadDialogOpen}>
+        <DialogContent className="dark:bg-gray-800 max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="dark:text-white">Create a New Lead</DialogTitle>
+            <DialogDescription className="dark:text-gray-400">
+              Fill in the details to create a new driver lead
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 mt-4">
+            {/* Name */}
+            <div>
+              <Label className="dark:text-gray-300">Name *</Label>
+              <Input
+                value={newLeadForm.name}
+                onChange={(e) => setNewLeadForm({...newLeadForm, name: e.target.value})}
+                placeholder="Enter full name"
+                className="dark:bg-gray-700 dark:text-white"
+              />
+            </div>
+
+            {/* Phone Number */}
+            <div>
+              <Label className="dark:text-gray-300">Phone Number *</Label>
+              <Input
+                value={newLeadForm.phone_number}
+                onChange={(e) => setNewLeadForm({...newLeadForm, phone_number: e.target.value})}
+                placeholder="9876543210 (last 10 digits only)"
+                maxLength={10}
+                className="dark:bg-gray-700 dark:text-white"
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Don't add prefix like 0 or +91. Enter 10 digits only.
+              </p>
+            </div>
+
+            {/* Email */}
+            <div>
+              <Label className="dark:text-gray-300">Email</Label>
+              <Input
+                type="email"
+                value={newLeadForm.email}
+                onChange={(e) => setNewLeadForm({...newLeadForm, email: e.target.value})}
+                placeholder="example@email.com"
+                className="dark:bg-gray-700 dark:text-white"
+              />
+            </div>
+
+            {/* Source */}
+            <div>
+              <Label className="dark:text-gray-300">Source</Label>
+              <Input
+                value={newLeadForm.source}
+                onChange={(e) => setNewLeadForm({...newLeadForm, source: e.target.value})}
+                placeholder="e.g., Referral, Website, Walk-in"
+                className="dark:bg-gray-700 dark:text-white"
+              />
+            </div>
+
+            {/* Current Location */}
+            <div>
+              <Label className="dark:text-gray-300">Current Location</Label>
+              <Input
+                value={newLeadForm.current_location}
+                onChange={(e) => setNewLeadForm({...newLeadForm, current_location: e.target.value})}
+                placeholder="City or Area"
+                className="dark:bg-gray-700 dark:text-white"
+              />
+            </div>
+
+            {/* Experience */}
+            <div>
+              <Label className="dark:text-gray-300">Experience</Label>
+              <Input
+                value={newLeadForm.experience}
+                onChange={(e) => setNewLeadForm({...newLeadForm, experience: e.target.value})}
+                placeholder="e.g., 2 years, 5 years"
+                className="dark:bg-gray-700 dark:text-white"
+              />
+            </div>
+
+            {/* Monthly Salary */}
+            <div>
+              <Label className="dark:text-gray-300">Monthly Salary</Label>
+              <Input
+                value={newLeadForm.monthly_salary}
+                onChange={(e) => setNewLeadForm({...newLeadForm, monthly_salary: e.target.value})}
+                placeholder="e.g., 25000, 30000"
+                className="dark:bg-gray-700 dark:text-white"
+              />
+            </div>
+
+            {/* Driving License */}
+            <div>
+              <Label className="dark:text-gray-300">Driving License</Label>
+              <Select
+                value={newLeadForm.has_driving_license}
+                onValueChange={(value) => setNewLeadForm({...newLeadForm, has_driving_license: value})}
+              >
+                <SelectTrigger className="dark:bg-gray-700 dark:text-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="no">No</SelectItem>
+                  <SelectItem value="yes">Yes</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* DL Number (conditional) */}
+            {newLeadForm.has_driving_license === 'yes' && (
+              <div>
+                <Label className="dark:text-gray-300">Driving License No.</Label>
+                <Input
+                  value={newLeadForm.driving_license_no}
+                  onChange={(e) => setNewLeadForm({...newLeadForm, driving_license_no: e.target.value})}
+                  placeholder="Enter DL number"
+                  className="dark:bg-gray-700 dark:text-white"
+                />
+              </div>
+            )}
+
+            {/* Badge */}
+            <div>
+              <Label className="dark:text-gray-300">Badge No</Label>
+              <Select
+                value={newLeadForm.has_badge}
+                onValueChange={(value) => setNewLeadForm({...newLeadForm, has_badge: value})}
+              >
+                <SelectTrigger className="dark:bg-gray-700 dark:text-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="no">No</SelectItem>
+                  <SelectItem value="yes">Yes</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Badge Number (conditional) */}
+            {newLeadForm.has_badge === 'yes' && (
+              <div>
+                <Label className="dark:text-gray-300">Badge No.</Label>
+                <Input
+                  value={newLeadForm.badge_no}
+                  onChange={(e) => setNewLeadForm({...newLeadForm, badge_no: e.target.value})}
+                  placeholder="Enter badge number"
+                  className="dark:bg-gray-700 dark:text-white"
+                />
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="mt-6">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setCreateLeadDialogOpen(false);
+                setNewLeadForm({
+                  name: '',
+                  phone_number: '',
+                  email: '',
+                  source: '',
+                  current_location: '',
+                  experience: '',
+                  monthly_salary: '',
+                  has_driving_license: 'no',
+                  driving_license_no: '',
+                  has_badge: 'no',
+                  badge_no: ''
+                });
+              }}
+              className="dark:bg-gray-700 dark:text-white"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleCreateLeadSubmit}
+              disabled={loading}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {loading ? "Creating..." : "Create Lead"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Lead Duplicate Dialog */}
+      <Dialog open={createLeadDuplicateDialogOpen} onOpenChange={setCreateLeadDuplicateDialogOpen}>
+        <DialogContent className="dark:bg-gray-800">
+          <DialogHeader>
+            <DialogTitle className="dark:text-white text-orange-600">Duplicate Phone Number Found</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              A lead with phone number <strong>{newLeadForm.phone_number}</strong> already exists in the database.
+            </p>
+            
+            {duplicateLeadInfo?.existing_lead && (
+              <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded space-y-2">
+                <p className="text-sm font-medium text-gray-900 dark:text-white">Existing Lead Details:</p>
+                <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+                  <p><strong>Name:</strong> {duplicateLeadInfo.existing_lead.name}</p>
+                  <p><strong>Phone:</strong> {duplicateLeadInfo.existing_lead.phone_number}</p>
+                  <p><strong>Email:</strong> {duplicateLeadInfo.existing_lead.email || 'N/A'}</p>
+                  <p><strong>Status:</strong> {duplicateLeadInfo.existing_lead.status}</p>
+                  <p><strong>Stage:</strong> {duplicateLeadInfo.existing_lead.stage}</p>
+                </div>
+              </div>
+            )}
+            
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-gray-900 dark:text-white">What would you like to do?</p>
+              <div className="flex flex-col space-y-2">
+                <Button
+                  onClick={() => performCreateLead('replace')}
+                  className="w-full bg-orange-600 hover:bg-orange-700"
+                  disabled={loading}
+                >
+                  Replace Existing Lead
+                </Button>
+                <Button
+                  onClick={() => {
+                    setCreateLeadDuplicateDialogOpen(false);
+                    setDuplicateLeadInfo(null);
+                  }}
+                  variant="outline"
+                  className="w-full"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+            
+            <div className="text-xs text-gray-500 dark:text-gray-400 pt-2 border-t">
+              <p><strong>Replace:</strong> Updates the existing lead with new information</p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Import Dialog */}
       <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
         <DialogContent className="dark:bg-gray-800">
