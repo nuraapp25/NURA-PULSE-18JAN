@@ -98,6 +98,44 @@ const TelecallerDeskMobile = () => {
   // NEW: Summary card filter state
   const [summaryFilter, setSummaryFilter] = useState(null); // null, 'total', 'calls_done', 'calls_pending', 'callbacks'
   
+  // Date selector scroll state
+  const [dateScrollIndex, setDateScrollIndex] = useState(0);
+  
+  // Generate date range (7 days before to 14 days after today)
+  const generateDateRange = () => {
+    const dates = [];
+    const today = new Date();
+    
+    // 7 days before to 14 days after = 22 days total
+    for (let i = -7; i <= 14; i++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+      dates.push(date.toISOString().split('T')[0]);
+    }
+    
+    return dates;
+  };
+  
+  const dateRange = generateDateRange();
+  
+  // Count leads for each date
+  const getLeadCountForDate = (dateStr) => {
+    return leads.filter(lead => {
+      const leadAssignedDate = lead.assigned_date ? lead.assigned_date.split('T')[0] : null;
+      const leadCallbackDate = lead.callback_date ? lead.callback_date.split('T')[0] : null;
+      return leadAssignedDate === dateStr || leadCallbackDate === dateStr;
+    }).length;
+  };
+  
+  // Navigate dates
+  const scrollDatesLeft = () => {
+    setDateScrollIndex(Math.max(0, dateScrollIndex - 1));
+  };
+  
+  const scrollDatesRight = () => {
+    setDateScrollIndex(Math.min(dateRange.length - 5, dateScrollIndex + 1));
+  };
+  
   // Filter leads based on date, search query, and summary card filter
   const getFilteredLeads = (leadsArray) => {
     let filtered = [...leadsArray];
