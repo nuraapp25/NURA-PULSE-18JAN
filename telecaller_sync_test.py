@@ -51,6 +51,9 @@ class TelecallerSyncTester:
             elif method.upper() == "POST":
                 headers["Content-Type"] = "application/json"
                 response = requests.post(url, headers=headers, json=data, timeout=30)
+            elif method.upper() == "PATCH":
+                headers["Content-Type"] = "application/json"
+                response = requests.patch(url, headers=headers, json=data, timeout=30)
             elif method.upper() == "DELETE":
                 if data is not None:
                     headers["Content-Type"] = "application/json"
