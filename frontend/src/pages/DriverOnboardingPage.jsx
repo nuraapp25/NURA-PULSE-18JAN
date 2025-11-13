@@ -1468,6 +1468,41 @@ const DriverOnboardingPage = () => {
     toast.success(`Showing all leads in ${stage}`);
   };
 
+  // Check if any selected leads are already assigned
+  const hasAssignedLeads = () => {
+    return selectedLeadIds.some(leadId => {
+      const lead = leads.find(l => l.id === leadId);
+      return lead && lead.assigned_telecaller;
+    });
+  };
+  
+  // Get assigned leads info
+  const getAssignedLeadsInfo = () => {
+    const assignedLeads = selectedLeadIds.filter(leadId => {
+      const lead = leads.find(l => l.id === leadId);
+      return lead && lead.assigned_telecaller;
+    });
+    return {
+      count: assignedLeads.length,
+      total: selectedLeadIds.length
+    };
+  };
+  
+  // Handle assign button click with confirmation check
+  const handleAssignButtonClick = () => {
+    if (hasAssignedLeads()) {
+      setIsReassignConfirmOpen(true);
+    } else {
+      setIsAssignDialogOpen(true);
+    }
+  };
+  
+  // Confirm re-assignment
+  const confirmReassignment = () => {
+    setIsReassignConfirmOpen(false);
+    setIsAssignDialogOpen(true);
+  };
+
   // Bulk lead assignment
   const handleBulkAssignLeads = async () => {
     if (!selectedTelecallerForAssignment) {
