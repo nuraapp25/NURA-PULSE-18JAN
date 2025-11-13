@@ -774,24 +774,24 @@ const TelecallerDeskNew = () => {
                 )}
               </div>
               
-              {isCallingDoneExpanded && (
-                <>
-                  {filteredCallingDoneLeads.length === 0 ? (
-                    <Card className="dark:bg-gray-800">
-                      <CardContent className="p-6 text-center">
-                        <CheckCircle className="w-12 h-12 mx-auto text-gray-400 mb-2" />
-                        <p className="text-gray-600 dark:text-gray-400">
-                          No calls completed yet for this date
-                        </p>
-                      </CardContent>
-                    </Card>
-                  ) : (
-                    <div className="space-y-3">
-                      {filteredCallingDoneLeads.map(lead => renderLeadCard(lead, true))}
-                    </div>
-                  )}
-                </>
-              )}
+              <div className={`transition-all duration-300 ease-in-out overflow-hidden ${
+                isCallingDoneExpanded ? 'max-h-[10000px] opacity-100' : 'max-h-0 opacity-0'
+              }`}>
+                {filteredCallingDoneLeads.length === 0 ? (
+                  <Card className="dark:bg-gray-800 mt-3">
+                    <CardContent className="p-6 text-center">
+                      <CheckCircle className="w-12 h-12 mx-auto text-gray-400 mb-2" />
+                      <p className="text-gray-600 dark:text-gray-400">
+                        No calls completed yet for this date
+                      </p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="space-y-3 mt-3">
+                    {filteredCallingDoneLeads.map(lead => renderLeadCard(lead, true))}
+                  </div>
+                )}
+              </div>
             </div>
           </>
         )}
