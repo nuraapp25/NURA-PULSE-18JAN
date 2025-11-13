@@ -139,6 +139,33 @@ const TelecallerDeskNew = () => {
     }
   };
   
+  // Fetch all leads (for counting by date)
+  const fetchAllLeads = async (telecallerEmail) => {
+    if (!telecallerEmail) return;
+    
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(`${API}/telecaller-desk/leads`, {
+        params: {
+          telecaller_email: telecallerEmail
+          // No date filter - get all leads
+        },
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.success) {
+        // Combine assigned and callback leads for counting
+        const allLeadsList = [
+          ...(response.data.assigned_leads || []),
+          ...(response.data.callback_leads || [])
+        ];
+        setAllLeads(allLeadsList);
+      }
+    } catch (error) {
+      console.error("Error fetching all leads:", error);
+    }
+  };
+  
   // Fetch leads for selected date
   const fetchLeadsForDate = async (telecallerEmail) => {
     if (!telecallerEmail) return;
