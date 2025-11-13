@@ -3629,6 +3629,12 @@ async def get_telecaller_users(current_user: User = Depends(get_current_user)):
         }
     ).to_list(1000)
     
+    # Add combined 'name' field for frontend compatibility
+    for telecaller in telecallers:
+        first_name = telecaller.get("first_name", "")
+        last_name = telecaller.get("last_name", "")
+        telecaller["name"] = f"{first_name} {last_name}".strip() if last_name else first_name
+    
     return telecallers
 
 
