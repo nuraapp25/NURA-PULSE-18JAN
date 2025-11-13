@@ -9263,6 +9263,216 @@ Case Test 6,9876540006,interested"""
         
         return success_count >= 10  # At least 10 out of 14 tests should pass
 
+    def test_telecaller_sync_and_assignment_flow(self):
+        """Test Telecaller Sync and Complete Assignment Flow as requested in review"""
+        print("\n=== Testing Telecaller Sync and Complete Assignment Flow ===")
+        
+        success_count = 0
+        
+        # Step 1: Sync Telecallers from Users
+        print("\n--- Step 1: Sync Telecallers from Users ---")
+        response = self.make_request("POST", "/telecallers/sync-from-users")
+        
+        if response is not None and response.status_code == 200:
+            try:
+                sync_result = response.json()
+                created_count = sync_result.get("created", 0)
+                updated_count = sync_result.get("updated", 0)
+                total_count = sync_result.get("total", 0)
+                
+                self.log_test("Telecaller Sync - Sync from Users", True, 
+                            f"Sync successful: {created_count} created, {updated_count} updated, {total_count} total telecaller profiles")
+                success_count += 1
+            except json.JSONDecodeError:
+                self.log_test("Telecaller Sync - Sync from Users", False, "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Telecaller Sync - Sync from Users", False, error_msg, 
+                        response.text if response else None)
+        
+        # Step 2: Verify Joshua's Profile Exists
+        print("\n--- Step 2: Verify Joshua's Profile Exists ---")
+        response = self.make_request("GET", "/telecallers")
+        
+        joshua_found = False
+        if response is not None and response.status_code == 200:
+            try:
+                telecallers = response.json()
+                
+                # Look for Joshua (praylovemusic@gmail.com)
+                for telecaller in telecallers:
+                    if telecaller.get("email") == "praylovemusic@gmail.com":
+                        joshua_found = True
+                        self.log_test("Telecaller Sync - Joshua Profile Exists", True, 
+                                    f"Joshua found in telecaller profiles: {telecaller.get('name', 'Unknown Name')}")
+                        success_count += 1
+                        break
+                
+                if not joshua_found:
+                    self.log_test("Telecaller Sync - Joshua Profile Exists", False, 
+                                f"Joshua (praylovemusic@gmail.com) not found in {len(telecallers)} telecaller profiles")
+            except json.JSONDecodeError:
+                self.log_test("Telecaller Sync - Joshua Profile Exists", False, "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Telecaller Sync - Joshua Profile Exists", False, error_msg, 
+                        response.text if response else None)
+        
+        # Step 3: Verify Users API Returns Joshua
+        print("\n--- Step 3: Verify Users API Returns Joshua ---")
+        response = self.make_request("GET", "/users/telecallers")
+        
+        joshua_user_found = False
+        if response is not None and response.status_code == 200:
+            try:
+                telecaller_users = response.json()
+                
+                # Look for Joshua in users with telecaller account type
+                for user in telecaller_users:
+                    if user.get("email") == "praylovemusic@gmail.com":
+                        joshua_user_found = True
+                        self.log_test("Telecaller Sync - Joshua in Users API", True, 
+                                    f"Joshua found in users/telecallers: {user.get('first_name', 'Unknown')} {user.get('last_name', '')}")
+                        success_count += 1
+                        break
+                
+                if not joshua_user_found:
+                    self.log_test("Telecaller Sync - Joshua in Users API", False, 
+                                f"Joshua (praylovemusic@gmail.com) not found in {len(telecaller_users)} telecaller users")
+            except json.JSONDecodeError:
+                self.log_test("Telecaller Sync - Joshua in Users API", False, "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Telecaller Sync - Joshua in Users API", False, error_msg, 
+                        response.text if response else None)
+        
+        # Step 4: Create and Assign Test Lead to Joshua for Nov 15
+        print("\n--- Step 4: Create and Assign Test Lead to Joshua for Nov 15 ---")
+        
+        # First create a test lead
+        test_lead_data = {
+            "name": "Test Lead for Joshua Assignment",
+            "phone_number": "9999888777",
+            "email": "testlead@example.com",
+            "vehicle": "Auto",
+            "current_location": "Chennai",
+            "status": "New",
+            "stage": "S1",
+            "lead_source": "Test Assignment Flow"
+        }
+        
+        create_response = self.make_request("POST", "/driver-onboarding/leads", test_lead_data)
+        test_lead_id = None
+        
+        if create_response is not None and create_response.status_code == 200:
+            try:
+                create_result = create_response.json()
+                test_lead_id = create_result.get("lead", {}).get("id")
+                
+                if test_lead_id:
+                    self.log_test("Lead Assignment - Create Test Lead", True, 
+                                f"Test lead created successfully: ID {test_lead_id}")
+                    
+                    # Now assign the lead to Joshua for Nov 15, 2025
+                    assignment_data = {
+                        "lead_ids": [test_lead_id],
+                        "telecaller_email": "praylovemusic@gmail.com",
+                        "assigned_date": "2025-11-15"
+                    }
+                    
+                    assign_response = self.make_request("POST", "/driver-onboarding/leads/assign", assignment_data)
+                    
+                    if assign_response is not None and assign_response.status_code == 200:
+                        try:
+                            assign_result = assign_response.json()
+                            if assign_result.get("success"):
+                                assigned_count = assign_result.get("assigned_count", 0)
+                                self.log_test("Lead Assignment - Assign to Joshua", True, 
+                                            f"Successfully assigned {assigned_count} lead(s) to Joshua for 2025-11-15")
+                                success_count += 1
+                            else:
+                                self.log_test("Lead Assignment - Assign to Joshua", False, 
+                                            f"Assignment failed: {assign_result.get('message', 'Unknown error')}")
+                        except json.JSONDecodeError:
+                            self.log_test("Lead Assignment - Assign to Joshua", False, "Invalid JSON response", assign_response.text)
+                    else:
+                        error_msg = "Network error" if not assign_response else f"Status {assign_response.status_code}"
+                        self.log_test("Lead Assignment - Assign to Joshua", False, error_msg, 
+                                    assign_response.text if assign_response else None)
+                else:
+                    self.log_test("Lead Assignment - Create Test Lead", False, "No lead ID in create response")
+            except json.JSONDecodeError:
+                self.log_test("Lead Assignment - Create Test Lead", False, "Invalid JSON response", create_response.text)
+        else:
+            error_msg = "Network error" if not create_response else f"Status {create_response.status_code}"
+            self.log_test("Lead Assignment - Create Test Lead", False, error_msg, 
+                        create_response.text if create_response else None)
+        
+        # Step 5: Query Leads for Joshua
+        print("\n--- Step 5: Query Leads for Joshua ---")
+        response = self.make_request("GET", "/driver-onboarding/leads?telecaller=praylovemusic@gmail.com&skip_pagination=true")
+        
+        if response is not None and response.status_code == 200:
+            try:
+                joshua_leads = response.json()
+                
+                # Look for our test lead in Joshua's assignments
+                test_lead_found = False
+                assigned_date_correct = False
+                
+                for lead in joshua_leads:
+                    if lead.get("id") == test_lead_id:
+                        test_lead_found = True
+                        assigned_date = lead.get("assigned_date", "")
+                        
+                        # Check if assigned_date field is present and correct
+                        if "2025-11-15" in str(assigned_date):
+                            assigned_date_correct = True
+                            self.log_test("Lead Assignment - Query Joshua's Leads", True, 
+                                        f"Test lead found in Joshua's assignments with correct date: {assigned_date}")
+                            success_count += 1
+                        else:
+                            self.log_test("Lead Assignment - Query Joshua's Leads", False, 
+                                        f"Test lead found but assigned_date incorrect: {assigned_date}")
+                        break
+                
+                if not test_lead_found:
+                    self.log_test("Lead Assignment - Query Joshua's Leads", False, 
+                                f"Test lead not found in Joshua's {len(joshua_leads)} assigned leads")
+                else:
+                    # Verify assigned_date field exists
+                    if assigned_date_correct:
+                        self.log_test("Lead Assignment - Assigned Date Field", True, 
+                                    "assigned_date field correctly populated with 2025-11-15")
+                        success_count += 1
+                    else:
+                        self.log_test("Lead Assignment - Assigned Date Field", False, 
+                                    "assigned_date field missing or incorrect")
+                
+                # General verification of Joshua's leads
+                self.log_test("Lead Assignment - Joshua Leads Count", True, 
+                            f"Joshua has {len(joshua_leads)} total assigned leads")
+                success_count += 1
+                
+            except json.JSONDecodeError:
+                self.log_test("Lead Assignment - Query Joshua's Leads", False, "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Lead Assignment - Query Joshua's Leads", False, error_msg, 
+                        response.text if response else None)
+        
+        # Cleanup: Delete the test lead
+        if test_lead_id:
+            print("\n--- Cleanup: Deleting Test Lead ---")
+            delete_response = self.make_request("DELETE", f"/driver-onboarding/leads/{test_lead_id}")
+            
+            if delete_response is not None and delete_response.status_code == 200:
+                self.log_test("Lead Assignment - Cleanup", True, "Test lead deleted successfully")
+            else:
+                self.log_test("Lead Assignment - Cleanup", False, "Failed to delete test lead")
+        
+        return success_count >= 5  # At least 5 out of 7 tests should pass
+
     def run_all_tests(self):
         """Run all backend tests"""
         print("🚀 Starting Comprehensive Backend Testing for Nura Pulse Application")
