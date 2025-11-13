@@ -2009,6 +2009,15 @@ const DriverOnboardingPage = () => {
             <span className="hidden sm:inline">Import Leads</span>
             <span className="sm:hidden">Import</span>
           </Button>
+          <Button
+            onClick={() => setCreateLeadDialogOpen(true)}
+            className="bg-green-600 hover:bg-green-700 text-sm"
+            size="sm"
+          >
+            <Plus size={16} className="mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">+ Create a lead</span>
+            <span className="sm:hidden">Create</span>
+          </Button>
         </div>
       </div>
 
