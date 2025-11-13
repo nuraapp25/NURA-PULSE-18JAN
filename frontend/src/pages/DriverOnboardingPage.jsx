@@ -4181,6 +4181,24 @@ const DriverOnboardingPage = () => {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Assignment Date Selection */}
+            <div>
+              <Label htmlFor="assignment-date" className="dark:text-gray-300">
+                Assignment Date *
+              </Label>
+              <Input
+                id="assignment-date"
+                type="date"
+                value={assignmentDate}
+                onChange={(e) => setAssignmentDate(e.target.value)}
+                min={new Date().toISOString().split('T')[0]}
+                className="dark:bg-gray-700 dark:border-gray-600 dark:text-white mt-2"
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Select the date when the telecaller should call these leads
+              </p>
+            </div>
           </div>
           <DialogFooter>
             <Button
