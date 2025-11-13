@@ -4,7 +4,7 @@
 // =============================================================================
 
 // ======================== CONFIGURATION ========================
-const APP_WEBHOOK_URL = 'https://telecaller-hub-4.preview.emergentagent.com/api/driver-onboarding/webhook/sync-from-sheets';
+const APP_WEBHOOK_URL = 'https://operator-hub-3.preview.emergentagent.com/api/driver-onboarding/webhook/sync-from-sheets';
 const GOOGLE_SHEETS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzQ140LA9tY1iUtiaj0mlNfNna2hiLe5sVZNZ_yfeQhjQVheJqOCc6aciRpF3JQKQ/exec';
 const SHEET_NAME = 'Driver Leads';
 
