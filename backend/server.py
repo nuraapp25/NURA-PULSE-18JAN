@@ -888,6 +888,7 @@ async def import_users(
         
         imported_count = 0
         skipped_count = 0
+        replaced_count = 0
         errors = []
         
         for user_data in users_data:
@@ -896,10 +897,38 @@ async def import_users(
                 existing_user = await db.users.find_one({"email": user_data["email"]})
                 
                 if existing_user:
-                    skipped_count += 1
-                    continue
+                    if duplicate_action == "skip":
+                        skipped_count += 1
+                        continue
+                    elif duplicate_action == "replace":
+                        # Replace existing user
+                        user_doc = {
+                            "first_name": user_data["first_name"],
+                            "last_name": user_data.get("last_name"),
+                            "account_type": user_data["account_type"],
+                            "status": user_data.get("status", "active"),
+                            "is_temp_password": user_data.get("is_temp_password", False),
+                            "telecaller_id": user_data.get("telecaller_id")
+                        }
+                        
+                        # Update user
+                        await db.users.update_one(
+                            {"email": user_data["email"]},
+                            {"$set": user_doc}
+                        )
+                        
+                        # Update password credential if exists
+                        if user_data.get("hashed_password"):
+                            await db.user_credentials.update_one(
+                                {"user_id": existing_user["id"]},
+                                {"$set": {"hashed_password": user_data["hashed_password"]}},
+                                upsert=True
+                            )
+                        
+                        replaced_count += 1
+                        continue
                 
-                # Prepare user document
+                # Prepare user document for new user
                 user_doc = {
                     "id": user_data["id"],
                     "first_name": user_data["first_name"],
@@ -933,9 +962,10 @@ async def import_users(
             "success": True,
             "imported": imported_count,
             "skipped": skipped_count,
+            "replaced": replaced_count,
             "total": len(users_data),
             "errors": errors,
-            "message": f"Successfully imported {imported_count} users. {skipped_count} users skipped (already exist)."
+            "message": f"Successfully imported {imported_count} new users. {replaced_count} users replaced. {skipped_count} users skipped."
         }
     
     except Exception as e:
