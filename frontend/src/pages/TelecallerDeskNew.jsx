@@ -444,6 +444,14 @@ const TelecallerDeskNew = () => {
       const email = isAdmin ? selectedTelecaller : user?.email;
       await fetchAllLeads(email);
       await fetchLeadsForDate(email);
+      
+      // Smooth scroll to "Calling Done" section after a brief delay
+      setTimeout(() => {
+        const callingDoneSection = document.getElementById('calling-done-section');
+        if (callingDoneSection) {
+          callingDoneSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 500);
     } catch (error) {
       console.error("Error marking as called:", error);
       toast.error("Failed to mark as called");
