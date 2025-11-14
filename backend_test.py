@@ -9473,6 +9473,210 @@ Case Test 6,9876540006,interested"""
         
         return success_count >= 5  # At least 5 out of 7 tests should pass
 
+    def test_vehicle_documents_vin_endpoint(self):
+        """Test Vehicle Documents VIN endpoint with Nura Fleet Data.xlsx"""
+        print("\n=== Testing Vehicle Documents VIN Endpoint ===")
+        
+        success_count = 0
+        
+        # Test 1: Authentication requirement
+        print("\n--- Testing Authentication Requirement ---")
+        try:
+            import requests
+            url = f"{self.base_url}/montra-vehicle/vins"
+            response = requests.get(url, timeout=10)  # No Authorization header
+            
+            if response.status_code in [401, 403]:
+                self.log_test("VIN Endpoint - Authentication Required", True, 
+                            f"Correctly requires authentication ({response.status_code} without token)")
+                success_count += 1
+            else:
+                self.log_test("VIN Endpoint - Authentication Required", False, 
+                            f"Expected 401/403, got {response.status_code}")
+        except Exception as e:
+            self.log_test("VIN Endpoint - Authentication Required", False, 
+                        f"Network error during authentication test: {e}")
+        
+        # Test 2: Valid request with authentication
+        print("\n--- Testing Valid Request with Authentication ---")
+        response = self.make_request("GET", "/montra-vehicle/vins")
+        
+        if response is not None and response.status_code == 200:
+            try:
+                data = response.json()
+                
+                # Check required response structure
+                required_fields = ["success", "vehicles", "count"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if not missing_fields:
+                    self.log_test("VIN Endpoint - Response Structure", True, 
+                                "Response contains all required fields: success, vehicles, count")
+                    success_count += 1
+                    
+                    # Check if success is True
+                    if data.get("success") == True:
+                        self.log_test("VIN Endpoint - Success Status", True, 
+                                    "Response success field is True")
+                        success_count += 1
+                    else:
+                        self.log_test("VIN Endpoint - Success Status", False, 
+                                    f"Expected success=True, got success={data.get('success')}")
+                    
+                    # Check vehicles array
+                    vehicles = data.get("vehicles", [])
+                    count = data.get("count", 0)
+                    
+                    if isinstance(vehicles, list):
+                        self.log_test("VIN Endpoint - Vehicles Array", True, 
+                                    f"vehicles is an array with {len(vehicles)} items")
+                        success_count += 1
+                        
+                        # Check count matches array length
+                        if count == len(vehicles):
+                            self.log_test("VIN Endpoint - Count Accuracy", True, 
+                                        f"count field ({count}) matches vehicles array length")
+                            success_count += 1
+                        else:
+                            self.log_test("VIN Endpoint - Count Accuracy", False, 
+                                        f"count field ({count}) doesn't match vehicles array length ({len(vehicles)})")
+                        
+                        # Expected: 10 vehicles from Nura Fleet Data.xlsx
+                        if count == 10:
+                            self.log_test("VIN Endpoint - Expected Vehicle Count", True, 
+                                        f"Returns expected 10 vehicles from Nura Fleet Data.xlsx")
+                            success_count += 1
+                        else:
+                            self.log_test("VIN Endpoint - Expected Vehicle Count", False, 
+                                        f"Expected 10 vehicles, got {count}")
+                        
+                        # Validate vehicle structure if vehicles exist
+                        if len(vehicles) > 0:
+                            sample_vehicle = vehicles[0]
+                            expected_vehicle_fields = ["vin", "registration_number", "vehicle_name"]
+                            missing_vehicle_fields = [field for field in expected_vehicle_fields if field not in sample_vehicle]
+                            
+                            if not missing_vehicle_fields:
+                                self.log_test("VIN Endpoint - Vehicle Structure", True, 
+                                            "Vehicle contains all required fields: vin, registration_number, vehicle_name")
+                                success_count += 1
+                                
+                                # Check VIN format (should start with P60...)
+                                vin = sample_vehicle.get("vin", "")
+                                if vin.startswith("P60"):
+                                    self.log_test("VIN Endpoint - VIN Format", True, 
+                                                f"VIN has expected format starting with P60: {vin}")
+                                    success_count += 1
+                                else:
+                                    self.log_test("VIN Endpoint - VIN Format", False, 
+                                                f"VIN doesn't start with P60: {vin}")
+                                
+                                # Check registration number format (should be TN format)
+                                reg_number = sample_vehicle.get("registration_number", "")
+                                if reg_number.startswith("TN"):
+                                    self.log_test("VIN Endpoint - Registration Format", True, 
+                                                f"Registration number has expected TN format: {reg_number}")
+                                    success_count += 1
+                                else:
+                                    self.log_test("VIN Endpoint - Registration Format", False, 
+                                                f"Registration number doesn't start with TN: {reg_number}")
+                                
+                                # Check vehicle_name matches registration_number (for compatibility)
+                                vehicle_name = sample_vehicle.get("vehicle_name", "")
+                                if vehicle_name == reg_number:
+                                    self.log_test("VIN Endpoint - Vehicle Name Compatibility", True, 
+                                                f"vehicle_name matches registration_number for compatibility: {vehicle_name}")
+                                    success_count += 1
+                                else:
+                                    self.log_test("VIN Endpoint - Vehicle Name Compatibility", False, 
+                                                f"vehicle_name ({vehicle_name}) doesn't match registration_number ({reg_number})")
+                                
+                                # Log sample vehicle data for verification
+                                self.log_test("VIN Endpoint - Sample Vehicle Data", True, 
+                                            f"Sample vehicle: VIN={vin}, Registration={reg_number}, Name={vehicle_name}")
+                                success_count += 1
+                                
+                            else:
+                                self.log_test("VIN Endpoint - Vehicle Structure", False, 
+                                            f"Vehicle missing required fields: {missing_vehicle_fields}")
+                        else:
+                            # If no vehicles, check if it's expected (file not found scenario)
+                            message = data.get("message", "")
+                            if "No vehicles found" in message and "Nura Fleet Data.xlsx" in message:
+                                self.log_test("VIN Endpoint - No Vehicles Message", True, 
+                                            f"Appropriate message for no vehicles: {message}")
+                                success_count += 1
+                            else:
+                                self.log_test("VIN Endpoint - Vehicle Structure", False, 
+                                            "No vehicles found and no appropriate message")
+                    else:
+                        self.log_test("VIN Endpoint - Vehicles Array", False, 
+                                    f"vehicles is not an array, got: {type(vehicles)}")
+                else:
+                    self.log_test("VIN Endpoint - Response Structure", False, 
+                                f"Response missing required fields: {missing_fields}")
+                
+            except json.JSONDecodeError:
+                self.log_test("VIN Endpoint - Valid Request", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("VIN Endpoint - Valid Request", False, error_msg, 
+                        response.text if response else None)
+        
+        # Test 3: Data source verification
+        print("\n--- Testing Data Source Verification ---")
+        if response is not None and response.status_code == 200:
+            try:
+                data = response.json()
+                vehicles = data.get("vehicles", [])
+                
+                # Verify all vehicles have the expected data pattern from Nura Fleet Data.xlsx
+                if len(vehicles) > 0:
+                    all_vins_valid = all(v.get("vin", "").startswith("P60") for v in vehicles)
+                    all_regs_valid = all(v.get("registration_number", "").startswith("TN") for v in vehicles)
+                    
+                    if all_vins_valid and all_regs_valid:
+                        self.log_test("VIN Endpoint - Data Source Consistency", True, 
+                                    f"All {len(vehicles)} vehicles have consistent P60 VINs and TN registration numbers")
+                        success_count += 1
+                    else:
+                        invalid_vins = [v.get("vin") for v in vehicles if not v.get("vin", "").startswith("P60")]
+                        invalid_regs = [v.get("registration_number") for v in vehicles if not v.get("registration_number", "").startswith("TN")]
+                        self.log_test("VIN Endpoint - Data Source Consistency", False, 
+                                    f"Inconsistent data - Invalid VINs: {invalid_vins}, Invalid Regs: {invalid_regs}")
+                    
+                    # Test that we get exactly the expected format from review request
+                    expected_sample = {
+                        "vin": "P60L2412200004541",
+                        "registration_number": "TN22ED4894", 
+                        "vehicle_name": "TN22ED4894"
+                    }
+                    
+                    # Check if any vehicle matches the expected sample format
+                    format_match = any(
+                        v.get("vin", "").startswith("P60L") and 
+                        v.get("registration_number", "").startswith("TN22") and
+                        v.get("vehicle_name") == v.get("registration_number")
+                        for v in vehicles
+                    )
+                    
+                    if format_match:
+                        self.log_test("VIN Endpoint - Expected Format Match", True, 
+                                    "At least one vehicle matches expected format (P60L..., TN22..., matching vehicle_name)")
+                        success_count += 1
+                    else:
+                        self.log_test("VIN Endpoint - Expected Format Match", False, 
+                                    "No vehicles match expected format from review request")
+                else:
+                    self.log_test("VIN Endpoint - Data Source Consistency", False, 
+                                "No vehicles to verify data source consistency")
+            except Exception as e:
+                self.log_test("VIN Endpoint - Data Source Verification", False, 
+                            f"Error during data source verification: {e}")
+        
+        return success_count >= 8  # At least 8 out of 12 tests should pass
+
     def run_all_tests(self):
         """Run all backend tests"""
         print("🚀 Starting Comprehensive Backend Testing for Nura Pulse Application")
