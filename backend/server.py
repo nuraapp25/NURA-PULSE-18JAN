@@ -2188,7 +2188,40 @@ async def bulk_import_leads(
                         lead_dict['assigned_telecaller'] = None
                         lead_dict['assigned_telecaller_name'] = None
         
-        # Step 7: Clean NaN values for all leads
+        # Step 7: Helper function to determine stage from status
+        def get_stage_from_status(status):
+            """Determine stage based on status value"""
+            if not status:
+                return 'S1 - Filtering'
+            
+            # S1 statuses
+            s1_statuses = ['New', 'Not Interested', 'Interested, No DL', 'Interested, No Badge', 
+                          'Highly Interested', 'Call back 1D', 'Call back 1W', 'Call back 2W', 'Call back 1M']
+            if status in s1_statuses:
+                return 'S1 - Filtering'
+            
+            # S2 statuses
+            s2_statuses = ['Docs Upload Pending', 'Verification Pending', 'Duplicate License', 
+                          'DL - Amount', 'Verified', 'Verification Rejected']
+            if status in s2_statuses:
+                return 'S2 - Documentation'
+            
+            # S3 statuses
+            s3_statuses = ['Schedule Pending', 'Training WIP', 'Training Completed', 'Training Rejected',
+                          'Re-Training', 'Absent for training', 'Approved']
+            if status in s3_statuses:
+                return 'S3 - Training'
+            
+            # S4 statuses
+            s4_statuses = ['CT Pending', 'CT WIP', 'Shift Details Pending', 'DONE!', 
+                          'Terminated']
+            if status in s4_statuses:
+                return 'S4 - Onboarding'
+            
+            # Default to S1 if status not recognized
+            return 'S1 - Filtering'
+        
+        # Clean NaN values and set stage for all leads
         def clean_lead_data(lead_dict):
             cleaned = {}
             for key, value in lead_dict.items():
@@ -2196,6 +2229,12 @@ async def bulk_import_leads(
                     cleaned[key] = None
                 else:
                     cleaned[key] = value
+            
+            # Automatically set stage based on status if not present or empty
+            if not cleaned.get('stage'):
+                status = cleaned.get('status')
+                cleaned['stage'] = get_stage_from_status(status)
+            
             return cleaned
         
         # Step 8: Update existing leads
