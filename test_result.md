@@ -105,13 +105,13 @@
 user_problem_statement: "Fix two issues in Driver Onboarding bulk import: 1) Notification shows 'Duplicates skipped: undefined' instead of actual count when importing 427 unique leads (only 331 added). 2) Status Summary Dashboard not showing 'Training WIP' and 'DONE!' numbers even though they exist in imported data."
 
 backend:
-  - task: "Vehicle Documents - Backend API Endpoints"
+  - task: "Bulk Import - Fix Duplicates Count & Stage Assignment"
     implemented: true
-    working: true
+    working: "NA"
     file: "/app/backend/server.py"
     stuck_count: 0
-    priority: "high"
-    needs_retesting: false
+    priority: "critical"
+    needs_retesting: true
     status_history:
         - working: "NA"
           agent: "main"
