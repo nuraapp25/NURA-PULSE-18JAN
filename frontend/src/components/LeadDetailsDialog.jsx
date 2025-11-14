@@ -233,9 +233,9 @@ const LeadDetailsDialog = ({
               </Button>
             </label>
           </div>
-        )}
+          )}
+        </div>
       </div>
-    </div>
     );
   };
 
