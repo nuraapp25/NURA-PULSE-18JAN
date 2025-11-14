@@ -155,7 +155,7 @@ const LeadDetailsDialog = ({
               </p>
             )}
           </div>
-        {uploadedDocs[docType] && (
+          {uploadedDocs[docType] && (
           <div className="flex flex-col gap-2">
             <div className="flex gap-1">
               <Button
