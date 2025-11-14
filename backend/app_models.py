@@ -256,6 +256,7 @@ class DriverLead(BaseModel):
     telecaller_notes: Optional[str] = None
     
     notes: Optional[str] = None
+    remarks: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     last_modified: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     
