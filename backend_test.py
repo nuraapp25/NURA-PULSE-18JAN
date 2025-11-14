@@ -9677,6 +9677,210 @@ Case Test 6,9876540006,interested"""
         
         return success_count >= 8  # At least 8 out of 12 tests should pass
 
+    def test_driver_onboarding_bulk_import_fixes(self):
+        """Test Driver Onboarding Bulk Import fixes with actual Excel file"""
+        print("\n=== Testing Driver Onboarding Bulk Import Fixes ===")
+        
+        success_count = 0
+        
+        # Test 1: Clear existing leads first (optional - for clean testing)
+        print("\n--- Phase 1: Getting current lead count ---")
+        response = self.make_request("GET", "/driver-onboarding/leads")
+        initial_count = 0
+        if response and response.status_code == 200:
+            try:
+                leads = response.json()
+                initial_count = len(leads)
+                self.log_test("Bulk Import - Initial Lead Count", True, 
+                            f"Current database has {initial_count} leads")
+                success_count += 1
+            except json.JSONDecodeError:
+                self.log_test("Bulk Import - Initial Lead Count", False, "Invalid JSON response")
+        
+        # Test 2: Perform bulk import with actual Excel file and column mapping
+        print("\n--- Phase 2: Testing Bulk Import with Excel File ---")
+        
+        # Column mapping as specified in review request
+        column_mapping = {
+            "name": 1,
+            "phone_number": 2,
+            "address": 3,
+            "remarks": 4,
+            "status": 5,
+            "source": 6
+        }
+        
+        try:
+            # Read the actual Excel file
+            with open('/app/backend/test_import.xlsx', 'rb') as f:
+                excel_content = f.read()
+            
+            # Prepare the import request
+            files = {'file': ('test_import.xlsx', excel_content, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')}
+            form_data = {
+                'lead_source': 'Test Import - User Excel File',
+                'lead_date': '2024-12-15',
+                'column_mapping': json.dumps(column_mapping)
+            }
+            
+            # Make the import request
+            import requests
+            url = f"{self.base_url}/driver-onboarding/import-leads"
+            headers = {"Authorization": f"Bearer {self.token}"}
+            
+            response = requests.post(url, headers=headers, files=files, data=form_data, timeout=60)
+            
+            if response.status_code == 200:
+                try:
+                    result = response.json()
+                    if result.get("success"):
+                        # Check for duplicates_skipped field (not undefined)
+                        duplicates_skipped = result.get("duplicates_skipped")
+                        new_leads_count = result.get("new_leads_count", 0)
+                        total_leads_now = result.get("total_leads_now", 0)
+                        
+                        if duplicates_skipped is not None:
+                            self.log_test("Bulk Import - Duplicates Skipped Field", True, 
+                                        f"duplicates_skipped field present: {duplicates_skipped} (not undefined)")
+                            success_count += 1
+                        else:
+                            self.log_test("Bulk Import - Duplicates Skipped Field", False, 
+                                        "duplicates_skipped field is missing or undefined")
+                        
+                        if new_leads_count > 0:
+                            self.log_test("Bulk Import - New Leads Added", True, 
+                                        f"Successfully imported {new_leads_count} new leads")
+                            success_count += 1
+                        else:
+                            self.log_test("Bulk Import - New Leads Added", False, 
+                                        f"Expected new leads but got {new_leads_count}")
+                        
+                        self.log_test("Bulk Import - Excel File Processing", True, 
+                                    f"Excel file processed successfully. Total leads now: {total_leads_now}")
+                        success_count += 1
+                        
+                    else:
+                        self.log_test("Bulk Import - Excel File Processing", False, 
+                                    f"Import failed: {result.get('message', 'Unknown error')}")
+                except json.JSONDecodeError:
+                    self.log_test("Bulk Import - Excel File Processing", False, 
+                                "Invalid JSON response", response.text)
+            else:
+                self.log_test("Bulk Import - Excel File Processing", False, 
+                            f"Import failed with status {response.status_code}", response.text)
+        
+        except FileNotFoundError:
+            self.log_test("Bulk Import - Excel File Processing", False, 
+                        "Test Excel file not found at /app/backend/test_import.xlsx")
+        except Exception as e:
+            self.log_test("Bulk Import - Excel File Processing", False, 
+                        f"Exception during import: {e}")
+        
+        # Test 3: Verify Status Summary Dashboard shows correct counts
+        print("\n--- Phase 3: Testing Status Summary Dashboard ---")
+        
+        response = self.make_request("GET", "/driver-onboarding/status-summary")
+        
+        if response and response.status_code == 200:
+            try:
+                summary_data = response.json()
+                
+                if summary_data.get("success"):
+                    summary = summary_data.get("summary", {})
+                    stage_totals = summary_data.get("stage_totals", {})
+                    
+                    # Check S3 stage for "Training WIP" 
+                    s3_summary = summary.get("S3", {})
+                    training_wip_count = s3_summary.get("Training WIP", 0)
+                    
+                    # Check S4 stage for "DONE!"
+                    s4_summary = summary.get("S4", {})
+                    done_count = s4_summary.get("DONE!", 0)
+                    
+                    if training_wip_count > 0:
+                        self.log_test("Status Summary - Training WIP Count", True, 
+                                    f"S3 stage shows 'Training WIP': {training_wip_count} leads")
+                        success_count += 1
+                    else:
+                        self.log_test("Status Summary - Training WIP Count", False, 
+                                    f"S3 stage 'Training WIP' shows {training_wip_count} (expected > 0)")
+                    
+                    if done_count > 0:
+                        self.log_test("Status Summary - DONE Count", True, 
+                                    f"S4 stage shows 'DONE!': {done_count} leads")
+                        success_count += 1
+                    else:
+                        self.log_test("Status Summary - DONE Count", False, 
+                                    f"S4 stage 'DONE!' shows {done_count} (expected > 0)")
+                    
+                    # Verify stage assignment is working
+                    s3_total = stage_totals.get("S3", 0)
+                    s4_total = stage_totals.get("S4", 0)
+                    
+                    if s3_total >= training_wip_count and s4_total >= done_count:
+                        self.log_test("Status Summary - Stage Assignment", True, 
+                                    f"Stage totals include status counts (S3: {s3_total}, S4: {s4_total})")
+                        success_count += 1
+                    else:
+                        self.log_test("Status Summary - Stage Assignment", False, 
+                                    f"Stage totals don't match status counts")
+                    
+                    self.log_test("Status Summary - Dashboard Response", True, 
+                                f"Dashboard summary working correctly")
+                    success_count += 1
+                    
+                else:
+                    self.log_test("Status Summary - Dashboard Response", False, 
+                                "Summary response missing success field", summary_data)
+            except json.JSONDecodeError:
+                self.log_test("Status Summary - Dashboard Response", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Status Summary - Dashboard Response", False, error_msg)
+        
+        # Test 4: Verify individual leads have stage field set
+        print("\n--- Phase 4: Verifying Lead Stage Assignment ---")
+        
+        response = self.make_request("GET", "/driver-onboarding/leads?limit=10")
+        
+        if response and response.status_code == 200:
+            try:
+                leads = response.json()
+                
+                leads_with_stage = 0
+                training_wip_leads = 0
+                done_leads = 0
+                
+                for lead in leads[:10]:  # Check first 10 leads
+                    if lead.get('stage'):
+                        leads_with_stage += 1
+                    
+                    if lead.get('status') == 'Training WIP':
+                        training_wip_leads += 1
+                        if lead.get('stage') and 'S3' in lead.get('stage'):
+                            self.log_test("Lead Stage Assignment - Training WIP", True, 
+                                        f"Training WIP lead has correct stage: {lead.get('stage')}")
+                    
+                    if lead.get('status') == 'DONE!':
+                        done_leads += 1
+                        if lead.get('stage') and 'S4' in lead.get('stage'):
+                            self.log_test("Lead Stage Assignment - DONE", True, 
+                                        f"DONE! lead has correct stage: {lead.get('stage')}")
+                
+                if leads_with_stage > 0:
+                    self.log_test("Lead Stage Assignment - Stage Field Present", True, 
+                                f"{leads_with_stage} out of {len(leads[:10])} leads have stage field set")
+                    success_count += 1
+                else:
+                    self.log_test("Lead Stage Assignment - Stage Field Present", False, 
+                                "No leads found with stage field set")
+                
+            except json.JSONDecodeError:
+                self.log_test("Lead Stage Assignment - Stage Field Present", False, 
+                            "Invalid JSON response", response.text)
+        
+        return success_count >= 6  # At least 6 out of 8 tests should pass
     def run_all_tests(self):
         """Run all backend tests"""
         print("🚀 Starting Comprehensive Backend Testing for Nura Pulse Application")
