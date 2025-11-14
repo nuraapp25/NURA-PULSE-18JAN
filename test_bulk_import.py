@@ -116,7 +116,7 @@ class BulkImportTester:
             }
             
             headers = {"Authorization": f"Bearer {self.token}"}
-            response = requests.post(f"{self.base_url}/driver-onboarding/import-leads", 
+            response = requests.post(f"{self.base_url}/driver-onboarding/bulk-import", 
                                    headers=headers, files=files, data=form_data, timeout=120)
             
             if response.status_code == 200:
