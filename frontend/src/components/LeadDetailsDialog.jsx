@@ -102,24 +102,59 @@ const LeadDetailsDialog = ({
 }) => {
   if (!lead || !editedLead) return null;
 
-  const DocumentSection = ({ docType, label, fieldName }) => (
-    <div className="border-b border-blue-200 dark:border-blue-800 pb-4">
-      <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">{label}</Label>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <div className="md:col-span-2">
-          {isEditMode ? (
-            <Input
-              value={editedLead[fieldName] || ''}
-              onChange={(e) => onFieldChange(fieldName, e.target.value)}
-              className="dark:bg-gray-700 dark:border-gray-600"
-              placeholder={`${label} Number`}
-            />
-          ) : (
-            <p className="text-base text-gray-900 dark:text-white">
-              {lead[fieldName] || 'Not provided'}
-            </p>
-          )}
-        </div>
+  const DocumentSection = ({ docType, label, fieldName }) => {
+    // Local state for document number to prevent focus loss
+    const [localValue, setLocalValue] = useState(editedLead[fieldName] || '');
+    const [hasLocalChanges, setHasLocalChanges] = useState(false);
+
+    // Update local value when editedLead changes (e.g., when opening dialog)
+    useEffect(() => {
+      setLocalValue(editedLead[fieldName] || '');
+      setHasLocalChanges(false);
+    }, [editedLead[fieldName], fieldName]);
+
+    const handleLocalChange = (value) => {
+      setLocalValue(value);
+      setHasLocalChanges(value !== (editedLead[fieldName] || ''));
+    };
+
+    const handleSaveDocNumber = () => {
+      onFieldChange(fieldName, localValue);
+      setHasLocalChanges(false);
+    };
+
+    return (
+      <div className="border-b border-blue-200 dark:border-blue-800 pb-4">
+        <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">{label}</Label>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="md:col-span-2">
+            {isEditMode ? (
+              <div className="flex gap-2">
+                <Input
+                  value={localValue}
+                  onChange={(e) => handleLocalChange(e.target.value)}
+                  className="dark:bg-gray-700 dark:border-gray-600 flex-1"
+                  placeholder={`${label} Number`}
+                />
+                {hasLocalChanges && (
+                  <Button
+                    type="button"
+                    variant="default"
+                    size="sm"
+                    onClick={handleSaveDocNumber}
+                    className="bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800"
+                    title="Save document number"
+                  >
+                    <Check className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <p className="text-base text-gray-900 dark:text-white">
+                {lead[fieldName] || 'Not provided'}
+              </p>
+            )}
+          </div>
         {uploadedDocs[docType] && (
           <div className="flex flex-col gap-2">
             <div className="flex gap-1">
