@@ -4554,6 +4554,7 @@ const DriverOnboardingPage = () => {
                   { field: 'stage', label: 'Stage' },
                   { field: 'assigned_telecaller', label: 'Assigned Telecaller' },
                   { field: 'source', label: 'Source' },
+                  { field: 'remarks', label: 'Remarks' },
                   { field: 'dl_no', label: 'DL Number' },
                   { field: 'badge_no', label: 'Badge Number' },
                   { field: 'aadhar_card', label: 'Aadhar Card' },
