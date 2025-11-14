@@ -6606,18 +6606,33 @@ async def get_vehicle_vins(
                         # Try the first sheet as fallback
                         if sheet_names:
                             df = pd.read_excel(file_path, sheet_name=sheet_names[0], header=None)
-                            if len(df.columns) > 1:
+                            if len(df.columns) > 2:
+                                # Read both columns B and C
+                                for idx in range(1, len(df)):
+                                    reg_number = str(df.iloc[idx, 1]).strip() if pd.notna(df.iloc[idx, 1]) else ""
+                                    vin = str(df.iloc[idx, 2]).strip() if pd.notna(df.iloc[idx, 2]) else ""
+                                    
+                                    if reg_number and reg_number.lower() not in ['nan', 'name', 'vehicle number', 'vehicle', 'registration number', 'vehicles']:
+                                        vehicle_list.append({
+                                            "registration_number": reg_number,
+                                            "vin": vin,
+                                            "vehicle_name": reg_number
+                                        })
+                                logger.info(f"Loaded {len(vehicle_list)} vehicles from first sheet '{sheet_names[0]}' as fallback")
+                            elif len(df.columns) > 1:
+                                # Fallback: Only Column B
                                 vehicles = df.iloc[1:, 1].dropna().astype(str).tolist()
                                 vehicles = [name.strip() for name in vehicles if name.strip() and name.strip().lower() not in ['nan', 'name', 'vehicle number', 'vehicle', 'registration number', 'vehicles']]
                                 
                                 vehicle_list = [
                                     {
+                                        "registration_number": vehicle,
                                         "vin": vehicle,
                                         "vehicle_name": vehicle
                                     }
                                     for vehicle in vehicles
                                 ]
-                                logger.info(f"Loaded {len(vehicle_list)} vehicles from first sheet '{sheet_names[0]}' as fallback")
+                                logger.info(f"Loaded {len(vehicle_list)} vehicles (no VIN) from first sheet '{sheet_names[0]}' as fallback")
                     except Exception as fallback_error:
                         logger.error(f"Fallback parsing also failed: {str(fallback_error)}")
         else:
