@@ -317,15 +317,14 @@ const VehicleDocuments = () => {
   };
 
   // Handle vehicle selection
-  const handleVehicleSelect = (vin) => {
-    const selectedVehicle = vehicles.find(v => v.vin === vin);
+  const handleVehicleSelect = (vinValue) => {
+    const selectedVehicle = vehicles.find(v => v.vin === vinValue);
     if (selectedVehicle) {
-      // Both VIN and vehicle_number are the same from the Excel file
       setFormData({
         ...formData,
         vin: selectedVehicle.vin,
-        vehicle_name: selectedVehicle.vehicle_name,
-        vehicle_number: selectedVehicle.vin // Auto-fill vehicle number same as VIN
+        vehicle_name: selectedVehicle.vehicle_name || selectedVehicle.registration_number,
+        vehicle_number: selectedVehicle.registration_number
       });
     }
   };
