@@ -472,8 +472,8 @@ const VehicleDocuments = () => {
                   </SelectTrigger>
                   <SelectContent>
                     {vehicles.map((vehicle) => (
-                      <SelectItem key={vehicle.vin} value={vehicle.vin}>
-                        {vehicle.vin}
+                      <SelectItem key={vehicle.vin || vehicle.registration_number} value={vehicle.vin}>
+                        {vehicle.registration_number} {vehicle.vin && vehicle.vin !== vehicle.registration_number ? `(${vehicle.vin})` : ''}
                       </SelectItem>
                     ))}
                   </SelectContent>
