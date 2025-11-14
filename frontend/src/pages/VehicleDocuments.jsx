@@ -245,6 +245,7 @@ const VehicleDocuments = () => {
       purchase_order: doc.purchase_order || "",
       registration_number: doc.registration_number || "",
       registration_expiry_date: doc.registration_expiry_date ? doc.registration_expiry_date.split('T')[0] : "",
+      insurance_start_date: doc.insurance_start_date ? doc.insurance_start_date.split('T')[0] : "",
       insurance_expiry_date: doc.insurance_expiry_date ? doc.insurance_expiry_date.split('T')[0] : "",
       vehicle_model_number: doc.vehicle_model_number || "",
       vehicle_description: doc.vehicle_description || "",
