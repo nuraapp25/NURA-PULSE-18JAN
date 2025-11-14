@@ -600,6 +600,7 @@ class VehicleDocument(BaseModel):
     # Registration & Insurance Details
     registration_number: Optional[str] = None
     registration_expiry_date: Optional[datetime] = None
+    insurance_start_date: Optional[datetime] = None
     insurance_expiry_date: Optional[datetime] = None
     
     # Vehicle Details
