@@ -47,6 +47,7 @@ const VehicleDocuments = () => {
     purchase_order: "",
     registration_number: "",
     registration_expiry_date: "",
+    insurance_start_date: "",
     insurance_expiry_date: "",
     vehicle_model_number: "",
     vehicle_description: "",
