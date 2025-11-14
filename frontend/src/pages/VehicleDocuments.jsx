@@ -797,6 +797,14 @@ const VehicleDocuments = () => {
                       </p>
                     </div>
                   )}
+                  {selectedDocument.insurance_start_date && (
+                    <div>
+                      <Label className="text-gray-500">Insurance Start</Label>
+                      <p className="font-medium">
+                        {format(new Date(selectedDocument.insurance_start_date), "MMM dd, yyyy")}
+                      </p>
+                    </div>
+                  )}
                   {selectedDocument.insurance_expiry_date && (
                     <div>
                       <Label className="text-gray-500">Insurance Expiry</Label>
