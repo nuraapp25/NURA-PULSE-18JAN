@@ -631,6 +631,7 @@ class VehicleDocumentCreate(BaseModel):
     purchase_order: Optional[str] = None
     registration_number: Optional[str] = None
     registration_expiry_date: Optional[datetime] = None
+    insurance_start_date: Optional[datetime] = None
     insurance_expiry_date: Optional[datetime] = None
     vehicle_model_number: Optional[str] = None
     vehicle_description: Optional[str] = None
@@ -652,6 +653,7 @@ class VehicleDocumentUpdate(BaseModel):
     purchase_order: Optional[str] = None
     registration_number: Optional[str] = None
     registration_expiry_date: Optional[datetime] = None
+    insurance_start_date: Optional[datetime] = None
     insurance_expiry_date: Optional[datetime] = None
     vehicle_model_number: Optional[str] = None
     vehicle_description: Optional[str] = None
