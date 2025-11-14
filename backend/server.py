@@ -6524,33 +6524,19 @@ async def get_vehicle_vins(
     year: Optional[str] = Query(None, description="Year (e.g., 2025)"),
     current_user: User = Depends(get_current_user)
 ):
-    """Get list of vehicle names from Vehicles List.xlsx file"""
+    """Get list of vehicle VINs and registration numbers from Nura Fleet Data.xlsx file"""
     import pandas as pd
     
     try:
-        # If no month/year provided, use current month/year
-        if not month or not year:
-            from datetime import datetime
-            now = datetime.now()
-            month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-            month = month_names[now.month - 1]
-            year = str(now.year)
+        logger.info(f"Looking for vehicles in Nura Fleet Data.xlsx")
         
-        # Ensure month name is title case
-        month = month.capitalize()
-        
-        # Tab name format: "Nov 2025", "Dec 2025", etc.
-        tab_name = f"{month} {year}"
-        
-        logger.info(f"Looking for vehicles in tab '{tab_name}' from Vehicles List.xlsx")
-        
-        # Find the Vehicles List.xlsx file
+        # Find the Nura Fleet Data.xlsx file
         files = await db.admin_files.find({}).to_list(1000)
         
         vehicles_file = None
         for file in files:
             filename = file.get("original_filename", "")
-            if filename == "Vehicles List.xlsx":
+            if filename == "Nura Fleet Data.xlsx":
                 vehicles_file = file
                 break
         
@@ -6560,100 +6546,47 @@ async def get_vehicle_vins(
             file_path = vehicles_file.get("file_path")
             if file_path and os.path.exists(file_path):
                 try:
-                    # Read specific sheet/tab by name (header=None to not treat B1 as column names)
-                    df = pd.read_excel(file_path, sheet_name=tab_name, header=None)
-                    # Read from Column B (registration number) and Column C (VIN)
-                    if len(df.columns) > 2:
-                        # Read both columns B and C, skip first row (headers)
-                        for idx in range(1, len(df)):
-                            reg_number = str(df.iloc[idx, 1]).strip() if pd.notna(df.iloc[idx, 1]) else ""
-                            vin = str(df.iloc[idx, 2]).strip() if pd.notna(df.iloc[idx, 2]) else ""
+                    # Read the first sheet with headers
+                    df = pd.read_excel(file_path, engine='openpyxl')
+                    
+                    # Expected columns: Column A = VIN (Montral Vehicle ID), Column B = Registration No.
+                    if len(df.columns) >= 2:
+                        # Iterate through rows (skip header which is already handled by pandas)
+                        for idx, row in df.iterrows():
+                            vin = str(row.iloc[0]).strip() if pd.notna(row.iloc[0]) else ""
+                            reg_number = str(row.iloc[1]).strip() if pd.notna(row.iloc[1]) else ""
                             
                             # Skip invalid rows
-                            if reg_number and reg_number.lower() not in ['nan', 'name', 'vehicle number', 'vehicle', 'registration number', 'vehicles']:
+                            if vin and reg_number and vin.lower() not in ['nan', 'montral vehicle id', 'vin']:
                                 vehicle_list.append({
-                                    "registration_number": reg_number,
                                     "vin": vin,
+                                    "registration_number": reg_number,
                                     "vehicle_name": reg_number  # Keep for compatibility
                                 })
                         
-                        logger.info(f"Loaded {len(vehicle_list)} vehicles from tab '{tab_name}' Columns B,C of Vehicles List.xlsx")
-                    elif len(df.columns) > 1:
-                        # Fallback: Only Column B available
-                        vehicles = df.iloc[1:, 1].dropna().astype(str).tolist()
-                        vehicles = [name.strip() for name in vehicles if name.strip() and name.strip().lower() not in ['nan', 'name', 'vehicle number', 'vehicle', 'registration number', 'vehicles']]
-                        
-                        vehicle_list = [
-                            {
-                                "registration_number": vehicle,
-                                "vin": vehicle,
-                                "vehicle_name": vehicle
-                            }
-                            for vehicle in vehicles
-                        ]
-                        
-                        logger.info(f"Loaded {len(vehicle_list)} vehicles from tab '{tab_name}' Column B only (no VIN column)")
+                        logger.info(f"Loaded {len(vehicle_list)} vehicles from Nura Fleet Data.xlsx (VIN from Col A, Reg from Col B)")
                     else:
-                        logger.warning(f"Vehicles file tab '{tab_name}' does not have Column B")
+                        logger.warning(f"Nura Fleet Data.xlsx does not have at least 2 columns")
+                
                 except Exception as e:
-                    logger.error(f"Error parsing vehicles file tab '{tab_name}': {str(e)}")
-                    # If tab doesn't exist, try to get from any available tab
-                    try:
-                        # Get all sheet names
-                        excel_file = pd.ExcelFile(file_path)
-                        sheet_names = excel_file.sheet_names
-                        
-                        # Try the first sheet as fallback
-                        if sheet_names:
-                            df = pd.read_excel(file_path, sheet_name=sheet_names[0], header=None)
-                            if len(df.columns) > 2:
-                                # Read both columns B and C
-                                for idx in range(1, len(df)):
-                                    reg_number = str(df.iloc[idx, 1]).strip() if pd.notna(df.iloc[idx, 1]) else ""
-                                    vin = str(df.iloc[idx, 2]).strip() if pd.notna(df.iloc[idx, 2]) else ""
-                                    
-                                    if reg_number and reg_number.lower() not in ['nan', 'name', 'vehicle number', 'vehicle', 'registration number', 'vehicles']:
-                                        vehicle_list.append({
-                                            "registration_number": reg_number,
-                                            "vin": vin,
-                                            "vehicle_name": reg_number
-                                        })
-                                logger.info(f"Loaded {len(vehicle_list)} vehicles from first sheet '{sheet_names[0]}' as fallback")
-                            elif len(df.columns) > 1:
-                                # Fallback: Only Column B
-                                vehicles = df.iloc[1:, 1].dropna().astype(str).tolist()
-                                vehicles = [name.strip() for name in vehicles if name.strip() and name.strip().lower() not in ['nan', 'name', 'vehicle number', 'vehicle', 'registration number', 'vehicles']]
-                                
-                                vehicle_list = [
-                                    {
-                                        "registration_number": vehicle,
-                                        "vin": vehicle,
-                                        "vehicle_name": vehicle
-                                    }
-                                    for vehicle in vehicles
-                                ]
-                                logger.info(f"Loaded {len(vehicle_list)} vehicles (no VIN) from first sheet '{sheet_names[0]}' as fallback")
-                    except Exception as fallback_error:
-                        logger.error(f"Fallback parsing also failed: {str(fallback_error)}")
+                    logger.error(f"Error parsing Nura Fleet Data.xlsx: {str(e)}")
         else:
-            logger.warning("Vehicles List.xlsx file not found in admin files")
+            logger.warning("Nura Fleet Data.xlsx file not found in admin files")
         
         # If no vehicles found, return empty list with message
         if not vehicle_list:
-            logger.warning(f"No vehicles found for tab '{tab_name}'. Please upload Vehicles List.xlsx with monthly tabs.")
+            logger.warning(f"No vehicles found in Nura Fleet Data.xlsx")
             return {
                 "success": True,
                 "vehicles": [],
                 "count": 0,
-                "message": f"No vehicles found for {tab_name}. Please upload Vehicles List.xlsx with monthly tabs."
+                "message": "No vehicles found. Please upload Nura Fleet Data.xlsx with VIN in Column A and Registration Number in Column B."
             }
         
         return {
             "success": True,
             "vehicles": vehicle_list,
-            "count": len(vehicle_list),
-            "month": month,
-            "year": year
+            "count": len(vehicle_list)
         }
     
     except Exception as e:
