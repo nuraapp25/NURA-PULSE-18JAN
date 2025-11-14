@@ -122,6 +122,9 @@ backend:
         - working: "NA"
           agent: "main"
           comment: "DATA SOURCE UPDATE: Changed VIN endpoint from 'Vehicles List.xlsx' to 'Nura Fleet Data.xlsx' per user request. Updated GET /api/montra-vehicle/vins endpoint to read VIN from Column A (Montral Vehicle ID) and Registration Number from Column B. Registered file in admin_files collection. Simplified logic - no longer uses monthly tabs, just reads the first sheet. Tested with Python - 10 vehicles loaded correctly with format: TN22ED4894 (P60L2412200004541). Ready for backend testing."
+        - working: true
+          agent: "testing"
+          comment: "✅ VIN ENDPOINT TESTING COMPLETE: Successfully tested GET /api/montra-vehicle/vins endpoint with Nura Fleet Data.xlsx with 100% success rate (12/12 tests passed). COMPREHENSIVE VERIFICATION: 1) AUTHENTICATION: ✅ Correctly requires authentication (returns 403 without token), ✅ Works properly with valid admin token. 2) RESPONSE STRUCTURE: ✅ Returns proper JSON with success, vehicles, count fields, ✅ Success field is true, ✅ Vehicles is array with 10 items, ✅ Count field (10) matches vehicles array length. 3) DATA SOURCE VERIFICATION: ✅ Returns expected 10 vehicles from Nura Fleet Data.xlsx, ✅ All vehicles have required fields (vin, registration_number, vehicle_name), ✅ VIN format correct (starts with P60L2412200004541), ✅ Registration format correct (starts with TN22ED4894), ✅ vehicle_name matches registration_number for compatibility. 4) DATA CONSISTENCY: ✅ All 10 vehicles have consistent P60 VINs and TN registration numbers, ✅ Matches expected format from review request (P60L..., TN22..., matching vehicle_name). PRODUCTION READY: VIN endpoint successfully updated to use Nura Fleet Data.xlsx with Column A = VIN and Column B = Registration Number as requested. Data source change working perfectly."
   
   - task: "Driver Onboarding Bulk Export API - Excel File Generation"
     implemented: true
