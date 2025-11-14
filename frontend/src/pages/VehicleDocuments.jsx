@@ -456,7 +456,7 @@ const VehicleDocuments = () => {
                     <SelectContent>
                       {vehicles.map((vehicle) => (
                         <SelectItem key={vehicle.vin} value={vehicle.vin}>
-                          {vehicle.vehicle_name} ({vehicle.vin})
+                          {vehicle.vin} - {vehicle.vehicle_name}
                         </SelectItem>
                       ))}
                     </SelectContent>
