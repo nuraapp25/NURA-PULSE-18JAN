@@ -229,20 +229,26 @@ class BulkImportTester:
             
             if response.status_code == 200:
                 try:
-                    leads = response.json()
+                    leads_data = response.json()
+                    
+                    # Handle both list and dict responses
+                    if isinstance(leads_data, dict):
+                        leads = leads_data.get('leads', []) if 'leads' in leads_data else []
+                    else:
+                        leads = leads_data if isinstance(leads_data, list) else []
                     
                     leads_with_stage = 0
                     training_wip_leads = []
                     done_leads = []
                     
                     for lead in leads:
-                        if lead.get('stage'):
+                        if isinstance(lead, dict) and lead.get('stage'):
                             leads_with_stage += 1
                         
-                        if lead.get('status') == 'Training WIP':
+                        if isinstance(lead, dict) and lead.get('status') == 'Training WIP':
                             training_wip_leads.append(lead)
                         
-                        if lead.get('status') == 'DONE!':
+                        if isinstance(lead, dict) and lead.get('status') == 'DONE!':
                             done_leads.append(lead)
                     
                     if leads_with_stage > 0:
