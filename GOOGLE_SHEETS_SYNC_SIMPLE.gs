@@ -1,5 +1,5 @@
 // ========== CONFIGURATION ==========
-var API_BASE_URL = "https://operator-hub-3.preview.emergentagent.com";
+var API_BASE_URL = "https://driver-docs-2.preview.emergentagent.com";
 var BEARER_TOKEN = "YOUR_TOKEN_HERE";
 
 // ========== MAIN FUNCTIONS ==========

@@ -10,7 +10,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://operator-hub-3.preview.emergentagent.com/api"
+BASE_URL = "https://driver-docs-2.preview.emergentagent.com/api"
 ADMIN_EMAIL = "admin"
 ADMIN_PASSWORD = "Nura@1234$"
 

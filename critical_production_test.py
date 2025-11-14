@@ -13,7 +13,7 @@ from datetime import datetime
 import time
 
 # Configuration
-BASE_URL = "https://operator-hub-3.preview.emergentagent.com/api"
+BASE_URL = "https://driver-docs-2.preview.emergentagent.com/api"
 MASTER_ADMIN_EMAIL = "admin"
 MASTER_ADMIN_PASSWORD = "Nura@1234$"
 
