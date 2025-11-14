@@ -107,11 +107,11 @@ user_problem_statement: "Fix two issues in Driver Onboarding bulk import: 1) Not
 backend:
   - task: "Bulk Import - Fix Duplicates Count & Stage Assignment"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "critical"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
