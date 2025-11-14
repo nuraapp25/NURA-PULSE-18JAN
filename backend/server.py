@@ -6562,21 +6562,37 @@ async def get_vehicle_vins(
                 try:
                     # Read specific sheet/tab by name (header=None to not treat B1 as column names)
                     df = pd.read_excel(file_path, sheet_name=tab_name, header=None)
-                    # Read from Column B (index 1), skip first row (B1 which has headers)
-                    if len(df.columns) > 1:
-                        vehicles = df.iloc[1:, 1].dropna().astype(str).tolist()  # Start from row 1 (B2), column 1 (B)
+                    # Read from Column B (registration number) and Column C (VIN)
+                    if len(df.columns) > 2:
+                        # Read both columns B and C, skip first row (headers)
+                        for idx in range(1, len(df)):
+                            reg_number = str(df.iloc[idx, 1]).strip() if pd.notna(df.iloc[idx, 1]) else ""
+                            vin = str(df.iloc[idx, 2]).strip() if pd.notna(df.iloc[idx, 2]) else ""
+                            
+                            # Skip invalid rows
+                            if reg_number and reg_number.lower() not in ['nan', 'name', 'vehicle number', 'vehicle', 'registration number', 'vehicles']:
+                                vehicle_list.append({
+                                    "registration_number": reg_number,
+                                    "vin": vin,
+                                    "vehicle_name": reg_number  # Keep for compatibility
+                                })
+                        
+                        logger.info(f"Loaded {len(vehicle_list)} vehicles from tab '{tab_name}' Columns B,C of Vehicles List.xlsx")
+                    elif len(df.columns) > 1:
+                        # Fallback: Only Column B available
+                        vehicles = df.iloc[1:, 1].dropna().astype(str).tolist()
                         vehicles = [name.strip() for name in vehicles if name.strip() and name.strip().lower() not in ['nan', 'name', 'vehicle number', 'vehicle', 'registration number', 'vehicles']]
                         
-                        # Format for dropdown
                         vehicle_list = [
                             {
+                                "registration_number": vehicle,
                                 "vin": vehicle,
                                 "vehicle_name": vehicle
                             }
                             for vehicle in vehicles
                         ]
                         
-                        logger.info(f"Loaded {len(vehicle_list)} vehicles from tab '{tab_name}' Column B of Vehicles List.xlsx")
+                        logger.info(f"Loaded {len(vehicle_list)} vehicles from tab '{tab_name}' Column B only (no VIN column)")
                     else:
                         logger.warning(f"Vehicles file tab '{tab_name}' does not have Column B")
                 except Exception as e:
