@@ -236,7 +236,8 @@ const LeadDetailsDialog = ({
         )}
       </div>
     </div>
-  );
+    );
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
