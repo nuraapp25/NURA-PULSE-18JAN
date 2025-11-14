@@ -2112,6 +2112,7 @@ async def bulk_import_leads(
                 "new_leads_count": 0,
                 "updated_leads_count": 0,
                 "duplicates_updated": 0,
+                "duplicates_skipped": 0,
                 "total_leads_now": len(current_leads),
                 "telecaller_assignments": {
                     "leads_assigned": 0,
