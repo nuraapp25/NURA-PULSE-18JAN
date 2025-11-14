@@ -2277,6 +2277,7 @@ async def bulk_import_leads(
             "new_leads_count": inserted_count,
             "updated_leads_count": updated_count,
             "duplicates_updated": duplicates_updated,
+            "duplicates_skipped": updated_count,  # Same as updated_leads_count - duplicates are updated, not skipped
             "total_leads_now": total_leads_now,
             "telecaller_assignments": {
                 "leads_assigned": leads_with_assignments,
