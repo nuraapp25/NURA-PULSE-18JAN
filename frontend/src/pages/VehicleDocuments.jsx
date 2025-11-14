@@ -602,6 +602,15 @@ const VehicleDocuments = () => {
                   </div>
 
                   <div>
+                    <Label>Insurance Start Date</Label>
+                    <Input
+                      type="date"
+                      value={formData.insurance_start_date}
+                      onChange={(e) => setFormData({ ...formData, insurance_start_date: e.target.value })}
+                    />
+                  </div>
+
+                  <div>
                     <Label>Insurance Expiry Date</Label>
                     <Input
                       type="date"
