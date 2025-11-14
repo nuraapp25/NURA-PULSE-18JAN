@@ -463,42 +463,21 @@ const VehicleDocuments = () => {
             </DialogHeader>
 
             <div className="space-y-4 py-4">
-              {/* Vehicle Selection */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label>VIN *</Label>
-                  <Select value={formData.vin} onValueChange={handleVehicleSelect}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select VIN" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {vehicles.map((vehicle) => (
-                        <SelectItem key={vehicle.vin} value={vehicle.vin}>
-                          {vehicle.vin}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label>Vehicle Number *</Label>
-                  <Input
-                    value={formData.vehicle_number}
-                    onChange={(e) => setFormData({ ...formData, vehicle_number: e.target.value })}
-                    placeholder="Enter vehicle number"
-                  />
-                </div>
-              </div>
-
+              {/* Vehicle Selection - Single Dropdown */}
               <div>
-                <Label>Vehicle Name *</Label>
-                <Input
-                  value={formData.vehicle_name}
-                  onChange={(e) => setFormData({ ...formData, vehicle_name: e.target.value })}
-                  placeholder="Enter vehicle name"
-                  disabled
-                />
+                <Label>Vehicle Number *</Label>
+                <Select value={formData.vin} onValueChange={handleVehicleSelect}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a vehicle" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {vehicles.map((vehicle) => (
+                      <SelectItem key={vehicle.vin} value={vehicle.vin}>
+                        {vehicle.vin}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Document Uploads */}
