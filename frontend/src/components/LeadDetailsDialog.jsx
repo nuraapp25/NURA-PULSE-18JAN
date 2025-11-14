@@ -209,8 +209,8 @@ const LeadDetailsDialog = ({
               </div>
             )}
           </div>
-        )}
-        {isEditMode && !uploadedDocs[docType] && (
+          )}
+          {isEditMode && !uploadedDocs[docType] && (
           <div className="flex flex-col gap-2">
             <label className="flex-1">
               <Input
