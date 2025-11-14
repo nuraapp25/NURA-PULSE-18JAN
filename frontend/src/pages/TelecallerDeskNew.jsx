@@ -619,7 +619,6 @@ const TelecallerDeskNew = () => {
                   const isToday = dateStr === new Date().toISOString().split('T')[0];
                   const dayName = format(date, 'EEE');
                   const monthDay = format(date, 'MMM d');
-                  const leadCount = getLeadCountForDate(dateStr);
                   
                   return (
                     <button
