@@ -331,15 +331,30 @@ const VehicleDocuments = () => {
   };
 
   // Handle file download/view
-  const handleFileView = (filePath) => {
+  const handleFileView = async (filePath) => {
     if (!filePath) {
       toast.error("No file available");
       return;
     }
     
-    const token = localStorage.getItem("token");
-    const fileUrl = `${API}/vehicle-documents/file/${filePath}?token=${token}`;
-    window.open(fileUrl, "_blank");
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(`${API}/vehicle-documents/file/${filePath}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob'
+      });
+      
+      // Create blob URL and open in new tab
+      const blob = new Blob([response.data], { type: response.headers['content-type'] });
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      
+      // Clean up the URL after a delay
+      setTimeout(() => window.URL.revokeObjectURL(url), 100);
+    } catch (error) {
+      console.error("Error viewing file:", error);
+      toast.error("Failed to open file");
+    }
   };
 
   return (
