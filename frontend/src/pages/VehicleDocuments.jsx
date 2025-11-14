@@ -318,11 +318,12 @@ const VehicleDocuments = () => {
   const handleVehicleSelect = (vin) => {
     const selectedVehicle = vehicles.find(v => v.vin === vin);
     if (selectedVehicle) {
+      // Both VIN and vehicle_number are the same from the Excel file
       setFormData({
         ...formData,
         vin: selectedVehicle.vin,
         vehicle_name: selectedVehicle.vehicle_name,
-        vehicle_number: selectedVehicle.vin // Using VIN as vehicle number by default
+        vehicle_number: selectedVehicle.vin // Auto-fill vehicle number same as VIN
       });
     }
   };
