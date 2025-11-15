@@ -517,6 +517,11 @@ const DriverOnboardingPage = () => {
       setSummaryLoading(false);
     }
   };
+  
+  // Wrapper function for backward compatibility - uses current state
+  const fetchStatusSummary = async () => {
+    await calculateStatusSummaryFromData(leads);
+  };
 
   useEffect(() => {
     // Initial page load - fetchLeads will call fetchStatusSummary internally
