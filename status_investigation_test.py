@@ -97,25 +97,30 @@ def main():
             
             # Step 5: Count unique status values
             print("\n--- Step 5: Count unique status values ---")
-            status_counts = {}
-            stage_counts = {}
-            
-            for lead in leads:
-                status = lead.get('status', 'Unknown')
-                stage = lead.get('stage', 'Unknown')
+            if total_leads > 0:
+                status_counts = {}
+                stage_counts = {}
                 
-                status_counts[status] = status_counts.get(status, 0) + 1
-                stage_counts[stage] = stage_counts.get(stage, 0) + 1
-            
-            print(f"\n📊 UNIQUE STATUS VALUES FOUND ({len(status_counts)} total):")
-            print("-" * 60)
-            for status, count in sorted(status_counts.items(), key=lambda x: x[1], reverse=True):
-                print(f"{status:<35} : {count:>6} leads")
-            
-            print(f"\n📊 STAGE DISTRIBUTION ({len(stage_counts)} total):")
-            print("-" * 40)
-            for stage, count in sorted(stage_counts.items()):
-                print(f"{stage:<15} : {count:>6} leads")
+                for lead in leads:
+                    status = lead.get('status', 'Unknown')
+                    stage = lead.get('stage', 'Unknown')
+                    
+                    status_counts[status] = status_counts.get(status, 0) + 1
+                    stage_counts[stage] = stage_counts.get(stage, 0) + 1
+                
+                print(f"\n📊 UNIQUE STATUS VALUES FOUND ({len(status_counts)} total):")
+                print("-" * 60)
+                for status, count in sorted(status_counts.items(), key=lambda x: x[1], reverse=True):
+                    print(f"{status:<35} : {count:>6} leads")
+                
+                print(f"\n📊 STAGE DISTRIBUTION ({len(stage_counts)} total):")
+                print("-" * 40)
+                for stage, count in sorted(stage_counts.items()):
+                    print(f"{stage:<15} : {count:>6} leads")
+            else:
+                print("⚠️  No leads to count statuses")
+                status_counts = {}
+                stage_counts = {}
             
             # Step 6: Verify status field exists and contains data
             print("\n--- Step 6: Verify status field exists and contains data ---")
