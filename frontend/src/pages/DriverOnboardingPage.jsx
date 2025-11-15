@@ -465,11 +465,12 @@ const DriverOnboardingPage = () => {
       
       // Count leads by status
       let totalLeads = 0;
-      console.log('Total leads to count:', leadsToCount.length);
+      console.log('📊 Total leads available:', leads.length);
+      console.log('📊 Leads to count (after filters):', leadsToCount.length);
       
       // Sample first few leads for debugging
       if (leadsToCount.length > 0) {
-        console.log('Sample lead statuses:', leadsToCount.slice(0, 5).map(l => l.status));
+        console.log('📊 Sample lead statuses:', leadsToCount.slice(0, 5).map(l => ({ name: l.name, status: l.status })));
       }
       
       leadsToCount.forEach(lead => {
@@ -486,16 +487,18 @@ const DriverOnboardingPage = () => {
               break;
             }
           }
+        } else {
+          console.warn('⚠️  Lead without status:', lead.name || lead.id);
         }
       });
-      
-      console.log('Summary calculated:', { totalLeads, stage_totals: stage_totals });
       
       // Calculate stage totals
       const stage_totals = {};
       for (const [stage, statuses] of Object.entries(summary)) {
         stage_totals[stage] = Object.values(statuses).reduce((sum, count) => sum + count, 0);
       }
+      
+      console.log('✅ Summary calculated:', { totalLeads, stage_totals });
       
       // Set the summary
       setStatusSummary({
