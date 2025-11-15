@@ -519,21 +519,19 @@ const DriverOnboardingPage = () => {
   };
 
   useEffect(() => {
-    const initializePage = async () => {
-      await fetchLeads(); // Wait for leads to load first
-      fetchTelecallers();
-      // Don't call fetchStatusSummary here - it will be called by the second useEffect when leads update
-    };
-    
-    initializePage();
+    // Initial page load - fetchLeads will call fetchStatusSummary internally
+    fetchLeads();
+    fetchTelecallers();
   }, []);
   
-  // Recalculate status summary whenever leads data or filters change
+  // Recalculate status summary whenever filter changes
   useEffect(() => {
-    // Always recalculate when leads change (even if empty, to show zeros)
-    console.log('Recalculating status summary with', leads.length, 'leads');
-    fetchStatusSummary();
-  }, [leads, summaryStartDate, summaryEndDate, summarySourceFilter]);
+    // Only recalculate when filters change, not on initial load
+    if (leads.length > 0 && (summaryStartDate || summaryEndDate || summarySourceFilter)) {
+      console.log('Recalculating status summary due to filter change');
+      fetchStatusSummary();
+    }
+  }, [summaryStartDate, summaryEndDate, summarySourceFilter]);
   
   // Refresh telecallers when page becomes visible (handles tab switching)
   useEffect(() => {
