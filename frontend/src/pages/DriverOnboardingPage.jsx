@@ -506,11 +506,14 @@ const DriverOnboardingPage = () => {
   useEffect(() => {
     fetchLeads();
     fetchTelecallers();
+    // Initialize summary with zeros
+    fetchStatusSummary();
   }, []);
   
   // Recalculate status summary whenever leads data or filters change
   useEffect(() => {
     if (leads.length > 0) {
+      console.log('Recalculating status summary with', leads.length, 'leads');
       fetchStatusSummary();
     }
   }, [leads, summaryStartDate, summaryEndDate, summarySourceFilter]);
