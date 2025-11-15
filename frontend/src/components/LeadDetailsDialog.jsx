@@ -343,7 +343,7 @@ const LeadDetailsDialog = ({
               <Label className="text-xs text-gray-600 dark:text-gray-400 mb-2 block">Status within Stage</Label>
               {isEditMode ? (
                 <Select
-                  value={editedLead.status && editedLead.status.trim() !== "" ? editedLead.status : "New"}
+                  value={editedLead.status || "New"}
                   onValueChange={(value) => onFieldChange('status', value)}
                   disabled={updating}
                 >
@@ -351,7 +351,11 @@ const LeadDetailsDialog = ({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="dark:bg-gray-800 dark:border-gray-700 max-h-[300px]">
-                    {getStatusesForStage(editedLead.stage && editedLead.stage.trim() !== "" ? editedLead.stage : "S1").map((option) => (
+                    {getStatusesForStage((() => {
+                      // Normalize stage value for status filtering
+                      const stage = editedLead.stage || "S1";
+                      return stage.split(' ')[0]; // Extract just "S1", "S2", etc.
+                    })()).map((option) => (
                       <SelectItem key={option.value} value={option.value}>
                         <span className={`px-2 py-1 rounded text-xs ${option.color}`}>
                           {option.label}
