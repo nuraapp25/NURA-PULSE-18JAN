@@ -4668,6 +4668,7 @@ const DriverOnboardingPage = () => {
                   { field: 'interested_ev', label: 'Interested in EV' },
                   { field: 'monthly_salary', label: 'Expected Salary' },
                   { field: 'current_location', label: 'Current Location' },
+                  { field: 'preferred_shift', label: 'Preferred Shift' },
                   { field: 'status', label: 'Status' },
                   { field: 'stage', label: 'Stage' },
                   { field: 'assigned_telecaller', label: 'Assigned Telecaller' },
