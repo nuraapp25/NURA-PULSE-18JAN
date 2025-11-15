@@ -505,9 +505,15 @@ const DriverOnboardingPage = () => {
 
   useEffect(() => {
     fetchLeads();
-    fetchStatusSummary();
     fetchTelecallers();
   }, []);
+  
+  // Recalculate status summary whenever leads data or filters change
+  useEffect(() => {
+    if (leads.length > 0) {
+      fetchStatusSummary();
+    }
+  }, [leads, summaryStartDate, summaryEndDate, summarySourceFilter]);
   
   // Refresh telecallers when page becomes visible (handles tab switching)
   useEffect(() => {
