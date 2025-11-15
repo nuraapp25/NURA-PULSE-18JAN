@@ -306,7 +306,12 @@ const LeadDetailsDialog = ({
               <Label className="text-xs text-gray-600 dark:text-gray-400 mb-2 block">Current Stage</Label>
               {isEditMode ? (
                 <Select
-                  value={editedLead.stage && editedLead.stage.trim() !== "" ? editedLead.stage : "S1"}
+                  value={(() => {
+                    // Normalize stage value: extract "S1", "S2", etc. from "S1 - Filtering" format
+                    const stage = editedLead.stage || "S1";
+                    const normalized = stage.split(' ')[0]; // Get just "S1", "S2", "S3", or "S4"
+                    return normalized;
+                  })()}
                   onValueChange={(value) => {
                     onFieldChange('stage', value);
                     const newStatuses = getStatusesForStage(value);
