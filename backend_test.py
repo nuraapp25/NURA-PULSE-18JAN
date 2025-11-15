@@ -9881,6 +9881,263 @@ Case Test 6,9876540006,interested"""
                             "Invalid JSON response", response.text)
         
         return success_count >= 6  # At least 6 out of 8 tests should pass
+
+    def test_driver_onboarding_leads_status_investigation(self):
+        """Test Driver Onboarding leads endpoint to investigate Status Summary Dashboard zeros"""
+        print("\n=== Testing Driver Onboarding Leads Status Investigation ===")
+        
+        success_count = 0
+        
+        # Test 1: Login with admin credentials
+        print("\n--- Step 1: Login with admin credentials ---")
+        login_data = {
+            "email": "admin@nurapulse.com",
+            "password": "admin123"
+        }
+        
+        response = self.make_request("POST", "/auth/login", login_data, use_auth=False)
+        
+        if response and response.status_code == 200:
+            try:
+                data = response.json()
+                if "token" in data:
+                    self.token = data["token"]
+                    user_info = data.get("user", {})
+                    self.log_test("Status Investigation - Admin Login", True, 
+                                f"Login successful. User: {user_info.get('first_name', 'Unknown')}, Type: {user_info.get('account_type', 'Unknown')}")
+                    success_count += 1
+                else:
+                    self.log_test("Status Investigation - Admin Login", False, "No token in response", data)
+                    return False
+            except json.JSONDecodeError:
+                self.log_test("Status Investigation - Admin Login", False, "Invalid JSON response", response.text)
+                return False
+        else:
+            self.log_test("Status Investigation - Admin Login", False, 
+                        f"Login failed with status {response.status_code if response else 'Network error'}", 
+                        response.text if response else None)
+            return False
+        
+        # Test 2: Fetch all leads using skip_pagination=true
+        print("\n--- Step 2: Fetch all leads with skip_pagination=true ---")
+        response = self.make_request("GET", "/driver-onboarding/leads?skip_pagination=true")
+        
+        if response and response.status_code == 200:
+            try:
+                leads = response.json()
+                total_leads = len(leads)
+                self.log_test("Status Investigation - Fetch All Leads", True, 
+                            f"Successfully retrieved {total_leads} leads from database")
+                success_count += 1
+                
+                # Test 3: Check response structure
+                print("\n--- Step 3: Check response structure ---")
+                if total_leads > 0:
+                    sample_lead = leads[0]
+                    required_fields = ["id", "name", "status", "stage"]
+                    missing_fields = [field for field in required_fields if field not in sample_lead]
+                    
+                    if not missing_fields:
+                        self.log_test("Status Investigation - Response Structure", True, 
+                                    f"Lead structure contains all required fields: {required_fields}")
+                        success_count += 1
+                    else:
+                        self.log_test("Status Investigation - Response Structure", False, 
+                                    f"Lead structure missing fields: {missing_fields}")
+                    
+                    # Test 4: Print sample leads with their status values
+                    print("\n--- Step 4: Sample leads with status values ---")
+                    sample_size = min(10, total_leads)
+                    print(f"\n📋 SAMPLE OF {sample_size} LEADS:")
+                    print("-" * 80)
+                    print(f"{'ID':<25} {'Name':<20} {'Status':<25} {'Stage':<8}")
+                    print("-" * 80)
+                    
+                    for i in range(sample_size):
+                        lead = leads[i]
+                        lead_id = lead.get('id', 'N/A')[:24]
+                        name = lead.get('name', 'N/A')[:19]
+                        status = lead.get('status', 'N/A')[:24]
+                        stage = lead.get('stage', 'N/A')[:7]
+                        print(f"{lead_id:<25} {name:<20} {status:<25} {stage:<8}")
+                    
+                    self.log_test("Status Investigation - Sample Leads Display", True, 
+                                f"Displayed sample of {sample_size} leads with status values")
+                    success_count += 1
+                    
+                    # Test 5: Count unique status values
+                    print("\n--- Step 5: Count unique status values ---")
+                    status_counts = {}
+                    stage_counts = {}
+                    
+                    for lead in leads:
+                        status = lead.get('status', 'Unknown')
+                        stage = lead.get('stage', 'Unknown')
+                        
+                        status_counts[status] = status_counts.get(status, 0) + 1
+                        stage_counts[stage] = stage_counts.get(stage, 0) + 1
+                    
+                    print(f"\n📊 UNIQUE STATUS VALUES FOUND ({len(status_counts)} total):")
+                    print("-" * 60)
+                    for status, count in sorted(status_counts.items(), key=lambda x: x[1], reverse=True):
+                        print(f"{status:<35} : {count:>6} leads")
+                    
+                    print(f"\n📊 STAGE DISTRIBUTION ({len(stage_counts)} total):")
+                    print("-" * 40)
+                    for stage, count in sorted(stage_counts.items()):
+                        print(f"{stage:<15} : {count:>6} leads")
+                    
+                    self.log_test("Status Investigation - Status Counting", True, 
+                                f"Found {len(status_counts)} unique status values and {len(stage_counts)} stages")
+                    success_count += 1
+                    
+                    # Test 6: Verify status field exists and contains data
+                    print("\n--- Step 6: Verify status field exists and contains data ---")
+                    leads_with_status = sum(1 for lead in leads if lead.get('status') and lead.get('status') != 'Unknown')
+                    leads_with_stage = sum(1 for lead in leads if lead.get('stage') and lead.get('stage') != 'Unknown')
+                    
+                    status_coverage = (leads_with_status / total_leads * 100) if total_leads > 0 else 0
+                    stage_coverage = (leads_with_stage / total_leads * 100) if total_leads > 0 else 0
+                    
+                    self.log_test("Status Investigation - Status Field Coverage", True, 
+                                f"{leads_with_status}/{total_leads} leads have status data ({status_coverage:.1f}%)")
+                    self.log_test("Status Investigation - Stage Field Coverage", True, 
+                                f"{leads_with_stage}/{total_leads} leads have stage data ({stage_coverage:.1f}%)")
+                    success_count += 2
+                    
+                    # Test 7: Check for expected status values
+                    print("\n--- Step 7: Check for expected status values ---")
+                    expected_s1_statuses = ['New', 'Not Interested', 'Interested, No DL', 'Interested, No Badge', 
+                                          'Highly Interested', 'Call back 1D', 'Call back 1W', 'Call back 2W', 'Call back 1M']
+                    expected_s2_statuses = ['Docs Upload Pending', 'Verification Pending', 'Duplicate License', 
+                                          'DL - Amount', 'Verified', 'Verification Rejected']
+                    expected_s3_statuses = ['Schedule Pending', 'Training WIP', 'Training Completed', 
+                                          'Training Rejected', 'Re-Training', 'Absent for training', 'Approved']
+                    expected_s4_statuses = ['CT Pending', 'CT WIP', 'Shift Details Pending', 'DONE!', 'Terminated']
+                    
+                    all_expected_statuses = expected_s1_statuses + expected_s2_statuses + expected_s3_statuses + expected_s4_statuses
+                    
+                    found_expected = []
+                    missing_expected = []
+                    unexpected_statuses = []
+                    
+                    for status in status_counts.keys():
+                        if status in all_expected_statuses:
+                            found_expected.append(status)
+                        else:
+                            unexpected_statuses.append(status)
+                    
+                    for status in all_expected_statuses:
+                        if status not in status_counts:
+                            missing_expected.append(status)
+                    
+                    print(f"\n✅ EXPECTED STATUSES FOUND ({len(found_expected)}):")
+                    for status in found_expected:
+                        count = status_counts[status]
+                        print(f"  {status}: {count} leads")
+                    
+                    if unexpected_statuses:
+                        print(f"\n⚠️  UNEXPECTED STATUSES FOUND ({len(unexpected_statuses)}):")
+                        for status in unexpected_statuses:
+                            count = status_counts[status]
+                            print(f"  {status}: {count} leads")
+                    
+                    if missing_expected:
+                        print(f"\n❌ EXPECTED STATUSES MISSING ({len(missing_expected)}):")
+                        for status in missing_expected:
+                            print(f"  {status}: 0 leads")
+                    
+                    self.log_test("Status Investigation - Expected Status Check", True, 
+                                f"Found {len(found_expected)} expected statuses, {len(unexpected_statuses)} unexpected, {len(missing_expected)} missing")
+                    success_count += 1
+                    
+                    # Test 8: Check specific statuses mentioned in the issue
+                    print("\n--- Step 8: Check specific statuses mentioned in issue ---")
+                    training_wip_count = status_counts.get('Training WIP', 0)
+                    done_count = status_counts.get('DONE!', 0)
+                    
+                    print(f"\n🎯 SPECIFIC STATUS INVESTIGATION:")
+                    print(f"  'Training WIP': {training_wip_count} leads")
+                    print(f"  'DONE!': {done_count} leads")
+                    
+                    if training_wip_count > 0 or done_count > 0:
+                        self.log_test("Status Investigation - Specific Statuses Found", True, 
+                                    f"Found Training WIP: {training_wip_count}, DONE!: {done_count}")
+                    else:
+                        self.log_test("Status Investigation - Specific Statuses Found", False, 
+                                    "Neither 'Training WIP' nor 'DONE!' statuses found in leads")
+                    success_count += 1
+                    
+                else:
+                    self.log_test("Status Investigation - Response Structure", False, 
+                                "No leads found in database")
+                    
+            except json.JSONDecodeError:
+                self.log_test("Status Investigation - Fetch All Leads", False, 
+                            "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Status Investigation - Fetch All Leads", False, error_msg, 
+                        response.text if response else None)
+        
+        # Test 9: Check Status Summary Dashboard endpoint
+        print("\n--- Step 9: Check Status Summary Dashboard endpoint ---")
+        response = self.make_request("GET", "/driver-onboarding/status-summary")
+        
+        if response and response.status_code == 200:
+            try:
+                summary_data = response.json()
+                
+                if summary_data.get("success"):
+                    summary = summary_data.get("summary", {})
+                    stage_totals = summary_data.get("stage_totals", {})
+                    total_leads = summary_data.get("total_leads", 0)
+                    
+                    print(f"\n📊 STATUS SUMMARY DASHBOARD RESULTS:")
+                    print(f"  Total Leads: {total_leads}")
+                    print(f"  Stage Totals: {stage_totals}")
+                    
+                    # Check each stage
+                    for stage in ['S1', 'S2', 'S3', 'S4']:
+                        stage_summary = summary.get(stage, {})
+                        stage_total = stage_totals.get(stage, 0)
+                        print(f"\n  {stage} Stage (Total: {stage_total}):")
+                        for status, count in stage_summary.items():
+                            if count > 0:
+                                print(f"    {status}: {count}")
+                    
+                    # Check if Training WIP and DONE! appear in summary
+                    s3_summary = summary.get("S3", {})
+                    s4_summary = summary.get("S4", {})
+                    
+                    training_wip_summary = s3_summary.get("Training WIP", 0)
+                    done_summary = s4_summary.get("DONE!", 0)
+                    
+                    print(f"\n🎯 DASHBOARD STATUS CHECK:")
+                    print(f"  Training WIP in S3: {training_wip_summary}")
+                    print(f"  DONE! in S4: {done_summary}")
+                    
+                    if training_wip_summary > 0 or done_summary > 0:
+                        self.log_test("Status Investigation - Dashboard Shows Statuses", True, 
+                                    f"Dashboard shows Training WIP: {training_wip_summary}, DONE!: {done_summary}")
+                    else:
+                        self.log_test("Status Investigation - Dashboard Shows Statuses", False, 
+                                    "Dashboard shows zeros for Training WIP and DONE! - this explains the issue!")
+                    success_count += 1
+                    
+                else:
+                    self.log_test("Status Investigation - Status Summary", False, 
+                                "Status summary response missing success field", summary_data)
+            except json.JSONDecodeError:
+                self.log_test("Status Investigation - Status Summary", False, 
+                            "Invalid JSON response from status summary", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Status Investigation - Status Summary", False, error_msg, 
+                        response.text if response else None)
+        
+        return success_count >= 6  # At least 6 out of 10 tests should pass
+
     def run_all_tests(self):
         """Run all backend tests"""
         print("🚀 Starting Comprehensive Backend Testing for Nura Pulse Application")
