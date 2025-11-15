@@ -516,18 +516,20 @@ const DriverOnboardingPage = () => {
   };
 
   useEffect(() => {
-    fetchLeads();
-    fetchTelecallers();
-    // Initialize summary with zeros
-    fetchStatusSummary();
+    const initializePage = async () => {
+      await fetchLeads(); // Wait for leads to load first
+      fetchTelecallers();
+      // Don't call fetchStatusSummary here - it will be called by the second useEffect when leads update
+    };
+    
+    initializePage();
   }, []);
   
   // Recalculate status summary whenever leads data or filters change
   useEffect(() => {
-    if (leads.length > 0) {
-      console.log('Recalculating status summary with', leads.length, 'leads');
-      fetchStatusSummary();
-    }
+    // Always recalculate when leads change (even if empty, to show zeros)
+    console.log('Recalculating status summary with', leads.length, 'leads');
+    fetchStatusSummary();
   }, [leads, summaryStartDate, summaryEndDate, summarySourceFilter]);
   
   // Refresh telecallers when page becomes visible (handles tab switching)
