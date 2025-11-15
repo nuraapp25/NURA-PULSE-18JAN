@@ -377,11 +377,10 @@ const DriverOnboardingPage = () => {
       // Complete progress - cap at exactly 100%
       setLoadingProgress(100);
       
-      // Calculate status summary after leads are loaded and state is updated
-      // Use setTimeout to ensure state update completes first
-      setTimeout(() => {
-        fetchStatusSummary();
-      }, 100);
+      // Calculate status summary immediately with the fetched data (not from state)
+      // Pass the data directly to avoid state timing issues
+      console.log('🔄 Calculating status summary with fetched leads:', fetchedLeads.length);
+      await calculateStatusSummaryFromData(fetchedLeads);
     } catch (error) {
       toast.error("Failed to fetch leads");
     } finally {
