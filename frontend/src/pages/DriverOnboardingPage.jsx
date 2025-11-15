@@ -468,7 +468,7 @@ const DriverOnboardingPage = () => {
       
       // Count leads by status
       let totalLeads = 0;
-      console.log('📊 Total leads available:', leads.length);
+      console.log('📊 Total leads available:', dataToUse.length);
       console.log('📊 Leads to count (after filters):', leadsToCount.length);
       
       // Sample first few leads for debugging
