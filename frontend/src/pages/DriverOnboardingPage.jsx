@@ -374,11 +374,14 @@ const DriverOnboardingPage = () => {
       // Fetch last sync time after fetching leads
       await fetchLastSyncTime();
       
-      // Fetch status summary
-      await fetchStatusSummary();
-      
       // Complete progress - cap at exactly 100%
       setLoadingProgress(100);
+      
+      // Calculate status summary after leads are loaded and state is updated
+      // Use setTimeout to ensure state update completes first
+      setTimeout(() => {
+        fetchStatusSummary();
+      }, 100);
     } catch (error) {
       toast.error("Failed to fetch leads");
     } finally {
