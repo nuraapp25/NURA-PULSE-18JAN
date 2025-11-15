@@ -433,7 +433,7 @@ const DriverOnboardingPage = () => {
       }
       
       // Filter leads based on date range and source (if filters are set)
-      let leadsToCount = leads;
+      let leadsToCount = dataToUse;
       
       if (summaryStartDate || summaryEndDate || summarySourceFilter) {
         leadsToCount = leads.filter(lead => {
