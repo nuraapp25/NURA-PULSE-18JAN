@@ -408,61 +408,93 @@ const DriverOnboardingPage = () => {
   const fetchStatusSummary = async () => {
     setSummaryLoading(true);
     try {
-      // TODO: User will provide the counting logic here
-      // For now, initialize empty structure
-      const summary = {
-        success: true,
-        summary: {
-          S1: {
-            'New': 0,
-            'Not Interested': 0,
-            'Interested, No DL': 0,
-            'Interested, No Badge': 0,
-            'Highly Interested': 0,
-            'Call back 1D': 0,
-            'Call back 1W': 0,
-            'Call back 2W': 0,
-            'Call back 1M': 0
-          },
-          S2: {
-            'Docs Upload Pending': 0,
-            'Verification Pending': 0,
-            'Duplicate License': 0,
-            'DL - Amount': 0,
-            'Verified': 0,
-            'Verification Rejected': 0
-          },
-          S3: {
-            'Schedule Pending': 0,
-            'Training WIP': 0,
-            'Training Completed': 0,
-            'Training Rejected': 0,
-            'Re-Training': 0,
-            'Absent for training': 0,
-            'Approved': 0
-          },
-          S4: {
-            'CT Pending': 0,
-            'CT WIP': 0,
-            'Shift Details Pending': 0,
-            'DONE!': 0,
-            'Training Rejected': 0,
-            'Re-Training': 0,
-            'Absent for training': 0,
-            'Terminated': 0
-          }
-        },
-        stage_totals: {
-          S1: 0,
-          S2: 0,
-          S3: 0,
-          S4: 0
-        },
-        total_leads: 0
+      // Define stage structure with their statuses
+      const stageDefinitions = {
+        'S1': ['New', 'Not Interested', 'Interested, No DL', 'Interested, No Badge', 
+               'Highly Interested', 'Call back 1D', 'Call back 1W', 'Call back 2W', 'Call back 1M'],
+        'S2': ['Docs Upload Pending', 'Verification Pending', 'Duplicate License', 
+               'DL - Amount', 'Verified', 'Verification Rejected'],
+        'S3': ['Schedule Pending', 'Training WIP', 'Training Completed', 'Training Rejected',
+               'Re-Training', 'Absent for training', 'Approved'],
+        'S4': ['CT Pending', 'CT WIP', 'Shift Details Pending', 'DONE!', 
+               'Training Rejected', 'Re-Training', 'Absent for training', 'Terminated']
       };
       
+      // Initialize summary structure with zeros
+      const summary = {};
+      for (const [stage, statuses] of Object.entries(stageDefinitions)) {
+        summary[stage] = {};
+        statuses.forEach(status => {
+          summary[stage][status] = 0;
+        });
+      }
+      
+      // Filter leads based on date range and source (if filters are set)
+      let leadsToCount = leads;
+      
+      if (summaryStartDate || summaryEndDate || summarySourceFilter) {
+        leadsToCount = leads.filter(lead => {
+          // Date filter
+          if (summaryStartDate || summaryEndDate) {
+            const leadDate = lead.import_date;
+            if (leadDate) {
+              const leadDateObj = new Date(leadDate);
+              
+              if (summaryStartDate) {
+                const startDateObj = new Date(summaryStartDate);
+                if (leadDateObj < startDateObj) return false;
+              }
+              
+              if (summaryEndDate) {
+                const endDateObj = new Date(summaryEndDate);
+                if (leadDateObj > endDateObj) return false;
+              }
+            }
+          }
+          
+          // Source filter
+          if (summarySourceFilter) {
+            const leadSource = (lead.source || '').toLowerCase();
+            const filterSource = summarySourceFilter.toLowerCase();
+            if (leadSource !== filterSource) return false;
+          }
+          
+          return true;
+        });
+      }
+      
+      // Count leads by status
+      let totalLeads = 0;
+      leadsToCount.forEach(lead => {
+        const status = lead.status;
+        
+        if (status) {
+          // Find which stage this status belongs to
+          for (const [stage, statuses] of Object.entries(stageDefinitions)) {
+            if (statuses.includes(status)) {
+              if (summary[stage][status] !== undefined) {
+                summary[stage][status]++;
+                totalLeads++;
+              }
+              break;
+            }
+          }
+        }
+      });
+      
+      // Calculate stage totals
+      const stage_totals = {};
+      for (const [stage, statuses] of Object.entries(summary)) {
+        stage_totals[stage] = Object.values(statuses).reduce((sum, count) => sum + count, 0);
+      }
+      
       // Set the summary
-      setStatusSummary(summary);
+      setStatusSummary({
+        success: true,
+        summary: summary,
+        stage_totals: stage_totals,
+        total_leads: totalLeads
+      });
     } catch (error) {
       console.error("Failed to calculate status summary:", error);
       toast.error("Failed to calculate status summary");
