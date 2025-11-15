@@ -2161,29 +2161,33 @@ async def bulk_import_leads(
                 
                 assigned_telecaller = lead_dict.get('assigned_telecaller')
                 
+                # Check if this lead has an ID (existing lead) or needs one (new lead)
+                lead_id = lead_dict.get('id')
+                
                 # If telecaller name is empty or NaN, unassign
                 if pd.isna(assigned_telecaller) or not str(assigned_telecaller).strip():
                     lead_dict['assigned_telecaller'] = None
                     lead_dict['assigned_telecaller_name'] = None
-                    logger.info(f"Unassigning telecaller for lead {lead_dict.get('id', 'unknown')}")
+                    logger.info(f"Unassigning telecaller for lead {lead_id or 'new lead'}")
                 else:
                     telecaller_name = str(assigned_telecaller).strip()
                     telecaller_name_lower = telecaller_name.lower()
                     
                     if telecaller_name_lower in telecaller_name_map:
                         telecaller = telecaller_name_map[telecaller_name_lower]
-                        lead_id = lead_dict['id']
                         
                         # Store email for assignment
                         lead_dict['assigned_telecaller'] = telecaller['email']
                         lead_dict['assigned_telecaller_name'] = f"{telecaller.get('first_name', '')} {telecaller.get('last_name', '')}".strip()
                         
-                        if telecaller['email'] not in telecaller_assignments:
-                            telecaller_assignments[telecaller['email']] = []
-                        telecaller_assignments[telecaller['email']].append(lead_id)
+                        # Only track assignments for existing leads with IDs
+                        if lead_id:
+                            if telecaller['email'] not in telecaller_assignments:
+                                telecaller_assignments[telecaller['email']] = []
+                            telecaller_assignments[telecaller['email']].append(lead_id)
                         
                         leads_with_assignments += 1
-                        logger.info(f"Assigned lead {lead_id} to telecaller {telecaller.get('first_name', '')}")
+                        logger.info(f"Assigned lead {lead_id or 'new lead'} to telecaller {telecaller.get('first_name', '')}")
                     else:
                         logger.warning(f"Telecaller '{telecaller_name}' not found in users - unassigning")
                         lead_dict['assigned_telecaller'] = None
