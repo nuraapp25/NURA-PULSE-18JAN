@@ -78,19 +78,22 @@ def main():
             
             # Step 4: Print sample leads with their status values
             print("\n--- Step 4: Sample leads with status values ---")
-            sample_size = min(10, total_leads)
-            print(f"\n📋 SAMPLE OF {sample_size} LEADS:")
-            print("-" * 80)
-            print(f"{'ID':<25} {'Name':<20} {'Status':<25} {'Stage':<8}")
-            print("-" * 80)
-            
-            for i in range(sample_size):
-                lead = leads[i]
-                lead_id = lead.get('id', 'N/A')[:24]
-                name = lead.get('name', 'N/A')[:19]
-                status = lead.get('status', 'N/A')[:24]
-                stage = lead.get('stage', 'N/A')[:7]
-                print(f"{lead_id:<25} {name:<20} {status:<25} {stage:<8}")
+            if total_leads > 0:
+                sample_size = min(10, total_leads)
+                print(f"\n📋 SAMPLE OF {sample_size} LEADS:")
+                print("-" * 80)
+                print(f"{'ID':<25} {'Name':<20} {'Status':<25} {'Stage':<8}")
+                print("-" * 80)
+                
+                for i in range(sample_size):
+                    lead = leads[i]
+                    lead_id = lead.get('id', 'N/A')[:24]
+                    name = lead.get('name', 'N/A')[:19]
+                    status = lead.get('status', 'N/A')[:24]
+                    stage = lead.get('stage', 'N/A')[:7]
+                    print(f"{lead_id:<25} {name:<20} {status:<25} {stage:<8}")
+            else:
+                print("⚠️  No leads to display")
             
             # Step 5: Count unique status values
             print("\n--- Step 5: Count unique status values ---")
