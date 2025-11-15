@@ -64,14 +64,17 @@ def main():
             
             # Step 3: Check response structure
             print("\n--- Step 3: Check response structure ---")
-            sample_lead = leads[0]
-            required_fields = ["id", "name", "status", "stage"]
-            missing_fields = [field for field in required_fields if field not in sample_lead]
-            
-            if not missing_fields:
-                print(f"✅ Lead structure contains all required fields: {required_fields}")
+            if total_leads > 0:
+                sample_lead = leads[0]
+                required_fields = ["id", "name", "status", "stage"]
+                missing_fields = [field for field in required_fields if field not in sample_lead]
+                
+                if not missing_fields:
+                    print(f"✅ Lead structure contains all required fields: {required_fields}")
+                else:
+                    print(f"❌ Lead structure missing fields: {missing_fields}")
             else:
-                print(f"❌ Lead structure missing fields: {missing_fields}")
+                print("⚠️  No leads to check structure")
             
             # Step 4: Print sample leads with their status values
             print("\n--- Step 4: Sample leads with status values ---")
