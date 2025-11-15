@@ -2087,11 +2087,17 @@ async def bulk_import_leads(
                 if normalized_phone and normalized_phone in existing_leads_map:
                     # Update existing lead
                     existing_lead = existing_leads_map[normalized_phone]
-                    row_dict = row.to_dict()
-                    row_dict['id'] = existing_lead['id']  # Keep original ID
-                    existing_leads_to_update.append(row_dict)
-                    duplicates_updated += 1
-                    logger.info(f"Will update existing lead: {phone}")
+                    
+                    # Check if this is a real existing lead (has ID) or just a duplicate within import file
+                    if 'id' in existing_lead:
+                        row_dict = row.to_dict()
+                        row_dict['id'] = existing_lead['id']  # Keep original ID
+                        existing_leads_to_update.append(row_dict)
+                        duplicates_updated += 1
+                        logger.info(f"Will update existing lead: {phone}")
+                    else:
+                        # Duplicate within import file - skip
+                        logger.warning(f"Duplicate phone number within import file, skipping: {phone}")
                 else:
                     # New lead
                     new_leads.append(row)
