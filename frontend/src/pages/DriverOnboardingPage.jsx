@@ -406,10 +406,11 @@ const DriverOnboardingPage = () => {
     }
   };
 
-  // Calculate status summary from leads data (frontend-only calculation)
-  const fetchStatusSummary = async () => {
+  // Calculate status summary from provided data directly
+  const calculateStatusSummaryFromData = async (leadsData) => {
     setSummaryLoading(true);
     try {
+      const dataToUse = leadsData || leads; // Use provided data or fall back to state
       // Define stage structure with their statuses
       const stageDefinitions = {
         'S1': ['New', 'Not Interested', 'Interested, No DL', 'Interested, No Badge', 
