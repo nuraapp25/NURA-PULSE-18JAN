@@ -59,7 +59,8 @@ def main():
             
             if total_leads == 0:
                 print("⚠️  No leads found in database - this explains why Status Summary shows zeros!")
-                return True
+                # Still check the status summary endpoint
+                pass
             
             # Step 3: Check response structure
             print("\n--- Step 3: Check response structure ---")
