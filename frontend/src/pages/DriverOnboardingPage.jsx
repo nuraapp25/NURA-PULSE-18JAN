@@ -436,7 +436,7 @@ const DriverOnboardingPage = () => {
       let leadsToCount = dataToUse;
       
       if (summaryStartDate || summaryEndDate || summarySourceFilter) {
-        leadsToCount = leads.filter(lead => {
+        leadsToCount = dataToUse.filter(lead => {
           // Date filter
           if (summaryStartDate || summaryEndDate) {
             const leadDate = lead.import_date;
