@@ -404,31 +404,68 @@ const DriverOnboardingPage = () => {
     }
   };
 
+  // Calculate status summary from leads data (frontend-only calculation)
   const fetchStatusSummary = async () => {
     setSummaryLoading(true);
     try {
-      const token = localStorage.getItem("token");
-      const params = {};
+      // TODO: User will provide the counting logic here
+      // For now, initialize empty structure
+      const summary = {
+        success: true,
+        summary: {
+          S1: {
+            'New': 0,
+            'Not Interested': 0,
+            'Interested, No DL': 0,
+            'Interested, No Badge': 0,
+            'Highly Interested': 0,
+            'Call back 1D': 0,
+            'Call back 1W': 0,
+            'Call back 2W': 0,
+            'Call back 1M': 0
+          },
+          S2: {
+            'Docs Upload Pending': 0,
+            'Verification Pending': 0,
+            'Duplicate License': 0,
+            'DL - Amount': 0,
+            'Verified': 0,
+            'Verification Rejected': 0
+          },
+          S3: {
+            'Schedule Pending': 0,
+            'Training WIP': 0,
+            'Training Completed': 0,
+            'Training Rejected': 0,
+            'Re-Training': 0,
+            'Absent for training': 0,
+            'Approved': 0
+          },
+          S4: {
+            'CT Pending': 0,
+            'CT WIP': 0,
+            'Shift Details Pending': 0,
+            'DONE!': 0,
+            'Training Rejected': 0,
+            'Re-Training': 0,
+            'Absent for training': 0,
+            'Terminated': 0
+          }
+        },
+        stage_totals: {
+          S1: 0,
+          S2: 0,
+          S3: 0,
+          S4: 0
+        },
+        total_leads: 0
+      };
       
-      if (summaryStartDate) {
-        params.start_date = format(summaryStartDate, 'yyyy-MM-dd');
-      }
-      if (summaryEndDate) {
-        params.end_date = format(summaryEndDate, 'yyyy-MM-dd');
-      }
-      if (summarySourceFilter) {
-        params.source = summarySourceFilter;
-      }
-      
-      const response = await axios.get(`${API}/driver-onboarding/status-summary`, {
-        headers: { Authorization: `Bearer ${token}` },
-        params
-      });
-      
-      setStatusSummary(response.data);
+      // Set the summary
+      setStatusSummary(summary);
     } catch (error) {
-      console.error("Failed to fetch status summary:", error);
-      toast.error("Failed to fetch status summary");
+      console.error("Failed to calculate status summary:", error);
+      toast.error("Failed to calculate status summary");
     } finally {
       setSummaryLoading(false);
     }
