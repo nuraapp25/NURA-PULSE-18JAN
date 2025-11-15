@@ -148,6 +148,14 @@ backend:
     stuck_count: 0
     priority: "critical"
     needs_retesting: false
+  
+  - task: "Driver Onboarding Status Investigation - Dashboard Zeros Issue"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: false
     status_history:
         - working: false
           agent: "testing"
