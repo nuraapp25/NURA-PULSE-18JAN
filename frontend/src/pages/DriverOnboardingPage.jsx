@@ -1037,7 +1037,32 @@ const DriverOnboardingPage = () => {
       fetchLastSyncTime().catch(err => console.error("Failed to fetch sync time:", err));
       
     } catch (error) {
-      toast.error(error.response?.data?.detail || "Failed to update lead");
+      console.error("Error updating lead:", error.response?.data);
+      
+      // Handle different error formats
+      let errorMessage = "Failed to update lead";
+      
+      if (error.response?.data) {
+        const errorData = error.response.data;
+        
+        // Handle Pydantic validation errors (array of error objects)
+        if (Array.isArray(errorData.detail)) {
+          const validationErrors = errorData.detail.map(err => 
+            `${err.loc?.join('.') || 'Field'}: ${err.msg}`
+          ).join(', ');
+          errorMessage = `Validation error: ${validationErrors}`;
+        }
+        // Handle string detail message
+        else if (typeof errorData.detail === 'string') {
+          errorMessage = errorData.detail;
+        }
+        // Handle object with message
+        else if (errorData.message) {
+          errorMessage = errorData.message;
+        }
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setUpdatingStatus(false);
     }
