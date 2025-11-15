@@ -978,9 +978,9 @@ const DriverOnboardingPage = () => {
       const response = await axios.patch(
         `${API}/driver-onboarding/leads/${editedLead.id}`,
         {
-          name: editedLead.name,
-          phone_number: editedLead.phone_number,
-          email: editedLead.email,
+          name: editedLead.name || "",
+          phone_number: String(editedLead.phone_number || ""),
+          email: editedLead.email || "",
           vehicle: editedLead.vehicle,
           driving_license: editedLead.driving_license,
           experience: editedLead.experience,
