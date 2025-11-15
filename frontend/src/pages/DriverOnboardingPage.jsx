@@ -1004,8 +1004,6 @@ const DriverOnboardingPage = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      toast.success("Lead details updated successfully!");
-      
       // Update local state immediately
       const updatedLead = response.data.lead;
       
@@ -1027,14 +1025,11 @@ const DriverOnboardingPage = () => {
       setIsEditMode(false);
       setHasUnsavedChanges(false);
       
-      // Refetch leads to update summary (do this in background)
-      fetchLeads().catch(err => console.error("Failed to refresh leads:", err));
+      // Recalculate status summary with updated leads data
+      calculateStatusSummaryFromData(updatedLeads).catch(err => console.error("Failed to refresh status summary:", err));
       
-      // Refetch status summary to reflect changes immediately
-      fetchStatusSummary().catch(err => console.error("Failed to refresh status summary:", err));
-      
-      // Update last sync time after edit
-      fetchLastSyncTime().catch(err => console.error("Failed to fetch sync time:", err));
+      // Show success message AFTER everything is updated
+      toast.success("Lead details updated successfully!");
       
     } catch (error) {
       console.error("Error updating lead:", error.response?.data);
