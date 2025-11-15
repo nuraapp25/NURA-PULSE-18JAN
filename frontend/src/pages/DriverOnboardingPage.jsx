@@ -465,6 +465,13 @@ const DriverOnboardingPage = () => {
       
       // Count leads by status
       let totalLeads = 0;
+      console.log('Total leads to count:', leadsToCount.length);
+      
+      // Sample first few leads for debugging
+      if (leadsToCount.length > 0) {
+        console.log('Sample lead statuses:', leadsToCount.slice(0, 5).map(l => l.status));
+      }
+      
       leadsToCount.forEach(lead => {
         const status = lead.status;
         
@@ -481,6 +488,8 @@ const DriverOnboardingPage = () => {
           }
         }
       });
+      
+      console.log('Summary calculated:', { totalLeads, stage_totals: stage_totals });
       
       // Calculate stage totals
       const stage_totals = {};
