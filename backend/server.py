@@ -1731,6 +1731,28 @@ async def bulk_export_leads(current_user: User = Depends(get_current_user)):
         logger.info(f"📊 Converting {actual_fetched} leads to DataFrame...")
         df = pd.DataFrame(leads)
         
+        # Add document upload status columns (yes/no based on whether field has value)
+        document_fields = {
+            'dl_no': 'dl_documents_uploaded',
+            'badge_no': 'badge_documents_uploaded',
+            'aadhar_card': 'aadhar_documents_uploaded',
+            'pan_card': 'pan_documents_uploaded',
+            'gas_bill': 'gas_documents_uploaded',
+            'bank_passbook': 'bank_documents_uploaded'
+        }
+        
+        for doc_field, status_field in document_fields.items():
+            if doc_field in df.columns:
+                # Set to "yes" if field has value (not null and not empty), otherwise "no"
+                df[status_field] = df[doc_field].apply(
+                    lambda x: "yes" if pd.notna(x) and str(x).strip() != "" else "no"
+                )
+            else:
+                # If document field doesn't exist, set status to "no"
+                df[status_field] = "no"
+        
+        logger.info(f"📋 Added document upload status columns")
+        
         # Define preferred column order
         preferred_columns = [
             'id', 'name', 'phone_number', 'email', 'vehicle', 
