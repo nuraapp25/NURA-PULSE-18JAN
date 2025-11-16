@@ -1917,7 +1917,7 @@ async def batch_export_leads_as_zip(current_user: User = Depends(get_current_use
                 
                 # Add document upload status columns (yes/no based on whether document number exists)
                 document_fields = {
-                    'dl_no': 'badge_documents_uploaded',
+                    'dl_no': 'dl_documents_uploaded',
                     'badge_no': 'badge_documents_uploaded',
                     'aadhar_card': 'aadhar_documents_uploaded',
                     'pan_card': 'pan_documents_uploaded',
