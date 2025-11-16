@@ -1735,7 +1735,13 @@ async def bulk_export_leads(current_user: User = Depends(get_current_user)):
         preferred_columns = [
             'id', 'name', 'phone_number', 'email', 'vehicle', 
             'stage', 'status', 'source', 'remarks',
-            'current_location', 'experience', 'assigned_telecaller',
+            'current_location', 'preferred_shift', 'experience', 'assigned_telecaller',
+            'dl_no', 'dl_documents_uploaded', 
+            'badge_no', 'badge_documents_uploaded',
+            'aadhar_card', 'aadhar_documents_uploaded',
+            'pan_card', 'pan_documents_uploaded',
+            'gas_bill', 'gas_documents_uploaded',
+            'bank_passbook', 'bank_documents_uploaded',
             'last_called', 'callback_date', 'assigned_date',
             'import_date', 'created_at', 'updated_at'
         ]
@@ -1856,7 +1862,13 @@ async def batch_export_leads_as_zip(current_user: User = Depends(get_current_use
         preferred_columns = [
             'id', 'name', 'phone_number', 'email', 'vehicle', 
             'stage', 'status', 'source', 'remarks',
-            'current_location', 'experience', 'assigned_telecaller',
+            'current_location', 'preferred_shift', 'experience', 'assigned_telecaller',
+            'dl_no', 'dl_documents_uploaded', 
+            'badge_no', 'badge_documents_uploaded',
+            'aadhar_card', 'aadhar_documents_uploaded',
+            'pan_card', 'pan_documents_uploaded',
+            'gas_bill', 'gas_documents_uploaded',
+            'bank_passbook', 'bank_documents_uploaded',
             'last_called', 'callback_date', 'assigned_date',
             'import_date', 'created_at', 'updated_at'
         ]
