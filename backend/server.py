@@ -1915,7 +1915,7 @@ async def batch_export_leads_as_zip(current_user: User = Depends(get_current_use
                 # Convert to DataFrame
                 df = pd.DataFrame(batch_leads)
                 
-                # Add document upload status columns (yes/no based on whether field has value)
+                # Add document upload status columns (show actual document number or "no")
                 document_fields = {
                     'dl_no': 'dl_documents_uploaded',
                     'badge_no': 'badge_documents_uploaded',
@@ -1927,9 +1927,9 @@ async def batch_export_leads_as_zip(current_user: User = Depends(get_current_use
                 
                 for doc_field, status_field in document_fields.items():
                     if doc_field in df.columns:
-                        # Set to "yes" if field has value (not null and not empty), otherwise "no"
+                        # Show actual document number if it exists, otherwise "no"
                         df[status_field] = df[doc_field].apply(
-                            lambda x: "yes" if pd.notna(x) and str(x).strip() != "" else "no"
+                            lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != "" else "no"
                         )
                     else:
                         # If document field doesn't exist, set status to "no"
