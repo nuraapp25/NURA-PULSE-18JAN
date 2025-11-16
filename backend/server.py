@@ -1917,6 +1917,12 @@ async def batch_export_leads_as_zip(current_user: User = Depends(get_current_use
                 # Convert to DataFrame
                 df = pd.DataFrame(batch_leads)
                 
+                # Add document number columns if they don't exist (ensure they're in export)
+                document_number_fields = ['dl_no', 'badge_no', 'aadhar_card', 'pan_card', 'gas_bill', 'bank_passbook']
+                for doc_field in document_number_fields:
+                    if doc_field not in df.columns:
+                        df[doc_field] = ""  # Add empty column
+                
                 # Add document upload status columns (yes/no based on whether document number exists)
                 document_fields = {
                     'dl_no': 'dl_documents_uploaded',
@@ -1928,14 +1934,10 @@ async def batch_export_leads_as_zip(current_user: User = Depends(get_current_use
                 }
                 
                 for doc_field, status_field in document_fields.items():
-                    if doc_field in df.columns:
-                        # Show "yes" if document number exists, otherwise "no"
-                        df[status_field] = df[doc_field].apply(
-                            lambda x: "yes" if pd.notna(x) and str(x).strip() != "" else "no"
-                        )
-                    else:
-                        # If document field doesn't exist, set status to "no"
-                        df[status_field] = "no"
+                    # Show "yes" if document number exists, otherwise "no"
+                    df[status_field] = df[doc_field].apply(
+                        lambda x: "yes" if pd.notna(x) and str(x).strip() != "" else "no"
+                    )
                 
                 # Reorder columns
                 existing_preferred = [col for col in preferred_columns if col in df.columns]
