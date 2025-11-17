@@ -435,13 +435,15 @@ const TelecallerDeskNew = () => {
   };
   
   // Render lead card
-  const renderLeadCard = (lead, showCallTimestamp = false) => (
-    <Card key={lead.id} className="mb-3 dark:bg-gray-800">
+  const renderLeadCard = (leadParam, showCallTimestamp = false) => {
+    console.log("renderLeadCard called with:", leadParam);
+    return (
+    <Card key={leadParam.id} className="mb-3 dark:bg-gray-800">
       <CardContent className="p-4">
         <div className="flex justify-between items-start mb-2">
           <div>
-            <h3 className="font-semibold text-lg dark:text-white">{lead.name}</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">{lead.phone_number}</p>
+            <h3 className="font-semibold text-lg dark:text-white">{leadParam.name}</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">{leadParam.phone_number}</p>
             {showCallTimestamp && lead.last_called && (
               <p className="text-xs text-green-600 dark:text-green-400 mt-1">
                 ✓ Called at {formatDateDDMMYYYY(lead.last_called)} {format(parseISO(lead.last_called), 'HH:mm:ss')}
