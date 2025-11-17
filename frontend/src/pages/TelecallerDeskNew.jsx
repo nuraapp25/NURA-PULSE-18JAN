@@ -750,14 +750,17 @@ const TelecallerDeskNew = () => {
         )}
         
         {/* Lead Details Dialog */}
+        {console.log("Rendering LeadDetailsDialog - open:", detailDialogOpen, "lead:", selectedLead)}
         <LeadDetailsDialog
           lead={selectedLead}
           open={detailDialogOpen}
           onClose={() => {
+            console.log("Dialog onClose called");
             setDetailDialogOpen(false);
             setSelectedLead(null);
           }}
           onSave={() => {
+            console.log("Dialog onSave called");
             setDetailDialogOpen(false);
             setSelectedLead(null);
             fetchLeads();
