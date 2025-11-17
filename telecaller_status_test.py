@@ -200,7 +200,8 @@ class TelecallerDeskTester:
                     verify_response = self.make_request("GET", f"/driver-onboarding/leads")
                     if verify_response and verify_response.status_code == 200:
                         try:
-                            verify_leads = verify_response.json()
+                            verify_data = verify_response.json()
+                            verify_leads = verify_data.get("leads", [])
                             # Find our test lead
                             updated_lead = None
                             for lead in verify_leads:
