@@ -53,7 +53,17 @@ const MorningChargeAudit = () => {
 
   useEffect(() => {
     fetchAuditData();
-  }, []);
+  }, [startDate, endDate]);
+  
+  // Quick date range selection
+  const setDateRange = (days) => {
+    const end = new Date();
+    const start = new Date();
+    start.setDate(start.getDate() - days);
+    
+    setEndDate(end.toISOString().split('T')[0]);
+    setStartDate(start.toISOString().split('T')[0]);
+  };
 
   const downloadCSV = () => {
     if (auditData.length === 0) {
