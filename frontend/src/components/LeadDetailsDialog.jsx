@@ -103,6 +103,27 @@ const LeadDetailsDialog = ({
   if (!lead || !editedLead) return null;
 
   const DocumentSection = ({ docType, label, fieldName }) => {
+    const [value, setValue] = React.useState(editedLead[fieldName] || '');
+    const timeoutRef = React.useRef(null);
+
+    // Sync when editedLead changes
+    React.useEffect(() => {
+      setValue(editedLead[fieldName] || '');
+    }, [editedLead[fieldName]]);
+
+    const handleChange = (e) => {
+      const newValue = e.target.value;
+      setValue(newValue);
+      
+      // Debounce update to parent (300ms after last keystroke)
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      timeoutRef.current = setTimeout(() => {
+        onFieldChange(fieldName, newValue);
+      }, 300);
+    };
+
     return (
       <div className="border-b border-blue-200 dark:border-blue-800 pb-4">
         <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">{label}</Label>
@@ -110,12 +131,8 @@ const LeadDetailsDialog = ({
           <div className="md:col-span-2">
             {isEditMode ? (
               <Input
-                key={fieldName}
-                defaultValue={editedLead[fieldName] || ''}
-                onChange={(e) => {
-                  // Update parent state immediately
-                  onFieldChange(fieldName, e.target.value);
-                }}
+                value={value}
+                onChange={handleChange}
                 className="dark:bg-gray-700 dark:border-gray-600"
                 placeholder={`${label} Number`}
               />
