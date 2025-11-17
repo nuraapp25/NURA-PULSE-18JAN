@@ -358,46 +358,7 @@ const TelecallerDeskNew = () => {
       return "Invalid Date";
     }
   };
-  
-  // Handle status update
-  const handleStatusUpdate = async () => {
-    if (!newStatus) {
-      toast.error("Please select a status");
-      return;
-    }
-    
-    try {
-      const token = localStorage.getItem("token");
-      const updateData = {
-        status: newStatus,
-        remarks: remarks || undefined
-      };
-      
-      // Add callback_date if status starts with "Call back"
-      if (newStatus.startsWith("Call back") && callbackDate) {
-        updateData.callback_date = callbackDate;
-      }
-      
-      await axios.patch(
-        `${API}/driver-onboarding/leads/${selectedLead.id}`,
-        updateData,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      
-      toast.success("Status updated successfully");
-      setStatusDialogOpen(false);
-      setNewStatus("");
-      setCallbackDate("");
-      setRemarks("");
-      
-      // Refresh leads
-      const email = isAdmin ? selectedTelecaller : user?.email;
-      fetchLeadsForDate(email);
-    } catch (error) {
-      console.error("Error updating status:", error);
-      toast.error("Failed to update status");
-    }
-  };
+  // Status update now handled by LeadDetailsDialog component
   
   // Handle call action
   const handleCall = (lead) => {
