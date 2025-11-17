@@ -363,17 +363,23 @@ const TelecallerDeskNew = () => {
   const { notCalled: assignedNotCalled, called: assignedCalled } = separateLeadsByCalled(assignedLeads);
   const { notCalled: callbackNotCalled, called: callbackCalled } = separateLeadsByCalled(callbackLeads);
   
-  console.log("📊 Telecaller:", isAdmin ? selectedTelecaller : user?.email);
+  console.log("📊 Current Telecaller:", isAdmin ? selectedTelecaller : user?.email);
   console.log("📊 Selected Date:", selectedDate);
-  console.log("📊 Assigned Leads:", assignedLeads.length);
-  console.log("📊 Called Today (assigned):", assignedCalled.length);
-  console.log("📊 Called Today (callback):", callbackCalled.length);
+  console.log("📊 Total Assigned Leads:", assignedLeads.length);
+  console.log("📊 Assigned Leads Details:", assignedLeads.map(l => ({name: l.name, assigned_to: l.assigned_telecaller})));
+  console.log("📊 Called on Selected Date (assigned):", assignedCalled.length);
+  console.log("📊 Called on Selected Date (callback):", callbackCalled.length);
   
   const filteredAssignedLeads = filterLeadsBySearch(assignedNotCalled);
   const filteredCallbackLeads = filterLeadsBySearch(callbackNotCalled);
   const filteredCallingDoneLeads = filterLeadsBySearch([...assignedCalled, ...callbackCalled]);
   
-  console.log("📊 Filtered Calling Done:", filteredCallingDoneLeads.length, filteredCallingDoneLeads.map(l => ({name: l.name, assigned_to: l.assigned_telecaller, last_called: l.last_called})));
+  console.log("📊 CALLING DONE LEADS:", filteredCallingDoneLeads.map(l => ({
+    name: l.name, 
+    assigned_to: l.assigned_telecaller, 
+    last_called: l.last_called,
+    matches_current_telecaller: l.assigned_telecaller === (isAdmin ? selectedTelecaller : user?.email)
+  })));
   
   // Format date to DD-MM-YYYY
   const formatDateDDMMYYYY = (isoDate) => {
