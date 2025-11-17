@@ -788,90 +788,20 @@ const TelecallerDeskNew = () => {
           </>
         )}
         
-        {/* Status Update Dialog */}
-        <Dialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
-          <DialogContent className="dark:bg-gray-800">
-            <DialogHeader>
-              <DialogTitle className="dark:text-white">Update Lead Status</DialogTitle>
-            </DialogHeader>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2 dark:text-gray-300">
-                  Select Status
-                </label>
-                <Select value={newStatus} onValueChange={setNewStatus}>
-                  <SelectTrigger className="dark:bg-gray-700 dark:border-gray-600">
-                    <SelectValue placeholder="Choose status" />
-                  </SelectTrigger>
-                  <SelectContent className="dark:bg-gray-800">
-                    <div className="p-2 font-semibold text-xs text-gray-500">S1 - Filtering</div>
-                    {S1_STATUSES.map(status => (
-                      <SelectItem key={status.value} value={status.value}>
-                        {status.label}
-                      </SelectItem>
-                    ))}
-                    <div className="p-2 font-semibold text-xs text-gray-500">S2 - Verification</div>
-                    {S2_STATUSES.map(status => (
-                      <SelectItem key={status.value} value={status.value}>
-                        {status.label}
-                      </SelectItem>
-                    ))}
-                    <div className="p-2 font-semibold text-xs text-gray-500">S3 - Training</div>
-                    {S3_STATUSES.map(status => (
-                      <SelectItem key={status.value} value={status.value}>
-                        {status.label}
-                      </SelectItem>
-                    ))}
-                    <div className="p-2 font-semibold text-xs text-gray-500">S4 - Final</div>
-                    {S4_STATUSES.map(status => (
-                      <SelectItem key={status.value} value={status.value}>
-                        {status.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              {newStatus && newStatus.startsWith("Call back") && (
-                <div>
-                  <label className="block text-sm font-medium mb-2 dark:text-gray-300">
-                    Callback Date
-                  </label>
-                  <Input
-                    type="date"
-                    value={callbackDate}
-                    onChange={(e) => setCallbackDate(e.target.value)}
-                    min={new Date().toISOString().split('T')[0]}
-                    className="dark:bg-gray-700 dark:border-gray-600"
-                  />
-                </div>
-              )}
-              
-              <div>
-                <label className="block text-sm font-medium mb-2 dark:text-gray-300">
-                  Remarks (Optional)
-                </label>
-                <Textarea
-                  value={remarks}
-                  onChange={(e) => setRemarks(e.target.value)}
-                  placeholder="Add any notes..."
-                  rows={3}
-                  className="dark:bg-gray-700 dark:border-gray-600"
-                />
-              </div>
-            </div>
-            
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setStatusDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleStatusUpdate} className="bg-blue-600 hover:bg-blue-700">
-                Update Status
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        {/* Lead Details Dialog */}
+        <LeadDetailsDialog
+          lead={selectedLead}
+          open={detailDialogOpen}
+          onClose={() => {
+            setDetailDialogOpen(false);
+            setSelectedLead(null);
+          }}
+          onSave={() => {
+            setDetailDialogOpen(false);
+            setSelectedLead(null);
+            fetchLeads();
+          }}
+        />
       </div>
     </div>
   );
