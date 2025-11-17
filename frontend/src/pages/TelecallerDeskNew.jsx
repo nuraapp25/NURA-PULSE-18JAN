@@ -90,6 +90,11 @@ const TelecallerDeskNew = () => {
   // Lead details dialog
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null);
+  const [editedLead, setEditedLead] = useState({});
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [uploadedDocs, setUploadedDocs] = useState({});
+  const [uploadingDoc, setUploadingDoc] = useState(null);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
   
   // Generate date range (7 days before to 14 days after today)
   const generateDateRange = () => {
