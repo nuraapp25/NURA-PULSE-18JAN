@@ -76,7 +76,6 @@ const Dashboard = () => {
   );
 
   const manageItems = [
-    { name: "Manage DB", icon: Database, path: "/dashboard/manage", roles: ["master_admin"] },
     { name: "Manage Database", icon: Database, path: "/dashboard/manage-database", roles: ["master_admin", "admin"] },
     { name: "Payment Screenshots", icon: Image, path: "/dashboard/admin/payment-screenshots", roles: ["master_admin", "admin", "ops_team"] },
     { name: "App Settings", icon: Settings, path: "/dashboard/app-settings", roles: ["master_admin"] },
