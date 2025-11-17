@@ -403,7 +403,15 @@ const TelecallerDeskNew = () => {
   
   // Handle call action
   const handleCall = (lead) => {
-    const phoneNumber = lead.phone_number.replace(/\D/g, '');
+    // Ensure phone_number is a string and handle null/undefined cases
+    const phoneString = String(lead.phone_number || '');
+    const phoneNumber = phoneString.replace(/\D/g, '');
+    
+    if (!phoneNumber) {
+      toast.error("No valid phone number available");
+      return;
+    }
+    
     window.location.href = `tel:${phoneNumber}`;
     
     // Mark as called
@@ -412,7 +420,15 @@ const TelecallerDeskNew = () => {
   
   // Handle WhatsApp action
   const handleWhatsApp = (lead) => {
-    const phoneNumber = lead.phone_number.replace(/\D/g, '');
+    // Ensure phone_number is a string and handle null/undefined cases
+    const phoneString = String(lead.phone_number || '');
+    const phoneNumber = phoneString.replace(/\D/g, '');
+    
+    if (!phoneNumber) {
+      toast.error("No valid phone number available");
+      return;
+    }
+    
     const message = encodeURIComponent(`Hi ${lead.name}, I'm calling from Nura regarding your driver application.`);
     window.open(`https://wa.me/91${phoneNumber}?text=${message}`, '_blank');
   };
