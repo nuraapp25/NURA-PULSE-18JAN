@@ -114,7 +114,8 @@ class TelecallerDeskTester:
         
         if response and response.status_code == 200:
             try:
-                leads = response.json()
+                data = response.json()
+                leads = data.get("leads", [])
                 if leads and len(leads) > 0:
                     test_lead_id = leads[0].get("id")
                     lead_name = leads[0].get("name", "Unknown")
