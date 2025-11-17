@@ -1025,11 +1025,16 @@ const DriverOnboardingPage = () => {
       setIsEditMode(false);
       setHasUnsavedChanges(false);
       
-      // Recalculate status summary with updated leads data
-      calculateStatusSummaryFromData(updatedLeads).catch(err => console.error("Failed to refresh status summary:", err));
-      
-      // Show success message AFTER everything is updated
+      // Show success message immediately
       toast.success("Lead details updated successfully!");
+      
+      // Recalculate status summary with updated leads data in background (don't await)
+      setTimeout(() => {
+        calculateStatusSummaryFromData(updatedLeads).catch(err => {
+          console.error("Failed to refresh status summary:", err);
+          // Don't show error to user - this is just a background refresh
+        });
+      }, 100);
       
     } catch (error) {
       console.error("Error updating lead:", error.response?.data);
