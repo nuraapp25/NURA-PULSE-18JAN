@@ -970,41 +970,48 @@ const DriverOnboardingPage = () => {
   };
 
   const handleSaveChanges = async () => {
-    if (!editedLead) return;
-
     setUpdatingStatus(true);
+    
     try {
       const token = localStorage.getItem("token");
+      
+      // Prepare update payload - only send fields that exist in editedLead
+      const updatePayload = {
+        name: editedLead.name,
+        phone_number: editedLead.phone_number,
+        email: editedLead.email,
+        vehicle: editedLead.vehicle,
+        driving_license: editedLead.driving_license,
+        experience: editedLead.experience,
+        interested_ev: editedLead.interested_ev,
+        monthly_salary: editedLead.monthly_salary,
+        current_location: editedLead.current_location,
+        preferred_shift: editedLead.preferred_shift,
+        stage: editedLead.stage,
+        status: editedLead.status,
+        assigned_telecaller: editedLead.assigned_telecaller,
+        telecaller_notes: editedLead.telecaller_notes,
+        notes: editedLead.notes,
+        remarks: editedLead.remarks,
+        dl_no: editedLead.dl_no,
+        badge_no: editedLead.badge_no,
+        aadhar_card: editedLead.aadhar_card,
+        pan_card: editedLead.pan_card,
+        gas_bill: editedLead.gas_bill,
+        bank_passbook: editedLead.bank_passbook
+      };
+      
+      console.log('Saving lead with data:', updatePayload);
+      
       const response = await axios.patch(
         `${API}/driver-onboarding/leads/${editedLead.id}`,
-        {
-          name: editedLead.name || "",
-          phone_number: String(editedLead.phone_number || ""),
-          email: editedLead.email || "",
-          vehicle: editedLead.vehicle,
-          driving_license: editedLead.driving_license,
-          experience: editedLead.experience,
-          interested_ev: editedLead.interested_ev,
-          monthly_salary: editedLead.monthly_salary,
-          current_location: editedLead.current_location,
-          preferred_shift: editedLead.preferred_shift,
-          stage: editedLead.stage,
-          status: editedLead.status,
-          assigned_telecaller: editedLead.assigned_telecaller,
-          telecaller_notes: editedLead.telecaller_notes,
-          notes: editedLead.notes,
-          remarks: editedLead.remarks,
-          dl_no: editedLead.dl_no,
-          badge_no: editedLead.badge_no,
-          aadhar_card: editedLead.aadhar_card,
-          pan_card: editedLead.pan_card,
-          gas_bill: editedLead.gas_bill,
-          bank_passbook: editedLead.bank_passbook
-        },
+        updatePayload,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      // Update local state immediately
+      console.log('Save response:', response.data);
+      
+      // Get the updated lead from response
       const updatedLead = response.data.lead;
       
       // Update main leads array
@@ -1020,45 +1027,26 @@ const DriverOnboardingPage = () => {
       setFilteredLeads(updatedFilteredLeads);
       
       // Update selected and edited lead states
-      setSelectedLead(updatedLead); // Update the selected lead with fresh data
-      setEditedLead({...updatedLead}); // Update edited lead copy
+      setSelectedLead(updatedLead);
+      setEditedLead({...updatedLead});
       setIsEditMode(false);
       setHasUnsavedChanges(false);
       
-      // Show success message immediately
+      // Show success message
       toast.success("Lead details updated successfully!");
       
-      // Recalculate status summary with updated leads data in background (don't await)
-      setTimeout(() => {
-        calculateStatusSummaryFromData(updatedLeads).catch(err => {
-          console.error("Failed to refresh status summary:", err);
-          // Don't show error to user - this is just a background refresh
-        });
-      }, 100);
-      
     } catch (error) {
-      console.error("Error updating lead:", error.response?.data);
+      console.error("Error updating lead:", error);
       
-      // Handle different error formats
-      let errorMessage = "Failed to update lead";
+      let errorMessage = "Failed to save lead data";
       
-      if (error.response?.data) {
-        const errorData = error.response.data;
-        
-        // Handle Pydantic validation errors (array of error objects)
-        if (Array.isArray(errorData.detail)) {
-          const validationErrors = errorData.detail.map(err => 
+      if (error.response?.data?.detail) {
+        if (Array.isArray(error.response.data.detail)) {
+          errorMessage = error.response.data.detail.map(err => 
             `${err.loc?.join('.') || 'Field'}: ${err.msg}`
           ).join(', ');
-          errorMessage = `Validation error: ${validationErrors}`;
-        }
-        // Handle string detail message
-        else if (typeof errorData.detail === 'string') {
-          errorMessage = errorData.detail;
-        }
-        // Handle object with message
-        else if (errorData.message) {
-          errorMessage = errorData.message;
+        } else if (typeof error.response.data.detail === 'string') {
+          errorMessage = error.response.data.detail;
         }
       }
       
