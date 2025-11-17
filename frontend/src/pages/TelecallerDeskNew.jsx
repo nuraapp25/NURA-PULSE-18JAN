@@ -893,21 +893,35 @@ const TelecallerDeskNew = () => {
         )}
         
         {/* Lead Details Dialog */}
-        {console.log("Rendering LeadDetailsDialog - open:", detailDialogOpen, "lead:", selectedLead)}
         <LeadDetailsDialog
-          lead={selectedLead}
           open={detailDialogOpen}
-          onClose={() => {
-            console.log("Dialog onClose called");
-            setDetailDialogOpen(false);
-            setSelectedLead(null);
+          onOpenChange={(open) => {
+            setDetailDialogOpen(open);
+            if (!open) {
+              setIsEditMode(false);
+              setUploadedDocs({});
+              setEditedLead({});
+              setSelectedLead(null);
+            }
           }}
-          onSave={() => {
-            console.log("Dialog onSave called");
-            setDetailDialogOpen(false);
-            setSelectedLead(null);
-            fetchLeads();
-          }}
+          lead={selectedLead}
+          editedLead={editedLead}
+          isEditMode={isEditMode}
+          setIsEditMode={setIsEditMode}
+          onFieldChange={handleFieldChange}
+          onSave={handleSaveChanges}
+          onStageSync={() => {}}
+          uploadedDocs={uploadedDocs}
+          onDocumentUpload={handleDocumentUpload}
+          onViewDocument={handleViewDocument}
+          onDownloadDocument={handleDownloadDocument}
+          onDeleteDocument={handleDeleteDocument}
+          onDocumentScan={null}
+          uploadingDoc={uploadingDoc}
+          scanningDoc={null}
+          updating={updatingStatus}
+          showDeleteButton={false}
+          onDelete={() => {}}
         />
       </div>
     </div>
