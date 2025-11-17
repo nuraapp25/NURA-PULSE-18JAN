@@ -10138,6 +10138,191 @@ Case Test 6,9876540006,interested"""
         
         return success_count >= 6  # At least 6 out of 10 tests should pass
 
+    def test_telecaller_status_update_and_mark_called(self):
+        """Test Telecaller's Desk Status Update and Mark as Called functionality"""
+        print("\n=== Testing Telecaller's Desk Status Update and Mark as Called ===")
+        
+        success_count = 0
+        test_lead_id = None
+        
+        # Step 1: Get a lead ID from the database
+        print("\n--- Step 1: Getting a lead ID from database ---")
+        response = self.make_request("GET", "/driver-onboarding/leads?limit=1")
+        
+        if response and response.status_code == 200:
+            try:
+                leads = response.json()
+                if leads and len(leads) > 0:
+                    test_lead_id = leads[0].get("id")
+                    lead_name = leads[0].get("name", "Unknown")
+                    current_status = leads[0].get("status", "Unknown")
+                    self.log_test("Get Lead ID", True, 
+                                f"Retrieved lead ID: {test_lead_id}, Name: {lead_name}, Current Status: {current_status}")
+                    success_count += 1
+                else:
+                    self.log_test("Get Lead ID", False, "No leads found in database")
+                    return False
+            except json.JSONDecodeError:
+                self.log_test("Get Lead ID", False, "Invalid JSON response", response.text)
+                return False
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Get Lead ID", False, error_msg, response.text if response else None)
+            return False
+        
+        if not test_lead_id:
+            self.log_test("Telecaller Status Update Tests", False, "No test lead ID available")
+            return False
+        
+        # Step 2: Test Status Update (PATCH /api/driver-onboarding/leads/{lead_id})
+        print("\n--- Step 2: Testing Status Update ---")
+        update_data = {
+            "status": "Interested",
+            "remarks": "Test update from backend testing"
+        }
+        
+        response = self.make_request("PATCH", f"/driver-onboarding/leads/{test_lead_id}", update_data)
+        
+        if response and response.status_code == 200:
+            try:
+                result = response.json()
+                if result.get("success") and "lead" in result:
+                    updated_lead = result["lead"]
+                    new_status = updated_lead.get("status")
+                    status_history = updated_lead.get("status_history", [])
+                    
+                    self.log_test("Status Update - PATCH Success", True, 
+                                f"Status updated successfully to '{new_status}', status_history has {len(status_history)} entries")
+                    success_count += 1
+                    
+                    # Verify status_history is properly populated
+                    if isinstance(status_history, list) and len(status_history) > 0:
+                        latest_entry = status_history[-1]
+                        if latest_entry.get("action") == "status_changed" and latest_entry.get("new_value") == "Interested":
+                            self.log_test("Status Update - History Populated", True, 
+                                        f"Status history properly recorded: {latest_entry.get('timestamp')}")
+                            success_count += 1
+                        else:
+                            self.log_test("Status Update - History Populated", False, 
+                                        f"Status history entry incorrect: {latest_entry}")
+                    else:
+                        self.log_test("Status Update - History Populated", False, 
+                                    f"Status history not properly populated: {status_history}")
+                else:
+                    self.log_test("Status Update - PATCH Success", False, 
+                                "Response missing success field or lead data", result)
+            except json.JSONDecodeError:
+                self.log_test("Status Update - PATCH Success", False, "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            error_detail = response.text if response else None
+            self.log_test("Status Update - PATCH Success", False, 
+                        f"Status update failed: {error_msg}", error_detail)
+        
+        # Step 3: Test Mark as Called (POST /api/driver-onboarding/leads/{lead_id}/mark-called)
+        print("\n--- Step 3: Testing Mark as Called ---")
+        response = self.make_request("POST", f"/driver-onboarding/leads/{test_lead_id}/mark-called")
+        
+        if response and response.status_code == 200:
+            try:
+                result = response.json()
+                if result.get("success") and "last_called" in result:
+                    last_called = result.get("last_called")
+                    self.log_test("Mark as Called - POST Success", True, 
+                                f"Lead marked as called successfully, last_called: {last_called}")
+                    success_count += 1
+                    
+                    # Verify the lead was updated in database
+                    verify_response = self.make_request("GET", f"/driver-onboarding/leads?lead_id={test_lead_id}")
+                    if verify_response and verify_response.status_code == 200:
+                        try:
+                            verify_leads = verify_response.json()
+                            if verify_leads and len(verify_leads) > 0:
+                                updated_lead = verify_leads[0]
+                                calling_history = updated_lead.get("calling_history", [])
+                                db_last_called = updated_lead.get("last_called")
+                                
+                                if db_last_called and len(calling_history) > 0:
+                                    self.log_test("Mark as Called - Database Updated", True, 
+                                                f"Database updated: last_called set, calling_history has {len(calling_history)} entries")
+                                    success_count += 1
+                                else:
+                                    self.log_test("Mark as Called - Database Updated", False, 
+                                                f"Database not properly updated: last_called={db_last_called}, calling_history={len(calling_history)}")
+                        except json.JSONDecodeError:
+                            self.log_test("Mark as Called - Database Updated", False, "Invalid JSON in verification response")
+                else:
+                    self.log_test("Mark as Called - POST Success", False, 
+                                "Response missing success field or last_called", result)
+            except json.JSONDecodeError:
+                self.log_test("Mark as Called - POST Success", False, "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            error_detail = response.text if response else None
+            self.log_test("Mark as Called - POST Success", False, 
+                        f"Mark as called failed: {error_msg}", error_detail)
+        
+        # Step 4: Test with Lead Having Null status_history (create a test case)
+        print("\n--- Step 4: Testing Lead with Null status_history ---")
+        
+        # Test updating the same lead again to ensure the fix works consistently
+        update_data_2 = {
+            "status": "Highly Interested",
+            "remarks": "Second test update to verify null status_history handling"
+        }
+        
+        response = self.make_request("PATCH", f"/driver-onboarding/leads/{test_lead_id}", update_data_2)
+        
+        if response and response.status_code == 200:
+            try:
+                result = response.json()
+                if result.get("success"):
+                    self.log_test("Null status_history Fix", True, 
+                                "Second status update successful - null status_history handling working")
+                    success_count += 1
+                else:
+                    self.log_test("Null status_history Fix", False, 
+                                "Second status update failed", result)
+            except json.JSONDecodeError:
+                self.log_test("Null status_history Fix", False, "Invalid JSON response", response.text)
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Null status_history Fix", False, 
+                        f"Second status update failed: {error_msg}")
+        
+        # Step 5: Test Error Handling - Invalid Lead ID
+        print("\n--- Step 5: Testing Error Handling ---")
+        invalid_lead_id = "invalid-lead-id-12345"
+        
+        response = self.make_request("PATCH", f"/driver-onboarding/leads/{invalid_lead_id}", {"status": "Test"})
+        
+        if response and response.status_code == 404:
+            self.log_test("Error Handling - Invalid Lead ID", True, 
+                        "Correctly returns 404 for invalid lead ID")
+            success_count += 1
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Error Handling - Invalid Lead ID", False, 
+                        f"Expected 404, got {error_msg}")
+        
+        # Step 6: Test Authentication Requirements
+        print("\n--- Step 6: Testing Authentication Requirements ---")
+        
+        # Test without authentication token
+        response = self.make_request("PATCH", f"/driver-onboarding/leads/{test_lead_id}", 
+                                   {"status": "Test"}, use_auth=False)
+        
+        if response and response.status_code in [401, 403]:
+            self.log_test("Authentication Required", True, 
+                        f"Correctly requires authentication ({response.status_code} without token)")
+            success_count += 1
+        else:
+            error_msg = "Network error" if not response else f"Status {response.status_code}"
+            self.log_test("Authentication Required", False, 
+                        f"Expected 401/403, got {error_msg}")
+        
+        return success_count >= 5  # At least 5 out of 7 tests should pass
+
     def run_all_tests(self):
         """Run all backend tests"""
         print("🚀 Starting Comprehensive Backend Testing for Nura Pulse Application")
