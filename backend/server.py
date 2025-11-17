@@ -4851,6 +4851,84 @@ async def import_montra_feed(file: UploadFile = File(...), current_user: User = 
         raise HTTPException(status_code=500, detail=f"Failed to import feed: {str(e)}")
 
 
+@api_router.post("/montra-vehicle/fix-date-format")
+async def fix_montra_date_format(current_user: User = Depends(get_current_user)):
+    """Fix date format in existing Montra feed data from 'DD MMM' to ISO 'YYYY-MM-DD' format"""
+    try:
+        from datetime import datetime as dt_obj
+        
+        logger.info("Starting date format fix for montra_feed_data...")
+        
+        # Get all records with old date format (pattern: "DD MMM")
+        # We'll process in batches to avoid memory issues
+        batch_size = 10000
+        total_updated = 0
+        total_failed = 0
+        
+        # Get total count
+        total_records = await db.montra_feed_data.count_documents({})
+        logger.info(f"Total records to process: {total_records}")
+        
+        # Process in batches
+        skip = 0
+        while skip < total_records:
+            batch = await db.montra_feed_data.find({}).skip(skip).limit(batch_size).to_list(batch_size)
+            
+            for record in batch:
+                try:
+                    old_date = record.get('date', '')
+                    day = record.get('day', '')
+                    month = record.get('month', '')
+                    year = record.get('year', '2025')
+                    
+                    # Check if date is already in ISO format (YYYY-MM-DD)
+                    if '-' in old_date and len(old_date) == 10:
+                        # Already in ISO format, skip
+                        continue
+                    
+                    # Parse the old format date
+                    if day and month and year:
+                        date_str = f"{day} {month} {year}"
+                        try:
+                            parsed_date = dt_obj.strptime(date_str, "%d %b %Y")
+                            iso_date = parsed_date.strftime("%Y-%m-%d")
+                            
+                            # Update the record
+                            await db.montra_feed_data.update_one(
+                                {"_id": record["_id"]},
+                                {"$set": {
+                                    "date": iso_date,
+                                    "date_display": f"{day} {month} {year}"
+                                }}
+                            )
+                            total_updated += 1
+                        except ValueError as e:
+                            logger.warning(f"Failed to parse date '{date_str}': {e}")
+                            total_failed += 1
+                    else:
+                        total_failed += 1
+                        
+                except Exception as e:
+                    logger.error(f"Error processing record {record.get('_id')}: {e}")
+                    total_failed += 1
+            
+            skip += batch_size
+            logger.info(f"Processed {skip}/{total_records} records. Updated: {total_updated}, Failed: {total_failed}")
+        
+        logger.info(f"Date format fix completed. Updated: {total_updated}, Failed: {total_failed}")
+        
+        return {
+            "success": True,
+            "message": f"Successfully fixed date format for {total_updated} records",
+            "total_updated": total_updated,
+            "total_failed": total_failed,
+            "total_records": total_records
+        }
+    except Exception as e:
+        logger.error(f"Error fixing date format: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fix date format: {str(e)}")
+
+
 @api_router.post("/montra-vehicle/enrich-existing-data")
 async def enrich_existing_montra_data(current_user: User = Depends(get_current_user)):
     """Re-process all existing Montra feed data to add Mode Name and Mode Type"""
