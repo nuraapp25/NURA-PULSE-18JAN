@@ -467,7 +467,7 @@ const DriverOnboardingPage = () => {
       }
       
       // Count leads by status
-      let totalLeads = 0;
+      let categorizedLeads = 0;
       console.log('📊 Total leads available:', dataToUse.length);
       console.log('📊 Leads to count (after filters):', leadsToCount.length);
       
@@ -485,7 +485,7 @@ const DriverOnboardingPage = () => {
             if (statuses.includes(status)) {
               if (summary[stage][status] !== undefined) {
                 summary[stage][status]++;
-                totalLeads++;
+                categorizedLeads++;
               }
               break;
             }
@@ -494,6 +494,9 @@ const DriverOnboardingPage = () => {
           console.warn('⚠️  Lead without status:', lead.name || lead.id);
         }
       });
+      
+      // Use the actual total count from leadsToCount (includes all leads, not just categorized ones)
+      const totalLeads = leadsToCount.length;
       
       // Calculate stage totals
       const stage_totals = {};
