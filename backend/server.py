@@ -6138,6 +6138,8 @@ async def get_morning_charge_audit(
     Uses pre-computed cache (updated daily), falls back to live computation if needed
     Supports custom date range filtering
     """
+    print(f"🚨 MORNING AUDIT CALLED: start={start_date}, end={end_date}, force={force_refresh}")
+    logger.info(f"🚨 MORNING AUDIT CALLED: start={start_date}, end={end_date}, force={force_refresh}")
     try:
         from datetime import datetime, time as dt_time, date, timedelta
         
