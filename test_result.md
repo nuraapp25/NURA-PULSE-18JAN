@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Telecaller's Desk - Telecallers cannot update status or use 'Mark as Called' button. Getting 'Failed to update status' error when trying to update lead status or mark leads as called."
+user_problem_statement: "Montra Vehicle Insights - Battery Charge Audit and Morning Charge Audit pages need date range filters with Start Date, End Date inputs and quick selection buttons (Last 7 Days, Last 30 Days, Last 90 Days) to allow users to view audit data for specific date ranges."
 
 backend:
   - task: "Telecaller's Desk - Status Update & Mark as Called Fix"
