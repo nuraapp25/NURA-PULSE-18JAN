@@ -3400,15 +3400,19 @@ async def mark_lead_as_called(lead_id: str, current_user: User = Depends(get_cur
     if not lead:
         raise HTTPException(status_code=404, detail="Lead not found")
     
-    # Initialize calling_history and status_history if they don't exist or are null
-    if "calling_history" not in lead or lead.get("calling_history") is None:
+    # Initialize calling_history and status_history if they don't exist, are null, or are not arrays
+    calling_history = lead.get("calling_history")
+    if not isinstance(calling_history, list):
+        # Fix corrupted calling_history field
         await db.driver_leads.update_one(
             {"id": lead_id},
             {"$set": {"calling_history": []}}
         )
         lead["calling_history"] = []
     
-    if "status_history" not in lead or lead.get("status_history") is None:
+    status_history = lead.get("status_history")
+    if not isinstance(status_history, list):
+        # Fix corrupted status_history field
         await db.driver_leads.update_one(
             {"id": lead_id},
             {"$set": {"status_history": []}}
