@@ -504,7 +504,7 @@ const DriverOnboardingPage = () => {
         stage_totals[stage] = Object.values(statuses).reduce((sum, count) => sum + count, 0);
       }
       
-      console.log('✅ Summary calculated:', { totalLeads, stage_totals });
+      console.log('✅ Summary calculated:', { totalLeads, categorizedLeads, stage_totals });
       
       // Set the summary
       setStatusSummary({
