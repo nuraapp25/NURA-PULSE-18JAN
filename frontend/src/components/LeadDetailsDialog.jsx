@@ -103,6 +103,18 @@ const LeadDetailsDialog = ({
   if (!lead || !editedLead) return null;
 
   const DocumentSection = ({ docType, label, fieldName }) => {
+    const [localValue, setLocalValue] = React.useState(editedLead[fieldName] || '');
+
+    // Sync with editedLead when it changes (e.g., when opening dialog)
+    React.useEffect(() => {
+      setLocalValue(editedLead[fieldName] || '');
+    }, [editedLead[fieldName]]);
+
+    // Update parent state when input loses focus
+    const handleBlur = () => {
+      onFieldChange(fieldName, localValue);
+    };
+
     return (
       <div className="border-b border-blue-200 dark:border-blue-800 pb-4">
         <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">{label}</Label>
@@ -110,8 +122,9 @@ const LeadDetailsDialog = ({
           <div className="md:col-span-2">
             {isEditMode ? (
               <Input
-                value={editedLead[fieldName] || ''}
-                onChange={(e) => onFieldChange(fieldName, e.target.value)}
+                value={localValue}
+                onChange={(e) => setLocalValue(e.target.value)}
+                onBlur={handleBlur}
                 className="dark:bg-gray-700 dark:border-gray-600"
                 placeholder={`${label} Number`}
               />
