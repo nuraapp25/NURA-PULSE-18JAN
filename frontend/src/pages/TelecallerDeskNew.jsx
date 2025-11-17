@@ -419,21 +419,52 @@ const TelecallerDeskNew = () => {
       fetchLeadsForDate(email);
     } catch (error) {
       console.error("Error updating lead:", error);
+      console.error("Error response:", error.response?.data);
       
-      // Handle different error formats
+      // Handle different error formats - ALWAYS convert to string
       let errorMessage = "Failed to update lead";
-      if (error.response?.data?.detail) {
-        const detail = error.response.data.detail;
-        if (typeof detail === 'string') {
-          errorMessage = detail;
-        } else if (Array.isArray(detail)) {
-          // Pydantic validation errors
-          errorMessage = detail.map(err => err.msg || err.message).join(', ');
-        } else if (typeof detail === 'object') {
-          errorMessage = JSON.stringify(detail);
+      
+      try {
+        if (error.response?.data) {
+          const data = error.response.data;
+          
+          if (data.detail) {
+            const detail = data.detail;
+            
+            if (typeof detail === 'string') {
+              errorMessage = detail;
+            } else if (Array.isArray(detail)) {
+              // Pydantic validation errors array
+              const messages = detail.map(err => {
+                if (typeof err === 'string') return err;
+                if (err.msg) return err.msg;
+                if (err.message) return err.message;
+                return JSON.stringify(err);
+              });
+              errorMessage = messages.join('; ');
+            } else {
+              // Object - convert to readable string
+              errorMessage = `Validation error: ${JSON.stringify(detail)}`;
+            }
+          } else if (typeof data === 'string') {
+            errorMessage = data;
+          } else {
+            errorMessage = `Error: ${JSON.stringify(data)}`;
+          }
+        } else if (error.message) {
+          errorMessage = error.message;
         }
+      } catch (parseError) {
+        console.error("Error parsing error message:", parseError);
+        errorMessage = "An error occurred while updating the lead";
       }
       
+      // Ensure errorMessage is always a string
+      if (typeof errorMessage !== 'string') {
+        errorMessage = String(errorMessage);
+      }
+      
+      console.log("Displaying error:", errorMessage);
       toast.error(errorMessage);
     } finally {
       setUpdatingStatus(false);
