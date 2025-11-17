@@ -4781,10 +4781,23 @@ async def import_montra_feed(file: UploadFile = File(...), current_user: User = 
         montra_docs = []
         headers = df.columns.tolist() + ['Vehicle ID', 'Separator', 'Day', 'Month', 'Registration Number']
         
+        # Parse the date properly for ISO format storage
+        from datetime import datetime as dt_obj
+        try:
+            # Convert "01 Sep 2025" to ISO date "2025-09-01"
+            date_str = f"{day} {month} {year}"
+            parsed_date = dt_obj.strptime(date_str, "%d %b %Y")
+            iso_date = parsed_date.strftime("%Y-%m-%d")
+        except:
+            # Fallback if parsing fails
+            iso_date = f"{year}-01-01"
+            logger.warning(f"Could not parse date '{day} {month} {year}', using fallback: {iso_date}")
+        
         for row_data in rows_to_import:
             doc = {
                 "vehicle_id": vehicle_id,
-                "date": f"{day} {month}",
+                "date": iso_date,  # Store in ISO format for easy querying
+                "date_display": f"{day} {month} {year}",  # Keep original for display
                 "day": day,
                 "month": month,
                 "year": year,
