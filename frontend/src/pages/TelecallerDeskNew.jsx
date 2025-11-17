@@ -481,7 +481,10 @@ const TelecallerDeskNew = () => {
             </Button>
           )}
           <Button
-            onClick={() => {
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              alert("Status button clicked! Lead: " + lead.name);
               console.log("Status button clicked for lead:", lead);
               setSelectedLead(lead);
               setDetailDialogOpen(true);
@@ -489,6 +492,7 @@ const TelecallerDeskNew = () => {
             }}
             variant="outline"
             size="sm"
+            className="bg-blue-50"
           >
             <CheckCircle className="w-4 h-4 mr-2" />
             Status
