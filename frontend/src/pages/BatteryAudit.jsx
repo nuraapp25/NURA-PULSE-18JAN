@@ -66,7 +66,17 @@ const BatteryAudit = () => {
 
   useEffect(() => {
     fetchAuditData();
-  }, []);
+  }, [startDate, endDate]);
+  
+  // Quick date range selection
+  const setDateRange = (days) => {
+    const end = new Date();
+    const start = new Date();
+    start.setDate(start.getDate() - days);
+    
+    setEndDate(end.toISOString().split('T')[0]);
+    setStartDate(start.toISOString().split('T')[0]);
+  };
 
   // Apply filtering and sorting
   useEffect(() => {
