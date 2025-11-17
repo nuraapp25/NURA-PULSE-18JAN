@@ -67,6 +67,7 @@ const BatteryConsumption = () => {
       // Fetch data for each date
       for (const date of dateRange) {
         const formattedDate = format(date, "dd MMM");
+        const isoDate = format(date, "yyyy-MM-dd");  // ISO format for backend
         
         const token = localStorage.getItem("token");
         const response = await axios.get(
@@ -74,7 +75,7 @@ const BatteryConsumption = () => {
           {
             params: {
               vehicle_id: selectedVehicle,
-              date: formattedDate
+              date: isoDate  // Send ISO format to backend
             },
             headers: { Authorization: `Bearer ${token}` }
           }
