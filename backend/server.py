@@ -6145,6 +6145,7 @@ async def get_morning_charge_audit(
         
         # If custom date range is provided, skip cache and compute live
         use_cache = not force_refresh and not start_date and not end_date
+        logger.info(f"🚨 use_cache={use_cache}, force_refresh={force_refresh}, start_date={start_date}, end_date={end_date}")
         
         # Try to get from cache first
         if use_cache:
