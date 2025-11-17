@@ -6251,6 +6251,8 @@ async def get_morning_charge_audit(
         logger.info(f"Processed {record_count} records, grouped into {len(vehicle_date_groups)} vehicle-date combinations")
         
         audit_results = []
+        debug_6am_found = 0
+        debug_below_95 = 0
         
         # Analyze each vehicle-date combination
         for key, group_data in vehicle_date_groups.items():
