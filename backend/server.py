@@ -6161,10 +6161,11 @@ async def get_morning_charge_audit(
                     logger.info(f"Cache is {age_hours:.1f} hours old, computing fresh data")
         
         # LIVE COMPUTATION (Fallback)
-        logger.info("Computing morning charge audit data live")
+        logger.info(f"🔍 MORNING AUDIT: Computing live with date range {start_date} to {end_date}")
         
         # Check if collection has data
         sample_count = await db.montra_feed_data.count_documents({}, limit=1)
+        logger.info(f"🔍 MORNING AUDIT: Database has {sample_count} records")
         if sample_count == 0:
             logger.warning("No montra_feed_data found in database")
             return {
