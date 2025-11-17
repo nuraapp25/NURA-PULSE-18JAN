@@ -6350,10 +6350,13 @@ async def get_morning_charge_audit(
             "message": f"Found {len(audit_results)} instances where morning charge was below 95% at 6 AM"
         }
         
-    except HTTPException:
+    except HTTPException as he:
+        logger.error(f"🔍 MORNING AUDIT: HTTPException - {he}")
         raise
     except Exception as e:
-        logger.error(f"Error in morning charge audit: {str(e)}")
+        logger.error(f"🔍 MORNING AUDIT: Exception - {str(e)}")
+        import traceback
+        logger.error(f"🔍 MORNING AUDIT: Traceback - {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"Error generating morning charge audit: {str(e)}")
 
 
