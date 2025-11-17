@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Fix two issues in Driver Onboarding bulk import: 1) Notification shows 'Duplicates skipped: undefined' instead of actual count when importing 427 unique leads (only 331 added). 2) Status Summary Dashboard not showing 'Training WIP' and 'DONE!' numbers even though they exist in imported data."
+user_problem_statement: "Telecaller's Desk - Telecallers cannot update status or use 'Mark as Called' button. Getting 'Failed to update status' error when trying to update lead status or mark leads as called."
 
 backend:
   - task: "Bulk Import - Fix Duplicates Count & Stage Assignment"
