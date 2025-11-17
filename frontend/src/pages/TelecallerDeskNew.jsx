@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Phone, MessageCircle, CheckCircle, RefreshCw, AlertCircle, User, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Calendar, Search } from "lucide-react";
 import { format, parseISO } from "date-fns";
+import LeadDetailsDialog from "@/components/LeadDetailsDialog";
 
 // Status options grouped by stage
 const S1_STATUSES = [
