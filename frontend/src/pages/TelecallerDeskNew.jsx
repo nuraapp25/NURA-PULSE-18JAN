@@ -87,12 +87,9 @@ const TelecallerDeskNew = () => {
   // Collapsible sections
   const [isCallingDoneExpanded, setIsCallingDoneExpanded] = useState(true);
   
-  // Status dialog
-  const [statusDialogOpen, setStatusDialogOpen] = useState(false);
+  // Lead details dialog
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null);
-  const [newStatus, setNewStatus] = useState("");
-  const [callbackDate, setCallbackDate] = useState("");
-  const [remarks, setRemarks] = useState("");
   
   // Generate date range (7 days before to 14 days after today)
   const generateDateRange = () => {
