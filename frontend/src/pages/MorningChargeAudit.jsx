@@ -13,12 +13,26 @@ const MorningChargeAudit = () => {
   const [loading, setLoading] = useState(false);
   const [auditData, setAuditData] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
+  
+  // Date range state
+  const [startDate, setStartDate] = useState(() => {
+    const date = new Date();
+    date.setDate(date.getDate() - 30); // Default to last 30 days
+    return date.toISOString().split('T')[0];
+  });
+  const [endDate, setEndDate] = useState(() => {
+    return new Date().toISOString().split('T')[0];
+  });
 
   const fetchAuditData = async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get(`${API}/montra-vehicle/morning-charge-audit`, {
+      const params = new URLSearchParams();
+      if (startDate) params.append('start_date', startDate);
+      if (endDate) params.append('end_date', endDate);
+      
+      const response = await axios.get(`${API}/montra-vehicle/morning-charge-audit?${params.toString()}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
