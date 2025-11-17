@@ -347,9 +347,17 @@ const TelecallerDeskNew = () => {
   const { notCalled: assignedNotCalled, called: assignedCalled } = separateLeadsByCalled(assignedLeads);
   const { notCalled: callbackNotCalled, called: callbackCalled } = separateLeadsByCalled(callbackLeads);
   
+  console.log("📊 Telecaller:", isAdmin ? selectedTelecaller : user?.email);
+  console.log("📊 Selected Date:", selectedDate);
+  console.log("📊 Assigned Leads:", assignedLeads.length);
+  console.log("📊 Called Today (assigned):", assignedCalled.length);
+  console.log("📊 Called Today (callback):", callbackCalled.length);
+  
   const filteredAssignedLeads = filterLeadsBySearch(assignedNotCalled);
   const filteredCallbackLeads = filterLeadsBySearch(callbackNotCalled);
   const filteredCallingDoneLeads = filterLeadsBySearch([...assignedCalled, ...callbackCalled]);
+  
+  console.log("📊 Filtered Calling Done:", filteredCallingDoneLeads.length, filteredCallingDoneLeads.map(l => ({name: l.name, assigned_to: l.assigned_telecaller, last_called: l.last_called})));
   
   // Format date to DD-MM-YYYY
   const formatDateDDMMYYYY = (isoDate) => {
