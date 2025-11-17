@@ -444,20 +444,20 @@ const TelecallerDeskNew = () => {
           <div>
             <h3 className="font-semibold text-lg dark:text-white">{leadParam.name}</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">{leadParam.phone_number}</p>
-            {showCallTimestamp && lead.last_called && (
+            {showCallTimestamp && leadParam.last_called && (
               <p className="text-xs text-green-600 dark:text-green-400 mt-1">
-                ✓ Called at {formatDateDDMMYYYY(lead.last_called)} {format(parseISO(lead.last_called), 'HH:mm:ss')}
+                ✓ Called at {formatDateDDMMYYYY(leadParam.last_called)} {format(parseISO(leadParam.last_called), 'HH:mm:ss')}
               </p>
             )}
           </div>
           <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-            {lead.status || "New"}
+            {leadParam.status || "New"}
           </Badge>
         </div>
         
         <div className="flex gap-2 mt-3">
           <Button
-            onClick={() => handleCall(lead)}
+            onClick={() => handleCall(leadParam)}
             className="flex-1 bg-blue-600 hover:bg-blue-700"
             size="sm"
           >
@@ -465,7 +465,7 @@ const TelecallerDeskNew = () => {
             Call
           </Button>
           <Button
-            onClick={() => handleWhatsApp(lead)}
+            onClick={() => handleWhatsApp(leadParam)}
             className="flex-1 bg-green-600 hover:bg-green-700"
             size="sm"
           >
@@ -474,7 +474,7 @@ const TelecallerDeskNew = () => {
           </Button>
           {!showCallTimestamp && (
             <Button
-              onClick={() => markAsCalledNow(lead.id)}
+              onClick={() => markAsCalledNow(leadParam.id)}
               className="flex-1 bg-orange-600 hover:bg-orange-700"
               size="sm"
             >
@@ -486,15 +486,13 @@ const TelecallerDeskNew = () => {
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              alert("Status button clicked! Lead: " + lead.name);
-              console.log("Status button clicked for lead:", lead);
-              setSelectedLead(lead);
+              console.log("Status button clicked for leadParam:", leadParam);
+              setSelectedLead(leadParam);
               setDetailDialogOpen(true);
               console.log("Dialog should open now, detailDialogOpen set to true");
             }}
             variant="outline"
             size="sm"
-            className="bg-blue-50"
           >
             <CheckCircle className="w-4 h-4 mr-2" />
             Status
@@ -502,7 +500,8 @@ const TelecallerDeskNew = () => {
         </div>
       </CardContent>
     </Card>
-  );
+    );
+  };
   
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
