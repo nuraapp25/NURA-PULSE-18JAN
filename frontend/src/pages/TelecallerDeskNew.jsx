@@ -380,9 +380,28 @@ const TelecallerDeskNew = () => {
     setUpdatingStatus(true);
     try {
       const token = localStorage.getItem("token");
+      
+      // Filter out fields that aren't in DriverLeadUpdate model
+      const allowedFields = [
+        'name', 'phone_number', 'email', 'vehicle', 'driving_license', 'experience',
+        'interested_ev', 'monthly_salary', 'current_location', 'lead_source', 'stage',
+        'status', 'assigned_telecaller', 'telecaller_notes', 'notes', 'remarks',
+        'dl_no', 'badge_no', 'aadhar_card', 'pan_card', 'gas_bill', 'bank_passbook',
+        'preferred_shift', 'allotted_shift', 'default_vehicle', 'end_date'
+      ];
+      
+      const updateData = {};
+      Object.keys(editedLead).forEach(key => {
+        if (allowedFields.includes(key) && editedLead[key] !== undefined) {
+          updateData[key] = editedLead[key];
+        }
+      });
+      
+      console.log("Sending update data:", updateData);
+      
       const response = await axios.patch(
         `${API}/driver-onboarding/leads/${selectedLead.id}`,
-        editedLead,
+        updateData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
