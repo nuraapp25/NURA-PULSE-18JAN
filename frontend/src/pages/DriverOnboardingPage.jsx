@@ -2961,7 +2961,9 @@ const DriverOnboardingPage = () => {
             <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Leads</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">{leads.length}</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              {statusSummary?.total_leads || leads.length}
+            </p>
           </CardContent>
         </Card>
         <Card className="dark:bg-gray-800 dark:border-gray-700">
