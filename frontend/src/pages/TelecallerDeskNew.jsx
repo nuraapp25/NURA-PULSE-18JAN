@@ -624,10 +624,10 @@ const TelecallerDeskNew = () => {
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              console.log("Status button clicked for leadParam:", leadParam);
               setSelectedLead(leadParam);
+              setEditedLead(leadParam);
+              setIsEditMode(true);
               setDetailDialogOpen(true);
-              console.log("Dialog should open now, detailDialogOpen set to true");
             }}
             variant="outline"
             size="sm"
