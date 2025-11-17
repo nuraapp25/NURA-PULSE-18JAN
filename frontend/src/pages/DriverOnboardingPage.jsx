@@ -1011,6 +1011,12 @@ const DriverOnboardingPage = () => {
 
       console.log('Save response:', response.data);
       
+      // Check if response has the expected structure
+      if (!response.data || !response.data.lead) {
+        console.error('Unexpected response structure:', response.data);
+        throw new Error('Invalid response from server');
+      }
+      
       // Get the updated lead from response
       const updatedLead = response.data.lead;
       
