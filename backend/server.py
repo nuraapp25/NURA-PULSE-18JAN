@@ -3258,8 +3258,10 @@ async def update_lead(lead_id: str, lead_data: DriverLeadUpdate, current_user: U
     # Track status/stage changes in history
     current_time = datetime.now(timezone.utc).isoformat()
     
-    # Initialize status_history if it doesn't exist or is null
-    if "status_history" not in lead or lead.get("status_history") is None:
+    # Initialize status_history if it doesn't exist, is null, or is not an array
+    status_history = lead.get("status_history")
+    if not isinstance(status_history, list):
+        # Fix corrupted status_history field (could be null, string, or any non-list type)
         await db.driver_leads.update_one(
             {"id": lead_id},
             {"$set": {"status_history": []}}
