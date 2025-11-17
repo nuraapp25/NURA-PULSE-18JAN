@@ -6340,6 +6340,7 @@ async def get_morning_charge_audit(
         audit_results.sort(key=lambda x: (x["date"], x["vehicle_name"]))
         
         logger.info(f"Morning charge audit complete: Found {len(audit_results)} instances with charge < 95% at 6 AM")
+        logger.info(f"Debug: Total 6AM records found: {debug_6am_found}, Records below 95%: {debug_below_95}, Final results: {len(audit_results)}")
         
         return {
             "success": True,
