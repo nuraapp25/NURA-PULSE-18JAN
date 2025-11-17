@@ -6088,11 +6088,11 @@ async def get_morning_charge_audit(
             # Default to today if no end_date provided
             end_date_filter = date.today().isoformat()
         
-        logger.info(f"Fetching records from {cutoff_date} onwards (last 30 days)")
+        logger.info(f"Fetching records from {cutoff_date} to {end_date_filter}")
         
         # Use aggregation with filters and projection
         pipeline = [
-            {"$match": {"date": {"$gte": cutoff_date}}},
+            {"$match": {"date": {"$gte": cutoff_date, "$lte": end_date_filter}}},
             {"$project": {
                 "_id": 0,
                 "vehicle_id": 1,
