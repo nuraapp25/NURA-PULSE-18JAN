@@ -482,8 +482,10 @@ const TelecallerDeskNew = () => {
           )}
           <Button
             onClick={() => {
+              console.log("Status button clicked for lead:", lead);
               setSelectedLead(lead);
               setDetailDialogOpen(true);
+              console.log("Dialog should open now, detailDialogOpen set to true");
             }}
             variant="outline"
             size="sm"
