@@ -400,7 +400,22 @@ const TelecallerDeskNew = () => {
       fetchLeadsForDate(email);
     } catch (error) {
       console.error("Error updating lead:", error);
-      toast.error(error.response?.data?.detail || "Failed to update lead");
+      
+      // Handle different error formats
+      let errorMessage = "Failed to update lead";
+      if (error.response?.data?.detail) {
+        const detail = error.response.data.detail;
+        if (typeof detail === 'string') {
+          errorMessage = detail;
+        } else if (Array.isArray(detail)) {
+          // Pydantic validation errors
+          errorMessage = detail.map(err => err.msg || err.message).join(', ');
+        } else if (typeof detail === 'object') {
+          errorMessage = JSON.stringify(detail);
+        }
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setUpdatingStatus(false);
     }
