@@ -6328,6 +6328,7 @@ async def get_morning_charge_audit(
             
             # Add to results if charge at 6 AM is less than 95%
             if charge_at_6am is not None and charge_at_6am < 95:
+                debug_below_95 += 1
                 audit_results.append({
                     "date": date,
                     "vehicle_name": display_name,
