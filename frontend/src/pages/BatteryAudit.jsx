@@ -218,6 +218,62 @@ const BatteryAudit = () => {
         </div>
       </div>
 
+      {/* Date Range Filter */}
+      <Card className="dark:bg-gray-800 dark:border-gray-700">
+        <CardHeader>
+          <CardTitle className="text-lg">Date Range Filter</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4">
+            <div className="flex-1 min-w-[200px]">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Start Date
+              </label>
+              <Input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full"
+              />
+            </div>
+            <div className="flex-1 min-w-[200px]">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                End Date
+              </label>
+              <Input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-full"
+              />
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              <Button 
+                onClick={() => setDateRange(7)} 
+                variant="outline" 
+                size="sm"
+              >
+                Last 7 Days
+              </Button>
+              <Button 
+                onClick={() => setDateRange(30)} 
+                variant="outline" 
+                size="sm"
+              >
+                Last 30 Days
+              </Button>
+              <Button 
+                onClick={() => setDateRange(90)} 
+                variant="outline" 
+                size="sm"
+              >
+                Last 90 Days
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="dark:bg-gray-800 dark:border-gray-700">
