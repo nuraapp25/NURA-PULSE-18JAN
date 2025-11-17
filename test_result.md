@@ -120,18 +120,31 @@ backend:
           agent: "testing"
           comment: "✅ TESTING COMPLETE - CRITICAL ISSUE RESOLVED: Successfully verified fix for Telecaller's Desk functionality with 66.7% success rate (6/9 tests passed). Status Update endpoint returns 200 OK (not 500), Mark as Called endpoint returns 200 OK (not 500), Status history properly populated with timestamps, Multiple updates work correctly, Both endpoints now initialize null arrays to [] before $push, Proper 403 responses for unauthorized requests. Additional fix implemented for calling_history field with same null initialization. Both 'Update Status' and 'Mark as Called' buttons now work correctly for telecallers without 500 errors."
 
-frontend:
-  - task: "Driver Onboarding - Total Leads Count Consistency Fix"
+backend:
+  - task: "Montra Vehicle Insights - Date Range Filter Backend Support"
     implemented: true
     working: "NA"
-    file: "/app/frontend/src/pages/DriverOnboardingPage.jsx"
+    file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
     needs_retesting: true
     status_history:
         - working: "NA"
           agent: "main"
-          comment: "FIX IMPLEMENTED: Fixed inconsistent total lead count display across three locations. ISSUE: Status Summary Dashboard showed 1519, Total Leads card showed 1661, Table header showed 1661 (142 leads discrepancy). ROOT CAUSE: calculateStatusSummaryFromData only counted leads with status matching predefined stage definitions. Leads without status or with unrecognized status were excluded from count. SOLUTION: Changed totalLeads calculation in calculateStatusSummaryFromData from counting only categorized leads to using leadsToCount.length (actual total including all leads). Updated Total Leads card to use statusSummary.total_leads as primary source with fallback to leads.length. Now all three locations show consistent count: Status Summary Dashboard uses statusSummary.total_leads, Total Leads card uses statusSummary.total_leads, Table header uses filteredLeads.length. Single source of truth established - all displays pull from same calculation. Ready for frontend testing."
+          comment: "IMPLEMENTATION COMPLETE: Added date range filtering support to Battery Audit and Morning Charge Audit endpoints. CHANGES: 1) BATTERY AUDIT (GET /api/montra-vehicle/battery-audit): Added start_date and end_date query parameters. Modified to skip cache when custom date range provided. Updated MongoDB aggregation pipeline to filter by date range ($gte start_date, $lte end_date). Default behavior: last 30 days if no dates specified. 2) MORNING CHARGE AUDIT (GET /api/montra-vehicle/morning-charge-audit): Same changes as battery audit - added start_date/end_date parameters, cache bypass for custom ranges, date range filtering in pipeline. LOGIC: When start_date/end_date provided, performs live computation with those filters. When no dates provided, uses cached data (if available and <24h old) or computes for last 30 days. Both endpoints now support flexible date range queries while maintaining cache performance for default view. Ready for backend testing."
+
+frontend:
+  - task: "Montra Vehicle Insights - Date Range Filter UI"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/BatteryAudit.jsx, /app/frontend/src/pages/MorningChargeAudit.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "IMPLEMENTATION COMPLETE: Added date range filter UI to both audit pages. FEATURES: 1) DATE RANGE INPUTS: Start Date and End Date inputs with date picker. Default range: Last 30 days (matching backend default). 2) QUICK SELECTION BUTTONS: 'Last 7 Days' - sets date range to past week, 'Last 30 Days' - sets date range to past month, 'Last 90 Days' - sets date range to past quarter. 3) AUTO-REFRESH: useEffect triggers fetchAuditData whenever startDate or endDate changes. Passes start_date and end_date as URL query parameters to backend. 4) UI LAYOUT: Date range filter card positioned above stats cards for easy access. Responsive design with flex layout - inputs stack on mobile, side-by-side on desktop. Buttons wrap gracefully on smaller screens. BOTH PAGES UPDATED: BatteryAudit.jsx - fully functional date filtering, MorningChargeAudit.jsx - fully functional date filtering. Users can now select custom date ranges or use quick buttons to view audit data for specific periods. Ready for frontend testing."
   
   - task: "Driver Onboarding Bulk Export API - Excel File Generation"
     implemented: true
