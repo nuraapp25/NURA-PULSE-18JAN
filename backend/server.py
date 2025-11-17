@@ -3324,6 +3324,11 @@ async def update_lead(lead_id: str, lead_data: DriverLeadUpdate, current_user: U
             {"$set": update_data}
         )
     
+    # Fetch and return the updated lead
+    updated_lead = await db.driver_leads.find_one({"id": lead_id}, {"_id": 0})
+    
+    return {"success": True, "lead": updated_lead}
+    
 
 
 @api_router.post("/driver-onboarding/leads/{lead_id}/call-done")
