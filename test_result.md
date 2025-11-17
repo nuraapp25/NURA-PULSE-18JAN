@@ -105,13 +105,13 @@
 user_problem_statement: "Telecaller's Desk - Telecallers cannot update status or use 'Mark as Called' button. Getting 'Failed to update status' error when trying to update lead status or mark leads as called."
 
 backend:
-  - task: "Bulk Import - Fix Duplicates Count & Stage Assignment"
+  - task: "Telecaller's Desk - Status Update & Mark as Called Fix"
     implemented: true
-    working: true
+    working: "NA"
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "critical"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: "NA"
           agent: "main"
