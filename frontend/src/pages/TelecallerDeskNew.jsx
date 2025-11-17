@@ -8,10 +8,26 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner";
+import { toast as originalToast } from "sonner";
 import { Phone, MessageCircle, CheckCircle, RefreshCw, AlertCircle, User, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Calendar, Search } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import LeadDetailsDialog from "@/components/LeadDetailsDialog";
+
+// Safe toast wrapper to prevent React errors from objects
+const toast = {
+  success: (msg) => originalToast.success(typeof msg === 'string' ? msg : String(msg)),
+  error: (msg) => {
+    try {
+      const message = typeof msg === 'string' ? msg : 
+                     (msg?.message || msg?.detail || JSON.stringify(msg));
+      originalToast.error(String(message));
+    } catch (e) {
+      originalToast.error("An error occurred");
+    }
+  },
+  info: (msg) => originalToast.info(typeof msg === 'string' ? msg : String(msg)),
+  warning: (msg) => originalToast.warning(typeof msg === 'string' ? msg : String(msg)),
+};
 
 // Status options grouped by stage
 const S1_STATUSES = [
