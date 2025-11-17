@@ -311,10 +311,8 @@ const TelecallerDeskNew = () => {
     });
   };
   
-  // Separate leads into called and not called
+  // Separate leads into called/not called based on selected date
   const separateLeadsByCalled = (leads) => {
-    const today = new Date().toISOString().split('T')[0];
-    
     const notCalled = [];
     const called = [];
     
@@ -324,8 +322,8 @@ const TelecallerDeskNew = () => {
           const callDate = parseISO(lead.last_called);
           const callDateStr = format(callDate, 'yyyy-MM-dd');
           
-          // If called today, move to "calling done"
-          if (callDateStr === today) {
+          // If called on the selected date, move to "calling done"
+          if (callDateStr === selectedDate) {
             called.push(lead);
           } else {
             notCalled.push(lead);
