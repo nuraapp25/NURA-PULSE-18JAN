@@ -409,7 +409,14 @@ const TelecallerDeskNew = () => {
       const updateData = {};
       Object.keys(editedLead).forEach(key => {
         if (allowedFields.includes(key) && editedLead[key] !== undefined) {
-          updateData[key] = editedLead[key];
+          let value = editedLead[key];
+          
+          // Convert phone_number to string if it's a number
+          if (key === 'phone_number' && typeof value === 'number') {
+            value = String(value);
+          }
+          
+          updateData[key] = value;
         }
       });
       
