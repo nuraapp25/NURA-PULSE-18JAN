@@ -524,8 +524,7 @@ const TelecallerDeskNew = () => {
           <Button
             onClick={() => {
               setSelectedLead(lead);
-              setNewStatus(lead.status || "");
-              setStatusDialogOpen(true);
+              setDetailDialogOpen(true);
             }}
             variant="outline"
             size="sm"
