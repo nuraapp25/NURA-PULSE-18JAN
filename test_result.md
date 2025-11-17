@@ -115,6 +115,10 @@ backend:
     status_history:
         - working: "NA"
           agent: "main"
+          comment: "CRITICAL FIX IMPLEMENTED: Fixed 500 Internal Server Error when telecallers try to update status or mark leads as called. ROOT CAUSE: MongoDB WriteError - 'The field status_history must be an array but is of type null'. Some leads in database had status_history field set to null instead of empty array []. MongoDB's $push operator requires array field. SOLUTION: Enhanced initialization check in PATCH /api/driver-onboarding/leads/{lead_id} endpoint (line 3262). Changed from checking only if field doesn't exist to also checking if field is null. Added await db.driver_leads.update_one to set status_history to empty array [] if it's null before using $push. This fixes both 'Update Status' and 'Mark as Called' functionality as both depend on the lead update endpoint working correctly. Ready for backend testing."
+    status_history:
+        - working: "NA"
+          agent: "main"
           comment: "IMPLEMENTATION COMPLETE: Created Vehicle Documents backend with full CRUD operations. ENDPOINTS ADDED: 1) POST /api/vehicle-documents/upload-file - Upload document files (pdf/png/word) to Vehicle_Docs folder, 2) GET /api/vehicle-documents - List all vehicle documents with pagination and search, 3) GET /api/vehicle-documents/{id} - Get single document by ID, 4) POST /api/vehicle-documents - Create new vehicle document with file paths, 5) PUT /api/vehicle-documents/{id} - Update existing document, 6) DELETE /api/vehicle-documents/{id} - Delete document (admin/master_admin only), 7) GET /api/vehicle-documents/file/{file_path} - Retrieve uploaded files. FEATURES: File upload handling with unique filenames, date field parsing (registration_expiry_date, insurance_expiry_date, purchase_date), permission checks for delete operation, MongoDB integration with vehicle_documents collection. FILES: /app/backend/server.py (new section added), /app/backend/app_models.py (VehicleDocument, VehicleDocumentCreate, VehicleDocumentUpdate models added). Ready for backend testing."
         - working: true
           agent: "testing"
