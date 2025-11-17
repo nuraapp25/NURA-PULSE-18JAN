@@ -3258,8 +3258,12 @@ async def update_lead(lead_id: str, lead_data: DriverLeadUpdate, current_user: U
     # Track status/stage changes in history
     current_time = datetime.now(timezone.utc).isoformat()
     
-    # Initialize status_history if it doesn't exist
-    if "status_history" not in lead:
+    # Initialize status_history if it doesn't exist or is null
+    if "status_history" not in lead or lead.get("status_history") is None:
+        await db.driver_leads.update_one(
+            {"id": lead_id},
+            {"$set": {"status_history": []}}
+        )
         lead["status_history"] = []
     
     # Calculate callback_date if status starts with "Call back"
