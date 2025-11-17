@@ -6028,16 +6028,25 @@ async def get_battery_charge_audit(
 
 
 @api_router.get("/montra-vehicle/morning-charge-audit")
-async def get_morning_charge_audit(current_user: User = Depends(get_current_user), force_refresh: bool = False):
+async def get_morning_charge_audit(
+    current_user: User = Depends(get_current_user), 
+    force_refresh: bool = False,
+    start_date: str = None,
+    end_date: str = None
+):
     """
     Morning Charge Audit - CACHED VERSION for Production Performance
     Uses pre-computed cache (updated daily), falls back to live computation if needed
+    Supports custom date range filtering
     """
     try:
         from datetime import datetime, time as dt_time, date, timedelta
         
+        # If custom date range is provided, skip cache and compute live
+        use_cache = not force_refresh and not start_date and not end_date
+        
         # Try to get from cache first
-        if not force_refresh:
+        if use_cache:
             logger.info("Checking analytics cache for morning charge audit data")
             cache_entry = await db.analytics_cache.find_one({"cache_type": "morning_charge_audit"})
             
@@ -6066,8 +6075,18 @@ async def get_morning_charge_audit(current_user: User = Depends(get_current_user
                 "message": "No Montra feed data found. Please import vehicle data first."
             }
         
-        # Limit to last 30 days (as requested by user)
-        cutoff_date = (date.today() - timedelta(days=30)).isoformat()
+        # Determine date range
+        if start_date:
+            cutoff_date = start_date
+        else:
+            # Default to last 30 days if no start_date provided
+            cutoff_date = (date.today() - timedelta(days=30)).isoformat()
+        
+        if end_date:
+            end_date_filter = end_date
+        else:
+            # Default to today if no end_date provided
+            end_date_filter = date.today().isoformat()
         
         logger.info(f"Fetching records from {cutoff_date} onwards (last 30 days)")
         
