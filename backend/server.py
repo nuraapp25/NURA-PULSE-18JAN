@@ -6317,6 +6317,7 @@ async def get_morning_charge_audit(
                                     if closest_time_to_6am is None or time_diff < closest_time_to_6am:
                                         closest_time_to_6am = time_diff
                                         charge_at_6am = battery_val
+                                        debug_6am_found += 1
                                 except:
                                     pass
                         elif record_time > dt_time(6, 30):
