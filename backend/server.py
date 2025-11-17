@@ -13283,3 +13283,301 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ==================== MANAGE DATABASE - VEHICLES & DRIVERS ====================
+
+class Vehicle(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    vehicle_type: str
+    register_number: str
+    vin_number: str
+    model: Optional[str] = None
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+class VehicleCreate(BaseModel):
+    vehicle_type: str
+    register_number: str
+    vin_number: str
+    model: Optional[str] = None
+
+class Driver(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    phone_number: str
+    dl_number: Optional[str] = None
+    status: str = "Active"  # Active or Terminated
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+class DriverCreate(BaseModel):
+    name: str
+    phone_number: str
+    dl_number: Optional[str] = None
+    status: str = "Active"
+
+# Vehicles Endpoints
+@api_router.get("/manage-db/vehicles")
+async def get_vehicles(current_user: User = Depends(get_current_user)):
+    """Get all vehicles"""
+    try:
+        vehicles = await db.vehicles.find({}).to_list(1000)
+        return {"vehicles": vehicles}
+    except Exception as e:
+        logger.error(f"Error fetching vehicles: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch vehicles")
+
+@api_router.post("/manage-db/vehicles")
+async def create_vehicle(vehicle: VehicleCreate, current_user: User = Depends(get_current_user)):
+    """Create a new vehicle"""
+    try:
+        vehicle_dict = Vehicle(
+            vehicle_type=vehicle.vehicle_type,
+            register_number=vehicle.register_number,
+            vin_number=vehicle.vin_number,
+            model=vehicle.model
+        ).model_dump()
+        
+        await db.vehicles.insert_one(vehicle_dict)
+        return {"success": True, "vehicle": vehicle_dict}
+    except Exception as e:
+        logger.error(f"Error creating vehicle: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to create vehicle")
+
+@api_router.put("/manage-db/vehicles/{vehicle_id}")
+async def update_vehicle(vehicle_id: str, vehicle: VehicleCreate, current_user: User = Depends(get_current_user)):
+    """Update a vehicle"""
+    try:
+        update_data = vehicle.model_dump()
+        update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+        
+        result = await db.vehicles.update_one(
+            {"id": vehicle_id},
+            {"$set": update_data}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Vehicle not found")
+        
+        return {"success": True, "message": "Vehicle updated successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating vehicle: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to update vehicle")
+
+@api_router.delete("/manage-db/vehicles/{vehicle_id}")
+async def delete_vehicle(vehicle_id: str, current_user: User = Depends(get_current_user)):
+    """Delete a vehicle"""
+    try:
+        result = await db.vehicles.delete_one({"id": vehicle_id})
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Vehicle not found")
+        
+        return {"success": True, "message": "Vehicle deleted successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting vehicle: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to delete vehicle")
+
+@api_router.post("/manage-db/vehicles/bulk-import")
+async def bulk_import_vehicles(vehicles_data: dict = Body(...), current_user: User = Depends(get_current_user)):
+    """Bulk import vehicles from Excel"""
+    try:
+        vehicles = vehicles_data.get("vehicles", [])
+        
+        if not vehicles:
+            raise HTTPException(status_code=400, detail="No vehicles data provided")
+        
+        imported_count = 0
+        for vehicle_data in vehicles:
+            if not vehicle_data.get("vehicle_type") or not vehicle_data.get("register_number") or not vehicle_data.get("vin_number"):
+                continue
+            
+            vehicle_dict = Vehicle(
+                vehicle_type=vehicle_data["vehicle_type"],
+                register_number=vehicle_data["register_number"],
+                vin_number=vehicle_data["vin_number"],
+                model=vehicle_data.get("model")
+            ).model_dump()
+            
+            # Check if vehicle already exists
+            existing = await db.vehicles.find_one({"vin_number": vehicle_data["vin_number"]})
+            if existing:
+                # Update existing
+                await db.vehicles.update_one(
+                    {"vin_number": vehicle_data["vin_number"]},
+                    {"$set": {**vehicle_dict, "updated_at": datetime.now(timezone.utc).isoformat()}}
+                )
+            else:
+                # Insert new
+                await db.vehicles.insert_one(vehicle_dict)
+            
+            imported_count += 1
+        
+        return {"success": True, "imported_count": imported_count}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error bulk importing vehicles: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to import vehicles: {str(e)}")
+
+# Drivers Endpoints
+@api_router.get("/manage-db/drivers")
+async def get_drivers(current_user: User = Depends(get_current_user)):
+    """Get all drivers"""
+    try:
+        drivers = await db.drivers.find({}).to_list(1000)
+        return {"drivers": drivers}
+    except Exception as e:
+        logger.error(f"Error fetching drivers: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch drivers")
+
+@api_router.post("/manage-db/drivers")
+async def create_driver(driver: DriverCreate, current_user: User = Depends(get_current_user)):
+    """Create a new driver"""
+    try:
+        driver_dict = Driver(
+            name=driver.name,
+            phone_number=driver.phone_number,
+            dl_number=driver.dl_number,
+            status=driver.status
+        ).model_dump()
+        
+        await db.drivers.insert_one(driver_dict)
+        return {"success": True, "driver": driver_dict}
+    except Exception as e:
+        logger.error(f"Error creating driver: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to create driver")
+
+@api_router.put("/manage-db/drivers/{driver_id}")
+async def update_driver(driver_id: str, driver: DriverCreate, current_user: User = Depends(get_current_user)):
+    """Update a driver"""
+    try:
+        update_data = driver.model_dump()
+        update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+        
+        result = await db.drivers.update_one(
+            {"id": driver_id},
+            {"$set": update_data}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Driver not found")
+        
+        return {"success": True, "message": "Driver updated successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating driver: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to update driver")
+
+@api_router.delete("/manage-db/drivers/{driver_id}")
+async def delete_driver(driver_id: str, current_user: User = Depends(get_current_user)):
+    """Delete a driver"""
+    try:
+        result = await db.drivers.delete_one({"id": driver_id})
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Driver not found")
+        
+        return {"success": True, "message": "Driver deleted successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting driver: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to delete driver")
+
+@api_router.post("/manage-db/drivers/bulk-import")
+async def bulk_import_drivers(drivers_data: dict = Body(...), current_user: User = Depends(get_current_user)):
+    """Bulk import drivers from Excel"""
+    try:
+        drivers = drivers_data.get("drivers", [])
+        
+        if not drivers:
+            raise HTTPException(status_code=400, detail="No drivers data provided")
+        
+        imported_count = 0
+        for driver_data in drivers:
+            if not driver_data.get("name") or not driver_data.get("phone_number"):
+                continue
+            
+            driver_dict = Driver(
+                name=driver_data["name"],
+                phone_number=driver_data["phone_number"],
+                dl_number=driver_data.get("dl_number"),
+                status=driver_data.get("status", "Active")
+            ).model_dump()
+            
+            # Check if driver already exists
+            existing = await db.drivers.find_one({"phone_number": driver_data["phone_number"]})
+            if existing:
+                # Update existing
+                await db.drivers.update_one(
+                    {"phone_number": driver_data["phone_number"]},
+                    {"$set": {**driver_dict, "updated_at": datetime.now(timezone.utc).isoformat()}}
+                )
+            else:
+                # Insert new
+                await db.drivers.insert_one(driver_dict)
+            
+            imported_count += 1
+        
+        return {"success": True, "imported_count": imported_count}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error bulk importing drivers: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to import drivers: {str(e)}")
+
+@api_router.post("/manage-db/drivers/sync-from-onboarding")
+async def sync_drivers_from_onboarding(current_user: User = Depends(get_current_user)):
+    """Sync drivers from Driver Onboarding leads with DONE! or Terminated status"""
+    try:
+        # Fetch leads with DONE! status or Terminated status
+        leads = await db.driver_leads.find({
+            "$or": [
+                {"status": "DONE!"},
+                {"status": "Terminated"}
+            ]
+        }).to_list(10000)
+        
+        synced_count = 0
+        for lead in leads:
+            if not lead.get("name") or not lead.get("phone_number"):
+                continue
+            
+            # Determine status based on lead status
+            driver_status = "Terminated" if lead.get("status") == "Terminated" else "Active"
+            
+            driver_dict = Driver(
+                name=lead["name"],
+                phone_number=str(lead["phone_number"]),
+                dl_number=lead.get("dl_no"),
+                status=driver_status
+            ).model_dump()
+            
+            # Check if driver already exists
+            existing = await db.drivers.find_one({"phone_number": str(lead["phone_number"])})
+            if existing:
+                # Update existing - update status if changed
+                await db.drivers.update_one(
+                    {"phone_number": str(lead["phone_number"])},
+                    {"$set": {
+                        "name": lead["name"],
+                        "dl_number": lead.get("dl_no"),
+                        "status": driver_status,
+                        "updated_at": datetime.now(timezone.utc).isoformat()
+                    }}
+                )
+            else:
+                # Insert new
+                await db.drivers.insert_one(driver_dict)
+            
+            synced_count += 1
+        
+        return {"success": True, "synced_count": synced_count}
+    except Exception as e:
+        logger.error(f"Error syncing drivers from onboarding: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to sync drivers: {str(e)}")
+
