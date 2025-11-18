@@ -775,20 +775,20 @@ const TelecallerDeskNew = () => {
         </div>
         
         {/* Date Selector */}
-        <div className="mb-4">
-          <div className="flex items-center gap-2">
+        <div className="mb-4 sm:mb-6">
+          <div className="flex items-center gap-1 sm:gap-2">
             <Button
               onClick={scrollDatesLeft}
               disabled={dateScrollIndex === 0}
               variant="outline"
               size="sm"
-              className="p-2 dark:bg-gray-800 dark:border-gray-700"
+              className="p-1 sm:p-2 dark:bg-gray-800 dark:border-gray-700 flex-shrink-0"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4" />
             </Button>
             
             <div className="flex-1 overflow-hidden">
-              <div className="flex gap-2">
+              <div className="flex gap-1 sm:gap-2">
                 {dateRange.slice(dateScrollIndex, dateScrollIndex + 5).map((dateStr) => {
                   const date = new Date(dateStr);
                   const isSelected = dateStr === selectedDate;
@@ -800,7 +800,7 @@ const TelecallerDeskNew = () => {
                     <button
                       key={dateStr}
                       onClick={() => setSelectedDate(dateStr)}
-                      className={`flex-1 min-w-[70px] p-2 rounded-lg border-2 transition-all ${
+                      className={`flex-1 min-w-[60px] sm:min-w-[70px] p-1 sm:p-2 rounded-lg border-2 transition-all ${
                         isSelected
                           ? 'bg-blue-500 border-blue-500 text-white'
                           : isToday
@@ -809,7 +809,7 @@ const TelecallerDeskNew = () => {
                       }`}
                     >
                       <div className="text-xs font-medium">{dayName}</div>
-                      <div className={`text-sm font-bold ${isSelected ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
+                      <div className={`text-xs sm:text-sm font-bold ${isSelected ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
                         {monthDay}
                       </div>
                     </button>
@@ -823,14 +823,14 @@ const TelecallerDeskNew = () => {
               disabled={dateScrollIndex >= dateRange.length - 5}
               variant="outline"
               size="sm"
-              className="p-2 dark:bg-gray-800 dark:border-gray-700"
+              className="p-1 sm:p-2 dark:bg-gray-800 dark:border-gray-700 flex-shrink-0"
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
             </Button>
           </div>
           
           {selectedDate && (
-            <div className="mt-2 flex items-center justify-between">
+            <div className="mt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <p className="text-xs text-blue-600 dark:text-blue-400">
                 Showing leads for {format(new Date(selectedDate), 'EEEE, MMMM d, yyyy')}
               </p>
@@ -838,7 +838,7 @@ const TelecallerDeskNew = () => {
                 onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])}
                 variant="ghost"
                 size="sm"
-                className="text-xs"
+                className="text-xs w-full sm:w-auto"
               >
                 Reset to Today
               </Button>
