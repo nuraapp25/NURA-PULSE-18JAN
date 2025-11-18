@@ -658,28 +658,25 @@ const TelecallerDeskNew = () => {
             className="bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm"
             size="sm"
           >
-            <Phone className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-            <span className="hidden sm:inline">Call</span>
-            <span className="sm:hidden">📞</span>
+            <Phone className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+            <span>Call</span>
           </Button>
           <Button
             onClick={() => handleWhatsApp(leadParam)}
             className="bg-green-600 hover:bg-green-700 text-xs sm:text-sm"
             size="sm"
           >
-            <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-            <span className="hidden sm:inline">WhatsApp</span>
-            <span className="sm:hidden">💬</span>
+            <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+            <span>WhatsApp</span>
           </Button>
           {!showCallTimestamp && (
             <Button
               onClick={() => markAsCalledNow(leadParam.id)}
-              className="bg-orange-600 hover:bg-orange-700 text-xs sm:text-sm col-span-1"
+              className="bg-orange-600 hover:bg-orange-700 text-xs sm:text-sm col-span-2"
               size="sm"
             >
-              <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-              <span className="hidden sm:inline">Mark as Called</span>
-              <span className="sm:hidden">✓</span>
+              <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+              <span>Mark as Called</span>
             </Button>
           )}
           <Button
@@ -693,11 +690,10 @@ const TelecallerDeskNew = () => {
             }}
             variant="outline"
             size="sm"
-            className="text-xs sm:text-sm"
+            className="text-xs sm:text-sm col-span-2"
           >
-            <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-            <span className="hidden sm:inline">Status</span>
-            <span className="sm:hidden">📝</span>
+            <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+            <span>Status</span>
           </Button>
         </div>
       </CardContent>
