@@ -715,8 +715,8 @@ const TelecallerDeskNew = () => {
         
         {/* Admin: Telecaller Selector */}
         {isAdmin && telecallers.length > 0 && (
-          <div className="mb-4">
-            <div className="flex gap-2">
+          <div className="mb-4 sm:mb-6">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Select value={selectedTelecaller || ""} onValueChange={setSelectedTelecaller}>
                 <SelectTrigger className="flex-1 dark:bg-gray-800 dark:border-gray-700">
                   <SelectValue placeholder="Select a telecaller" />
@@ -732,10 +732,10 @@ const TelecallerDeskNew = () => {
               <Button
                 onClick={handleViewDesk}
                 disabled={!selectedTelecaller}
-                className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400"
+                className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 w-full sm:w-auto"
               >
                 <User className="w-4 h-4 mr-2" />
-                View Desk
+                <span className="sm:inline">View Desk</span>
               </Button>
             </div>
             {selectedTelecaller && (
