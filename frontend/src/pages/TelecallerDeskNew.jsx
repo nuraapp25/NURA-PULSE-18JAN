@@ -635,11 +635,11 @@ const TelecallerDeskNew = () => {
   const renderLeadCard = (leadParam, showCallTimestamp = false) => {
     console.log("renderLeadCard called with:", leadParam);
     return (
-    <Card key={leadParam.id} className="mb-3 dark:bg-gray-800">
-      <CardContent className="p-4">
-        <div className="flex justify-between items-start mb-2">
-          <div>
-            <h3 className="font-semibold text-lg dark:text-white">{leadParam.name}</h3>
+    <Card key={leadParam.id} className="mb-2 sm:mb-3 dark:bg-gray-800">
+      <CardContent className="p-3 sm:p-4">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-2 sm:mb-3">
+          <div className="flex-1 mb-2 sm:mb-0">
+            <h3 className="font-semibold text-base sm:text-lg dark:text-white">{leadParam.name}</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">{leadParam.phone_number}</p>
             {showCallTimestamp && leadParam.last_called && (
               <p className="text-xs text-green-600 dark:text-green-400 mt-1">
@@ -647,36 +647,39 @@ const TelecallerDeskNew = () => {
               </p>
             )}
           </div>
-          <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+          <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 self-start">
             {leadParam.status || "New"}
           </Badge>
         </div>
         
-        <div className="flex gap-2 mt-3">
+        <div className="grid grid-cols-2 sm:flex gap-1 sm:gap-2 mt-2 sm:mt-3">
           <Button
             onClick={() => handleCall(leadParam)}
-            className="flex-1 bg-blue-600 hover:bg-blue-700"
+            className="bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm"
             size="sm"
           >
-            <Phone className="w-4 h-4 mr-2" />
-            Call
+            <Phone className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Call</span>
+            <span className="sm:hidden">📞</span>
           </Button>
           <Button
             onClick={() => handleWhatsApp(leadParam)}
-            className="flex-1 bg-green-600 hover:bg-green-700"
+            className="bg-green-600 hover:bg-green-700 text-xs sm:text-sm"
             size="sm"
           >
-            <MessageCircle className="w-4 h-4 mr-2" />
-            WhatsApp
+            <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">WhatsApp</span>
+            <span className="sm:hidden">💬</span>
           </Button>
           {!showCallTimestamp && (
             <Button
               onClick={() => markAsCalledNow(leadParam.id)}
-              className="flex-1 bg-orange-600 hover:bg-orange-700"
+              className="bg-orange-600 hover:bg-orange-700 text-xs sm:text-sm col-span-1"
               size="sm"
             >
-              <CheckCircle className="w-4 h-4 mr-2" />
-              Mark as Called
+              <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Mark as Called</span>
+              <span className="sm:hidden">✓</span>
             </Button>
           )}
           <Button
@@ -690,9 +693,11 @@ const TelecallerDeskNew = () => {
             }}
             variant="outline"
             size="sm"
+            className="text-xs sm:text-sm"
           >
-            <CheckCircle className="w-4 h-4 mr-2" />
-            Status
+            <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Status</span>
+            <span className="sm:hidden">📝</span>
           </Button>
         </div>
       </CardContent>
