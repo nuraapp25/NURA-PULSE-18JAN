@@ -701,11 +701,11 @@ const TelecallerDeskNew = () => {
   };
   
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-2 sm:p-4">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="mb-4">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+        <div className="mb-4 sm:mb-6">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-2 sm:mb-4">
             Telecaller's Desk
           </h1>
           <p className="text-sm text-gray-600 dark:text-gray-400">
