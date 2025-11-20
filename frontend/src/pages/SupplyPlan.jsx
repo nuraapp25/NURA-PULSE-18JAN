@@ -404,17 +404,23 @@ const SupplyPlan = () => {
             </Button>
             
             <div className="flex items-center gap-2">
-              {weekDates.map((date, index) => (
-                <Button
-                  key={index}
-                  variant={isToday(date) ? "default" : "outline"}
-                  size="sm"
-                  className={`flex flex-col py-2 px-3 ${isToday(date) ? 'bg-blue-600' : ''}`}
-                >
-                  <span className="text-xs">{format(date, 'EEE')}</span>
-                  <span className="font-bold">{format(date, 'dd MMM')}</span>
-                </Button>
-              ))}
+              {weekDates.map((date, index) => {
+                const isSelected = format(date, 'yyyy-MM-dd') === format(selectedViewDate, 'yyyy-MM-dd');
+                const isTodayDate = isToday(date);
+                
+                return (
+                  <Button
+                    key={index}
+                    onClick={() => handleDateClick(date)}
+                    variant={isSelected ? "default" : "outline"}
+                    size="sm"
+                    className={`flex flex-col py-2 px-3 ${isSelected ? 'bg-blue-600' : ''} ${isTodayDate && !isSelected ? 'border-blue-400 border-2' : ''}`}
+                  >
+                    <span className="text-xs">{format(date, 'EEE')}</span>
+                    <span className="font-bold">{format(date, 'dd MMM')}</span>
+                  </Button>
+                );
+              })}
             </div>
 
             <div className="flex gap-2">
