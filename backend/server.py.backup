@@ -13359,6 +13359,24 @@ async def get_individual_qr_analytics(
         logger.error(f"Failed to get QR code analytics: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to get QR code analytics: {str(e)}")
 
+@app.on_event("shutdown")
+async def shutdown_db_client():
+    client.close()
+    logger.info("Application shutdown")
+
+
+# ==================== Include Router ====================
+
+app.include_router(api_router)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_credentials=True,
+    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # ==================== MANAGE DATABASE - VEHICLES & DRIVERS ====================
 
 class Vehicle(BaseModel):
@@ -13655,23 +13673,4 @@ async def sync_drivers_from_onboarding(current_user: User = Depends(get_current_
     except Exception as e:
         logger.error(f"Error syncing drivers from onboarding: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to sync drivers: {str(e)}")
-
-
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    client.close()
-    logger.info("Application shutdown")
-
-
-# ==================== Include Router ====================
-
-app.include_router(api_router)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
