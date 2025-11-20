@@ -13755,11 +13755,12 @@ async def create_shift_assignment(
     """Create a new shift assignment"""
     try:
         # Generate color if not provided
-        driver_color = assignment_data.driver_color or get_driver_color(assignment_data.driver_name)
+        data_dict = assignment_data.model_dump()
+        if not data_dict.get('driver_color'):
+            data_dict['driver_color'] = get_driver_color(assignment_data.driver_name)
         
         assignment = ShiftAssignment(
-            **assignment_data.model_dump(),
-            driver_color=driver_color,
+            **data_dict,
             created_by=current_user.id
         )
         
