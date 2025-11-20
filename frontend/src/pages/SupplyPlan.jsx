@@ -71,10 +71,8 @@ const SupplyPlan = () => {
   }, []);
 
   useEffect(() => {
-    if (weekDates.length > 0) {
-      fetchAssignments();
-    }
-  }, [weekDates]);
+    fetchAssignments();
+  }, [selectedViewDate]);
 
   const fetchDrivers = async () => {
     try {
