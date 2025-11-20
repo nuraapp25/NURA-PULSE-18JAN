@@ -11412,6 +11412,313 @@ async def get_documents_status(
 
 
 
+# ==================== DOCUMENT LIBRARY ====================
+
+@api_router.get("/document-library/list")
+async def list_all_documents(
+    search: str = None,
+    document_type: str = None,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    List all documents from all driver leads with metadata
+    Returns folders organized by driver with their documents
+    """
+    try:
+        import zipfile
+        from io import BytesIO
+        
+        # Get all leads with documents
+        leads_collection = db['driver_leads']
+        query = {}
+        
+        leads = await leads_collection.find(query, {"_id": 0}).to_list(length=None)
+        
+        folders = []
+        document_types = ['dl', 'aadhar', 'pan', 'gas_bill', 'bank_passbook']
+        
+        for lead in leads:
+            lead_id = lead.get('id')
+            if not lead_id:
+                continue
+                
+            # Check if this lead has any documents
+            has_documents = False
+            documents = []
+            
+            for doc_type in document_types:
+                field_name = f"{doc_type}_document_path"
+                file_path = lead.get(field_name)
+                uploaded_at = lead.get(f"{doc_type}_document_uploaded_at")
+                
+                if file_path and os.path.exists(file_path):
+                    # Filter by document type if specified
+                    if document_type and doc_type != document_type:
+                        continue
+                        
+                    has_documents = True
+                    file_stats = os.stat(file_path)
+                    file_ext = os.path.splitext(file_path)[1]
+                    
+                    documents.append({
+                        "document_type": doc_type,
+                        "file_path": file_path,
+                        "filename": os.path.basename(file_path),
+                        "file_size": file_stats.st_size,
+                        "file_extension": file_ext,
+                        "uploaded_at": uploaded_at
+                    })
+            
+            if has_documents:
+                driver_name = lead.get('name', 'Unknown')
+                phone = lead.get('phone_number', 'N/A')
+                
+                # Apply search filter
+                if search:
+                    search_lower = search.lower()
+                    if not (search_lower in driver_name.lower() or search_lower in phone):
+                        continue
+                
+                folders.append({
+                    "lead_id": lead_id,
+                    "driver_name": driver_name,
+                    "phone_number": phone,
+                    "email": lead.get('email', 'N/A'),
+                    "documents": documents,
+                    "document_count": len(documents),
+                    "total_size": sum(doc['file_size'] for doc in documents)
+                })
+        
+        # Calculate stats
+        total_documents = sum(folder['document_count'] for folder in folders)
+        total_size = sum(folder['total_size'] for folder in folders)
+        
+        return {
+            "success": True,
+            "folders": folders,
+            "stats": {
+                "total_drivers": len(folders),
+                "total_documents": total_documents,
+                "total_size": total_size,
+                "total_size_mb": round(total_size / (1024 * 1024), 2)
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to list documents: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to list documents: {str(e)}")
+
+
+@api_router.get("/document-library/download/{lead_id}/{document_type}")
+async def download_document(
+    lead_id: str,
+    document_type: str,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Download a single document
+    """
+    try:
+        leads_collection = db['driver_leads']
+        lead = await leads_collection.find_one({'id': lead_id}, {"_id": 0})
+        
+        if not lead:
+            raise HTTPException(status_code=404, detail="Driver not found")
+        
+        field_name = f"{document_type}_document_path"
+        file_path = lead.get(field_name)
+        
+        if not file_path or not os.path.exists(file_path):
+            raise HTTPException(status_code=404, detail="Document not found")
+        
+        driver_name = lead.get('name', 'Unknown').replace(' ', '_')
+        filename = f"{driver_name}_{document_type}{os.path.splitext(file_path)[1]}"
+        
+        return FileResponse(
+            path=file_path,
+            filename=filename,
+            media_type='application/octet-stream'
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to download document: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to download document: {str(e)}")
+
+
+@api_router.post("/document-library/download-bulk")
+async def download_bulk_documents(
+    request: Request,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Download selected documents as a ZIP file
+    Request body: {"selections": [{"lead_id": "...", "document_type": "..."}]}
+    """
+    try:
+        import zipfile
+        from io import BytesIO
+        
+        body = await request.json()
+        selections = body.get('selections', [])
+        
+        if not selections:
+            raise HTTPException(status_code=400, detail="No documents selected")
+        
+        # Create ZIP file in memory
+        zip_buffer = BytesIO()
+        
+        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+            leads_collection = db['driver_leads']
+            
+            for selection in selections:
+                lead_id = selection.get('lead_id')
+                document_type = selection.get('document_type')
+                
+                if not lead_id or not document_type:
+                    continue
+                
+                lead = await leads_collection.find_one({'id': lead_id}, {"_id": 0})
+                if not lead:
+                    continue
+                
+                field_name = f"{document_type}_document_path"
+                file_path = lead.get(field_name)
+                
+                if file_path and os.path.exists(file_path):
+                    driver_name = lead.get('name', 'Unknown').replace(' ', '_')
+                    file_ext = os.path.splitext(file_path)[1]
+                    
+                    # Create folder structure in ZIP: driver_name/document_type.ext
+                    zip_path = f"{driver_name}/{document_type}{file_ext}"
+                    zip_file.write(file_path, zip_path)
+        
+        zip_buffer.seek(0)
+        
+        timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
+        filename = f"driver_documents_{timestamp}.zip"
+        
+        return StreamingResponse(
+            zip_buffer,
+            media_type='application/zip',
+            headers={'Content-Disposition': f'attachment; filename="{filename}"'}
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to create bulk download: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to create bulk download: {str(e)}")
+
+
+@api_router.post("/document-library/delete")
+async def delete_documents(
+    request: Request,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Delete selected documents
+    Request body: {"selections": [{"lead_id": "...", "document_type": "..."}]}
+    """
+    try:
+        body = await request.json()
+        selections = body.get('selections', [])
+        
+        if not selections:
+            raise HTTPException(status_code=400, detail="No documents selected")
+        
+        leads_collection = db['driver_leads']
+        deleted_count = 0
+        
+        for selection in selections:
+            lead_id = selection.get('lead_id')
+            document_type = selection.get('document_type')
+            
+            if not lead_id or not document_type:
+                continue
+            
+            lead = await leads_collection.find_one({'id': lead_id}, {"_id": 0})
+            if not lead:
+                continue
+            
+            field_name = f"{document_type}_document_path"
+            file_path = lead.get(field_name)
+            
+            if file_path and os.path.exists(file_path):
+                # Delete the file
+                os.remove(file_path)
+                
+                # Update database
+                await leads_collection.update_one(
+                    {'id': lead_id},
+                    {'$unset': {
+                        field_name: "",
+                        f"{document_type}_document_uploaded_at": ""
+                    }}
+                )
+                
+                deleted_count += 1
+        
+        return {
+            "success": True,
+            "message": f"Successfully deleted {deleted_count} document(s)",
+            "deleted_count": deleted_count
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to delete documents: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete documents: {str(e)}")
+
+
+@api_router.get("/document-library/preview/{lead_id}/{document_type}")
+async def preview_document(
+    lead_id: str,
+    document_type: str,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Preview a document (returns file for inline viewing in browser)
+    """
+    try:
+        leads_collection = db['driver_leads']
+        lead = await leads_collection.find_one({'id': lead_id}, {"_id": 0})
+        
+        if not lead:
+            raise HTTPException(status_code=404, detail="Driver not found")
+        
+        field_name = f"{document_type}_document_path"
+        file_path = lead.get(field_name)
+        
+        if not file_path or not os.path.exists(file_path):
+            raise HTTPException(status_code=404, detail="Document not found")
+        
+        # Determine media type
+        file_ext = os.path.splitext(file_path)[1].lower()
+        media_types = {
+            '.pdf': 'application/pdf',
+            '.png': 'image/png',
+            '.jpg': 'image/jpeg',
+            '.jpeg': 'image/jpeg'
+        }
+        media_type = media_types.get(file_ext, 'application/octet-stream')
+        
+        return FileResponse(
+            path=file_path,
+            media_type=media_type,
+            headers={'Content-Disposition': f'inline; filename="{os.path.basename(file_path)}"'}
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to preview document: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to preview document: {str(e)}")
+
+
+
 # ==================== RIDE PAY EXTRACT V2 - UPLOAD FIRST, PROCESS IN BACKGROUND ====================
 
 # Storage folder for uploaded images
