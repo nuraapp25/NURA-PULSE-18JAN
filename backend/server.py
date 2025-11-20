@@ -13657,6 +13657,325 @@ async def sync_drivers_from_onboarding(current_user: User = Depends(get_current_
         raise HTTPException(status_code=500, detail=f"Failed to sync drivers: {str(e)}")
 
 
+# ==================== SUPPLY PLAN - SHIFT ASSIGNMENTS ====================
+
+from app_models import ShiftAssignment, ShiftAssignmentCreate, ShiftAssignmentUpdate
+
+# Helper function to generate unique color for each driver
+def get_driver_color(driver_name: str) -> str:
+    """Generate a consistent color for each driver based on their name"""
+    import hashlib
+    # Use hash to generate consistent color
+    hash_obj = hashlib.md5(driver_name.encode())
+    hash_hex = hash_obj.hexdigest()
+    # Take first 6 characters for color
+    color = f"#{hash_hex[:6]}"
+    return color
+
+
+@api_router.get("/supply-plan/drivers")
+async def get_supply_plan_drivers(current_user: User = Depends(get_current_user)):
+    """Get drivers list from Drivers List.xlsx"""
+    try:
+        import pandas as pd
+        
+        # Find the drivers list file
+        drivers_file = "/app/backend/uploaded_files/3ea2faab-edc6-4bf1-9512-7b8fb64fb90c_Drivers List.xlsx"
+        
+        if not os.path.exists(drivers_file):
+            raise HTTPException(status_code=404, detail="Drivers List.xlsx not found")
+        
+        # Read the Excel file
+        df = pd.read_excel(drivers_file)
+        
+        # Extract driver names (assuming they're in a column named 'Driver Name' or similar)
+        if 'Driver Name' in df.columns:
+            drivers = df['Driver Name'].dropna().unique().tolist()
+        else:
+            # Try to find the column with names
+            drivers = df.iloc[:, 1].dropna().unique().tolist()  # Assuming second column
+        
+        return {"drivers": sorted(drivers)}
+    except Exception as e:
+        logger.error(f"Error fetching drivers list: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch drivers: {str(e)}")
+
+
+@api_router.get("/supply-plan/vehicles")
+async def get_supply_plan_vehicles(current_user: User = Depends(get_current_user)):
+    """Get vehicles list from Vehicles List.xlsx"""
+    try:
+        import pandas as pd
+        
+        # Find the vehicles list file
+        vehicles_file = "/app/backend/uploaded_files/1e0860b7-a35b-4813-aa25-15523b6f22e7_Vehicles List.xlsx"
+        
+        if not os.path.exists(vehicles_file):
+            raise HTTPException(status_code=404, detail="Vehicles List.xlsx not found")
+        
+        # Read the Excel file
+        df = pd.read_excel(vehicles_file)
+        
+        # Extract vehicle registration numbers
+        if 'Vehicle List (A to Z)' in df.columns:
+            vehicles = df['Vehicle List (A to Z)'].dropna().unique().tolist()
+        else:
+            # Try to find the column with vehicle numbers
+            vehicles = df.iloc[:, 1].dropna().unique().tolist()  # Assuming second column
+        
+        return {"vehicles": sorted(vehicles)}
+    except Exception as e:
+        logger.error(f"Error fetching vehicles list: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch vehicles: {str(e)}")
+
+
+@api_router.get("/supply-plan/assignments")
+async def get_shift_assignments(
+    start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
+    end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
+    current_user: User = Depends(get_current_user)
+):
+    """Get shift assignments for a date range"""
+    try:
+        assignments = await db.shift_assignments.find({
+            "shift_date": {"$gte": start_date, "$lte": end_date}
+        }, {"_id": 0}).to_list(10000)
+        
+        return {"assignments": assignments}
+    except Exception as e:
+        logger.error(f"Error fetching shift assignments: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch assignments: {str(e)}")
+
+
+@api_router.post("/supply-plan/assignments")
+async def create_shift_assignment(
+    assignment_data: ShiftAssignmentCreate,
+    current_user: User = Depends(get_current_user)
+):
+    """Create a new shift assignment"""
+    try:
+        # Generate color if not provided
+        driver_color = assignment_data.driver_color or get_driver_color(assignment_data.driver_name)
+        
+        assignment = ShiftAssignment(
+            **assignment_data.model_dump(),
+            driver_color=driver_color,
+            created_by=current_user.id
+        )
+        
+        assignment_dict = assignment.model_dump()
+        assignment_dict['created_at'] = assignment_dict['created_at'].isoformat()
+        assignment_dict['updated_at'] = assignment_dict['updated_at'].isoformat()
+        
+        await db.shift_assignments.insert_one(assignment_dict)
+        
+        return {"message": "Shift assignment created successfully", "assignment": assignment}
+    except Exception as e:
+        logger.error(f"Error creating shift assignment: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to create assignment: {str(e)}")
+
+
+@api_router.put("/supply-plan/assignments/{assignment_id}")
+async def update_shift_assignment(
+    assignment_id: str,
+    assignment_data: ShiftAssignmentUpdate,
+    current_user: User = Depends(get_current_user)
+):
+    """Update an existing shift assignment"""
+    try:
+        update_data = {k: v for k, v in assignment_data.model_dump().items() if v is not None}
+        update_data['updated_at'] = datetime.now(timezone.utc).isoformat()
+        
+        result = await db.shift_assignments.update_one(
+            {"id": assignment_id},
+            {"$set": update_data}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Assignment not found")
+        
+        return {"message": "Shift assignment updated successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating shift assignment: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to update assignment: {str(e)}")
+
+
+@api_router.delete("/supply-plan/assignments/{assignment_id}")
+async def delete_shift_assignment(
+    assignment_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Delete a shift assignment"""
+    try:
+        result = await db.shift_assignments.delete_one({"id": assignment_id})
+        
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Assignment not found")
+        
+        return {"message": "Shift assignment deleted successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting shift assignment: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete assignment: {str(e)}")
+
+
+@api_router.get("/supply-plan/export")
+async def export_shift_assignments(
+    start_date: str = Query(...),
+    end_date: str = Query(...),
+    current_user: User = Depends(get_current_user)
+):
+    """Export shift assignments to Excel"""
+    try:
+        import pandas as pd
+        from io import BytesIO
+        
+        # Fetch assignments
+        assignments = await db.shift_assignments.find({
+            "shift_date": {"$gte": start_date, "$lte": end_date}
+        }, {"_id": 0}).to_list(10000)
+        
+        if not assignments:
+            raise HTTPException(status_code=404, detail="No assignments found for the selected date range")
+        
+        # Convert to DataFrame
+        df = pd.DataFrame(assignments)
+        
+        # Select and reorder columns
+        columns = ['shift_date', 'vehicle_reg_no', 'driver_name', 'shift_start_time', 'shift_end_time', 'notes']
+        df = df[[col for col in columns if col in df.columns]]
+        
+        # Rename columns for better readability
+        df.columns = ['Date', 'Vehicle Registration', 'Driver Name', 'Start Time', 'End Time', 'Notes']
+        
+        # Create Excel file in memory
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False, sheet_name='Shift Assignments')
+        
+        output.seek(0)
+        
+        return StreamingResponse(
+            output,
+            media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            headers={'Content-Disposition': f'attachment; filename=shift_assignments_{start_date}_to_{end_date}.xlsx'}
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error exporting shift assignments: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to export assignments: {str(e)}")
+
+
+@api_router.post("/supply-plan/import")
+async def import_shift_assignments(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user)
+):
+    """Import shift assignments from Excel"""
+    try:
+        import pandas as pd
+        from io import BytesIO
+        
+        # Read the uploaded file
+        contents = await file.read()
+        df = pd.read_excel(BytesIO(contents))
+        
+        # Validate required columns
+        required_columns = ['Date', 'Vehicle Registration', 'Driver Name', 'Start Time', 'End Time']
+        missing_columns = [col for col in required_columns if col not in df.columns]
+        
+        if missing_columns:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Missing required columns: {', '.join(missing_columns)}"
+            )
+        
+        imported_count = 0
+        errors = []
+        
+        for idx, row in df.iterrows():
+            try:
+                # Skip empty rows
+                if pd.isna(row['Date']) or pd.isna(row['Vehicle Registration']) or pd.isna(row['Driver Name']):
+                    continue
+                
+                # Convert date to string format
+                shift_date = pd.to_datetime(row['Date']).strftime('%Y-%m-%d')
+                
+                # Create assignment
+                assignment = ShiftAssignment(
+                    vehicle_reg_no=str(row['Vehicle Registration']),
+                    driver_name=str(row['Driver Name']),
+                    shift_date=shift_date,
+                    shift_start_time=str(row['Start Time']),
+                    shift_end_time=str(row['End Time']),
+                    driver_color=get_driver_color(str(row['Driver Name'])),
+                    notes=str(row['Notes']) if 'Notes' in row and pd.notna(row['Notes']) else None,
+                    created_by=current_user.id
+                )
+                
+                assignment_dict = assignment.model_dump()
+                assignment_dict['created_at'] = assignment_dict['created_at'].isoformat()
+                assignment_dict['updated_at'] = assignment_dict['updated_at'].isoformat()
+                
+                await db.shift_assignments.insert_one(assignment_dict)
+                imported_count += 1
+                
+            except Exception as e:
+                errors.append(f"Row {idx + 2}: {str(e)}")
+        
+        return {
+            "message": f"Successfully imported {imported_count} assignments",
+            "imported_count": imported_count,
+            "errors": errors if errors else None
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error importing shift assignments: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to import assignments: {str(e)}")
+
+
+@api_router.get("/supply-plan/sample-template")
+async def download_sample_template(current_user: User = Depends(get_current_user)):
+    """Download sample template for shift assignments import"""
+    try:
+        import pandas as pd
+        from io import BytesIO
+        
+        # Create sample data
+        sample_data = {
+            'Date': ['2025-11-18', '2025-11-18', '2025-11-19'],
+            'Vehicle Registration': ['TN02CE0730', 'TN02CE0738', 'TN02CE0730'],
+            'Driver Name': ['Abdul Nayeem', 'Alexander A', 'Abdul Nayeem'],
+            'Start Time': ['06:00', '14:00', '06:00'],
+            'End Time': ['14:00', '22:00', '14:00'],
+            'Notes': ['Morning shift', 'Evening shift', 'Morning shift']
+        }
+        
+        df = pd.DataFrame(sample_data)
+        
+        # Create Excel file in memory
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False, sheet_name='Shift Assignments')
+        
+        output.seek(0)
+        
+        return StreamingResponse(
+            output,
+            media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            headers={'Content-Disposition': 'attachment; filename=shift_assignments_template.xlsx'}
+        )
+    except Exception as e:
+        logger.error(f"Error creating sample template: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to create template: {str(e)}")
+
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
