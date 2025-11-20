@@ -615,6 +615,48 @@ class VehicleDocument(BaseModel):
     
     # Additional Info
     comments: Optional[str] = None
+
+
+# ==================== Supply Plan - Shift Assignments ====================
+
+class ShiftAssignment(BaseModel):
+    """Supply Plan Shift Assignment Model"""
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    vehicle_reg_no: str  # Vehicle registration number
+    driver_name: str  # Driver name
+    shift_date: str  # YYYY-MM-DD format
+    shift_start_time: str  # HH:MM format (e.g., "06:00")
+    shift_end_time: str  # HH:MM format (e.g., "14:30")
+    driver_color: str  # Hex color code for visual representation
+    notes: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_by: Optional[str] = None  # user_id
+
+
+class ShiftAssignmentCreate(BaseModel):
+    """Model for creating shift assignment"""
+    vehicle_reg_no: str
+    driver_name: str
+    shift_date: str
+    shift_start_time: str
+    shift_end_time: str
+    driver_color: Optional[str] = None
+    notes: Optional[str] = None
+
+
+class ShiftAssignmentUpdate(BaseModel):
+    """Model for updating shift assignment"""
+    vehicle_reg_no: Optional[str] = None
+    driver_name: Optional[str] = None
+    shift_date: Optional[str] = None
+    shift_start_time: Optional[str] = None
+    shift_end_time: Optional[str] = None
+    driver_color: Optional[str] = None
+    notes: Optional[str] = None
+
     
     # Metadata
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
