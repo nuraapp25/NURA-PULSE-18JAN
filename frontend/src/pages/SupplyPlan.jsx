@@ -101,16 +101,13 @@ const SupplyPlan = () => {
   };
 
   const fetchAssignments = async () => {
-    if (weekDates.length === 0) return;
-    
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const startDate = format(weekDates[0], 'yyyy-MM-dd');
-      const endDate = format(weekDates[6], 'yyyy-MM-dd');
+      const dateStr = format(selectedViewDate, 'yyyy-MM-dd');
       
       const response = await axios.get(`${API}/supply-plan/assignments`, {
-        params: { start_date: startDate, end_date: endDate },
+        params: { start_date: dateStr, end_date: dateStr },
         headers: { Authorization: `Bearer ${token}` }
       });
       setAssignments(response.data.assignments || []);
