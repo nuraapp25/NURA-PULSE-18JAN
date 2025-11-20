@@ -63,6 +63,7 @@ const Dashboard = () => {
     { name: "Driver Onboarding", icon: Car, path: "/dashboard/driver-onboarding", roles: ["master_admin", "admin", "standard"] },
     { name: "Telecaller's Desk", icon: Phone, path: "/dashboard/telecaller-desk", roles: ["telecaller", "master_admin", "admin"] },
     { name: "Montra Vehicle Insights", icon: BarChart3, path: "/dashboard/montra-vehicle", roles: ["master_admin", "admin", "standard"] },
+    { name: "Supply Plan", icon: CalendarDays, path: "/dashboard/supply-plan", roles: ["master_admin", "admin", "standard", "ops_team"] },
     { name: "Expense Tracker", icon: Receipt, path: "/dashboard/expense-tracker", roles: ["master_admin", "admin", "standard"] },
     { name: "Hotspot Planning", icon: MapPin, path: "/dashboard/hotspot-planning", roles: ["master_admin", "admin", "standard"] },
     { name: "QR Code Manager", icon: QrCode, path: "/dashboard/qr-codes-new", roles: ["master_admin"] },
