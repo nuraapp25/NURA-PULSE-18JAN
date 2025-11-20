@@ -518,9 +518,11 @@ const ManageDatabase = () => {
           </Table>
         </CardContent>
       </Card>
+          )}
 
-      {/* Drivers Section */}
-      <Card>
+          {/* Drivers Section */}
+          {activeTab === "drivers" && (
+            <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
