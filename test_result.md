@@ -445,7 +445,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Supply Plan Feature - Comprehensive Testing"
+    - "Morning Charge Audit Testing Complete"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
