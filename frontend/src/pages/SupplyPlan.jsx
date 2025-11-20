@@ -121,17 +121,25 @@ const SupplyPlan = () => {
 
   const handlePreviousWeek = () => {
     setCurrentDate(prev => subDays(prev, 7));
+    setSelectedViewDate(prev => subDays(prev, 7));
   };
 
   const handleNextWeek = () => {
     setCurrentDate(prev => addDays(prev, 7));
+    setSelectedViewDate(prev => addDays(prev, 7));
   };
 
   const handleToday = () => {
-    setCurrentDate(new Date());
+    const today = new Date();
+    setCurrentDate(today);
+    setSelectedViewDate(today);
   };
 
-  const openAssignDialog = (vehicle, date) => {
+  const handleDateClick = (date) => {
+    setSelectedViewDate(date);
+  };
+
+  const openAssignDialog = (vehicle, date = null) => {
     setSelectedVehicle(vehicle);
     setSelectedDate(date);
     setEditingAssignment(null);
