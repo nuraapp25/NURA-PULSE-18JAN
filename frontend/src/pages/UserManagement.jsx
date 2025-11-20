@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { API } from "@/App";
+import { API, useAuth } from "@/App";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { Users, UserPlus, Trash2, Key, RefreshCw, CheckCircle, XCircle, UserCheck, Copy, Mail, Download, Upload } from "lucide-react";
 
 const UserManagement = () => {
+  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState([]);
   const [stats, setStats] = useState(null);
   const [passwordResets, setPasswordResets] = useState([]);
