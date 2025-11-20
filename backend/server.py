@@ -753,6 +753,99 @@ async def delete_user(user_id: str, current_user: User = Depends(get_current_use
     return {"message": "User deleted successfully"}
 
 
+class AccountTypeChange(BaseModel):
+    user_id: str
+    new_account_type: str
+
+
+@api_router.post("/users/change-account-type")
+async def change_user_account_type(
+    account_change: AccountTypeChange,
+    current_user: User = Depends(get_current_user)
+):
+    """Change user account type (master admin only)"""
+    from datetime import datetime, timezone
+    
+    if current_user.account_type != "master_admin":
+        raise HTTPException(status_code=403, detail="Only master admin can change account types")
+    
+    # Validate new account type
+    valid_types = ["admin", "standard", "ops_team", "telecaller"]
+    if account_change.new_account_type not in valid_types:
+        raise HTTPException(status_code=400, detail=f"Invalid account type. Must be one of: {', '.join(valid_types)}")
+    
+    # Find the user
+    user_to_update = await db.users.find_one({"id": account_change.user_id})
+    if not user_to_update:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Cannot change master admin account type
+    if user_to_update.get('account_type') == "master_admin":
+        raise HTTPException(status_code=400, detail="Cannot change master admin account type")
+    
+    old_account_type = user_to_update.get('account_type')
+    
+    # Update user account type
+    await db.users.update_one(
+        {"id": account_change.user_id},
+        {"$set": {"account_type": account_change.new_account_type}}
+    )
+    
+    # Handle telecaller profile creation/deactivation
+    if account_change.new_account_type == "telecaller" and old_account_type != "telecaller":
+        # User is being changed TO telecaller - create profile if doesn't exist
+        existing_profile = await db.telecaller_profiles.find_one({"email": user_to_update['email']})
+        
+        if not existing_profile:
+            telecaller_profile = {
+                "id": str(uuid.uuid4()),
+                "name": f"{user_to_update.get('first_name', '')} {user_to_update.get('last_name', '')}",
+                "phone_number": "",
+                "email": user_to_update['email'],
+                "status": "active" if user_to_update.get('status') == 'active' else "pending",
+                "notes": f"Created from account type change by {current_user.email}",
+                "aadhar_card": "",
+                "pan_card": "",
+                "address_proof": "",
+                "total_assigned_leads": 0,
+                "active_leads": 0,
+                "converted_leads": 0,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "last_modified": datetime.now(timezone.utc).isoformat(),
+                "created_by": current_user.id
+            }
+            await db.telecaller_profiles.insert_one(telecaller_profile)
+        else:
+            # Reactivate existing profile
+            await db.telecaller_profiles.update_one(
+                {"email": user_to_update['email']},
+                {"$set": {
+                    "status": "active" if user_to_update.get('status') == 'active' else "pending",
+                    "last_modified": datetime.now(timezone.utc).isoformat()
+                }}
+            )
+    elif old_account_type == "telecaller" and account_change.new_account_type != "telecaller":
+        # User is being changed FROM telecaller - deactivate profile
+        await db.telecaller_profiles.update_one(
+            {"email": user_to_update['email']},
+            {"$set": {
+                "status": "inactive",
+                "notes": f"User account type changed from telecaller to {account_change.new_account_type} by {current_user.email}",
+                "last_modified": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+    
+    # Update Google Sheets
+    user_to_update['account_type'] = account_change.new_account_type
+    sync_user_to_sheets(user_to_update)
+    
+    return {
+        "message": "Account type changed successfully",
+        "old_type": old_account_type,
+        "new_type": account_change.new_account_type
+    }
+
+
 @api_router.get("/stats")
 async def get_stats(current_user: User = Depends(get_current_user)):
     """Get user statistics (master admin and admin only)"""
