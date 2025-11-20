@@ -443,76 +443,76 @@ const SupplyPlan = () => {
             <table className="w-full border-collapse">
               <thead>
                 <tr className="border-b bg-gray-50">
-                  <th className="sticky left-0 z-10 bg-gray-50 p-3 text-left border-r min-w-[150px]">
+                  <th className="sticky left-0 z-10 bg-gray-50 p-3 text-left border-r w-[200px]">
                     Vehicle
                   </th>
-                  {weekDates.map((date, idx) => (
-                    <th key={idx} className="p-3 text-center border-r min-w-[800px]">
-                      <div className="font-semibold">{format(date, 'EEE, dd MMM')}</div>
-                      <div className="text-xs text-gray-500 mt-1">6 AM → 6 AM (Next Day)</div>
-                    </th>
-                  ))}
+                  <th className="p-3 text-center border-r w-full">
+                    <div className="font-semibold">{format(selectedViewDate, 'EEEE, dd MMM yyyy')}</div>
+                    <div className="text-xs text-gray-500 mt-1">6 AM → 6 AM (Next Day)</div>
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {vehicles.map((vehicle, vIdx) => (
-                  <tr key={vIdx} className="border-b hover:bg-gray-50">
-                    <td className="sticky left-0 z-10 bg-white p-3 border-r font-medium">
-                      {vehicle}
-                    </td>
-                    {weekDates.map((date, dIdx) => {
-                      const vehicleAssignments = getAssignmentsForVehicleAndDate(vehicle, date);
-                      return (
-                        <td key={dIdx} className="p-2 border-r relative">
-                          <div className="relative h-20 bg-gray-100 rounded">
-                            {/* Time blocks */}
-                            {vehicleAssignments.map((assignment, aIdx) => {
-                              const leftPos = calculateTimePosition(assignment.shift_start_time);
-                              const width = calculateTimePosition(assignment.shift_end_time) - leftPos;
-                              
-                              return (
-                                <div
-                                  key={aIdx}
-                                  className="absolute top-1 bottom-1 rounded px-2 py-1 text-xs font-medium text-white cursor-pointer hover:opacity-90 flex items-center justify-between group"
-                                  style={{
-                                    left: `${leftPos}%`,
-                                    width: `${width}%`,
-                                    backgroundColor: assignment.driver_color
-                                  }}
-                                  onClick={() => openEditDialog(assignment)}
-                                >
-                                  <div className="flex-1 overflow-hidden">
-                                    <div className="truncate">{assignment.driver_name}</div>
-                                    <div className="text-[10px] opacity-90">
-                                      {assignment.shift_start_time} - {assignment.shift_end_time}
-                                    </div>
-                                  </div>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleDeleteAssignment(assignment.id);
-                                    }}
-                                    className="opacity-0 group-hover:opacity-100 ml-1 hover:bg-white/20 rounded p-1"
-                                  >
-                                    <Trash2 className="w-3 h-3" />
-                                  </button>
-                                </div>
-                              );
-                            })}
+                {vehicles.map((vehicle, vIdx) => {
+                  const vehicleAssignments = getAssignmentsForVehicleAndDate(vehicle, selectedViewDate);
+                  
+                  return (
+                    <tr key={vIdx} className="border-b hover:bg-gray-50">
+                      <td className="sticky left-0 z-10 bg-white p-3 border-r align-top">
+                        <div className="flex flex-col gap-2">
+                          <div className="font-medium">{vehicle}</div>
+                          <Button
+                            onClick={() => openAssignDialog(vehicle)}
+                            size="sm"
+                            variant="outline"
+                            className="w-full text-xs"
+                          >
+                            <Plus className="w-3 h-3 mr-1" />
+                            Assign Driver
+                          </Button>
+                        </div>
+                      </td>
+                      <td className="p-2 border-r relative">
+                        <div className="relative h-20 bg-gray-100 rounded">
+                          {/* Time blocks */}
+                          {vehicleAssignments.map((assignment, aIdx) => {
+                            const leftPos = calculateTimePosition(assignment.shift_start_time);
+                            const width = calculateTimePosition(assignment.shift_end_time) - leftPos;
                             
-                            {/* Add button */}
-                            <button
-                              onClick={() => openAssignDialog(vehicle, date)}
-                              className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-0 hover:opacity-100 bg-blue-500 text-white rounded-full p-1"
-                            >
-                              <Plus className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
+                            return (
+                              <div
+                                key={aIdx}
+                                className="absolute top-1 bottom-1 rounded px-2 py-1 text-xs font-medium text-white cursor-pointer hover:opacity-90 flex items-center justify-between group"
+                                style={{
+                                  left: `${leftPos}%`,
+                                  width: `${width}%`,
+                                  backgroundColor: assignment.driver_color
+                                }}
+                                onClick={() => openEditDialog(assignment)}
+                              >
+                                <div className="flex-1 overflow-hidden">
+                                  <div className="truncate">{assignment.driver_name}</div>
+                                  <div className="text-[10px] opacity-90">
+                                    {assignment.shift_start_time} - {assignment.shift_end_time}
+                                  </div>
+                                </div>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteAssignment(assignment.id);
+                                  }}
+                                  className="opacity-0 group-hover:opacity-100 ml-1 hover:bg-white/20 rounded p-1"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
