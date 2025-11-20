@@ -34,8 +34,8 @@ const DocumentLibrary = () => {
     } else {
       const query = searchQuery.toLowerCase();
       const filtered = folders.filter(folder => 
-        folder.driver_name.toLowerCase().includes(query) ||
-        folder.phone_number.toLowerCase().includes(query)
+        (folder.driver_name && folder.driver_name.toLowerCase().includes(query)) ||
+        (folder.phone_number && String(folder.phone_number).toLowerCase().includes(query))
       );
       setFilteredFolders(filtered);
     }
