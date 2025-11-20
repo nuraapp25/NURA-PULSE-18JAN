@@ -13,7 +13,7 @@ from tabulate import tabulate
 load_dotenv()
 
 # Configuration
-BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', 'https://driver-sync-tool.preview.emergentagent.com/api')
+BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', 'https://driver-roster-1.preview.emergentagent.com/api')
 LOGIN_EMAIL = os.getenv('ADMIN_EMAIL', 'admin')
 LOGIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'Nura@1234$')
 

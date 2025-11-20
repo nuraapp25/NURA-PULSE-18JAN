@@ -4,7 +4,7 @@
  */
 
 // ========== CONFIGURATION ==========
-var API_BASE_URL = "https://driver-sync-tool.preview.emergentagent.com";
+var API_BASE_URL = "https://driver-roster-1.preview.emergentagent.com";
 var BEARER_TOKEN = "YOUR_TOKEN_HERE";
 var LEADS_SHEET_NAME = "Driver Leads";
 

@@ -13,7 +13,7 @@ from datetime import datetime
 import pandas as pd
 
 # Configuration
-BASE_URL = "https://driver-sync-tool.preview.emergentagent.com/api"
+BASE_URL = "https://driver-roster-1.preview.emergentagent.com/api"
 ADMIN_EMAIL = "admin@nurapulse.com"
 ADMIN_PASSWORD = "admin123"
 

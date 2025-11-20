@@ -79,7 +79,7 @@ Make any request to wake it up.
 #### Troubleshooting Steps:
 ```bash
 # 1. Check if server is responding
-curl https://driver-sync-tool.preview.emergentagent.com/api/health
+curl https://driver-roster-1.preview.emergentagent.com/api/health
 
 # 2. Check backend logs
 tail -n 100 /var/log/supervisor/backend.err.log
