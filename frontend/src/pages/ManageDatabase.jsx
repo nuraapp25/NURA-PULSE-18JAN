@@ -670,6 +670,9 @@ const ManageDatabase = () => {
           </Table>
         </CardContent>
       </Card>
+          )}
+        </>
+      )}
     </div>
   );
 };
