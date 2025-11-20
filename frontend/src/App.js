@@ -37,6 +37,7 @@ import UserActivityAnalytics from "@/pages/UserActivityAnalytics";
 import RidePayExtractV2 from "@/pages/RidePayExtractV2";
 import ManageDB from "@/pages/ManagePage";
 import ManageDatabase from "@/pages/ManageDatabase";
+import SupplyPlan from "@/pages/SupplyPlan";
 import SettingsPage from "@/pages/SettingsPage";
 import MaintenancePage from "@/pages/MaintenancePage";
 
