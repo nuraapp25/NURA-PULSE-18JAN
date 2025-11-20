@@ -13396,7 +13396,7 @@ class DriverCreate(BaseModel):
 async def get_vehicles(current_user: User = Depends(get_current_user)):
     """Get all vehicles"""
     try:
-        vehicles = await db.vehicles.find({}).to_list(1000)
+        vehicles = await db.vehicles.find({}, {"_id": 0}).to_list(1000)
         return {"vehicles": vehicles}
     except Exception as e:
         logger.error(f"Error fetching vehicles: {str(e)}")
