@@ -11,7 +11,7 @@ import io
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://leadonboard.preview.emergentagent.com/api"
+BASE_URL = "https://driver-sync-tool.preview.emergentagent.com/api"
 MASTER_ADMIN_EMAIL = "admin"
 MASTER_ADMIN_PASSWORD = "Nura@1234$"
 

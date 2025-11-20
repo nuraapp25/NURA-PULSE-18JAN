@@ -1,5 +1,5 @@
 // ========== CONFIGURATION ==========
-var API_BASE_URL = "https://leadonboard.preview.emergentagent.com";
+var API_BASE_URL = "https://driver-sync-tool.preview.emergentagent.com";
 var BEARER_TOKEN = "YOUR_TOKEN_HERE";
 
 // ========== MAIN FUNCTIONS ==========

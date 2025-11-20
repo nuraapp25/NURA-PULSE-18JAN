@@ -8,7 +8,7 @@ import requests
 import json
 
 # Configuration
-BASE_URL = "https://leadonboard.preview.emergentagent.com/api"
+BASE_URL = "https://driver-sync-tool.preview.emergentagent.com/api"
 ADMIN_EMAIL = "admin@nurapulse.com"
 ADMIN_PASSWORD = "admin123"
 

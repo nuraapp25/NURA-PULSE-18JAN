@@ -1,6 +1,6 @@
 // ==================== CONFIGURATION ====================
 const CONFIG = {
-  BACKEND_URL: "YOUR_BACKEND_URL_HERE",  // Replace with your actual backend URL (e.g., https://leadonboard.preview.emergentagent.com/api)
+  BACKEND_URL: "YOUR_BACKEND_URL_HERE",  // Replace with your actual backend URL (e.g., https://driver-sync-tool.preview.emergentagent.com/api)
   SHEET_NAME: "Driver Leads",
   COLUMN_MAPPING: {
     ID: "A",
