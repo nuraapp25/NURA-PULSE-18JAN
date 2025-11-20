@@ -6,13 +6,15 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Car, Users, Plus, Download, Upload, RefreshCw, Trash2, Edit } from "lucide-react";
+import { Car, Users, Plus, Download, Upload, RefreshCw, Trash2, Edit, FolderOpen } from "lucide-react";
 import axios from "axios";
 import { API } from "@/App";
 import { toast } from "sonner";
 import * as XLSX from 'xlsx';
+import DocumentLibrary from "./DocumentLibrary";
 
 const ManageDatabase = () => {
+  const [activeTab, setActiveTab] = useState("vehicles");
   const [vehicles, setVehicles] = useState([]);
   const [drivers, setDrivers] = useState([]);
   const [loading, setLoading] = useState(false);
