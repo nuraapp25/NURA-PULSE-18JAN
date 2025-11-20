@@ -93,6 +93,26 @@ const UserManagement = () => {
     }
   };
 
+  const handleChangeAccountType = async (userId, newAccountType, userName) => {
+    if (!window.confirm(`Change ${userName}'s account type to ${newAccountType.replace('_', ' ')}?`)) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      await axios.post(
+        `${API}/users/change-account-type`,
+        { user_id: userId, new_account_type: newAccountType },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      toast.success(`Account type changed to ${newAccountType.replace('_', ' ')}`);
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to change account type");
+    }
+  };
+
   const handleApproveUser = async (userId) => {
     try {
       const token = localStorage.getItem("token");
