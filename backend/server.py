@@ -10962,6 +10962,19 @@ async def upload_driver_document(
         lead_folder = os.path.join(DRIVER_DOCUMENTS_FOLDER, lead_id)
         os.makedirs(lead_folder, exist_ok=True)
         
+        # Check file count limit (max 10 files per driver)
+        existing_files = [f for f in os.listdir(lead_folder) if os.path.isfile(os.path.join(lead_folder, f))]
+        
+        # Check if we're replacing an existing file
+        temp_filename = f"{document_type}{file_ext}"
+        is_replacement = any(f.startswith(document_type) for f in existing_files)
+        
+        if not is_replacement and len(existing_files) >= 10:
+            raise HTTPException(
+                status_code=400, 
+                detail="Maximum 10 documents allowed per driver. Please delete some documents before uploading new ones."
+            )
+        
         # Save file with document type name
         filename = f"{document_type}{file_ext}"
         file_path = os.path.join(lead_folder, filename)
