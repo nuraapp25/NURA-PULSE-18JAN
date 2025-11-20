@@ -13,6 +13,7 @@ import { format, addDays, startOfWeek, subDays, parseISO } from "date-fns";
 
 const SupplyPlan = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedViewDate, setSelectedViewDate] = useState(new Date()); // The date currently being viewed
   const [weekDates, setWeekDates] = useState([]);
   const [drivers, setDrivers] = useState([]);
   const [vehicles, setVehicles] = useState([]);
