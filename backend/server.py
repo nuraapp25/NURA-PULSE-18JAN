@@ -345,12 +345,19 @@ async def register(user_data: UserCreate):
 @api_router.post("/auth/login")
 async def login(credentials: UserLogin):
     # Find user
+    logger.info(f"🔐 Login attempt for email: {credentials.email}")
     user = await db.users.find_one({"email": credentials.email})
     if not user:
+        logger.warning(f"❌ User not found: {credentials.email}")
         raise HTTPException(status_code=401, detail="Invalid email or password")
     
+    logger.info(f"✅ User found: {user.get('email')}, status: {user.get('status')}")
+    
     # Verify password
-    if not verify_password(credentials.password, user['password']):
+    password_match = verify_password(credentials.password, user['password'])
+    logger.info(f"🔑 Password verification: {password_match}")
+    if not password_match:
+        logger.warning(f"❌ Invalid password for: {credentials.email}")
         raise HTTPException(status_code=401, detail="Invalid email or password")
     
     # Check if user is approved
