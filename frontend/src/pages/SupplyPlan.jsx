@@ -141,7 +141,7 @@ const SupplyPlan = () => {
 
   const openAssignDialog = (vehicle, date = null) => {
     setSelectedVehicle(vehicle);
-    setSelectedDate(date);
+    setSelectedDate(date || selectedViewDate);
     setEditingAssignment(null);
     setAssignmentForm({
       driver_name: "",
