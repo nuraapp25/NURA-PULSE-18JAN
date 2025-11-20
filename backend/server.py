@@ -13503,7 +13503,7 @@ async def bulk_import_vehicles(vehicles_data: dict = Body(...), current_user: Us
 async def get_drivers(current_user: User = Depends(get_current_user)):
     """Get all drivers"""
     try:
-        drivers = await db.drivers.find({}).to_list(1000)
+        drivers = await db.drivers.find({}, {"_id": 0}).to_list(1000)
         return {"drivers": drivers}
     except Exception as e:
         logger.error(f"Error fetching drivers: {str(e)}")
