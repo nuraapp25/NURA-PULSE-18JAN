@@ -209,6 +209,7 @@ function App() {
                 <Route path="admin/payment-screenshots" element={<PaymentScreenshots />} />
                 <Route path="manage" element={<ManageDB />} />
                 <Route path="manage-database" element={<ManageDatabase />} />
+                <Route path="supply-plan" element={<SupplyPlan />} />
                 <Route path="settings" element={<SettingsPage />} />
               </Route>
               <Route path="/" element={<Navigate to={user ? "/dashboard" : "/login"} />} />
