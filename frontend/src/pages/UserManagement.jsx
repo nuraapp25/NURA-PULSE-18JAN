@@ -860,15 +860,33 @@ const UserManagement = () => {
                     </td>
                     <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">{user.email}</td>
                     <td className="py-3 px-4">
-                      <span className={`
-                        inline-block px-2 py-1 text-xs font-medium rounded-full capitalize
-                        ${user.account_type === 'master_admin' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' : ''}
-                        ${user.account_type === 'admin' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : ''}
-                        ${user.account_type === 'standard' ? 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300' : ''}
-                        ${user.account_type === 'ops_team' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : ''}
-                      `}>
-                        {user.account_type.replace('_', ' ')}
-                      </span>
+                      {currentUser?.account_type === 'master_admin' && user.account_type !== 'master_admin' ? (
+                        <Select
+                          value={user.account_type}
+                          onValueChange={(value) => handleChangeAccountType(user.id, value, `${user.first_name} ${user.last_name}`)}
+                        >
+                          <SelectTrigger className="w-[140px] h-7 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="admin">Admin</SelectItem>
+                            <SelectItem value="standard">Standard</SelectItem>
+                            <SelectItem value="ops_team">Ops Team</SelectItem>
+                            <SelectItem value="telecaller">Telecaller</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <span className={`
+                          inline-block px-2 py-1 text-xs font-medium rounded-full capitalize
+                          ${user.account_type === 'master_admin' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' : ''}
+                          ${user.account_type === 'admin' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : ''}
+                          ${user.account_type === 'standard' ? 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300' : ''}
+                          ${user.account_type === 'ops_team' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : ''}
+                          ${user.account_type === 'telecaller' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' : ''}
+                        `}>
+                          {user.account_type.replace('_', ' ')}
+                        </span>
+                      )}
                     </td>
                     <td className="py-3 px-4">
                       {getStatusBadge(user.status)}
