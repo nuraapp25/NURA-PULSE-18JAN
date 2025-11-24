@@ -171,7 +171,7 @@ const TelecallerDeskMobile = () => {
       const query = searchQuery.toLowerCase().trim();
       filtered = filtered.filter(lead => {
         const name = (lead.name || "").toLowerCase();
-        const phone = (lead.phone_number || "").toLowerCase();
+        const phone = String(lead.phone_number || "").toLowerCase();
         return name.includes(query) || phone.includes(query);
       });
     }
