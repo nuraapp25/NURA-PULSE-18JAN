@@ -327,7 +327,7 @@ const TelecallerDeskNew = () => {
     const query = searchQuery.toLowerCase();
     return leads.filter(lead => {
       const name = (lead.name || "").toLowerCase();
-      const phone = (lead.phone_number || "").toLowerCase();
+      const phone = String(lead.phone_number || "").toLowerCase();
       return name.includes(query) || phone.includes(query);
     });
   };
