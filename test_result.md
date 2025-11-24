@@ -445,7 +445,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Morning Charge Audit Testing Complete"
+    - "Telecaller's Desk Phone Number Search Fix"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
