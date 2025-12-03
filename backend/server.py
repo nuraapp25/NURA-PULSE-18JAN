@@ -2758,7 +2758,8 @@ async def get_leads(
                 "import_date": 1,
                 "source": 1,  # Added source for filtering
                 "last_called": 1,  # Add last_called for sorting
-                "callback_date": 1  # Add callback_date for filtering
+                "callback_date": 1,  # Add callback_date for filtering
+                "remarks": 1  # Add remarks for display in table
             }
             # Fetch all leads first
             all_leads = await db.driver_leads.find(query, projection).limit(50000).to_list(50000)
