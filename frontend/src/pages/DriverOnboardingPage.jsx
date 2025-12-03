@@ -3360,25 +3360,6 @@ const DriverOnboardingPage = () => {
                         {startIndex + index + 1}
                       </td>
                       
-                      {/* Leads ID with Copy Button */}
-                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono">{lead.id?.substring(0, 8) || '-'}</span>
-                          {lead.id && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleCopyToClipboard(lead.id, 'Leads ID');
-                              }}
-                              className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
-                              title="Copy Leads ID"
-                            >
-                              <Copy size={14} />
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                      
                       {/* Name with Copy Button */}
                       <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm text-gray-900 dark:text-white font-medium">
                         <div className="flex items-center gap-2">
