@@ -2729,8 +2729,8 @@ async def get_leads(
                 for value in search_values:
                     # Check if it looks like a phone number (digits only)
                     if value.isdigit():
-                        # Exact phone match
-                        or_conditions.append({"phone_number": value})
+                        # Partial phone match - handles both string and number formats
+                        or_conditions.append({"phone_number": {"$regex": value, "$options": "i"}})
                     else:
                         # Partial name match (case-insensitive)
                         or_conditions.append({"name": {"$regex": value, "$options": "i"}})
