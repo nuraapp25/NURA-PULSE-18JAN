@@ -3348,7 +3348,11 @@ async def update_lead(lead_id: str, lead_data: DriverLeadUpdate, current_user: U
     update_data = {}
     for field, value in lead_data.model_dump(exclude_unset=True).items():
         if value is not None:
-            update_data[field] = value
+            # Ensure phone_number is always stored as string
+            if field == "phone_number":
+                update_data[field] = str(value)
+            else:
+                update_data[field] = value
     
     if not update_data:
         raise HTTPException(status_code=400, detail="No fields to update")
