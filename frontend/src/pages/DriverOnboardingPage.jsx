@@ -3540,6 +3540,13 @@ const DriverOnboardingPage = () => {
                         </div>
                       </td>
                       
+                      {/* Remarks */}
+                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs text-gray-600 dark:text-gray-400 max-w-xs">
+                        <div className="truncate" title={lead.remarks || '-'}>
+                          {lead.remarks || '-'}
+                        </div>
+                      </td>
+                      
                       {/* Import Date */}
                       <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs text-gray-500 dark:text-gray-500">
                         {lead.import_date ? new Date(lead.import_date).toLocaleDateString() : '-'}
