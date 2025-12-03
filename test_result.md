@@ -443,14 +443,28 @@ metadata:
   test_sequence: 0
   run_ui: false
 
+  - task: "Driver Onboarding Enhanced Pagination System"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/DriverOnboardingPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ ENHANCED PAGINATION SYSTEM TESTING COMPLETE: Successfully verified all pagination features with 95% success rate (19/20 tests passed). COMPREHENSIVE VERIFICATION: 1) LOGIN & NAVIGATION: Successfully logged in with admin@example.com/admin123 credentials and navigated to Driver Onboarding page (/dashboard/driver-onboarding). Page loaded with 45,045 total leads across 2,253 pages. 2) INITIAL PAGINATION DISPLAY: ✅ Pagination controls visible at bottom of table, ✅ 'Previous' button correctly disabled on page 1, ✅ 'Next' button enabled, ✅ Current page indicator shows 'Page 1 of 2253', ✅ Page number buttons visible (1-20 plus last page 2253), ⚠️ Shows 21 page numbers instead of exactly 20 (includes last page button). 3) PAGE NUMBER BUTTONS: ✅ Page 2 button functional - successfully navigated to page 2, ✅ Page 2 button highlighted with blue background (bg-blue-600), ✅ 'Showing 21 to 40 of 45045' updates correctly, ✅ Table content updates properly. 4) +10 BUTTON FUNCTIONALITY: ✅ +10 button visible and functional, ✅ Successfully jumped from page 2 to page 12, ✅ Page numbers display maintained (1-20 range plus last page). 5) -10 BUTTON FUNCTIONALITY: ✅ -10 button visible and functional, ✅ Successfully jumped back from page 12 to page 2. 6) PAGE RANGE DISPLAY: ✅ Ellipsis (...) indicator working correctly, ✅ First page (1) button always visible, ✅ Last page (2253) button always visible when not in current range. 7) PREVIOUS/NEXT BUTTONS: ✅ Previous button navigates correctly (page 2→1), ✅ Next button navigates correctly (page 1→2), ✅ Proper disabled states on boundaries. 8) VISUAL DESIGN: ✅ Page number buttons correct size (h-8, w-8), ✅ Current page button has blue background, ✅ +10/-10 buttons clearly visible, ✅ Professional layout and styling. 9) PAGE INFO DISPLAY: ✅ 'Showing X to Y of Z' displays correctly ('Showing 21 to 40 of 45045'), ✅ 'Page X of Y' displays correctly ('Page 2 of 2253'), ✅ Both update when navigating. 10) RESPONSIVE DESIGN: ✅ Pagination layout responsive and doesn't break on mobile (390x844 viewport tested). PRODUCTION READY: Enhanced pagination system is fully functional with 20-page grouping, +10/-10 quick navigation, ellipsis indicators, and proper visual feedback. All major UX improvements working correctly for large datasets (45K+ leads)."
+
 test_plan:
   current_focus:
-    - "Driver Onboarding Remarks Column Verification"
+    - "Driver Onboarding Enhanced Pagination System"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
 agent_communication:
+    - agent: "testing"
+      message: "🎉 ENHANCED PAGINATION SYSTEM TESTING COMPLETE: Successfully tested the enhanced pagination system in Driver Onboarding page with 95% success rate (19/20 tests passed). COMPREHENSIVE VERIFICATION: All major pagination features working correctly including 20-page grouping (shows pages 1-20 at a time), +10/-10 quick navigation buttons, ellipsis indicators for page ranges, first/last page buttons always visible, proper visual feedback with blue highlighting for current page, responsive design that works on mobile, and accurate page info display ('Showing X to Y of Z' and 'Page X of Y'). CRITICAL FUNCTIONALITY CONFIRMED: ✅ Page number buttons (1-20) functional with proper highlighting, ✅ +10 button jumps 10 pages forward (tested: page 2→12), ✅ -10 button jumps 10 pages backward (tested: page 12→2), ✅ Previous/Next buttons work with proper disabled states, ✅ Ellipsis (...) indicators show when more pages exist, ✅ Table content updates correctly when navigating, ✅ 'Showing 21 to 40 of 45045' updates accurately, ✅ Responsive layout doesn't break on mobile (390x844 tested). MINOR OBSERVATION: Shows 21 page numbers instead of exactly 20 (includes last page button 2253), but this is acceptable UX behavior. PRODUCTION READY: The enhanced pagination system is a major UX improvement for handling large datasets (45,045 leads across 2,253 pages) and provides excellent navigation experience with all requested features working correctly."
     - agent: "main"
       message: "VEHICLE DOCUMENTS MINI-APP IMPLEMENTATION COMPLETE: Added 11th section to Montra Vehicle dashboard with full CRUD functionality. BACKEND: Created 7 new endpoints for file uploads (Vehicle_Docs folder), document CRUD operations, file retrieval, with proper auth and admin-only delete. Added 3 Pydantic models (VehicleDocument, VehicleDocumentCreate, VehicleDocumentUpdate) to app_models.py. FRONTEND: Built comprehensive VehicleDocuments.jsx page with: table view (id, vehicle_name, vin), search functionality, Add New Vehicle form with VIN dropdown from Vehicles List.xlsx, 4 file upload fields (RC Book, Insurance Doc, Sales Invoice, Purchase Order), registration/insurance/vehicle details, View/Edit dialog with file viewing capability, delete button for admins. INTEGRATION: Added cyan widget to MontraVehicle.jsx dashboard, added route in App.js. All services restarted and running. Ready for backend API testing first, then frontend E2E testing."
     - agent: "main"
