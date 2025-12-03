@@ -3542,8 +3542,8 @@ const DriverOnboardingPage = () => {
                       
                       {/* Remarks */}
                       <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs text-gray-600 dark:text-gray-400 max-w-xs">
-                        <div className="truncate" title={lead.remarks || '-'}>
-                          {lead.remarks || '-'}
+                        <div className="truncate" title={lead.remarks && lead.remarks !== 'None' ? lead.remarks : '-'}>
+                          {lead.remarks && lead.remarks !== 'None' ? lead.remarks : '-'}
                         </div>
                       </td>
                       
