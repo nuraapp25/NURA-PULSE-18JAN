@@ -2847,6 +2847,9 @@ async def get_leads(
                 elif not isinstance(lead["remarks"], str):
                     # Convert any other type to string
                     lead["remarks"] = str(lead["remarks"])
+            else:
+                # Set empty remarks to None instead of string "None"
+                lead["remarks"] = None
         
         # Return with pagination metadata
         if skip_pagination:
