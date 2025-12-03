@@ -3586,34 +3586,123 @@ const DriverOnboardingPage = () => {
               </div>
               
               {/* Page info and navigation */}
-              <div className="flex items-center gap-4">
+              <div className="flex flex-col items-center gap-3">
                 <span className="text-sm text-gray-600 dark:text-gray-400">
                   Showing {startIndex + 1} to {Math.min(endIndex, filteredLeads.length)} of {filteredLeads.length}
                 </span>
                 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 flex-wrap justify-center">
+                  {/* Previous Button */}
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                     disabled={currentPage === 1}
+                    className="h-8 px-3"
                   >
                     Previous
                   </Button>
                   
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    Page {currentPage} of {totalPages}
-                  </span>
+                  {/* -10 Button */}
+                  {currentPage > 10 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 10))}
+                      className="h-8 px-2"
+                    >
+                      -10
+                    </Button>
+                  )}
                   
+                  {/* Page Numbers - show 20 pages at a time */}
+                  {(() => {
+                    const pageNumbers = [];
+                    const currentGroup = Math.floor((currentPage - 1) / 20);
+                    const startPage = currentGroup * 20 + 1;
+                    const endPage = Math.min(startPage + 19, totalPages);
+                    
+                    // Show first page if not in current range
+                    if (startPage > 1) {
+                      pageNumbers.push(
+                        <Button
+                          key={1}
+                          variant={1 === currentPage ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setCurrentPage(1)}
+                          className={`h-8 w-8 p-0 ${1 === currentPage ? 'bg-blue-600 text-white' : ''}`}
+                        >
+                          1
+                        </Button>
+                      );
+                      pageNumbers.push(
+                        <span key="ellipsis-start" className="px-1 text-gray-400">...</span>
+                      );
+                    }
+                    
+                    // Show pages in current range
+                    for (let i = startPage; i <= endPage; i++) {
+                      pageNumbers.push(
+                        <Button
+                          key={i}
+                          variant={i === currentPage ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setCurrentPage(i)}
+                          className={`h-8 w-8 p-0 ${i === currentPage ? 'bg-blue-600 text-white' : ''}`}
+                        >
+                          {i}
+                        </Button>
+                      );
+                    }
+                    
+                    // Show last page if not in current range
+                    if (endPage < totalPages) {
+                      pageNumbers.push(
+                        <span key="ellipsis-end" className="px-1 text-gray-400">...</span>
+                      );
+                      pageNumbers.push(
+                        <Button
+                          key={totalPages}
+                          variant={totalPages === currentPage ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setCurrentPage(totalPages)}
+                          className={`h-8 w-8 p-0 ${totalPages === currentPage ? 'bg-blue-600 text-white' : ''}`}
+                        >
+                          {totalPages}
+                        </Button>
+                      );
+                    }
+                    
+                    return pageNumbers;
+                  })()}
+                  
+                  {/* +10 Button */}
+                  {currentPage + 10 <= totalPages && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 10))}
+                      className="h-8 px-2"
+                    >
+                      +10
+                    </Button>
+                  )}
+                  
+                  {/* Next Button */}
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                     disabled={currentPage === totalPages}
+                    className="h-8 px-3"
                   >
                     Next
                   </Button>
                 </div>
+                
+                <span className="text-xs text-gray-500 dark:text-gray-500">
+                  Page {currentPage} of {totalPages}
+                </span>
               </div>
             </div>
           )}
