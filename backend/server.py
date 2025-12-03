@@ -2834,21 +2834,23 @@ async def get_leads(
                     lead['assigned_telecaller_name'] = telecaller_name
             
             # Ensure remarks is always a string (handle legacy data)
-            if lead.get("remarks"):
-                if isinstance(lead["remarks"], list) and len(lead["remarks"]) > 0:
+            remarks_value = lead.get("remarks")
+            if remarks_value is not None and remarks_value != "":
+                if isinstance(remarks_value, list) and len(remarks_value) > 0:
                     # Convert array of remark objects to string
                     lead["remarks"] = "\n".join([
                         remark.get("text", str(remark)) if isinstance(remark, dict) else str(remark)
-                        for remark in lead["remarks"]
+                        for remark in remarks_value
                     ])
-                elif isinstance(lead["remarks"], dict):
+                elif isinstance(remarks_value, dict):
                     # Convert single remark object to string
-                    lead["remarks"] = lead["remarks"].get("text", str(lead["remarks"]))
-                elif not isinstance(lead["remarks"], str):
+                    lead["remarks"] = remarks_value.get("text", str(remarks_value))
+                elif not isinstance(remarks_value, str):
                     # Convert any other type to string
-                    lead["remarks"] = str(lead["remarks"])
+                    lead["remarks"] = str(remarks_value)
+                # else: it's already a string, keep it as is
             else:
-                # Set empty remarks to None instead of string "None"
+                # Set empty/null remarks to None for consistent API response
                 lead["remarks"] = None
         
         # Return with pagination metadata
