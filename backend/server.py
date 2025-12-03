@@ -1472,10 +1472,10 @@ async def import_leads(
             if len(phone_digits) > 10:
                 # If number has more than 10 digits, take the last 10 digits
                 # This handles +919897721333 or 919897721333 → 9897721333
-                phone_val = phone_digits[-10:]
+                phone_val = str(phone_digits[-10:])
             else:
                 # If already 10 digits or less, keep as is
-                phone_val = phone_digits
+                phone_val = str(phone_digits)
             
             # Get status from file and match with app's status hierarchy
             file_status = str(row[status_col]) if status_col and pd.notna(row.get(status_col)) else None
