@@ -1692,7 +1692,7 @@ async def check_duplicate_lead(
 @api_router.post("/driver-onboarding/create-lead")
 async def create_single_lead(
     name: str = Body(...),
-    phone_number: str = Body(...),
+    phone_number: Union[str, int] = Body(...),
     email: Optional[str] = Body(None),
     source: Optional[str] = Body("Manual Entry"),
     status: str = Body("New"),
