@@ -301,6 +301,9 @@ const DriverOnboardingPage = () => {
   
   // Delete confirmation
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [mergeSourcesDialogOpen, setMergeSourcesDialogOpen] = useState(false);
+  const [mergeSuggestions, setMergeSuggestions] = useState([]);
+  const [mergingSource, setMergingSource] = useState(null);
   const [deletingLead, setDeletingLead] = useState(false);
   
   // Status Summary Dashboard
