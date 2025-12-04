@@ -11435,6 +11435,125 @@ async def get_documents_status(
 
 
 
+# ==================== SOURCE MERGE ENDPOINTS ====================
+
+@api_router.get("/driver-onboarding/sources/merge-suggestions")
+async def get_source_merge_suggestions(
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Analyze import sources and suggest merges based on case-insensitive similarity
+    Returns list of merge suggestions with groups of similar sources
+    """
+    try:
+        leads_collection = db['driver_leads']
+        
+        # Get all unique sources
+        sources = await leads_collection.distinct("source")
+        sources = [s for s in sources if s]  # Remove None/empty values
+        
+        if not sources:
+            return {
+                "success": True,
+                "suggestions": [],
+                "message": "No sources found"
+            }
+        
+        # Group similar sources (case-insensitive, whitespace normalized)
+        source_groups = {}
+        
+        for source in sources:
+            # Normalize: lowercase and remove extra spaces
+            normalized = source.lower().strip().replace("  ", " ")
+            
+            if normalized not in source_groups:
+                source_groups[normalized] = []
+            source_groups[normalized].append(source)
+        
+        # Find groups with multiple variations
+        suggestions = []
+        for normalized, variants in source_groups.items():
+            if len(variants) > 1:
+                # Count leads for each variant
+                variant_counts = {}
+                for variant in variants:
+                    count = await leads_collection.count_documents({"source": variant})
+                    variant_counts[variant] = count
+                
+                # Suggest most common variant as target
+                target_source = max(variant_counts.items(), key=lambda x: x[1])[0]
+                
+                suggestions.append({
+                    "target": target_source,
+                    "variants": [
+                        {
+                            "source": variant,
+                            "count": variant_counts[variant]
+                        }
+                        for variant in variants if variant != target_source
+                    ],
+                    "total_affected": sum(variant_counts[v] for v in variants if v != target_source)
+                })
+        
+        # Sort by total affected leads (descending)
+        suggestions.sort(key=lambda x: x["total_affected"], reverse=True)
+        
+        return {
+            "success": True,
+            "suggestions": suggestions,
+            "total_suggestions": len(suggestions)
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get merge suggestions: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get merge suggestions: {str(e)}")
+
+
+@api_router.post("/driver-onboarding/sources/merge")
+async def merge_sources(
+    request: Request,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Merge multiple source variants into a single target source
+    Request body: {"target": "Job Hai", "variants": ["Job hai", "job hai"]}
+    """
+    try:
+        body = await request.json()
+        target_source = body.get("target")
+        variants = body.get("variants", [])
+        
+        if not target_source or not variants:
+            raise HTTPException(status_code=400, detail="Target and variants are required")
+        
+        leads_collection = db['driver_leads']
+        
+        # Update all leads with variant sources to use target source
+        total_updated = 0
+        for variant in variants:
+            result = await leads_collection.update_many(
+                {"source": variant},
+                {"$set": {"source": target_source}}
+            )
+            total_updated += result.modified_count
+            logger.info(f"Merged source '{variant}' into '{target_source}': {result.modified_count} leads updated")
+        
+        return {
+            "success": True,
+            "message": f"Successfully merged {len(variants)} source(s) into '{target_source}'",
+            "target": target_source,
+            "merged_variants": variants,
+            "total_leads_updated": total_updated
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to merge sources: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to merge sources: {str(e)}")
+
+
+
 # ==================== DOCUMENT LIBRARY ====================
 
 @api_router.get("/document-library/list")
