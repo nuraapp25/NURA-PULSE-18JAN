@@ -2383,25 +2383,27 @@ const DriverOnboardingPage = () => {
                     {summarySourceFilter ? sourceOptions.find(s => s.value === summarySourceFilter)?.label : "Import Source"}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-56 dark:bg-gray-800 dark:border-gray-700">
-                  <div className="space-y-1">
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start text-sm"
-                      onClick={() => setSummarySourceFilter(null)}
-                    >
-                      All Import Sources
-                    </Button>
-                    {sourceOptions.map((source) => (
+                <PopoverContent className="w-56 dark:bg-gray-800 dark:border-gray-700 p-0">
+                  <div className="max-h-96 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600 scrollbar-track-gray-200 dark:scrollbar-track-gray-800 hover:scrollbar-thumb-gray-500 dark:hover:scrollbar-thumb-gray-500">
+                    <div className="p-2 space-y-1">
                       <Button
-                        key={source.value}
                         variant="ghost"
-                        className="w-full justify-start text-xs"
-                        onClick={() => setSummarySourceFilter(source.value)}
+                        className="w-full justify-start text-sm"
+                        onClick={() => setSummarySourceFilter(null)}
                       >
-                        {source.label}
+                        All Import Sources
                       </Button>
-                    ))}
+                      {sourceOptions.map((source) => (
+                        <Button
+                          key={source.value}
+                          variant="ghost"
+                          className="w-full justify-start text-xs"
+                          onClick={() => setSummarySourceFilter(source.value)}
+                        >
+                          {source.label}
+                        </Button>
+                      ))}
+                    </div>
                   </div>
                 </PopoverContent>
               </Popover>
