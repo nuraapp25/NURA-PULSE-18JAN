@@ -13,7 +13,7 @@ from datetime import datetime
 from PIL import Image
 
 # Configuration
-BASE_URL = "https://driver-roster-1.preview.emergentagent.com/api"
+BASE_URL = "https://driver-hub-46.preview.emergentagent.com/api"
 MASTER_ADMIN_EMAIL = "admin"
 MASTER_ADMIN_PASSWORD = "Nura@1234$"
 
