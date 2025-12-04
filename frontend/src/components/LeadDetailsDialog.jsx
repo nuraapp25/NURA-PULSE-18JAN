@@ -453,6 +453,86 @@ const LeadDetailsDialog = ({
               )}
             </div>
             <div>
+              <Label className="text-sm text-gray-600 dark:text-gray-400">Import Source</Label>
+              {isEditMode ? (
+                <div className="space-y-2 mt-1">
+                  {!showAddNewSource ? (
+                    <>
+                      <Select 
+                        value={editedLead.source || ''} 
+                        onValueChange={(value) => onFieldChange('source', value)}
+                      >
+                        <SelectTrigger className="w-full dark:bg-gray-700 dark:border-gray-600">
+                          <SelectValue placeholder="Select source..." />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-60 overflow-y-auto dark:bg-gray-800">
+                          <SelectItem value="Excel Import">Excel Import</SelectItem>
+                          <SelectItem value="Manual Entry">Manual Entry</SelectItem>
+                          <SelectItem value="Job Hai">Job Hai</SelectItem>
+                          <SelectItem value="HireVox">HireVox</SelectItem>
+                          <SelectItem value="Indeed">Indeed</SelectItem>
+                          <SelectItem value="Naukri">Naukri</SelectItem>
+                          <SelectItem value="Referral">Referral</SelectItem>
+                          <SelectItem value="Walk-in">Walk-in</SelectItem>
+                          <SelectItem value="LinkedIn">LinkedIn</SelectItem>
+                          <SelectItem value="Facebook">Facebook</SelectItem>
+                          <SelectItem value="WhatsApp">WhatsApp</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        type="button"
+                        onClick={() => setShowAddNewSource(true)}
+                        variant="outline"
+                        size="sm"
+                        className="w-full text-xs border-blue-300 text-blue-600 hover:bg-blue-50 dark:border-blue-700 dark:text-blue-400"
+                      >
+                        + Add New Source
+                      </Button>
+                    </>
+                  ) : (
+                    <div className="flex gap-2">
+                      <Input
+                        value={newSourceName}
+                        onChange={(e) => setNewSourceName(e.target.value)}
+                        placeholder="Enter new source name..."
+                        className="flex-1 dark:bg-gray-700 dark:border-gray-600"
+                      />
+                      <Button
+                        type="button"
+                        onClick={() => {
+                          if (newSourceName.trim()) {
+                            onFieldChange('source', newSourceName.trim());
+                            setNewSourceName('');
+                            setShowAddNewSource(false);
+                          }
+                        }}
+                        size="sm"
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        Add
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={() => {
+                          setNewSourceName('');
+                          setShowAddNewSource(false);
+                        }}
+                        variant="outline"
+                        size="sm"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p className="text-base text-gray-900 dark:text-white mt-1">
+                  {lead.source || '-'}
+                </p>
+              )}
+            </div>
+            <div>
               <Label className="text-sm text-gray-600 dark:text-gray-400">Vehicle</Label>
               {isEditMode ? (
                 <Input
