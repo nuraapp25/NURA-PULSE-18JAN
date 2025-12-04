@@ -3220,7 +3220,7 @@ const DriverOnboardingPage = () => {
               Driver Leads ({filteredLeads.length})
             </CardTitle>
             
-            {/* Top Pagination & Filter Controls */}
+            {/* Table Controls - Results per page only */}
             <div className="flex flex-wrap items-center gap-2">
               {/* Results per page */}
               <div className="flex items-center gap-2">
@@ -3242,139 +3242,6 @@ const DriverOnboardingPage = () => {
                   </SelectContent>
                 </Select>
               </div>
-              
-              {/* Filter by Source */}
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-xs"
-                  >
-                    <Filter className="w-3 h-3 mr-1" />
-                    Filter by Import Source
-                    {sourceFilter && ` (${sourceOptions.find(s => s.value === sourceFilter)?.label || sourceFilter})`}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-56 dark:bg-gray-800 dark:border-gray-700">
-                  <div className="space-y-1">
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start text-sm"
-                      onClick={() => setSourceFilter(null)}
-                    >
-                      All Import Sources
-                    </Button>
-                    {sourceOptions.map((source) => (
-                      <Button
-                        key={source.value}
-                        variant="ghost"
-                        className="w-full justify-start text-xs"
-                        onClick={() => setSourceFilter(source.value)}
-                      >
-                        {source.label}
-                      </Button>
-                    ))}
-                  </div>
-                </PopoverContent>
-              </Popover>
-              
-              {/* Filter by Telecaller */}
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-xs"
-                  >
-                    <Users className="w-3 h-3 mr-1" />
-                    Filter by Telecaller
-                    {telecallerFilter && (telecallerFilter === "UNASSIGNED" ? " (Unassigned)" : ` (${telecallers.find(t => t.email === telecallerFilter)?.name || telecallerFilter})`)}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-56 dark:bg-gray-800 dark:border-gray-700">
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between px-2 pb-2 border-b border-gray-200 dark:border-gray-700">
-                      <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Telecallers</span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={fetchTelecallers}
-                        className="h-6 px-2 text-xs"
-                        title="Refresh telecaller list"
-                      >
-                        <RefreshCw className="w-3 h-3" />
-                      </Button>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start text-sm"
-                      onClick={() => setTelecallerFilter(null)}
-                    >
-                      All Telecallers
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start text-sm bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400"
-                      onClick={() => setTelecallerFilter("UNASSIGNED")}
-                    >
-                      Unassigned Leads
-                    </Button>
-                    {telecallers.map((telecaller) => (
-                      <Button
-                        key={telecaller.id}
-                        variant="ghost"
-                        className="w-full justify-start text-xs"
-                        onClick={() => setTelecallerFilter(telecaller.email)}
-                      >
-                        {telecaller.name}
-                      </Button>
-                    ))}
-                    {telecallers.length === 0 && (
-                      <div className="px-2 py-4 text-xs text-gray-500 text-center">
-                        No telecallers found
-                      </div>
-                    )}
-                  </div>
-                </PopoverContent>
-              </Popover>
-              
-              {/* Filter by Status */}
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-xs"
-                  >
-                    <CheckSquare className="w-3 h-3 mr-1" />
-                    Filter by Status
-                    {statusFilter && ` (${statusFilter})`}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-56 dark:bg-gray-800 dark:border-gray-700 max-h-96 overflow-y-auto">
-                  <div className="space-y-1">
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start text-sm"
-                      onClick={() => setStatusFilter(null)}
-                    >
-                      All Statuses
-                    </Button>
-                    {uniqueStatuses.map((status) => (
-                      <Button
-                        key={status}
-                        variant="ghost"
-                        className="w-full justify-start text-xs"
-                        onClick={() => setStatusFilter(status)}
-                      >
-                        {status}
-                      </Button>
-                    ))}
-                  </div>
-                </PopoverContent>
-              </Popover>
               
               {/* Page navigation */}
               {totalPages > 1 && (
