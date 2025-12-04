@@ -2627,6 +2627,7 @@ const DriverOnboardingPage = () => {
                     setSummaryStartDate(null);
                     setSummaryEndDate(null);
                     setSummarySourceFilter(null);
+                    setSourceFilter(null);
                     setTelecallerFilter(null);
                     setStatusFilter(null);
                   }}
