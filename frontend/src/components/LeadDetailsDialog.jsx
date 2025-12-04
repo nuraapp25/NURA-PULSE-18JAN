@@ -689,8 +689,10 @@ const LeadDetailsDialog = ({
                   <Button
                     type="button"
                     onClick={() => {
-                      if (tempSource) {
-                        onFieldChange('source', tempSource);
+                      const sourceToSave = tempSource || editedLead.source || lead.source;
+                      console.log('Saving source:', sourceToSave);
+                      if (sourceToSave) {
+                        onFieldChange('source', sourceToSave);
                       }
                       setShowChangeSourceDialog(false);
                       setTempSource('');
