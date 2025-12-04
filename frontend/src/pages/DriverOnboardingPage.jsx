@@ -5090,5 +5090,8 @@ const DriverOnboardingPage = () => {
           </div>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+};
 
 export default DriverOnboardingPage;
