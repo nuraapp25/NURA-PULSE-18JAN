@@ -2378,10 +2378,9 @@ const DriverOnboardingPage = () => {
                     variant="outline"
                     size="sm"
                     className="text-xs dark:bg-gray-700 dark:border-gray-600"
-                    disabled={loadingSources}
                   >
                     <Filter className="mr-2 h-3 w-3" />
-                    {loadingSources ? "Loading..." : summarySourceFilter ? `Source: ${sourceOptions.find(s => s.value === summarySourceFilter)?.label || summarySourceFilter}` : "All Import Sources"}
+                    {summarySourceFilter ? sourceOptions.find(s => s.value === summarySourceFilter)?.label : "Import Source"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-56 dark:bg-gray-800 dark:border-gray-700">
@@ -2406,7 +2405,103 @@ const DriverOnboardingPage = () => {
                   </div>
                 </PopoverContent>
               </Popover>
+
+              {/* Telecaller Filter */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs dark:bg-gray-700 dark:border-gray-600"
+                  >
+                    <Users className="mr-2 h-3 w-3" />
+                    {telecallerFilter ? (telecallerFilter === "UNASSIGNED" ? "Unassigned" : telecallers.find(t => t.email === telecallerFilter)?.name || "Telecaller") : "Telecaller"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-56 dark:bg-gray-800 dark:border-gray-700">
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between px-2 pb-2 border-b border-gray-200 dark:border-gray-700">
+                      <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Telecallers</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={fetchTelecallers}
+                        className="h-6 px-2 text-xs"
+                        title="Refresh telecaller list"
+                      >
+                        <RefreshCw className="w-3 h-3" />
+                      </Button>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start text-sm"
+                      onClick={() => setTelecallerFilter(null)}
+                    >
+                      All Telecallers
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start text-sm bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400"
+                      onClick={() => setTelecallerFilter("UNASSIGNED")}
+                    >
+                      Unassigned Leads
+                    </Button>
+                    {telecallers.map((telecaller) => (
+                      <Button
+                        key={telecaller.id}
+                        variant="ghost"
+                        className="w-full justify-start text-xs"
+                        onClick={() => setTelecallerFilter(telecaller.email)}
+                      >
+                        {telecaller.name}
+                      </Button>
+                    ))}
+                    {telecallers.length === 0 && (
+                      <div className="px-2 py-4 text-xs text-gray-500 text-center">
+                        No telecallers found
+                      </div>
+                    )}
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              {/* Status Filter */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs dark:bg-gray-700 dark:border-gray-600"
+                  >
+                    <CheckSquare className="mr-2 h-3 w-3" />
+                    {statusFilter ? statusFilter : "Status"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-56 dark:bg-gray-800 dark:border-gray-700 max-h-96 overflow-y-auto">
+                  <div className="space-y-1">
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start text-sm"
+                      onClick={() => setStatusFilter(null)}
+                    >
+                      All Statuses
+                    </Button>
+                    {uniqueStatuses.map((status) => (
+                      <Button
+                        key={status}
+                        variant="ghost"
+                        className="w-full justify-start text-xs"
+                        onClick={() => setStatusFilter(status)}
+                      >
+                        {status}
+                      </Button>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
               
+              {/* Start Date Filter */}
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -2428,6 +2523,7 @@ const DriverOnboardingPage = () => {
                 </PopoverContent>
               </Popover>
               
+              {/* End Date Filter */}
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -2449,12 +2545,15 @@ const DriverOnboardingPage = () => {
                 </PopoverContent>
               </Popover>
               
-              {(summaryStartDate || summaryEndDate || summarySourceFilter) && (
+              {/* Clear All Button */}
+              {(summaryStartDate || summaryEndDate || summarySourceFilter || telecallerFilter || statusFilter) && (
                 <Button
                   onClick={() => {
                     setSummaryStartDate(null);
                     setSummaryEndDate(null);
                     setSummarySourceFilter(null);
+                    setTelecallerFilter(null);
+                    setStatusFilter(null);
                   }}
                   variant="outline"
                   size="sm"
@@ -2466,6 +2565,14 @@ const DriverOnboardingPage = () => {
               )}
             </div>
           </div>
+        </CardHeader>
+      </Card>
+
+      {/* Status Summary Dashboard */}
+      <Card className="dark:bg-gray-800 dark:border-gray-700">
+        <CardHeader>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <CardTitle className="text-lg font-semibold">Status Summary Dashboard</CardTitle>
           
           {statusSummary && (
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
