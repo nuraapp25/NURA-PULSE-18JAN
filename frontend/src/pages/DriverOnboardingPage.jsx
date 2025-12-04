@@ -3526,9 +3526,11 @@ const DriverOnboardingPage = () => {
                         </div>
                       </td>
                       
-                      {/* Import Date */}
-                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs text-gray-500 dark:text-gray-500">
-                        {lead.import_date ? new Date(lead.import_date).toLocaleDateString() : '-'}
+                      {/* Source */}
+                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs text-gray-600 dark:text-gray-400">
+                        <span className="px-2 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded text-xs">
+                          {lead.source || 'Unknown'}
+                        </span>
                       </td>
                     </tr>
                   ))}
