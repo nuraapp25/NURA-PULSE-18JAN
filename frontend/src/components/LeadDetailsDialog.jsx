@@ -100,8 +100,10 @@ const LeadDetailsDialog = ({
   hasUnsavedChanges = false,
   onShowStatusHistory  // New prop for showing status history
 }) => {
+  const [showChangeSourceDialog, setShowChangeSourceDialog] = useState(false);
   const [showAddNewSource, setShowAddNewSource] = useState(false);
   const [newSourceName, setNewSourceName] = useState('');
+  const [tempSource, setTempSource] = useState('');
 
   if (!lead || !editedLead) return null;
 
