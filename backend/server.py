@@ -3483,6 +3483,7 @@ async def mark_call_done(lead_id: str, current_user: User = Depends(get_current_
             },
             "$set": {
                 "last_called": current_time,
+                "last_called_by": current_user.email,
                 "last_modified": current_time
             }
         }
