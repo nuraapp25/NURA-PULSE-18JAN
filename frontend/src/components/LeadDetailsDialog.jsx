@@ -732,6 +732,7 @@ const LeadDetailsDialog = ({
                     type="button"
                     onClick={() => {
                       if (newSourceName.trim()) {
+                        console.log('Adding new source:', newSourceName.trim());
                         onFieldChange('source', newSourceName.trim());
                         setTempSource(newSourceName.trim());
                         setNewSourceName('');
