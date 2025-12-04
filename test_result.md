@@ -512,9 +512,22 @@ frontend:
           agent: "testing"
           comment: "🔍 MERGE SOURCES FUNCTIONALITY TESTING COMPLETE: Comprehensive testing with mixed results. BACKEND API SUCCESS: ✅ Successfully verified merge suggestions API endpoint returns 4 expected suggestions: HireVox←Hirevox (44 leads), Job Hai←Job hai/job hai (37 leads), Bhavani←bhavani (6 leads), Other reference←Other Reference (1 lead). ✅ Authentication working correctly (admin@example.com/admin123). ✅ All merge endpoints functional via direct API testing. CRITICAL UI ISSUE: ❌ Frontend page not rendering correctly - shows 'You need to enable JavaScript to run this app' message. ❌ No buttons or interactive elements visible on Driver Onboarding page. ❌ Unable to test Merge Sources button, dialog, or UI functionality through browser automation. POSITIVE FINDINGS: ✅ CRITICAL SUCCESS: 4 stat cards (Total Leads, New, Onboarded, In Progress) have been properly removed from the page as required. ✅ Backend merge functionality fully operational and ready for use. FRONTEND RENDERING ISSUE: The Driver Onboarding page has a JavaScript/React rendering problem preventing UI testing. While backend APIs work perfectly, the frontend interface is not accessible for comprehensive testing. RECOMMENDATION: Main agent should investigate frontend rendering issues in Driver Onboarding page to enable full UI testing of the Merge Sources functionality."
 
+frontend:
+  - task: "Driver Onboarding Source Filter - P0 Blocker Fix"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/DriverOnboardingPage.jsx"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ DRIVER ONBOARDING SOURCE FILTER P0 BLOCKER FIX VERIFIED: Comprehensive testing completed with 100% success rate (7/7 tests passed). CRITICAL P0 FIX CONFIRMED WORKING: The reported issue where source filter only filtered summary cards but not the main table has been completely resolved. DETAILED VERIFICATION: 1) LOGIN & NAVIGATION: Successfully logged in with admin@example.com/admin123 and navigated to Driver Onboarding page. 2) INITIAL STATE: Captured baseline - Total Leads: 45,097, table showing 20 rows, Status Summary Dashboard displaying all stage counts. 3) IMPORT SOURCE FILTER: Successfully clicked Import Source filter button in unified filters section, dropdown opened with multiple source options (All Import Sources, A New, Anew, Bhavani, Digital Marketing, Facebook, Ganesh, HireVox, etc.). 4) SOURCE SELECTION: Selected 'A New' source option, filter applied successfully. 5) DUAL FILTERING VERIFICATION: ✅ SUMMARY CARDS: Total Leads changed from 45,097 → 1 (filtered), Status Summary Dashboard shows '(filtered)' indicator, all stage counts updated to reflect filtered data. ✅ MAIN TABLE: Table rows changed from 20 → 1, showing only leads from 'A New' source. 6) CLEAR ALL FUNCTIONALITY: Clear All button appeared when filter active, clicked successfully, both summary cards and table reset to initial state (Total Leads: 45,097, table: 20 rows). TECHNICAL IMPLEMENTATION VERIFIED: Code inspection confirms fix at lines 2459-2474 in DriverOnboardingPage.jsx - both setSummarySourceFilter(source.value) and setSourceFilter(source.value) are called simultaneously when selecting a source, and both setSummarySourceFilter(null) and setSourceFilter(null) are called when clearing filters. P0 BLOCKER RESOLVED: The critical issue where source filter only affected summary dashboard but not main table is completely fixed. Both components now filter simultaneously as expected."
+
 test_plan:
   current_focus:
-    - "Driver Onboarding Merge Sources Functionality"
+    - "Driver Onboarding Source Filter - P0 Blocker Fix"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
