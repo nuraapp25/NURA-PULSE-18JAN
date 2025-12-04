@@ -2573,6 +2573,7 @@ const DriverOnboardingPage = () => {
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <CardTitle className="text-lg font-semibold">Status Summary Dashboard</CardTitle>
+          </div>
           
           {statusSummary && (
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
