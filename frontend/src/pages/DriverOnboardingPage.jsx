@@ -4964,11 +4964,6 @@ const DriverOnboardingPage = () => {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
-  );
-};
-
-
 
       {/* Merge Sources Dialog */}
       <Dialog open={mergeSourcesDialogOpen} onOpenChange={setMergeSourcesDialogOpen}>
