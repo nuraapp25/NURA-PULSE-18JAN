@@ -336,15 +336,16 @@ const TelecallerDeskNew = () => {
   const separateLeadsByCalled = (leads) => {
     const notCalled = [];
     const called = [];
+    const currentTelecaller = isAdmin ? selectedTelecaller : user?.email;
     
     leads.forEach(lead => {
-      if (lead.last_called) {
+      if (lead.last_called && lead.last_called_by) {
         try {
           const callDate = parseISO(lead.last_called);
           const callDateStr = format(callDate, 'yyyy-MM-dd');
           
-          // If called on the selected date, move to "calling done"
-          if (callDateStr === selectedDate) {
+          // If called on the selected date by the current telecaller, move to "calling done"
+          if (callDateStr === selectedDate && lead.last_called_by === currentTelecaller) {
             called.push(lead);
           } else {
             notCalled.push(lead);
