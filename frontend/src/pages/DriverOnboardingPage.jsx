@@ -525,6 +525,54 @@ const DriverOnboardingPage = () => {
   };
   
   // Wrapper function for backward compatibility - uses current state
+
+
+  // Fetch merge suggestions
+  const fetchMergeSuggestions = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(`${API}/driver-onboarding/sources/merge-suggestions`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.success) {
+        setMergeSuggestions(response.data.suggestions || []);
+        if (response.data.suggestions.length === 0) {
+          toast.info("No merge suggestions found. All sources are unique!");
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching merge suggestions:", error);
+      toast.error("Failed to load merge suggestions");
+    }
+  };
+
+  // Handle merge sources
+  const handleMergeSources = async (target, variants) => {
+    setMergingSource(target);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.post(
+        `${API}/driver-onboarding/sources/merge`,
+        { target, variants },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      if (response.data.success) {
+        toast.success(response.data.message);
+        // Refresh suggestions and leads
+        await fetchMergeSuggestions();
+        await fetchLeads();
+        await fetchStatusSummary();
+      }
+    } catch (error) {
+      console.error("Error merging sources:", error);
+      toast.error(error.response?.data?.detail || "Failed to merge sources");
+    } finally {
+      setMergingSource(null);
+    }
+  };
+
   const fetchStatusSummary = async () => {
     await calculateStatusSummaryFromData(leads);
   };
