@@ -3130,50 +3130,6 @@ const DriverOnboardingPage = () => {
         </Card>
       )}
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-        <Card className="dark:bg-gray-800 dark:border-gray-700">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Leads</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">
-              {statusSummary?.total_leads || leads.length}
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="dark:bg-gray-800 dark:border-gray-700">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">New</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">
-              {filteredLeads.filter(l => l.status === "New").length}
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="dark:bg-gray-800 dark:border-gray-700">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Onboarded</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">
-              {filteredLeads.filter(l => l.status === "DONE!").length}
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="dark:bg-gray-800 dark:border-gray-700">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">In Progress</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">
-              {filteredLeads.filter(l => !["New", "Not Interested", "DONE!"].includes(l.status)).length}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
       {/* Search Bar - Moved above selection controls */}
       <Card className="dark:bg-gray-800 dark:border-gray-700 mb-4">
         <CardContent className="pt-6">
