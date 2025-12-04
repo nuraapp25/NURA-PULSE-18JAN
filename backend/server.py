@@ -1654,13 +1654,14 @@ os.makedirs(BACKUP_LIBRARY_FOLDER, exist_ok=True)
 
 @api_router.post("/driver-onboarding/check-duplicate")
 async def check_duplicate_lead(
-    phone_number: str = Body(..., embed=True),
+    phone_number: Union[str, int] = Body(..., embed=True),
     current_user: User = Depends(get_current_user)
 ):
     """Check if a lead with the given phone number already exists"""
     try:
-        # Normalize phone number (last 10 digits)
-        normalized_phone = phone_number[-10:] if len(phone_number) >= 10 else phone_number
+        # Convert to string and normalize phone number (last 10 digits)
+        phone_str = str(phone_number)
+        normalized_phone = phone_str[-10:] if len(phone_str) >= 10 else phone_str
         
         # Check for duplicate
         existing_lead = await db.driver_leads.find_one({"phone_number": normalized_phone})
