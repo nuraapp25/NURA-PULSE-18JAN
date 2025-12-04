@@ -379,7 +379,8 @@ const TelecallerDeskNew = () => {
     name: l.name, 
     assigned_to: l.assigned_telecaller, 
     last_called: l.last_called,
-    matches_current_telecaller: l.assigned_telecaller === (isAdmin ? selectedTelecaller : user?.email)
+    last_called_by: l.last_called_by,
+    called_by_current_telecaller: l.last_called_by === (isAdmin ? selectedTelecaller : user?.email)
   })));
   
   // Format date to DD-MM-YYYY
