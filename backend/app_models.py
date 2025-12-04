@@ -289,6 +289,7 @@ class DriverLeadUpdate(BaseModel):
     interested_ev: Optional[str] = None
     monthly_salary: Optional[str] = None
     current_location: Optional[str] = None
+    source: Optional[str] = None
     lead_source: Optional[str] = None
     stage: Optional[str] = None
     status: Optional[str] = None
