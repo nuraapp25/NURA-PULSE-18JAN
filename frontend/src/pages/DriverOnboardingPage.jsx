@@ -2336,6 +2336,21 @@ const DriverOnboardingPage = () => {
         </div>
       </div>
 
+      {/* Merge Sources Button */}
+      <div className="flex justify-end">
+        <Button
+          onClick={() => setMergeSourcesDialogOpen(true)}
+          variant="outline"
+          size="sm"
+          className="text-xs border-purple-500 text-purple-600 hover:bg-purple-50 dark:border-purple-700 dark:text-purple-400 dark:hover:bg-purple-900/20"
+        >
+          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+          </svg>
+          Merge Sources
+        </Button>
+      </div>
+
       {/* Universal Filters Section */}
       <Card className="dark:bg-gray-800 dark:border-gray-700">
         <CardHeader>
