@@ -1034,6 +1034,7 @@ const DriverOnboardingPage = () => {
         name: editedLead.name,
         phone_number: editedLead.phone_number,
         email: editedLead.email,
+        source: editedLead.source,
         vehicle: editedLead.vehicle,
         driving_license: editedLead.driving_license,
         experience: editedLead.experience,
