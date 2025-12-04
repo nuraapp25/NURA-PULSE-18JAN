@@ -3558,6 +3558,7 @@ async def mark_lead_as_called(lead_id: str, current_user: User = Depends(get_cur
             },
             "$set": {
                 "last_called": current_time_iso,
+                "last_called_by": current_user.email,
                 "last_modified": current_time_iso
             }
         }
