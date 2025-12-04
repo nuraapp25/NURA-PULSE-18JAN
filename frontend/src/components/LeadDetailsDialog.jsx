@@ -614,6 +614,132 @@ const LeadDetailsDialog = ({
           </div>
         </div>
       </DialogContent>
+
+      {/* Change Source Dialog */}
+      <Dialog open={showChangeSourceDialog} onOpenChange={setShowChangeSourceDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Change Import Source</DialogTitle>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+              Select from existing sources or add a new one
+            </p>
+          </DialogHeader>
+          
+          <div className="space-y-4 mt-4">
+            {!showAddNewSource ? (
+              <>
+                <div>
+                  <Label className="text-sm text-gray-600 dark:text-gray-400 mb-2">Select Source</Label>
+                  <Select 
+                    value={tempSource || editedLead.source || lead.source || ''} 
+                    onValueChange={(value) => setTempSource(value)}
+                  >
+                    <SelectTrigger className="w-full dark:bg-gray-700 dark:border-gray-600">
+                      <SelectValue placeholder="Select source..." />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-60 overflow-y-auto dark:bg-gray-800">
+                      <SelectItem value="Excel Import">Excel Import</SelectItem>
+                      <SelectItem value="Manual Entry">Manual Entry</SelectItem>
+                      <SelectItem value="Job Hai">Job Hai</SelectItem>
+                      <SelectItem value="HireVox">HireVox</SelectItem>
+                      <SelectItem value="Indeed">Indeed</SelectItem>
+                      <SelectItem value="Naukri">Naukri</SelectItem>
+                      <SelectItem value="Referral">Referral</SelectItem>
+                      <SelectItem value="Walk-in">Walk-in</SelectItem>
+                      <SelectItem value="LinkedIn">LinkedIn</SelectItem>
+                      <SelectItem value="Facebook">Facebook</SelectItem>
+                      <SelectItem value="WhatsApp">WhatsApp</SelectItem>
+                      <SelectItem value="Instagram">Instagram</SelectItem>
+                      <SelectItem value="Twitter">Twitter</SelectItem>
+                      <SelectItem value="Company Website">Company Website</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <Button
+                  type="button"
+                  onClick={() => setShowAddNewSource(true)}
+                  variant="outline"
+                  className="w-full text-sm border-blue-300 text-blue-600 hover:bg-blue-50 dark:border-blue-700 dark:text-blue-400"
+                >
+                  + Add New Source
+                </Button>
+
+                <div className="flex gap-2 pt-4 border-t dark:border-gray-700">
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      setShowChangeSourceDialog(false);
+                      setTempSource('');
+                    }}
+                    variant="outline"
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      if (tempSource) {
+                        onFieldChange('source', tempSource);
+                      }
+                      setShowChangeSourceDialog(false);
+                      setTempSource('');
+                    }}
+                    className="flex-1 bg-green-600 hover:bg-green-700"
+                  >
+                    Save & Apply
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <Label className="text-sm text-gray-600 dark:text-gray-400 mb-2">Enter New Source</Label>
+                  <Input
+                    value={newSourceName}
+                    onChange={(e) => setNewSourceName(e.target.value)}
+                    placeholder="Enter new source name..."
+                    className="w-full dark:bg-gray-700 dark:border-gray-600"
+                    autoFocus
+                  />
+                </div>
+
+                <div className="flex gap-2 pt-4 border-t dark:border-gray-700">
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      setNewSourceName('');
+                      setShowAddNewSource(false);
+                    }}
+                    variant="outline"
+                    className="flex-1"
+                  >
+                    Back
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      if (newSourceName.trim()) {
+                        onFieldChange('source', newSourceName.trim());
+                        setTempSource(newSourceName.trim());
+                        setNewSourceName('');
+                        setShowAddNewSource(false);
+                        setShowChangeSourceDialog(false);
+                      }
+                    }}
+                    disabled={!newSourceName.trim()}
+                    className="flex-1 bg-green-600 hover:bg-green-700"
+                  >
+                    Add & Apply
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 };
