@@ -281,7 +281,7 @@ class DriverLead(BaseModel):
 
 class DriverLeadUpdate(BaseModel):
     name: Optional[str] = None
-    phone_number: Optional[str] = None
+    phone_number: Optional[Union[str, int]] = None
     email: Optional[str] = None
     vehicle: Optional[str] = None
     driving_license: Optional[str] = None
