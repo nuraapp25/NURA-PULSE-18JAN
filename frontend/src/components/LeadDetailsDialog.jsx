@@ -638,22 +638,22 @@ const LeadDetailsDialog = ({
                     <SelectTrigger className="w-full dark:bg-gray-700 dark:border-gray-600">
                       <SelectValue placeholder="Select source..." />
                     </SelectTrigger>
-                    <SelectContent className="max-h-60 overflow-y-auto dark:bg-gray-800">
-                      <SelectItem value="Excel Import">Excel Import</SelectItem>
-                      <SelectItem value="Manual Entry">Manual Entry</SelectItem>
-                      <SelectItem value="Job Hai">Job Hai</SelectItem>
-                      <SelectItem value="HireVox">HireVox</SelectItem>
-                      <SelectItem value="Indeed">Indeed</SelectItem>
-                      <SelectItem value="Naukri">Naukri</SelectItem>
-                      <SelectItem value="Referral">Referral</SelectItem>
-                      <SelectItem value="Walk-in">Walk-in</SelectItem>
-                      <SelectItem value="LinkedIn">LinkedIn</SelectItem>
-                      <SelectItem value="Facebook">Facebook</SelectItem>
-                      <SelectItem value="WhatsApp">WhatsApp</SelectItem>
-                      <SelectItem value="Instagram">Instagram</SelectItem>
-                      <SelectItem value="Twitter">Twitter</SelectItem>
-                      <SelectItem value="Company Website">Company Website</SelectItem>
-                      <SelectItem value="Other">Other</SelectItem>
+                    <SelectContent className="max-h-60 overflow-y-auto dark:bg-gray-800 scrollbar-thin">
+                      {availableSources && availableSources.length > 0 ? (
+                        availableSources.map((source) => (
+                          <SelectItem key={source} value={source}>
+                            {source}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <>
+                          <SelectItem value="Excel Import">Excel Import</SelectItem>
+                          <SelectItem value="Manual Entry">Manual Entry</SelectItem>
+                          <SelectItem value="Job Hai">Job Hai</SelectItem>
+                          <SelectItem value="HireVox">HireVox</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </>
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
