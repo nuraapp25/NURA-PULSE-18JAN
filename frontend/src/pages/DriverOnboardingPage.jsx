@@ -4088,7 +4088,10 @@ const DriverOnboardingPage = () => {
         onDelete={() => {}}
         hasUnsavedChanges={hasUnsavedChanges}
         onLeadUpdate={fetchLeads}
-        availableSources={sourceOptions.map(s => s.value || s.label || s)}
+        availableSources={sourceOptions && sourceOptions.length > 0 
+          ? sourceOptions.map(s => typeof s === 'string' ? s : (s.value || s.label || s))
+          : []
+        }
       />
 
       {/* Bulk Status Update Dialog */}
