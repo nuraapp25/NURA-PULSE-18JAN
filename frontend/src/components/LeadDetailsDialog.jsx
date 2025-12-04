@@ -100,6 +100,9 @@ const LeadDetailsDialog = ({
   hasUnsavedChanges = false,
   onShowStatusHistory  // New prop for showing status history
 }) => {
+  const [showAddNewSource, setShowAddNewSource] = useState(false);
+  const [newSourceName, setNewSourceName] = useState('');
+
   if (!lead || !editedLead) return null;
 
   const DocumentSection = ({ docType, label, fieldName }) => {
