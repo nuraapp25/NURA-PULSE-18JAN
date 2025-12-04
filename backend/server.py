@@ -1708,8 +1708,9 @@ async def create_single_lead(
 ):
     """Create a single driver lead manually"""
     try:
-        # Normalize phone number (last 10 digits)
-        normalized_phone = phone_number[-10:] if len(phone_number) >= 10 else phone_number
+        # Convert phone_number to string and normalize (last 10 digits)
+        phone_str = str(phone_number)
+        normalized_phone = phone_str[-10:] if len(phone_str) >= 10 else phone_str
         
         # Check for duplicate
         existing_lead = await db.driver_leads.find_one({"phone_number": normalized_phone})
