@@ -4089,7 +4089,7 @@ const DriverOnboardingPage = () => {
         hasUnsavedChanges={hasUnsavedChanges}
         onLeadUpdate={fetchLeads}
         availableSources={sourceOptions && sourceOptions.length > 0 
-          ? sourceOptions.map(s => typeof s === 'string' ? s : (s.value || s.label || s))
+          ? sourceOptions.map(s => s.value || s)
           : []
         }
       />
