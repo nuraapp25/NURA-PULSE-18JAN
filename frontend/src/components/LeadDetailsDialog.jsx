@@ -98,7 +98,8 @@ const LeadDetailsDialog = ({
   showDeleteButton = false,
   onDelete,
   hasUnsavedChanges = false,
-  onShowStatusHistory  // New prop for showing status history
+  onShowStatusHistory,  // New prop for showing status history
+  availableSources = []  // List of available sources from parent
 }) => {
   const [showChangeSourceDialog, setShowChangeSourceDialog] = useState(false);
   const [showAddNewSource, setShowAddNewSource] = useState(false);
