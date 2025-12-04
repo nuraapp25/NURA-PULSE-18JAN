@@ -2456,7 +2456,10 @@ const DriverOnboardingPage = () => {
                       <Button
                         variant="ghost"
                         className="w-full justify-start text-sm"
-                        onClick={() => setSummarySourceFilter(null)}
+                        onClick={() => {
+                          setSummarySourceFilter(null);
+                          setSourceFilter(null);
+                        }}
                       >
                         All Import Sources
                       </Button>
@@ -2465,7 +2468,10 @@ const DriverOnboardingPage = () => {
                           key={source.value}
                           variant="ghost"
                           className="w-full justify-start text-xs"
-                          onClick={() => setSummarySourceFilter(source.value)}
+                          onClick={() => {
+                            setSummarySourceFilter(source.value);
+                            setSourceFilter(source.value);
+                          }}
                         >
                           {source.label}
                         </Button>
