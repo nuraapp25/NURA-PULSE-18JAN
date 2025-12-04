@@ -106,6 +106,13 @@ const LeadDetailsDialog = ({
   const [newSourceName, setNewSourceName] = useState('');
   const [tempSource, setTempSource] = useState('');
 
+  // Debug: log available sources
+  React.useEffect(() => {
+    if (showChangeSourceDialog) {
+      console.log('Available sources in dialog:', availableSources);
+    }
+  }, [showChangeSourceDialog, availableSources]);
+
   if (!lead || !editedLead) return null;
 
   const DocumentSection = ({ docType, label, fieldName }) => {
