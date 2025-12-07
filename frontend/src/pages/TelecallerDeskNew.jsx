@@ -100,6 +100,14 @@ const TelecallerDeskNew = () => {
     callbacks: 0
   });
   
+  // Call statistics for summary report
+  const [callStatistics, setCallStatistics] = useState([]);
+  const [showCallStats, setShowCallStats] = useState(false);
+  const [statsDateRange, setStatsDateRange] = useState({
+    start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 7 days ago
+    end: new Date().toISOString().split('T')[0] // today
+  });
+  
   // Collapsible sections
   const [isCallingDoneExpanded, setIsCallingDoneExpanded] = useState(true);
   
