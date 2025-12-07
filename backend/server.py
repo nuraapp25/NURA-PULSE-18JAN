@@ -3759,6 +3759,101 @@ async def get_telecaller_desk_leads(
     }
 
 
+@api_router.get("/telecaller-desk/call-statistics")
+async def get_telecaller_call_statistics(
+    start_date: str = Query(None, description="Start date in YYYY-MM-DD format"),
+    end_date: str = Query(None, description="End date in YYYY-MM-DD format"),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get call statistics for all telecallers showing:
+    - Number of calls made per telecaller per day
+    - Call timings for each telecaller
+    Based on calling_history data
+    """
+    from datetime import datetime, timezone
+    from collections import defaultdict
+    import pytz
+    
+    # Get all leads that have calling_history
+    all_leads = await db.driver_leads.find(
+        {"calling_history": {"$exists": True, "$ne": []}},
+        {"_id": 0, "calling_history": 1}
+    ).to_list(length=50000)
+    
+    # Aggregate call data by telecaller and date
+    call_stats = defaultdict(lambda: defaultdict(list))  # {telecaller_email: {date: [call_times]}}
+    
+    ist = pytz.timezone('Asia/Kolkata')
+    
+    for lead in all_leads:
+        calling_history = lead.get("calling_history", [])
+        for call in calling_history:
+            called_by = call.get("called_by")
+            timestamp = call.get("timestamp")
+            caller_name = call.get("caller_name", called_by)
+            
+            if not called_by or not timestamp:
+                continue
+            
+            try:
+                # Parse timestamp
+                call_time = datetime.fromisoformat(timestamp)
+                call_date = call_time.date().isoformat()
+                
+                # Filter by date range if provided
+                if start_date:
+                    start = datetime.strptime(start_date, "%Y-%m-%d").date()
+                    if call_time.date() < start:
+                        continue
+                
+                if end_date:
+                    end = datetime.strptime(end_date, "%Y-%m-%d").date()
+                    if call_time.date() > end:
+                        continue
+                
+                # Store call data
+                call_stats[called_by][call_date].append({
+                    "time": call_time.strftime("%H:%M:%S"),
+                    "timestamp": timestamp,
+                    "caller_name": caller_name
+                })
+            except Exception as e:
+                continue
+    
+    # Format the response
+    summary = []
+    for telecaller_email, dates in call_stats.items():
+        telecaller_data = {
+            "telecaller_email": telecaller_email,
+            "telecaller_name": list(dates.values())[0][0]["caller_name"] if dates else telecaller_email,
+            "total_calls": sum(len(calls) for calls in dates.values()),
+            "daily_stats": []
+        }
+        
+        for date, calls in sorted(dates.items(), reverse=True):
+            daily_data = {
+                "date": date,
+                "call_count": len(calls),
+                "call_times": [call["time"] for call in calls],
+                "calls": calls
+            }
+            telecaller_data["daily_stats"].append(daily_data)
+        
+        summary.append(telecaller_data)
+    
+    # Sort by total calls descending
+    summary.sort(key=lambda x: x["total_calls"], reverse=True)
+    
+    return {
+        "success": True,
+        "start_date": start_date,
+        "end_date": end_date,
+        "total_telecallers": len(summary),
+        "statistics": summary
+    }
+
+
     return {
         "success": True,
         "message": "Call marked as done",
