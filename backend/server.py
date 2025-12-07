@@ -3792,8 +3792,10 @@ async def get_telecaller_call_statistics(
         lead_phone = lead.get("phone_number", "N/A")
         lead_id = lead.get("id", "")
         
+        # Ensure calling_history is a list and not None
         if not calling_history or not isinstance(calling_history, list):
             continue
+            
         for call in calling_history:
             # Skip if call is not a dictionary (handle corrupted data)
             if not isinstance(call, dict):
