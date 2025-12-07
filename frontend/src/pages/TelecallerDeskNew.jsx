@@ -830,14 +830,28 @@ const TelecallerDeskNew = () => {
                                 {day.call_count} calls
                               </Badge>
                             </div>
-                            <div className="flex flex-wrap gap-1 mt-2">
-                              {day.call_times.map((time, timeIdx) => (
-                                <span 
-                                  key={timeIdx}
-                                  className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded"
+                            <div className="space-y-2 mt-2">
+                              {day.calls.map((call, callIdx) => (
+                                <div 
+                                  key={callIdx}
+                                  className="bg-white dark:bg-gray-600 border border-gray-200 dark:border-gray-500 rounded p-2"
                                 >
-                                  🕐 {time}
-                                </span>
+                                  <div className="flex items-center justify-between gap-2">
+                                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                                      <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded whitespace-nowrap">
+                                        🕐 {call.time}
+                                      </span>
+                                      <div className="flex-1 min-w-0">
+                                        <div className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                          👤 {call.lead_name}
+                                        </div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                                          📱 {call.lead_phone}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
                               ))}
                             </div>
                           </div>
