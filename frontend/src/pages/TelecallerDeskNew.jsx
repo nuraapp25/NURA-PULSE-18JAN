@@ -169,6 +169,27 @@ const TelecallerDeskNew = () => {
     }
   };
   
+  // Fetch call statistics for summary report
+  const fetchCallStatistics = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(`${API}/telecaller-desk/call-statistics`, {
+        params: {
+          start_date: statsDateRange.start,
+          end_date: statsDateRange.end
+        },
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.success) {
+        setCallStatistics(response.data.statistics || []);
+      }
+    } catch (error) {
+      console.error("Error fetching call statistics:", error);
+      toast.error("Failed to load call statistics");
+    }
+  };
+  
   // Fetch all leads (for counting by date)
   const fetchAllLeads = async (telecallerEmail) => {
     if (!telecallerEmail) return;
