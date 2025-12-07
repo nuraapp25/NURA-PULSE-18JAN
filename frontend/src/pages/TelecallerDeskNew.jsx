@@ -737,13 +737,119 @@ const TelecallerDeskNew = () => {
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-4 sm:mb-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-2 sm:mb-4">
-            Telecaller's Desk
-          </h1>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            {isAdmin ? "View and manage telecaller leads" : "Your assigned leads for today"}
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-2 sm:mb-4">
+                Telecaller's Desk
+              </h1>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {isAdmin ? "View and manage telecaller leads" : "Your assigned leads for today"}
+              </p>
+            </div>
+            <Button
+              onClick={() => {
+                setShowCallStats(!showCallStats);
+                if (!showCallStats && callStatistics.length === 0) {
+                  fetchCallStatistics();
+                }
+              }}
+              variant="outline"
+              size="sm"
+              className="dark:bg-gray-800 dark:border-gray-700"
+            >
+              <Phone className="w-4 h-4 mr-2" />
+              {showCallStats ? 'Hide' : 'Show'} Call Stats
+            </Button>
+          </div>
         </div>
+        
+        {/* Call Statistics Summary Report */}
+        {showCallStats && (
+          <Card className="mb-4 sm:mb-6 dark:bg-gray-800">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  📊 Telecaller Call Statistics
+                </h2>
+                <div className="flex gap-2 items-center">
+                  <Input
+                    type="date"
+                    value={statsDateRange.start}
+                    onChange={(e) => setStatsDateRange({ ...statsDateRange, start: e.target.value })}
+                    className="w-36 text-xs dark:bg-gray-700 dark:border-gray-600"
+                  />
+                  <span className="text-xs text-gray-500">to</span>
+                  <Input
+                    type="date"
+                    value={statsDateRange.end}
+                    onChange={(e) => setStatsDateRange({ ...statsDateRange, end: e.target.value })}
+                    className="w-36 text-xs dark:bg-gray-700 dark:border-gray-600"
+                  />
+                  <Button onClick={fetchCallStatistics} size="sm" variant="outline">
+                    <RefreshCw className="w-3 h-3 mr-1" />
+                    Refresh
+                  </Button>
+                </div>
+              </div>
+              
+              {callStatistics.length === 0 ? (
+                <div className="text-center py-6 text-gray-500 dark:text-gray-400">
+                  No call data available for the selected date range
+                </div>
+              ) : (
+                <div className="space-y-4 max-h-96 overflow-y-auto">
+                  {callStatistics.map((telecaller, idx) => (
+                    <div key={idx} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
+                          <h3 className="font-semibold text-gray-900 dark:text-white">
+                            {telecaller.telecaller_name}
+                          </h3>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {telecaller.telecaller_email}
+                          </p>
+                        </div>
+                        <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                          {telecaller.total_calls} total calls
+                        </Badge>
+                      </div>
+                      
+                      <div className="space-y-2 mt-3">
+                        {telecaller.daily_stats.map((day, dayIdx) => (
+                          <div key={dayIdx} className="bg-gray-50 dark:bg-gray-700 rounded p-2">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                📅 {new Date(day.date).toLocaleDateString('en-US', { 
+                                  weekday: 'short', 
+                                  year: 'numeric', 
+                                  month: 'short', 
+                                  day: 'numeric' 
+                                })}
+                              </span>
+                              <Badge variant="outline" className="text-xs">
+                                {day.call_count} calls
+                              </Badge>
+                            </div>
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {day.call_times.map((time, timeIdx) => (
+                                <span 
+                                  key={timeIdx}
+                                  className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded"
+                                >
+                                  🕐 {time}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
         
         {/* Admin: Telecaller Selector */}
         {isAdmin && telecallers.length > 0 && (
