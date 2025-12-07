@@ -3775,10 +3775,10 @@ async def get_telecaller_call_statistics(
     from collections import defaultdict
     import pytz
     
-    # Get all leads that have calling_history
+    # Get all leads that have calling_history with name and phone
     all_leads = await db.driver_leads.find(
         {"calling_history": {"$exists": True, "$ne": []}},
-        {"_id": 0, "calling_history": 1}
+        {"_id": 0, "calling_history": 1, "name": 1, "phone_number": 1, "id": 1}
     ).to_list(length=50000)
     
     # Aggregate call data by telecaller and date
@@ -3788,6 +3788,10 @@ async def get_telecaller_call_statistics(
     
     for lead in all_leads:
         calling_history = lead.get("calling_history", [])
+        lead_name = lead.get("name", "Unknown")
+        lead_phone = lead.get("phone_number", "N/A")
+        lead_id = lead.get("id", "")
+        
         if not calling_history or not isinstance(calling_history, list):
             continue
         for call in calling_history:
@@ -3818,11 +3822,14 @@ async def get_telecaller_call_statistics(
                     if call_time.date() > end:
                         continue
                 
-                # Store call data
+                # Store call data with lead information
                 call_stats[called_by][call_date].append({
                     "time": call_time.strftime("%H:%M:%S"),
                     "timestamp": timestamp,
-                    "caller_name": caller_name
+                    "caller_name": caller_name,
+                    "lead_name": lead_name,
+                    "lead_phone": str(lead_phone),
+                    "lead_id": lead_id
                 })
             except Exception as e:
                 continue
