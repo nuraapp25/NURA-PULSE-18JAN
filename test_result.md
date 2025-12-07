@@ -451,6 +451,18 @@ frontend:
           agent: "testing"
           comment: "🚨 CRITICAL FRONTEND ISSUE IDENTIFIED: Driver Onboarding Bulk Export button testing revealed multiple issues. BACKEND API FIXED: Fixed critical backend bug in bulk export endpoint - removed incompatible 'engine_kwargs' parameter causing 'Workbook.__init__() got an unexpected keyword argument options' error. Backend API now working correctly (verified via curl - successfully exports 17,114 leads to 2.5MB Excel file). FRONTEND ISSUES IDENTIFIED: 1) LOGIN AUTHENTICATION FAILURE: Frontend login form not working properly - credentials admin@nurapulse.com/admin123 fail to authenticate through UI (though API login works via curl). 2) BULK EXPORT BUTTON ACCESS: Unable to reach Driver Onboarding page due to authentication issues, preventing frontend button testing. 3) API URL BUG FIXED: Corrected duplicate '/api/api/' in frontend bulk export URL to '/api/'. TESTING RESULTS: ✅ Backend bulk export API working (POST /api/driver-onboarding/bulk-export returns 200, proper Excel file, correct headers), ❌ Frontend login preventing access to test bulk export button functionality, ❌ Unable to verify button states, toast messages, or download behavior through UI. RECOMMENDATION: Main agent should investigate frontend authentication issues preventing login, then retest bulk export button functionality once login is resolved."
 
+  - task: "Telecaller Call Statistics - Lead Names Enhancement"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/TelecallerDeskNew.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "ENHANCEMENT REQUEST: Updated Telecaller Call Statistics feature to display lead names along with call times and phone numbers. Frontend implementation shows call statistics in individual cards/boxes with format: 🕐 [time], 👤 [Lead Name], 📱 [Phone Number]. Backend API already provides lead_name and lead_phone in call statistics response. Date range filtering functionality maintained. Ready for comprehensive testing to verify lead information display and date filtering."
+
 metadata:
   created_by: "main_agent"
   version: "3.0"
