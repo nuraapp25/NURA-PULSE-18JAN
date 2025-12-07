@@ -378,6 +378,18 @@ agent_communication:
           comment: "✅ COMPREHENSIVE QR CODE FLOW TESTING COMPLETE: Tested complete end-to-end QR code system with 69.2% success rate (9/13 tests passed). CORE FUNCTIONALITY VERIFIED WORKING: 1) SINGLE URL QR CODES: Creation (POST /api/qr-codes/create), scanning (GET /api/qr/{code}), UTM parameter injection, and scan recording all working perfectly. 2) MULTI-URL QR CODES: Device-specific redirects working correctly - Android scans redirect to Play Store, iOS scans redirect to App Store, platform detection operational. 3) QR SCAN RECORDING: Backend logs confirm scans are being recorded with correct platform detection (android->mobile, ios->ios, desktop->desktop). 4) UTM TRACKING: All redirects include proper UTM parameters (utm_source, utm_medium, utm_campaign, utm_content). MINOR ISSUES IDENTIFIED: Analytics scan details array returns empty despite scans being recorded, fallback logic redirects to iOS URL instead of nuraemobility.co.in for unrecognized devices, campaign analytics endpoint has intermittent 500 errors. PRODUCTION READY: Core QR code functionality (creation, scanning, redirects) is fully operational and ready for production use. Issues are in analytics display only, not core QR functionality."
 
 backend:
+  - task: "Telecaller Call Statistics API - Data Validation Fix"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "testing"
+          comment: "CRITICAL BACKEND BUG FIX: Fixed GET /api/telecaller-desk/call-statistics endpoint that was returning 500 Internal Server Error. ROOT CAUSE: AttributeError: 'str' object has no attribute 'get' at line 3792 - code expected calling_history entries to be dictionaries but some were strings due to data corruption. SOLUTION IMPLEMENTED: 1) Added isinstance(call, dict) check before accessing call attributes, 2) Added validation for calling_history field to ensure it's a list before iteration, 3) Added proper error handling for corrupted data entries. TESTING RESULTS: ✅ API now returns HTTP 200 with proper JSON response, ✅ Successfully aggregates call data by telecaller and date, ✅ Returns detailed statistics including telecaller info, total calls, and daily breakdowns, ✅ Handles date range filtering correctly (start_date and end_date parameters), ✅ Processes large datasets efficiently (350+ calls for single telecaller). PRODUCTION READY: Backend API is now stable and handles data corruption gracefully while providing comprehensive call statistics."
+
   - task: "Battery Audit Optimization for Production"
     implemented: true
     working: "NA"
