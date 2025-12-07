@@ -3789,6 +3789,10 @@ async def get_telecaller_call_statistics(
     for lead in all_leads:
         calling_history = lead.get("calling_history", [])
         for call in calling_history:
+            # Skip if call is not a dictionary (handle corrupted data)
+            if not isinstance(call, dict):
+                continue
+                
             called_by = call.get("called_by")
             timestamp = call.get("timestamp")
             caller_name = call.get("caller_name", called_by)
