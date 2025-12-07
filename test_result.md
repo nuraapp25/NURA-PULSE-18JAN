@@ -453,15 +453,18 @@ frontend:
 
   - task: "Telecaller Call Statistics - Lead Names Enhancement"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/frontend/src/pages/TelecallerDeskNew.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "ENHANCEMENT REQUEST: Updated Telecaller Call Statistics feature to display lead names along with call times and phone numbers. Frontend implementation shows call statistics in individual cards/boxes with format: 🕐 [time], 👤 [Lead Name], 📱 [Phone Number]. Backend API already provides lead_name and lead_phone in call statistics response. Date range filtering functionality maintained. Ready for comprehensive testing to verify lead information display and date filtering."
+        - working: true
+          agent: "testing"
+          comment: "✅ TELECALLER CALL STATISTICS TESTING COMPLETE: Successfully verified the enhanced feature with 100% success rate (9/9 core tests passed). CRITICAL VERIFICATION RESULTS: 1) LOGIN & NAVIGATION: ✅ Successfully logged in with admin@example.com/admin123 credentials and navigated to Telecaller's Desk page. 2) SHOW CALL STATS BUTTON: ✅ Found 'Show Call Stats' button in header area, ✅ Button click successfully toggles call statistics display. 3) CALL STATISTICS DISPLAY: ✅ Call Statistics section appears with proper title '📊 Telecaller Call Statistics', ✅ Found 350 call entries with complete lead information, ✅ Each call entry displays in correct format: 🕐 [time], 👤 [Lead Name], 📱 [Phone Number]. 4) LEAD INFORMATION VERIFICATION: ✅ All 350 call entries show proper lead names (VIGNESH PAGAR, Jaya Philip, Crime Enginner Prabha, Thennarasu V, ANUGURAJ, etc.), ✅ Phone numbers displayed correctly (8971370132, 9080672509, 9445130723, etc.), ✅ Call times shown in HH:MM:SS format (11:16:38, 11:12:35, 11:20:01, etc.). 5) DATE RANGE FILTERING: ✅ Found 2 date inputs for filtering (start and end dates), ✅ Successfully changed date range from 2025-11-30 to 2025-12-07 → 2024-12-01 to 2024-12-31, ✅ Refresh button applies date filter correctly, ✅ 'No call data available for the selected date range' message displayed when no data matches filter. 6) HIDE FUNCTIONALITY: ✅ 'Hide Call Stats' button successfully collapses the section, ✅ Toggle functionality working perfectly. 7) BACKEND INTEGRATION: ✅ Fixed backend bug in call statistics endpoint (NoneType iteration error), ✅ API returns comprehensive call statistics with proper structure including lead_name and lead_phone. 8) UI/UX VERIFICATION: ✅ Individual call cards displayed in clean format, ✅ Telecaller information shown (Angelin - aangelinsemon@gmail.com - 350 total calls), ✅ Daily breakdown with call counts per day. PRODUCTION READY: The Telecaller Call Statistics enhancement is fully functional and ready for production use. All requirements from the review request have been successfully implemented and verified - lead names and phone numbers are now displayed with each call entry in the requested format."
 
 metadata:
   created_by: "main_agent"
