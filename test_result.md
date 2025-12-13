@@ -2451,10 +2451,22 @@ metadata:
   test_sequence: 0
   run_ui: false
 
+backend:
+  - task: "Vehicle Service Request Creation Fix - Multiple Values Error"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "PRODUCTION CRITICAL FIX: Fixed Vehicle Service Request creation failing with 'app_models.VehicleServiceRequest() got multiple values for keyword argument request_reported_by' error. ROOT CAUSE: Backend was passing request_reported_by in both request_data dict and as separate parameter to VehicleServiceRequest constructor. SOLUTION IMPLEMENTED: Modified POST /api/montra-vehicle/service-requests endpoint (line 6726) to exclude 'request_reported_by' from request_data.dict() before passing to constructor, then set request_reported_by=current_user.email separately. This prevents duplicate parameter passing and allows service request creation to work correctly. Ready for frontend testing."
+
 test_plan:
   current_focus:
-    - "Payment Reconciliation - Platform Display Fix"
-    - "Payment Reconciliation - Dropdown Scrolling Enhancement"
+    - "Vehicle Service Request Creation Fix - Multiple Values Error"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
