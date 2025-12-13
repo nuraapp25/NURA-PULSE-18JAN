@@ -6722,8 +6722,10 @@ async def create_service_request(
     
     try:
         # Create request object
+        # Exclude request_reported_by from request_data as we'll set it from current_user
+        request_dict = request_data.dict(exclude={'request_reported_by'})
         service_request = VehicleServiceRequest(
-            **request_data.dict(),
+            **request_dict,
             request_reported_by=current_user.email
         )
         
