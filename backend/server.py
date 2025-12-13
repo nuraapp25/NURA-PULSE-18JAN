@@ -6642,7 +6642,7 @@ async def get_service_request(
 ):
     """Get single service request by ID"""
     try:
-        request = await db.vehicle_service_requests.find_one({"id": request_id})
+        request = await db.vehicle_service_requests.find_one({"id": request_id}, {"_id": 0})
         
         if not request:
             raise HTTPException(status_code=404, detail="Service request not found")
