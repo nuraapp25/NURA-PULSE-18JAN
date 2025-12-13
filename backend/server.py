@@ -6619,8 +6619,8 @@ async def get_service_requests(
         # Get total count
         total = await db.vehicle_service_requests.count_documents(query)
         
-        # Get requests
-        requests = await db.vehicle_service_requests.find(query).sort("request_timestamp", -1).skip(skip).limit(limit).to_list(length=limit)
+        # Get requests (exclude _id to avoid ObjectId serialization issues)
+        requests = await db.vehicle_service_requests.find(query, {"_id": 0}).sort("request_timestamp", -1).skip(skip).limit(limit).to_list(length=limit)
         
         return {
             "success": True,
