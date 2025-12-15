@@ -699,6 +699,36 @@ const TelecallerDeskNew = () => {
     }
   };
   
+  // Mark lead as no response (with UI feedback)
+  const markAsNoResponse = async (leadId) => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.post(
+        `${API}/driver-onboarding/leads/${leadId}/mark-no-response`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      toast.success("Lead marked as no response");
+      
+      // Refresh leads
+      const email = isAdmin ? selectedTelecaller : user?.email;
+      await fetchAllLeads(email);
+      await fetchLeadsForDate(email);
+      
+      // Smooth scroll to "No Response" section after a brief delay
+      setTimeout(() => {
+        const noResponseSection = document.getElementById('no-response-section');
+        if (noResponseSection) {
+          noResponseSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 500);
+    } catch (error) {
+      console.error("Error marking as no response:", error);
+      toast.error("Failed to mark as no response");
+    }
+  };
+  
   // Render lead card
   const renderLeadCard = (leadParam, showCallTimestamp = false) => {
     console.log("renderLeadCard called with:", leadParam);
