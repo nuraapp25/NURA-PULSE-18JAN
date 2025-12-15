@@ -980,7 +980,7 @@ const TelecallerDeskNew = () => {
         )}
         
         {/* Summary Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-2 sm:gap-4 mb-4 sm:mb-6">
           <Card className="dark:bg-gray-800">
             <CardContent className="p-2 sm:p-4">
               <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Total Leads</div>
@@ -991,6 +991,15 @@ const TelecallerDeskNew = () => {
             <CardContent className="p-2 sm:p-4">
               <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Calls Done</div>
               <div className="text-lg sm:text-2xl font-bold text-green-600">{stats.callsDone}</div>
+            </CardContent>
+          </Card>
+          <Card 
+            className={`dark:bg-gray-800 cursor-pointer transition-all ${showOnlyNoResponse ? 'ring-2 ring-red-500' : ''}`}
+            onClick={() => setShowOnlyNoResponse(!showOnlyNoResponse)}
+          >
+            <CardContent className="p-2 sm:p-4">
+              <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">No Response</div>
+              <div className="text-lg sm:text-2xl font-bold text-red-600">{stats.noResponse || 0}</div>
             </CardContent>
           </Card>
           <Card className="dark:bg-gray-800">
