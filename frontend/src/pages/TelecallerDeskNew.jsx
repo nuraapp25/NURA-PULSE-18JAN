@@ -479,10 +479,10 @@ const TelecallerDeskNew = () => {
       return "Invalid Date";
     }
   };
-  // Lead details dialog handlers
-  const handleFieldChange = (field, value) => {
+  // Lead details dialog handlers - memoized to prevent recreating on every render
+  const handleFieldChange = useCallback((field, value) => {
     setEditedLead(prev => ({ ...prev, [field]: value }));
-  };
+  }, []);
 
   const handleSaveChanges = async () => {
     if (!selectedLead) return;
