@@ -350,6 +350,31 @@ const VehicleServiceRequest = () => {
         </div>
         <div className="flex items-center space-x-3">
           <Button
+            onClick={handleBulkExport}
+            variant="outline"
+            className="flex items-center space-x-2"
+            disabled={loading}
+          >
+            <Download className="w-4 h-4" />
+            <span>Export</span>
+          </Button>
+          <Button
+            onClick={() => document.getElementById('bulk-import-input').click()}
+            variant="outline"
+            className="flex items-center space-x-2"
+            disabled={loading}
+          >
+            <Upload className="w-4 h-4" />
+            <span>Import</span>
+          </Button>
+          <input
+            id="bulk-import-input"
+            type="file"
+            accept=".xlsx,.xls"
+            onChange={handleBulkImport}
+            style={{ display: 'none' }}
+          />
+          <Button
             onClick={() => setImageFolderDialogOpen(true)}
             variant="outline"
             className="flex items-center space-x-2"
