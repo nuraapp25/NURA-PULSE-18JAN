@@ -6995,6 +6995,230 @@ async def get_image_folders(
         raise HTTPException(status_code=500, detail=f"Error fetching image folders: {str(e)}")
 
 
+@api_router.post("/montra-vehicle/service-requests/bulk-export")
+async def bulk_export_service_requests(current_user: User = Depends(get_current_user)):
+    """
+    Export all vehicle service requests to Excel file
+    """
+    try:
+        import pandas as pd
+        from datetime import datetime
+        import io
+        from fastapi.responses import StreamingResponse
+        
+        logger.info(f"🔄 Starting bulk export of service requests for user {current_user.email}")
+        
+        # Fetch all service requests from database
+        total_count = await db.vehicle_service_requests.count_documents({})
+        logger.info(f"📊 Total service requests in database: {total_count}")
+        
+        if total_count == 0:
+            raise HTTPException(status_code=404, detail="No service requests found to export")
+        
+        # Fetch all service requests (exclude _id)
+        requests = await db.vehicle_service_requests.find({}, {"_id": 0}).to_list(length=None)
+        logger.info(f"✅ Fetched {len(requests)} service requests for export")
+        
+        # Convert to DataFrame
+        df = pd.DataFrame(requests)
+        
+        # Define column order for export
+        export_columns = [
+            'id', 'vin', 'vehicle_name', 'request_timestamp',
+            'repair_type', 'repair_sub_type', 'description',
+            'repair_start_date', 'repair_end_date', 
+            'repair_cost', 'repair_time_days', 'service_vehicle_downtime_hours',
+            'repair_status', 'liability', 'liability_POC',
+            'repair_service_provider', 'recovery_amount', 'recovery_provider',
+            'request_reported_by', 'comments',
+            'created_at', 'updated_at'
+        ]
+        
+        # Select columns that exist in the dataframe
+        available_columns = [col for col in export_columns if col in df.columns]
+        df_export = df[available_columns]
+        
+        # Format datetime columns to readable format
+        datetime_columns = ['request_timestamp', 'repair_start_date', 'repair_end_date', 'created_at', 'updated_at']
+        for col in datetime_columns:
+            if col in df_export.columns:
+                df_export[col] = pd.to_datetime(df_export[col], errors='coerce').dt.strftime('%Y-%m-%d %H:%M:%S')
+        
+        # Create Excel file in memory
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df_export.to_excel(writer, index=False, sheet_name='Service Requests')
+        
+        output.seek(0)
+        
+        # Generate filename with timestamp
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f"vehicle_service_requests_export_{timestamp}.xlsx"
+        
+        logger.info(f"✅ Excel file created successfully: {filename} ({len(requests)} requests)")
+        
+        return StreamingResponse(
+            io.BytesIO(output.getvalue()),
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in bulk export: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Export failed: {str(e)}")
+
+
+@api_router.post("/montra-vehicle/service-requests/bulk-import")
+async def bulk_import_service_requests(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Import vehicle service requests from Excel file with column mapping
+    """
+    try:
+        import pandas as pd
+        from datetime import datetime
+        import io
+        
+        logger.info(f"📥 Starting bulk import for user {current_user.email}")
+        
+        # Validate file type
+        if not file.filename.endswith(('.xlsx', '.xls')):
+            raise HTTPException(status_code=400, detail="Only Excel files (.xlsx, .xls) are supported")
+        
+        # Read Excel file
+        contents = await file.read()
+        df = pd.read_excel(io.BytesIO(contents))
+        logger.info(f"📊 Excel file read successfully: {len(df)} rows")
+        
+        if df.empty:
+            raise HTTPException(status_code=400, detail="Excel file is empty")
+        
+        # Column mapping - map Excel columns to database fields
+        column_mapping = {
+            'id': 'id',
+            'vin': 'vin',
+            'vehicle_name': 'vehicle_name',
+            'request_timestamp': 'request_timestamp',
+            'repair_type': 'repair_type',
+            'repair_sub_type': 'repair_sub_type',
+            'description': 'description',
+            'repair_start_date': 'repair_start_date',
+            'repair_end_date': 'repair_end_date',
+            'repair_cost': 'repair_cost',
+            'repair_time_days': 'repair_time_days',
+            'service_vehicle_downtime_hours': 'service_vehicle_downtime_hours',
+            'repair_status': 'repair_status',
+            'liability': 'liability',
+            'liability_POC': 'liability_POC',
+            'repair_service_provider': 'repair_service_provider',
+            'recovery_amount': 'recovery_amount',
+            'recovery_provider': 'recovery_provider',
+            'request_reported_by': 'request_reported_by',
+            'comments': 'comments',
+            'created_at': 'created_at',
+            'updated_at': 'updated_at'
+        }
+        
+        # Rename columns based on mapping
+        df.rename(columns=column_mapping, inplace=True)
+        
+        # Required fields validation
+        required_fields = ['vin', 'vehicle_name', 'repair_type', 'repair_sub_type', 'description']
+        missing_fields = [field for field in required_fields if field not in df.columns]
+        if missing_fields:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Missing required columns: {', '.join(missing_fields)}"
+            )
+        
+        # Process each row
+        imported_count = 0
+        updated_count = 0
+        errors = []
+        
+        for index, row in df.iterrows():
+            try:
+                # Generate new ID if not present
+                request_id = str(row.get('id', str(uuid.uuid4())))
+                
+                # Prepare service request data
+                request_data = {
+                    'id': request_id,
+                    'vin': str(row['vin']),
+                    'vehicle_name': str(row['vehicle_name']),
+                    'repair_type': str(row['repair_type']),
+                    'repair_sub_type': str(row['repair_sub_type']),
+                    'description': str(row['description']),
+                    'repair_status': str(row.get('repair_status', 'Pending')),
+                    'vehicle_images': [],
+                    'created_at': datetime.now(timezone.utc),
+                    'updated_at': datetime.now(timezone.utc)
+                }
+                
+                # Add optional datetime fields
+                for date_field in ['request_timestamp', 'repair_start_date', 'repair_end_date']:
+                    if date_field in row and pd.notna(row[date_field]):
+                        try:
+                            request_data[date_field] = pd.to_datetime(row[date_field])
+                        except:
+                            pass
+                
+                # Add optional numeric fields
+                for num_field in ['repair_cost', 'repair_time_days', 'service_vehicle_downtime_hours', 'recovery_amount']:
+                    if num_field in row and pd.notna(row[num_field]):
+                        try:
+                            request_data[num_field] = float(row[num_field])
+                        except:
+                            pass
+                
+                # Add optional string fields
+                for str_field in ['liability', 'liability_POC', 'repair_service_provider', 'recovery_provider', 'comments']:
+                    if str_field in row and pd.notna(row[str_field]):
+                        request_data[str_field] = str(row[str_field])
+                
+                # Set request_reported_by
+                request_data['request_reported_by'] = str(row.get('request_reported_by', current_user.email))
+                
+                # Check if request already exists
+                existing = await db.vehicle_service_requests.find_one({"id": request_id})
+                
+                if existing:
+                    # Update existing request
+                    await db.vehicle_service_requests.update_one(
+                        {"id": request_id},
+                        {"$set": request_data}
+                    )
+                    updated_count += 1
+                else:
+                    # Insert new request
+                    await db.vehicle_service_requests.insert_one(request_data)
+                    imported_count += 1
+                
+            except Exception as e:
+                errors.append(f"Row {index + 2}: {str(e)}")
+                logger.error(f"Error processing row {index + 2}: {str(e)}")
+        
+        logger.info(f"✅ Import complete: {imported_count} new, {updated_count} updated, {len(errors)} errors")
+        
+        return {
+            "success": True,
+            "imported": imported_count,
+            "updated": updated_count,
+            "errors": errors,
+            "message": f"Successfully imported {imported_count} new requests and updated {updated_count} existing requests"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in bulk import: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Import failed: {str(e)}")
+
+
 @api_router.get("/montra-vehicle/vins")
 async def get_vehicle_vins(
     month: Optional[str] = Query(None, description="Month name (e.g., Nov)"),
