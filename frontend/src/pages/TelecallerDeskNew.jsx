@@ -1174,42 +1174,44 @@ const TelecallerDeskNew = () => {
               <div className="my-4 sm:my-8 border-t-4 border-green-500 dark:border-green-600"></div>
             )}
             
-            {/* Calling Done Section */}
-            <div id="calling-done-section" className="scroll-mt-4">
-              <div 
-                className="flex items-center justify-between mb-2 sm:mb-3 cursor-pointer p-2 sm:p-3 bg-green-50 dark:bg-green-900/20 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
-                onClick={() => setIsCallingDoneExpanded(!isCallingDoneExpanded)}
-              >
-                <h2 className="text-base sm:text-lg font-semibold text-green-700 dark:text-green-400 flex items-center gap-1 sm:gap-2">
-                  <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
-                  Calling Done ({filteredCallingDoneLeads.length})
-                </h2>
-                {isCallingDoneExpanded ? (
-                  <ChevronUp className="w-4 h-4 sm:w-5 sm:h-5 text-green-700 dark:text-green-400" />
-                ) : (
-                  <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-green-700 dark:text-green-400" />
-                )}
+            {/* Calling Done Section - show when no filter OR filter is 'all' OR 'callsDone' */}
+            {(!activeFilter || activeFilter === 'all' || activeFilter === 'callsDone') && (
+              <div id="calling-done-section" className="scroll-mt-4">
+                <div 
+                  className="flex items-center justify-between mb-2 sm:mb-3 cursor-pointer p-2 sm:p-3 bg-green-50 dark:bg-green-900/20 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
+                  onClick={() => setIsCallingDoneExpanded(!isCallingDoneExpanded)}
+                >
+                  <h2 className="text-base sm:text-lg font-semibold text-green-700 dark:text-green-400 flex items-center gap-1 sm:gap-2">
+                    <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+                    Calling Done ({filteredCallingDoneLeads.length})
+                  </h2>
+                  {isCallingDoneExpanded ? (
+                    <ChevronUp className="w-4 h-4 sm:w-5 sm:h-5 text-green-700 dark:text-green-400" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-green-700 dark:text-green-400" />
+                  )}
+                </div>
+                
+                <div className={`transition-all duration-300 ease-in-out overflow-hidden ${
+                  isCallingDoneExpanded ? 'max-h-[10000px] opacity-100' : 'max-h-0 opacity-0'
+                }`}>
+                  {filteredCallingDoneLeads.length === 0 ? (
+                    <Card className="dark:bg-gray-800 mt-2 sm:mt-3">
+                      <CardContent className="p-4 sm:p-6 text-center">
+                        <CheckCircle className="w-8 h-8 sm:w-12 sm:h-12 mx-auto text-gray-400 mb-2" />
+                        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
+                          No calls completed yet for this date
+                        </p>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <div className="space-y-2 sm:space-y-3 mt-2 sm:mt-3">
+                      {filteredCallingDoneLeads.map(lead => renderLeadCard(lead, true))}
+                    </div>
+                  )}
+                </div>
               </div>
-              
-              <div className={`transition-all duration-300 ease-in-out overflow-hidden ${
-                isCallingDoneExpanded ? 'max-h-[10000px] opacity-100' : 'max-h-0 opacity-0'
-              }`}>
-                {filteredCallingDoneLeads.length === 0 ? (
-                  <Card className="dark:bg-gray-800 mt-2 sm:mt-3">
-                    <CardContent className="p-4 sm:p-6 text-center">
-                      <CheckCircle className="w-8 h-8 sm:w-12 sm:h-12 mx-auto text-gray-400 mb-2" />
-                      <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
-                        No calls completed yet for this date
-                      </p>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <div className="space-y-2 sm:space-y-3 mt-2 sm:mt-3">
-                    {filteredCallingDoneLeads.map(lead => renderLeadCard(lead, true))}
-                  </div>
-                )}
-              </div>
-            </div>
+            )}
             
             {/* No Response Section */}
             <div id="no-response-section" className="scroll-mt-4 mt-4 sm:mt-6">
