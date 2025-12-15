@@ -106,6 +106,48 @@ const LeadDetailsDialog = ({
   const [newSourceName, setNewSourceName] = useState('');
   const [tempSource, setTempSource] = useState('');
 
+  // Local state for remarks with debouncing
+  const [localRemarks, setLocalRemarks] = useState('');
+  const remarksTimeoutRef = useRef(null);
+
+  // Sync local remarks when editedLead changes
+  useEffect(() => {
+    if (!editedLead.remarks) {
+      setLocalRemarks('');
+    } else if (typeof editedLead.remarks === 'string') {
+      setLocalRemarks(editedLead.remarks);
+    } else if (Array.isArray(editedLead.remarks) && editedLead.remarks.length > 0) {
+      setLocalRemarks(editedLead.remarks.map(remark => remark.text || remark).join('\n'));
+    } else if (typeof editedLead.remarks === 'object') {
+      setLocalRemarks(editedLead.remarks.text || '');
+    }
+  }, [editedLead.remarks]);
+
+  // Debounced onChange for remarks
+  const handleRemarksChange = useCallback((e) => {
+    const newValue = e.target.value;
+    setLocalRemarks(newValue);
+    
+    // Clear existing timeout
+    if (remarksTimeoutRef.current) {
+      clearTimeout(remarksTimeoutRef.current);
+    }
+    
+    // Set new timeout to update parent state after 300ms
+    remarksTimeoutRef.current = setTimeout(() => {
+      onFieldChange('remarks', newValue);
+    }, 300);
+  }, [onFieldChange]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (remarksTimeoutRef.current) {
+        clearTimeout(remarksTimeoutRef.current);
+      }
+    };
+  }, []);
+
   // Debug: log available sources
   React.useEffect(() => {
     if (showChangeSourceDialog) {
