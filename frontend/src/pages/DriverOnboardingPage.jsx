@@ -2394,6 +2394,17 @@ const DriverOnboardingPage = () => {
             <span className="sm:hidden">Backups</span>
           </Button>
           <Button
+            onClick={fetchNoResponseLeads}
+            variant="outline"
+            className="border-red-600 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm"
+            size="sm"
+            disabled={loadingNoResponse}
+          >
+            <AlertCircle size={16} className="mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">{loadingNoResponse ? "Loading..." : "No Response"}</span>
+            <span className="sm:hidden">No Resp</span>
+          </Button>
+          <Button
             onClick={() => setImportDialogOpen(true)}
             className="bg-blue-600 hover:bg-blue-700 text-sm"
             data-testid="import-leads-button"
