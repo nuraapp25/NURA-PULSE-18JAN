@@ -3575,6 +3575,82 @@ async def mark_lead_as_called(lead_id: str, current_user: User = Depends(get_cur
     }
 
 
+@api_router.post("/driver-onboarding/leads/{lead_id}/mark-no-response")
+async def mark_lead_as_no_response(lead_id: str, current_user: User = Depends(get_current_user)):
+    """Mark lead as no response with timestamp"""
+    from datetime import datetime
+    import pytz
+    
+    # Find the lead
+    lead = await db.driver_leads.find_one({"id": lead_id})
+    if not lead:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    
+    # Initialize no_response_history and status_history if they don't exist
+    no_response_history = lead.get("no_response_history")
+    if not isinstance(no_response_history, list):
+        await db.driver_leads.update_one(
+            {"id": lead_id},
+            {"$set": {"no_response_history": []}}
+        )
+        lead["no_response_history"] = []
+    
+    status_history = lead.get("status_history")
+    if not isinstance(status_history, list):
+        await db.driver_leads.update_one(
+            {"id": lead_id},
+            {"$set": {"status_history": []}}
+        )
+        lead["status_history"] = []
+    
+    # Get current time in IST
+    ist = pytz.timezone('Asia/Kolkata')
+    current_time_ist = datetime.now(ist)
+    current_time_iso = current_time_ist.isoformat()
+    
+    # Create no response history entry
+    no_response_entry = {
+        "timestamp": current_time_iso,
+        "marked_by": current_user.email,
+        "marker_name": f"{current_user.first_name} {current_user.last_name}" if hasattr(current_user, 'first_name') else current_user.email
+    }
+    
+    # Add to status history
+    status_history_entry = {
+        "timestamp": current_time_iso,
+        "field": "no_response",
+        "old_value": None,
+        "new_value": "No response recorded",
+        "changed_by": current_user.email,
+        "action": "no_response"
+    }
+    
+    # Update lead with no response history and last_no_response timestamp
+    await db.driver_leads.update_one(
+        {"id": lead_id},
+        {
+            "$push": {
+                "no_response_history": no_response_entry,
+                "status_history": status_history_entry
+            },
+            "$set": {
+                "last_no_response": current_time_iso,
+                "last_no_response_by": current_user.email,
+                "last_modified": current_time_iso
+            }
+        }
+    )
+    
+    logger.info(f"Lead {lead_id} marked as no response by {current_user.email} at {current_time_iso}")
+    
+    return {
+        "success": True,
+        "message": "Lead marked as no response",
+        "lead_id": lead_id,
+        "last_no_response": current_time_iso
+    }
+
+
 
 @api_router.get("/driver-onboarding/telecaller-summary")
 async def get_telecaller_summary(
