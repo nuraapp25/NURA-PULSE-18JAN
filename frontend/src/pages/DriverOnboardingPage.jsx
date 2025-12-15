@@ -207,8 +207,13 @@ const DriverOnboardingPage = () => {
   const [bulkExporting, setBulkExporting] = useState(false);
   const [batchExporting, setBatchExporting] = useState(false);
   const [bulkImporting, setBulkImporting] = useState(false);
-  const [bulkImportFile, setBulkImportFile] = useState(null);
+  const [bulkImportFile, setBulkImportFile] = useState(false);
   const [bulkImportDialogOpen, setBulkImportDialogOpen] = useState(false);
+  
+  // No Response leads states
+  const [noResponseDialogOpen, setNoResponseDialogOpen] = useState(false);
+  const [noResponseData, setNoResponseData] = useState(null);
+  const [loadingNoResponse, setLoadingNoResponse] = useState(false);
   
   // Column mapping states
   const [showColumnMapping, setShowColumnMapping] = useState(false);
