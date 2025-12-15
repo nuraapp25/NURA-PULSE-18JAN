@@ -1190,6 +1190,43 @@ const TelecallerDeskNew = () => {
                 )}
               </div>
             </div>
+            
+            {/* No Response Section */}
+            <div id="no-response-section" className="scroll-mt-4 mt-4 sm:mt-6">
+              <div 
+                className="flex items-center justify-between mb-2 sm:mb-3 cursor-pointer p-2 sm:p-3 bg-red-50 dark:bg-red-900/20 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
+                onClick={() => setIsNoResponseExpanded(!isNoResponseExpanded)}
+              >
+                <h2 className="text-base sm:text-lg font-semibold text-red-700 dark:text-red-400 flex items-center gap-1 sm:gap-2">
+                  <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+                  No Response ({filteredNoResponseLeads.length})
+                </h2>
+                {isNoResponseExpanded ? (
+                  <ChevronUp className="w-4 h-4 sm:w-5 sm:h-5 text-red-700 dark:text-red-400" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-red-700 dark:text-red-400" />
+                )}
+              </div>
+              
+              <div className={`transition-all duration-300 ease-in-out overflow-hidden ${
+                isNoResponseExpanded ? 'max-h-[10000px] opacity-100' : 'max-h-0 opacity-0'
+              }`}>
+                {filteredNoResponseLeads.length === 0 ? (
+                  <Card className="dark:bg-gray-800 mt-2 sm:mt-3">
+                    <CardContent className="p-4 sm:p-6 text-center">
+                      <AlertCircle className="w-8 h-8 sm:w-12 sm:h-12 mx-auto text-gray-400 mb-2" />
+                      <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
+                        No "no response" leads for this date
+                      </p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="space-y-2 sm:space-y-3 mt-2 sm:mt-3">
+                    {filteredNoResponseLeads.map(lead => renderLeadCard(lead, true))}
+                  </div>
+                )}
+              </div>
+            </div>
           </>
         )}
         
