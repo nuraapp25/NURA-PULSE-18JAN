@@ -768,14 +768,24 @@ const TelecallerDeskNew = () => {
             <span>WhatsApp</span>
           </Button>
           {!showCallTimestamp && (
-            <Button
-              onClick={() => markAsCalledNow(leadParam.id)}
-              className="bg-orange-600 hover:bg-orange-700 text-xs sm:text-sm col-span-2"
-              size="sm"
-            >
-              <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-              <span>Mark as Called</span>
-            </Button>
+            <>
+              <Button
+                onClick={() => markAsCalledNow(leadParam.id)}
+                className="bg-orange-600 hover:bg-orange-700 text-xs sm:text-sm"
+                size="sm"
+              >
+                <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                <span>Mark as Called</span>
+              </Button>
+              <Button
+                onClick={() => markAsNoResponse(leadParam.id)}
+                className="bg-gray-600 hover:bg-gray-700 text-xs sm:text-sm"
+                size="sm"
+              >
+                <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                <span>No Response</span>
+              </Button>
+            </>
           )}
           <Button
             onClick={(e) => {
