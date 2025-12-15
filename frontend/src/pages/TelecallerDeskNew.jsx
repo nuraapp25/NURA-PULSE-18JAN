@@ -110,6 +110,8 @@ const TelecallerDeskNew = () => {
   
   // Collapsible sections
   const [isCallingDoneExpanded, setIsCallingDoneExpanded] = useState(true);
+  const [isNoResponseExpanded, setIsNoResponseExpanded] = useState(true);
+  const [showOnlyNoResponse, setShowOnlyNoResponse] = useState(false);
   
   // Lead details dialog
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
