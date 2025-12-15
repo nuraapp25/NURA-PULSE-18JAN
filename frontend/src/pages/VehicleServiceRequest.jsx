@@ -287,6 +287,83 @@ const VehicleServiceRequest = () => {
     }
   };
 
+  // Bulk Export
+  const handleBulkExport = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("token");
+      
+      const response = await axios.post(
+        `${API}/montra-vehicle/service-requests/bulk-export`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: 'blob'
+        }
+      );
+      
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `vehicle_service_requests_export_${new Date().getTime()}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      
+      toast.success("Service requests exported successfully");
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to export service requests");
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Bulk Import
+  const handleBulkImport = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("token");
+      
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await axios.post(
+        `${API}/montra-vehicle/service-requests/bulk-import`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+      
+      toast.success(response.data.message || "Service requests imported successfully");
+      
+      if (response.data.errors && response.data.errors.length > 0) {
+        console.warn("Import errors:", response.data.errors);
+        toast.warning(`${response.data.errors.length} rows had errors. Check console for details.`);
+      }
+      
+      // Refresh the list
+      fetchServiceRequests();
+      
+      // Reset file input
+      event.target.value = null;
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to import service requests");
+      console.error(error);
+      event.target.value = null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // View/Edit request
   const handleViewEdit = (request) => {
     setSelectedRequest(request);
