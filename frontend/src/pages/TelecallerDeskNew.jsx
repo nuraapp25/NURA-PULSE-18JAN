@@ -424,17 +424,17 @@ const TelecallerDeskNew = () => {
     });
     
     return { notCalled, called, noResponse };
-  };
+  }, [selectedDate, isAdmin, selectedTelecaller, user?.email]);
   
   // Memoize lead separation to prevent recalculation on every render
   const separatedAssignedLeads = useMemo(() => 
     separateLeadsByCalled(assignedLeads), 
-    [assignedLeads, selectedDate, isAdmin, selectedTelecaller, user?.email]
+    [separateLeadsByCalled, assignedLeads]
   );
   
   const separatedCallbackLeads = useMemo(() => 
     separateLeadsByCalled(callbackLeads), 
-    [callbackLeads, selectedDate, isAdmin, selectedTelecaller, user?.email]
+    [separateLeadsByCalled, callbackLeads]
   );
   
   const { notCalled: assignedNotCalled, called: assignedCalled, noResponse: assignedNoResponse } = separatedAssignedLeads;
