@@ -1127,49 +1127,51 @@ const TelecallerDeskNew = () => {
         {/* Leads Display */}
         {!loading && (
           <>
-            {!showOnlyNoResponse && (
-              <>
-                {/* Assigned Leads Section */}
-                <div className="mb-4 sm:mb-6">
-                  <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-2 sm:mb-3">
-                    Assigned for {format(new Date(selectedDate), 'MMM d, yyyy')} ({filteredAssignedLeads.length})
-                  </h2>
-                  {filteredAssignedLeads.length === 0 ? (
-                    <Card className="dark:bg-gray-800">
-                      <CardContent className="p-4 sm:p-6 text-center">
-                        <AlertCircle className="w-8 h-8 sm:w-12 sm:h-12 mx-auto text-gray-400 mb-2" />
-                        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
-                          No leads assigned for this date
-                        </p>
-                      </CardContent>
-                    </Card>
-                  ) : (
-                    filteredAssignedLeads.map(lead => renderLeadCard(lead, false))
-                  )}
-                </div>
-                
-                {/* Callback Leads Section */}
-                <div className="mb-4 sm:mb-6">
-                  <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-2 sm:mb-3">
-                    Callbacks for {format(new Date(selectedDate), 'MMM d, yyyy')} ({filteredCallbackLeads.length})
-                  </h2>
-                  {filteredCallbackLeads.length === 0 ? (
-                    <Card className="dark:bg-gray-800">
-                      <CardContent className="p-4 sm:p-6 text-center">
-                        <AlertCircle className="w-8 h-8 sm:w-12 sm:h-12 mx-auto text-gray-400 mb-2" />
-                        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
-                          No callbacks scheduled for this date
-                        </p>
-                      </CardContent>
-                    </Card>
-                  ) : (
-                    filteredCallbackLeads.map(lead => renderLeadCard(lead, false))
-                  )}
-                </div>
-                
-                {/* Visual Separator */}
-                <div className="my-4 sm:my-8 border-t-4 border-green-500 dark:border-green-600"></div>
-              </>
+            {/* Show Assigned Leads - when no filter OR filter is 'all' OR 'callsPending' */}
+            {(!activeFilter || activeFilter === 'all' || activeFilter === 'callsPending') && (
+              <div className="mb-4 sm:mb-6">
+                <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-2 sm:mb-3">
+                  Assigned for {format(new Date(selectedDate), 'MMM d, yyyy')} ({filteredAssignedLeads.length})
+                </h2>
+                {filteredAssignedLeads.length === 0 ? (
+                  <Card className="dark:bg-gray-800">
+                    <CardContent className="p-4 sm:p-6 text-center">
+                      <AlertCircle className="w-8 h-8 sm:w-12 sm:h-12 mx-auto text-gray-400 mb-2" />
+                      <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
+                        No leads assigned for this date
+                      </p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  filteredAssignedLeads.map(lead => renderLeadCard(lead, false))
+                )}
+              </div>
+            )}
+            
+            {/* Show Callback Leads - when no filter OR filter is 'all' OR 'callbacks' OR 'callsPending' */}
+            {(!activeFilter || activeFilter === 'all' || activeFilter === 'callbacks' || activeFilter === 'callsPending') && (
+              <div className="mb-4 sm:mb-6">
+                <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-2 sm:mb-3">
+                  Callbacks for {format(new Date(selectedDate), 'MMM d, yyyy')} ({filteredCallbackLeads.length})
+                </h2>
+                {filteredCallbackLeads.length === 0 ? (
+                  <Card className="dark:bg-gray-800">
+                    <CardContent className="p-4 sm:p-6 text-center">
+                      <AlertCircle className="w-8 h-8 sm:w-12 sm:h-12 mx-auto text-gray-400 mb-2" />
+                      <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
+                        No callbacks scheduled for this date
+                      </p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  filteredCallbackLeads.map(lead => renderLeadCard(lead, false))
+                )}
+              </div>
+            )}
+            
+            {/* Visual Separator - show only when not filtering or showing all */}
+            {(!activeFilter || activeFilter === 'all') && (
+              <div className="my-4 sm:my-8 border-t-4 border-green-500 dark:border-green-600"></div>
             )}
             
             {/* Calling Done Section */}
