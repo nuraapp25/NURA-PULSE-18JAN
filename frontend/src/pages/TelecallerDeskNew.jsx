@@ -361,33 +361,53 @@ const TelecallerDeskNew = () => {
     });
   };
   
-  // Separate leads into called/not called based on selected date
+  // Separate leads into called/not called/no response based on selected date
   const separateLeadsByCalled = (leads) => {
     const notCalled = [];
     const called = [];
+    const noResponse = [];
     const currentTelecaller = isAdmin ? selectedTelecaller : user?.email;
     
     leads.forEach(lead => {
-      if (lead.last_called && lead.last_called_by) {
+      let categorized = false;
+      
+      // Check if marked as "No Response" on selected date by current telecaller
+      if (lead.last_no_response && lead.last_no_response_by) {
+        try {
+          const noResponseDate = parseISO(lead.last_no_response);
+          const noResponseDateStr = format(noResponseDate, 'yyyy-MM-dd');
+          
+          if (noResponseDateStr === selectedDate && lead.last_no_response_by === currentTelecaller) {
+            noResponse.push(lead);
+            categorized = true;
+          }
+        } catch {
+          // Invalid date format, continue
+        }
+      }
+      
+      // Check if called on selected date by current telecaller (only if not already in noResponse)
+      if (!categorized && lead.last_called && lead.last_called_by) {
         try {
           const callDate = parseISO(lead.last_called);
           const callDateStr = format(callDate, 'yyyy-MM-dd');
           
-          // If called on the selected date by the current telecaller, move to "calling done"
           if (callDateStr === selectedDate && lead.last_called_by === currentTelecaller) {
             called.push(lead);
-          } else {
-            notCalled.push(lead);
+            categorized = true;
           }
         } catch {
-          notCalled.push(lead);
+          // Invalid date format, continue
         }
-      } else {
+      }
+      
+      // If not called or no response, add to notCalled
+      if (!categorized) {
         notCalled.push(lead);
       }
     });
     
-    return { notCalled, called };
+    return { notCalled, called, noResponse };
   };
   
   const { notCalled: assignedNotCalled, called: assignedCalled } = separateLeadsByCalled(assignedLeads);
