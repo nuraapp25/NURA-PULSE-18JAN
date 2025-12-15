@@ -443,22 +443,22 @@ const TelecallerDeskNew = () => {
   // Memoize filtered leads to prevent recalculation
   const filteredAssignedLeads = useMemo(() => 
     filterLeadsBySearch(assignedNotCalled), 
-    [assignedNotCalled, searchQuery]
+    [filterLeadsBySearch, assignedNotCalled]
   );
   
   const filteredCallbackLeads = useMemo(() => 
     filterLeadsBySearch(callbackNotCalled), 
-    [callbackNotCalled, searchQuery]
+    [filterLeadsBySearch, callbackNotCalled]
   );
   
   const filteredCallingDoneLeads = useMemo(() => 
     filterLeadsBySearch([...assignedCalled, ...callbackCalled]), 
-    [assignedCalled, callbackCalled, searchQuery]
+    [filterLeadsBySearch, assignedCalled, callbackCalled]
   );
   
   const filteredNoResponseLeads = useMemo(() => 
     filterLeadsBySearch([...assignedNoResponse, ...callbackNoResponse]), 
-    [assignedNoResponse, callbackNoResponse, searchQuery]
+    [filterLeadsBySearch, assignedNoResponse, callbackNoResponse]
   );
   
   console.log("📊 CALLING DONE LEADS:", filteredCallingDoneLeads.map(l => ({
