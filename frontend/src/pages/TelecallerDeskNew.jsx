@@ -305,15 +305,27 @@ const TelecallerDeskNew = () => {
       }
     }).length;
     
+    const noResponse = allLeads.filter(lead => {
+      const lastNoResponse = lead.last_no_response;
+      if (!lastNoResponse) return false;
+      try {
+        const noResponseDate = parseISO(lastNoResponse);
+        return format(noResponseDate, 'yyyy-MM-dd') === today;
+      } catch {
+        return false;
+      }
+    }).length;
+    
     const total = allLeads.length;
-    const callsPending = total - callsDone;
+    const callsPending = total - callsDone - noResponse;
     const callbackCount = callbacks.length;
     
     setStats({
       total,
       callsDone,
       callsPending,
-      callbacks: callbackCount
+      callbacks: callbackCount,
+      noResponse
     });
   };
   
