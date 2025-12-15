@@ -3990,6 +3990,54 @@ async def get_lead(lead_id: str, current_user: User = Depends(get_current_user))
         raise HTTPException(status_code=500, detail=f"Failed to fetch lead: {str(e)}")
 
 
+@api_router.get("/driver-onboarding/no-response-leads")
+async def get_no_response_leads(current_user: User = Depends(get_current_user)):
+    """
+    Get all leads that have been marked as 'No Response', grouped by telecaller
+    """
+    try:
+        # Fetch all leads that have last_no_response field
+        leads = await db.driver_leads.find(
+            {"last_no_response": {"$exists": True, "$ne": None}},
+            {"_id": 0}
+        ).to_list(length=50000)
+        
+        logger.info(f"Found {len(leads)} leads with no response status")
+        
+        # Group leads by telecaller (last_no_response_by)
+        grouped_by_telecaller = {}
+        total_count = 0
+        
+        for lead in leads:
+            telecaller_email = lead.get("last_no_response_by", "Unknown")
+            
+            if telecaller_email not in grouped_by_telecaller:
+                grouped_by_telecaller[telecaller_email] = {
+                    "telecaller_email": telecaller_email,
+                    "telecaller_name": telecaller_email.split('@')[0] if '@' in telecaller_email else telecaller_email,
+                    "leads": [],
+                    "count": 0
+                }
+            
+            grouped_by_telecaller[telecaller_email]["leads"].append(lead)
+            grouped_by_telecaller[telecaller_email]["count"] += 1
+            total_count += 1
+        
+        # Convert to list and sort by count (descending)
+        telecaller_groups = list(grouped_by_telecaller.values())
+        telecaller_groups.sort(key=lambda x: x["count"], reverse=True)
+        
+        return {
+            "success": True,
+            "total_count": total_count,
+            "telecaller_groups": telecaller_groups
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching no response leads: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch no response leads: {str(e)}")
+
+
 @api_router.patch("/driver-onboarding/leads/{lead_id}/status")
 async def update_lead_status(lead_id: str, status_data: LeadStatusUpdate, current_user: User = Depends(get_current_user)):
     """Update lead status"""
