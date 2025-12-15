@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Plus, Search, Eye, Edit, Trash2, Folder, Upload, X, Calendar } from "lucide-react";
+import { Plus, Search, Eye, Edit, Trash2, Folder, Upload, Download, X, Calendar } from "lucide-react";
 import { format } from "date-fns";
 
 // Placeholder dropdown values (will be updated later)
