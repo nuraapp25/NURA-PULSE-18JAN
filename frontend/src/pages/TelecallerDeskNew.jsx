@@ -365,8 +365,8 @@ const TelecallerDeskNew = () => {
     await fetchLeadsForDate(selectedTelecaller);
   };
   
-  // Filter leads by search query
-  const filterLeadsBySearch = (leads) => {
+  // Filter leads by search query - memoized
+  const filterLeadsBySearch = useCallback((leads) => {
     if (!searchQuery.trim()) return leads;
     
     const query = searchQuery.toLowerCase();
@@ -375,10 +375,10 @@ const TelecallerDeskNew = () => {
       const phone = String(lead.phone_number || "").toLowerCase();
       return name.includes(query) || phone.includes(query);
     });
-  };
+  }, [searchQuery]);
   
-  // Separate leads into called/not called/no response based on selected date
-  const separateLeadsByCalled = (leads) => {
+  // Separate leads into called/not called/no response based on selected date - memoized
+  const separateLeadsByCalled = useCallback((leads) => {
     const notCalled = [];
     const called = [];
     const noResponse = [];
