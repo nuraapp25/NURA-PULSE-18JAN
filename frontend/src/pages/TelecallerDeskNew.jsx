@@ -296,23 +296,39 @@ const TelecallerDeskNew = () => {
     const allLeads = [...assigned, ...callbacks];
     const today = new Date().toISOString().split('T')[0];
     
-    const callsDone = allLeads.filter(lead => {
-      const lastCalled = lead.last_called;
-      if (!lastCalled) return false;
-      try {
-        const callDate = parseISO(lastCalled);
-        return format(callDate, 'yyyy-MM-dd') === today;
-      } catch {
-        return false;
-      }
-    }).length;
-    
+    // Count leads marked as "No Response" today
     const noResponse = allLeads.filter(lead => {
       const lastNoResponse = lead.last_no_response;
       if (!lastNoResponse) return false;
       try {
         const noResponseDate = parseISO(lastNoResponse);
         return format(noResponseDate, 'yyyy-MM-dd') === today;
+      } catch {
+        return false;
+      }
+    }).length;
+    
+    // Count leads marked as "Called" today - exclude leads that are marked as "No Response"
+    const callsDone = allLeads.filter(lead => {
+      // First check if marked as no response today
+      const lastNoResponse = lead.last_no_response;
+      if (lastNoResponse) {
+        try {
+          const noResponseDate = parseISO(lastNoResponse);
+          if (format(noResponseDate, 'yyyy-MM-dd') === today) {
+            return false; // Exclude from calls done if marked as no response today
+          }
+        } catch {
+          // Invalid date, continue
+        }
+      }
+      
+      // Now check if called today
+      const lastCalled = lead.last_called;
+      if (!lastCalled) return false;
+      try {
+        const callDate = parseISO(lastCalled);
+        return format(callDate, 'yyyy-MM-dd') === today;
       } catch {
         return false;
       }
