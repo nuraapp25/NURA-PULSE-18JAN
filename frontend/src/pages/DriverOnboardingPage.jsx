@@ -5017,6 +5017,110 @@ const DriverOnboardingPage = () => {
         </DialogContent>
       </Dialog>
 
+      {/* No Response Leads Dialog */}
+      <Dialog open={noResponseDialogOpen} onOpenChange={setNoResponseDialogOpen}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertCircle className="w-5 h-5 text-red-600" />
+              <span>No Response Leads</span>
+              {noResponseData && (
+                <Badge className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                  {noResponseData.total_count} Total
+                </Badge>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="flex-1 overflow-y-auto">
+            {loadingNoResponse ? (
+              <div className="flex items-center justify-center py-8">
+                <RefreshCw className="w-6 h-6 animate-spin text-gray-400" />
+                <span className="ml-2 text-gray-600 dark:text-gray-400">Loading...</span>
+              </div>
+            ) : noResponseData && noResponseData.telecaller_groups.length > 0 ? (
+              <div className="space-y-4">
+                {noResponseData.telecaller_groups.map((group, index) => (
+                  <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <h3 className="font-semibold text-lg text-gray-900 dark:text-white">
+                          {group.telecaller_name}
+                        </h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          {group.telecaller_email}
+                        </p>
+                      </div>
+                      <Badge className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                        {group.count} leads
+                      </Badge>
+                    </div>
+                    
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-gray-200 dark:border-gray-700">
+                            <th className="text-left py-2 px-2 font-medium text-gray-700 dark:text-gray-300">Name</th>
+                            <th className="text-left py-2 px-2 font-medium text-gray-700 dark:text-gray-300">Phone</th>
+                            <th className="text-left py-2 px-2 font-medium text-gray-700 dark:text-gray-300">Status</th>
+                            <th className="text-left py-2 px-2 font-medium text-gray-700 dark:text-gray-300">Stage</th>
+                            <th className="text-left py-2 px-2 font-medium text-gray-700 dark:text-gray-300">Last No Response</th>
+                            <th className="text-left py-2 px-2 font-medium text-gray-700 dark:text-gray-300">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {group.leads.map((lead, leadIndex) => (
+                            <tr key={leadIndex} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800">
+                              <td className="py-2 px-2">{lead.name || 'N/A'}</td>
+                              <td className="py-2 px-2">{lead.phone_number || 'N/A'}</td>
+                              <td className="py-2 px-2">
+                                <span className="px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+                                  {lead.status || 'N/A'}
+                                </span>
+                              </td>
+                              <td className="py-2 px-2">{lead.stage || 'N/A'}</td>
+                              <td className="py-2 px-2 text-xs text-gray-500">
+                                {lead.last_no_response ? new Date(lead.last_no_response).toLocaleDateString() : 'N/A'}
+                              </td>
+                              <td className="py-2 px-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    setSelectedLead(lead);
+                                    setDetailDialogOpen(true);
+                                    setNoResponseDialogOpen(false);
+                                  }}
+                                  className="text-xs"
+                                >
+                                  <Eye className="w-3 h-3 mr-1" />
+                                  View
+                                </Button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <AlertCircle className="w-12 h-12 mx-auto text-gray-400 mb-2" />
+                <p className="text-gray-600 dark:text-gray-400">No leads marked as "No Response" yet</p>
+              </div>
+            )}
+          </div>
+          
+          <div className="flex justify-end pt-4 border-t border-gray-200 dark:border-gray-700">
+            <Button onClick={() => setNoResponseDialogOpen(false)} variant="outline">
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Merge Sources Dialog */}
       <Dialog open={mergeSourcesDialogOpen} onOpenChange={setMergeSourcesDialogOpen}>
         <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
