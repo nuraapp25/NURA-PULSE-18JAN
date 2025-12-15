@@ -426,22 +426,40 @@ const TelecallerDeskNew = () => {
     return { notCalled, called, noResponse };
   };
   
-  const { notCalled: assignedNotCalled, called: assignedCalled, noResponse: assignedNoResponse } = separateLeadsByCalled(assignedLeads);
-  const { notCalled: callbackNotCalled, called: callbackCalled, noResponse: callbackNoResponse } = separateLeadsByCalled(callbackLeads);
+  // Memoize lead separation to prevent recalculation on every render
+  const separatedAssignedLeads = useMemo(() => 
+    separateLeadsByCalled(assignedLeads), 
+    [assignedLeads, selectedDate, isAdmin, selectedTelecaller, user?.email]
+  );
   
-  console.log("📊 Current Telecaller:", isAdmin ? selectedTelecaller : user?.email);
-  console.log("📊 Selected Date:", selectedDate);
-  console.log("📊 Total Assigned Leads:", assignedLeads.length);
-  console.log("📊 Assigned Leads Details:", assignedLeads.map(l => ({name: l.name, assigned_to: l.assigned_telecaller})));
-  console.log("📊 Called on Selected Date (assigned):", assignedCalled.length);
-  console.log("📊 Called on Selected Date (callback):", callbackCalled.length);
-  console.log("📊 No Response on Selected Date (assigned):", assignedNoResponse.length);
-  console.log("📊 No Response on Selected Date (callback):", callbackNoResponse.length);
+  const separatedCallbackLeads = useMemo(() => 
+    separateLeadsByCalled(callbackLeads), 
+    [callbackLeads, selectedDate, isAdmin, selectedTelecaller, user?.email]
+  );
   
-  const filteredAssignedLeads = filterLeadsBySearch(assignedNotCalled);
-  const filteredCallbackLeads = filterLeadsBySearch(callbackNotCalled);
-  const filteredCallingDoneLeads = filterLeadsBySearch([...assignedCalled, ...callbackCalled]);
-  const filteredNoResponseLeads = filterLeadsBySearch([...assignedNoResponse, ...callbackNoResponse]);
+  const { notCalled: assignedNotCalled, called: assignedCalled, noResponse: assignedNoResponse } = separatedAssignedLeads;
+  const { notCalled: callbackNotCalled, called: callbackCalled, noResponse: callbackNoResponse } = separatedCallbackLeads;
+  
+  // Memoize filtered leads to prevent recalculation
+  const filteredAssignedLeads = useMemo(() => 
+    filterLeadsBySearch(assignedNotCalled), 
+    [assignedNotCalled, searchQuery]
+  );
+  
+  const filteredCallbackLeads = useMemo(() => 
+    filterLeadsBySearch(callbackNotCalled), 
+    [callbackNotCalled, searchQuery]
+  );
+  
+  const filteredCallingDoneLeads = useMemo(() => 
+    filterLeadsBySearch([...assignedCalled, ...callbackCalled]), 
+    [assignedCalled, callbackCalled, searchQuery]
+  );
+  
+  const filteredNoResponseLeads = useMemo(() => 
+    filterLeadsBySearch([...assignedNoResponse, ...callbackNoResponse]), 
+    [assignedNoResponse, callbackNoResponse, searchQuery]
+  );
   
   console.log("📊 CALLING DONE LEADS:", filteredCallingDoneLeads.map(l => ({
     name: l.name, 
