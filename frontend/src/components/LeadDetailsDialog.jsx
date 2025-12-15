@@ -112,7 +112,7 @@ const LeadDetailsDialog = ({
 
   // Sync local remarks when editedLead changes
   useEffect(() => {
-    if (!editedLead.remarks) {
+    if (!editedLead || !editedLead.remarks) {
       setLocalRemarks('');
     } else if (typeof editedLead.remarks === 'string') {
       setLocalRemarks(editedLead.remarks);
@@ -121,7 +121,7 @@ const LeadDetailsDialog = ({
     } else if (typeof editedLead.remarks === 'object') {
       setLocalRemarks(editedLead.remarks.text || '');
     }
-  }, [editedLead.remarks]);
+  }, [editedLead?.remarks]);
 
   // Debounced onChange for remarks
   const handleRemarksChange = useCallback((e) => {
