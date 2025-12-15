@@ -410,8 +410,8 @@ const TelecallerDeskNew = () => {
     return { notCalled, called, noResponse };
   };
   
-  const { notCalled: assignedNotCalled, called: assignedCalled } = separateLeadsByCalled(assignedLeads);
-  const { notCalled: callbackNotCalled, called: callbackCalled } = separateLeadsByCalled(callbackLeads);
+  const { notCalled: assignedNotCalled, called: assignedCalled, noResponse: assignedNoResponse } = separateLeadsByCalled(assignedLeads);
+  const { notCalled: callbackNotCalled, called: callbackCalled, noResponse: callbackNoResponse } = separateLeadsByCalled(callbackLeads);
   
   console.log("📊 Current Telecaller:", isAdmin ? selectedTelecaller : user?.email);
   console.log("📊 Selected Date:", selectedDate);
@@ -419,10 +419,13 @@ const TelecallerDeskNew = () => {
   console.log("📊 Assigned Leads Details:", assignedLeads.map(l => ({name: l.name, assigned_to: l.assigned_telecaller})));
   console.log("📊 Called on Selected Date (assigned):", assignedCalled.length);
   console.log("📊 Called on Selected Date (callback):", callbackCalled.length);
+  console.log("📊 No Response on Selected Date (assigned):", assignedNoResponse.length);
+  console.log("📊 No Response on Selected Date (callback):", callbackNoResponse.length);
   
   const filteredAssignedLeads = filterLeadsBySearch(assignedNotCalled);
   const filteredCallbackLeads = filterLeadsBySearch(callbackNotCalled);
   const filteredCallingDoneLeads = filterLeadsBySearch([...assignedCalled, ...callbackCalled]);
+  const filteredNoResponseLeads = filterLeadsBySearch([...assignedNoResponse, ...callbackNoResponse]);
   
   console.log("📊 CALLING DONE LEADS:", filteredCallingDoneLeads.map(l => ({
     name: l.name, 
