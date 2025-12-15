@@ -418,18 +418,8 @@ const LeadDetailsDialog = ({
               <Label className="text-xs text-gray-600 dark:text-gray-400 mb-2 block">Remarks</Label>
               {isEditMode ? (
                 <Textarea
-                  value={(() => {
-                    if (!editedLead.remarks) return '';
-                    if (typeof editedLead.remarks === 'string') return editedLead.remarks;
-                    if (Array.isArray(editedLead.remarks) && editedLead.remarks.length > 0) {
-                      return editedLead.remarks.map(remark => remark.text || remark).join('\n');
-                    }
-                    if (typeof editedLead.remarks === 'object') {
-                      return editedLead.remarks.text || '';
-                    }
-                    return '';
-                  })()}
-                  onChange={(e) => onFieldChange('remarks', e.target.value)}
+                  value={localRemarks}
+                  onChange={handleRemarksChange}
                   placeholder="Enter remarks about this lead..."
                   className="w-full min-h-[80px] dark:bg-gray-700 dark:border-gray-600 text-sm"
                   disabled={updating}
