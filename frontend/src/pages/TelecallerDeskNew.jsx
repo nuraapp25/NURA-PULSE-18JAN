@@ -983,34 +983,46 @@ const TelecallerDeskNew = () => {
         
         {/* Summary Cards */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-2 sm:gap-4 mb-4 sm:mb-6">
-          <Card className="dark:bg-gray-800">
+          <Card 
+            className={`dark:bg-gray-800 cursor-pointer transition-all hover:shadow-lg ${activeFilter === 'all' ? 'ring-2 ring-gray-500' : ''}`}
+            onClick={() => setActiveFilter(activeFilter === 'all' ? null : 'all')}
+          >
             <CardContent className="p-2 sm:p-4">
               <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Total Leads</div>
               <div className="text-lg sm:text-2xl font-bold dark:text-white">{stats.total}</div>
             </CardContent>
           </Card>
-          <Card className="dark:bg-gray-800">
+          <Card 
+            className={`dark:bg-gray-800 cursor-pointer transition-all hover:shadow-lg ${activeFilter === 'callsDone' ? 'ring-2 ring-green-500' : ''}`}
+            onClick={() => setActiveFilter(activeFilter === 'callsDone' ? null : 'callsDone')}
+          >
             <CardContent className="p-2 sm:p-4">
               <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Calls Done</div>
               <div className="text-lg sm:text-2xl font-bold text-green-600">{stats.callsDone}</div>
             </CardContent>
           </Card>
           <Card 
-            className={`dark:bg-gray-800 cursor-pointer transition-all ${showOnlyNoResponse ? 'ring-2 ring-red-500' : ''}`}
-            onClick={() => setShowOnlyNoResponse(!showOnlyNoResponse)}
+            className={`dark:bg-gray-800 cursor-pointer transition-all hover:shadow-lg ${activeFilter === 'noResponse' ? 'ring-2 ring-red-500' : ''}`}
+            onClick={() => setActiveFilter(activeFilter === 'noResponse' ? null : 'noResponse')}
           >
             <CardContent className="p-2 sm:p-4">
               <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">No Response</div>
               <div className="text-lg sm:text-2xl font-bold text-red-600">{stats.noResponse || 0}</div>
             </CardContent>
           </Card>
-          <Card className="dark:bg-gray-800">
+          <Card 
+            className={`dark:bg-gray-800 cursor-pointer transition-all hover:shadow-lg ${activeFilter === 'callsPending' ? 'ring-2 ring-orange-500' : ''}`}
+            onClick={() => setActiveFilter(activeFilter === 'callsPending' ? null : 'callsPending')}
+          >
             <CardContent className="p-2 sm:p-4">
               <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Calls Pending</div>
               <div className="text-lg sm:text-2xl font-bold text-orange-600">{stats.callsPending}</div>
             </CardContent>
           </Card>
-          <Card className="dark:bg-gray-800">
+          <Card 
+            className={`dark:bg-gray-800 cursor-pointer transition-all hover:shadow-lg ${activeFilter === 'callbacks' ? 'ring-2 ring-blue-500' : ''}`}
+            onClick={() => setActiveFilter(activeFilter === 'callbacks' ? null : 'callbacks')}
+          >
             <CardContent className="p-2 sm:p-4">
               <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Callbacks</div>
               <div className="text-lg sm:text-2xl font-bold text-blue-600">{stats.callbacks}</div>
