@@ -1937,6 +1937,28 @@ const DriverOnboardingPage = () => {
     }
   };
   
+  // Fetch No Response Leads
+  const fetchNoResponseLeads = async () => {
+    try {
+      setLoadingNoResponse(true);
+      const token = localStorage.getItem("token");
+      
+      const response = await axios.get(`${API}/driver-onboarding/no-response-leads`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.success) {
+        setNoResponseData(response.data);
+        setNoResponseDialogOpen(true);
+      }
+    } catch (error) {
+      console.error("Error fetching no response leads:", error);
+      toast.error("Failed to fetch no response leads");
+    } finally {
+      setLoadingNoResponse(false);
+    }
+  };
+  
   // Parse Excel file and show column mapping
   const handleFileUpload = async (file) => {
     if (!file) return;
