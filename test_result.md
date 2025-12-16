@@ -346,11 +346,11 @@ frontend:
 
   - task: "Call Logs Export Updated Format Testing"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/frontend/src/pages/TelecallerDeskNew.jsx, /app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: true
           agent: "testing"
