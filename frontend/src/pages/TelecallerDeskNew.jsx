@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast as originalToast } from "sonner";
-import { Phone, MessageCircle, CheckCircle, RefreshCw, AlertCircle, User, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Calendar, Search } from "lucide-react";
+import { Phone, MessageCircle, CheckCircle, RefreshCw, AlertCircle, User, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Calendar, Search, Download } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import LeadDetailsDialog from "@/components/LeadDetailsDialog";
 
