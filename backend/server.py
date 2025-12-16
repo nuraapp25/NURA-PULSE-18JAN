@@ -3615,8 +3615,11 @@ async def mark_lead_as_no_response(lead_id: str, current_user: User = Depends(ge
         "marker_name": f"{current_user.first_name} {current_user.last_name}" if hasattr(current_user, 'first_name') else current_user.email
     }
     
-    # Add to status history
-    status_history_entry = {
+    # Get current status before change
+    old_status = lead.get("status", "Unknown")
+    
+    # Add to status history for no response action
+    no_response_history_entry = {
         "timestamp": current_time_iso,
         "field": "no_response",
         "old_value": None,
@@ -3625,15 +3628,28 @@ async def mark_lead_as_no_response(lead_id: str, current_user: User = Depends(ge
         "action": "no_response"
     }
     
-    # Update lead with no response history and last_no_response timestamp
+    # Add to status history for status change to RNR
+    status_change_entry = {
+        "timestamp": current_time_iso,
+        "field": "status",
+        "old_value": old_status,
+        "new_value": "RNR",
+        "changed_by": current_user.email,
+        "action": "status_change"
+    }
+    
+    # Update lead with no response history, status change to RNR, and last_no_response timestamp
     await db.driver_leads.update_one(
         {"id": lead_id},
         {
             "$push": {
                 "no_response_history": no_response_entry,
-                "status_history": status_history_entry
+                "status_history": {
+                    "$each": [no_response_history_entry, status_change_entry]
+                }
             },
             "$set": {
+                "status": "RNR",
                 "last_no_response": current_time_iso,
                 "last_no_response_by": current_user.email,
                 "last_modified": current_time_iso
