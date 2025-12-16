@@ -344,6 +344,18 @@ frontend:
           agent: "main"
           comment: "Created bash script for cron job execution. Runs daily at 2 AM to pre-compute analytics. Logs to /var/log/analytics_cache.log. Requires crontab setup in production: '0 2 * * * /app/backend/run_cache_update.sh >> /var/log/analytics_cache.log 2>&1'"
 
+  - task: "Call Logs Export Updated Format Testing"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/TelecallerDeskNew.jsx, /app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "testing"
+          comment: "TESTING REQUEST: Verify updated Call Logs Export format with new Excel structure including main 'Call Report' sheet with header section, summary statistics, call history log, and additional detail sheets (All Assigned, Calls Done Details, RNR Details, Pending Details). Test with admin@example.com/admin123 credentials, select telecaller 'Angelin', and verify filename format and Excel formatting."
+
 metadata:
   created_by: "main_agent"
   version: "4.0"
