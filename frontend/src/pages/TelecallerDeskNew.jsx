@@ -194,6 +194,48 @@ const TelecallerDeskNew = () => {
     }
   };
   
+  // Export call logs
+  const handleExportCallLogs = async () => {
+    const telecallerEmail = isAdmin ? selectedTelecaller : user?.email;
+    
+    if (!telecallerEmail) {
+      toast.error("Please select a telecaller first");
+      return;
+    }
+    
+    try {
+      const token = localStorage.getItem("token");
+      
+      const response = await axios.post(
+        `${API}/telecaller-desk/export-call-logs`,
+        {},
+        {
+          params: {
+            telecaller: telecallerEmail,
+            date: selectedDate
+          },
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: 'blob'
+        }
+      );
+      
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      const telecallerName = telecallerEmail.split('@')[0];
+      link.setAttribute('download', `call_logs_${telecallerName}_${selectedDate}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      
+      toast.success("Call logs exported successfully");
+    } catch (error) {
+      console.error("Error exporting call logs:", error);
+      toast.error(error.response?.data?.detail || "Failed to export call logs");
+    }
+  };
+  
   // Fetch all leads (for counting by date)
   const fetchAllLeads = async (telecallerEmail) => {
     if (!telecallerEmail) return;
