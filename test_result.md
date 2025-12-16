@@ -2624,10 +2624,10 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Driver Onboarding - Bulk Export All Leads"
+    - "Call Logs Export Feature - Telecaller's Desk"
   stuck_tasks: []
   test_all: false
-  test_priority: "critical"
+  test_priority: "high_first"
 
 agent_communication:
     - agent: "main"
