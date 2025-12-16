@@ -4003,9 +4003,6 @@ async def export_telecaller_call_logs(
         
         logger.info(f"📊 Found {len(all_leads)} total leads for telecaller {telecaller}")
         
-        if not all_leads:
-            raise HTTPException(status_code=404, detail="No leads found for the specified telecaller and date")
-        
         # Categorize leads
         calls_assigned = []
         calls_done = []
