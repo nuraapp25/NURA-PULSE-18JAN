@@ -873,6 +873,15 @@ const TelecallerDeskNew = () => {
               <Phone className="w-4 h-4 mr-2" />
               {showCallStats ? 'Hide' : 'Show'} Call Stats
             </Button>
+            <Button
+              onClick={handleExportCallLogs}
+              variant="outline"
+              size="sm"
+              className="dark:bg-gray-800 dark:border-gray-700"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Export Logs
+            </Button>
           </div>
         </div>
         
