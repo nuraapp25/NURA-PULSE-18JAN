@@ -3961,6 +3961,154 @@ async def get_telecaller_call_statistics(
     }
 
 
+@api_router.post("/telecaller-desk/export-call-logs")
+async def export_telecaller_call_logs(
+    telecaller: str = Query(..., description="Telecaller email"),
+    date: str = Query(..., description="Date in YYYY-MM-DD format"),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Export call logs for a specific telecaller on a specific date
+    Includes: Assigned leads, Calls Done, No Response, Calls Pending
+    """
+    try:
+        import pandas as pd
+        from datetime import datetime
+        import io
+        from fastapi.responses import StreamingResponse
+        
+        logger.info(f"🔄 Exporting call logs for telecaller {telecaller} on date {date}")
+        
+        # Fetch assigned leads for the telecaller on the specified date
+        assigned_leads = await db.driver_leads.find(
+            {
+                "assigned_telecaller": telecaller,
+                "assigned_date": date
+            },
+            {"_id": 0}
+        ).to_list(length=10000)
+        
+        # Fetch callback leads for the telecaller on the specified date
+        callback_leads = await db.driver_leads.find(
+            {
+                "callback_telecaller": telecaller,
+                "callback_date": date
+            },
+            {"_id": 0}
+        ).to_list(length=10000)
+        
+        # Combine all leads and remove duplicates
+        all_leads = {lead['id']: lead for lead in (assigned_leads + callback_leads)}.values()
+        all_leads = list(all_leads)
+        
+        logger.info(f"📊 Found {len(all_leads)} total leads for telecaller {telecaller}")
+        
+        if not all_leads:
+            raise HTTPException(status_code=404, detail="No leads found for the specified telecaller and date")
+        
+        # Categorize leads
+        calls_assigned = []
+        calls_done = []
+        calls_no_response = []
+        calls_pending = []
+        
+        for lead in all_leads:
+            # Check if called on the specified date
+            called_today = False
+            if lead.get('last_called') and lead.get('last_called_by') == telecaller:
+                try:
+                    call_date = datetime.fromisoformat(lead['last_called']).date().isoformat()
+                    if call_date == date:
+                        called_today = True
+                except:
+                    pass
+            
+            # Check if marked as no response on the specified date
+            no_response_today = False
+            if lead.get('last_no_response') and lead.get('last_no_response_by') == telecaller:
+                try:
+                    no_response_date = datetime.fromisoformat(lead['last_no_response']).date().isoformat()
+                    if no_response_date == date:
+                        no_response_today = True
+                except:
+                    pass
+            
+            # Add to all assigned
+            calls_assigned.append(lead)
+            
+            # Categorize based on action
+            if no_response_today:
+                calls_no_response.append(lead)
+            elif called_today:
+                calls_done.append(lead)
+            else:
+                calls_pending.append(lead)
+        
+        # Create Excel file with multiple sheets
+        output = io.BytesIO()
+        
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            # Define columns to export
+            export_columns = [
+                'name', 'phone_number', 'status', 'stage', 'source',
+                'assigned_telecaller', 'assigned_date', 
+                'callback_telecaller', 'callback_date',
+                'last_called', 'last_no_response', 'remarks'
+            ]
+            
+            # Sheet 1: Summary
+            summary_data = {
+                'Category': ['Total Assigned', 'Calls Done', 'No Response', 'Calls Pending'],
+                'Count': [len(calls_assigned), len(calls_done), len(calls_no_response), len(calls_pending)]
+            }
+            df_summary = pd.DataFrame(summary_data)
+            df_summary.to_excel(writer, sheet_name='Summary', index=False)
+            
+            # Sheet 2: All Assigned Leads
+            if calls_assigned:
+                df_assigned = pd.DataFrame(calls_assigned)
+                df_assigned = df_assigned[[col for col in export_columns if col in df_assigned.columns]]
+                df_assigned.to_excel(writer, sheet_name='Calls Assigned', index=False)
+            
+            # Sheet 3: Calls Done
+            if calls_done:
+                df_done = pd.DataFrame(calls_done)
+                df_done = df_done[[col for col in export_columns if col in df_done.columns]]
+                df_done.to_excel(writer, sheet_name='Calls Done', index=False)
+            
+            # Sheet 4: No Response
+            if calls_no_response:
+                df_no_response = pd.DataFrame(calls_no_response)
+                df_no_response = df_no_response[[col for col in export_columns if col in df_no_response.columns]]
+                df_no_response.to_excel(writer, sheet_name='No Response', index=False)
+            
+            # Sheet 5: Calls Pending
+            if calls_pending:
+                df_pending = pd.DataFrame(calls_pending)
+                df_pending = df_pending[[col for col in export_columns if col in df_pending.columns]]
+                df_pending.to_excel(writer, sheet_name='Calls Pending', index=False)
+        
+        output.seek(0)
+        
+        # Generate filename
+        telecaller_name = telecaller.split('@')[0]
+        filename = f"call_logs_{telecaller_name}_{date}.xlsx"
+        
+        logger.info(f"✅ Excel file created successfully: {filename}")
+        
+        return StreamingResponse(
+            io.BytesIO(output.getvalue()),
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error exporting call logs: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Export failed: {str(e)}")
+
+
     return {
         "success": True,
         "message": "Call marked as done",
