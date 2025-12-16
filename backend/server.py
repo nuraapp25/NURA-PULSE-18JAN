@@ -4041,49 +4041,141 @@ async def export_telecaller_call_logs(
             else:
                 calls_pending.append(lead)
         
-        # Create Excel file with multiple sheets
+        # Get telecaller name from email
+        telecaller_name = telecaller.split('@')[0].title()
+        
+        # Create call history log from calling_history
+        call_history_log = []
+        for lead in calls_done:
+            if lead.get('calling_history'):
+                for call in lead.get('calling_history', []):
+                    if isinstance(call, dict) and call.get('called_by') == telecaller:
+                        try:
+                            call_timestamp = call.get('timestamp', '')
+                            # Check if this call was on the specified date
+                            if call_timestamp:
+                                call_date_parsed = datetime.fromisoformat(call_timestamp).date().isoformat()
+                                if call_date_parsed == date:
+                                    call_history_log.append({
+                                        'Timestamp': datetime.fromisoformat(call_timestamp).strftime('%Y-%m-%d %H:%M:%S'),
+                                        'Lead Name': lead.get('name', 'N/A'),
+                                        'Lead Number': str(lead.get('phone_number', 'N/A')),
+                                        'Lead Status': lead.get('status', 'N/A')
+                                    })
+                        except:
+                            pass
+        
+        # Sort call history by timestamp
+        call_history_log = sorted(call_history_log, key=lambda x: x['Timestamp'])
+        
+        # Create Excel file
         output = io.BytesIO()
         
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            # Define columns to export
-            export_columns = [
-                'name', 'phone_number', 'status', 'stage', 'source',
-                'assigned_telecaller', 'assigned_date', 
-                'callback_telecaller', 'callback_date',
-                'last_called', 'last_no_response', 'remarks'
-            ]
+            # Create main report sheet
+            workbook = writer.book
+            worksheet = workbook.create_sheet('Call Report', 0)
             
-            # Sheet 1: Summary
-            summary_data = {
-                'Category': ['Total Assigned', 'Calls Done', 'No Response', 'Calls Pending'],
-                'Count': [len(calls_assigned), len(calls_done), len(calls_no_response), len(calls_pending)]
-            }
-            df_summary = pd.DataFrame(summary_data)
-            df_summary.to_excel(writer, sheet_name='Summary', index=False)
+            # Header section
+            row = 1
+            worksheet.cell(row=row, column=1, value="TELECALLER CALL REPORT")
+            worksheet.cell(row=row, column=1).font = Font(bold=True, size=14)
+            row += 2
             
+            worksheet.cell(row=row, column=1, value="Telecaller's Name:")
+            worksheet.cell(row=row, column=2, value=telecaller_name)
+            worksheet.cell(row=row, column=1).font = Font(bold=True)
+            row += 1
+            
+            worksheet.cell(row=row, column=1, value="Date:")
+            worksheet.cell(row=row, column=2, value=date)
+            worksheet.cell(row=row, column=1).font = Font(bold=True)
+            row += 2
+            
+            # Statistics section
+            worksheet.cell(row=row, column=1, value="SUMMARY STATISTICS")
+            worksheet.cell(row=row, column=1).font = Font(bold=True, size=12)
+            row += 1
+            
+            worksheet.cell(row=row, column=1, value="No. of leads assigned:")
+            worksheet.cell(row=row, column=2, value=len(calls_assigned))
+            worksheet.cell(row=row, column=1).font = Font(bold=True)
+            row += 1
+            
+            worksheet.cell(row=row, column=1, value="No. of Calling Done:")
+            worksheet.cell(row=row, column=2, value=len(calls_done))
+            worksheet.cell(row=row, column=1).font = Font(bold=True)
+            row += 1
+            
+            worksheet.cell(row=row, column=1, value="No. of Calls pending:")
+            worksheet.cell(row=row, column=2, value=len(calls_pending))
+            worksheet.cell(row=row, column=1).font = Font(bold=True)
+            row += 1
+            
+            worksheet.cell(row=row, column=1, value="No. of leads RNR:")
+            worksheet.cell(row=row, column=2, value=len(calls_no_response))
+            worksheet.cell(row=row, column=1).font = Font(bold=True)
+            row += 2
+            
+            # Call History Log section
+            worksheet.cell(row=row, column=1, value="CALL HISTORY LOG")
+            worksheet.cell(row=row, column=1).font = Font(bold=True, size=12)
+            row += 1
+            
+            if call_history_log:
+                # Create DataFrame for call history
+                df_call_history = pd.DataFrame(call_history_log)
+                
+                # Write to worksheet starting at current row
+                for col_idx, col_name in enumerate(df_call_history.columns, start=1):
+                    cell = worksheet.cell(row=row, column=col_idx, value=col_name)
+                    cell.font = Font(bold=True)
+                    cell.fill = PatternFill(start_color="CCCCCC", end_color="CCCCCC", fill_type="solid")
+                
+                row += 1
+                
+                for idx, record in df_call_history.iterrows():
+                    for col_idx, value in enumerate(record, start=1):
+                        worksheet.cell(row=row, column=col_idx, value=value)
+                    row += 1
+            else:
+                worksheet.cell(row=row, column=1, value="No calls made on this date")
+                row += 1
+            
+            # Adjust column widths
+            worksheet.column_dimensions['A'].width = 25
+            worksheet.column_dimensions['B'].width = 20
+            worksheet.column_dimensions['C'].width = 20
+            worksheet.column_dimensions['D'].width = 20
+            
+            # Add detailed sheets
             # Sheet 2: All Assigned Leads
             if calls_assigned:
                 df_assigned = pd.DataFrame(calls_assigned)
+                export_columns = ['name', 'phone_number', 'status', 'stage', 'assigned_date', 'remarks']
                 df_assigned = df_assigned[[col for col in export_columns if col in df_assigned.columns]]
-                df_assigned.to_excel(writer, sheet_name='Calls Assigned', index=False)
+                df_assigned.to_excel(writer, sheet_name='All Assigned', index=False)
             
-            # Sheet 3: Calls Done
+            # Sheet 3: Calls Done Details
             if calls_done:
                 df_done = pd.DataFrame(calls_done)
+                export_columns = ['name', 'phone_number', 'status', 'stage', 'last_called', 'remarks']
                 df_done = df_done[[col for col in export_columns if col in df_done.columns]]
-                df_done.to_excel(writer, sheet_name='Calls Done', index=False)
+                df_done.to_excel(writer, sheet_name='Calls Done Details', index=False)
             
-            # Sheet 4: No Response
+            # Sheet 4: No Response Details
             if calls_no_response:
                 df_no_response = pd.DataFrame(calls_no_response)
+                export_columns = ['name', 'phone_number', 'status', 'stage', 'last_no_response', 'remarks']
                 df_no_response = df_no_response[[col for col in export_columns if col in df_no_response.columns]]
-                df_no_response.to_excel(writer, sheet_name='No Response', index=False)
+                df_no_response.to_excel(writer, sheet_name='RNR Details', index=False)
             
-            # Sheet 5: Calls Pending
+            # Sheet 5: Calls Pending Details
             if calls_pending:
                 df_pending = pd.DataFrame(calls_pending)
+                export_columns = ['name', 'phone_number', 'status', 'stage', 'assigned_date', 'remarks']
                 df_pending = df_pending[[col for col in export_columns if col in df_pending.columns]]
-                df_pending.to_excel(writer, sheet_name='Calls Pending', index=False)
+                df_pending.to_excel(writer, sheet_name='Pending Details', index=False)
         
         output.seek(0)
         
