@@ -396,6 +396,18 @@ agent_communication:
     - agent: "testing"
       message: "🎯 DRIVER ONBOARDING TELECALLER VISIBILITY TESTING COMPLETE: Comprehensive testing performed with mixed results due to authentication limitations. TESTING RESULTS: ✅ ADMIN ACCOUNT VERIFICATION: Successfully logged in with admin@example.com/admin123 credentials and confirmed Driver Onboarding and Telecaller's Desk are both visible in the sidebar under 'APPS' section. Admin can access Driver Onboarding page successfully. ❌ TELECALLER ACCOUNT TESTING BLOCKED: Found 6 telecaller accounts in the system (Joshua, Yashvika, Angelin, Vignesh, Dhivya, Ravi) but unable to login with any common password combinations. Tried 42 different email/password combinations without success. 🔍 CONFIGURATION ANALYSIS: Based on Dashboard.jsx code review, the configuration is CORRECT - Driver Onboarding roles include ['master_admin', 'admin', 'standard', 'telecaller'] and Telecaller's Desk roles include ['telecaller', 'master_admin', 'admin']. This means telecallers SHOULD be able to see both apps. ✅ FRONTEND IMPLEMENTATION VERIFIED: The sidebar filtering logic correctly shows apps based on user account_type, and telecaller role is properly included in both app configurations. CONCLUSION: The feature implementation is correct at the code level. Telecallers should be able to see both Driver Onboarding and Telecaller's Desk apps. Testing was limited by lack of valid telecaller credentials, but the configuration analysis confirms the feature is properly implemented. RECOMMENDATION: Main agent should provide valid telecaller credentials or reset passwords for existing telecaller accounts to enable full end-to-end testing verification."
 
+  - task: "Call Logs Export Feature - Telecaller's Desk"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/TelecallerDeskNew.jsx, /app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "testing"
+          comment: "TESTING INITIATED: Call Logs Export feature in Telecaller's Desk. Feature includes Export Logs button next to Show Call Stats button, Excel file generation with multiple sheets (Summary, Calls Assigned, Calls Done, No Response, Calls Pending), proper filename format call_logs_[telecaller_name]_[date].xlsx. Backend endpoint POST /api/telecaller-desk/export-call-logs implemented with comprehensive lead categorization logic. Ready for comprehensive UI and integration testing."
+
   - task: "QR Code Complete Flow - Creation, Scanning, and Analytics"
     implemented: true
     working: true
