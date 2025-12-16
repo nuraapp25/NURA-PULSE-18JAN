@@ -3976,6 +3976,7 @@ async def export_telecaller_call_logs(
         from datetime import datetime
         import io
         from fastapi.responses import StreamingResponse
+        from openpyxl.styles import Font, PatternFill
         
         logger.info(f"🔄 Exporting call logs for telecaller {telecaller} on date {date}")
         
@@ -7306,6 +7307,7 @@ async def bulk_export_service_requests(current_user: User = Depends(get_current_
         from datetime import datetime
         import io
         from fastapi.responses import StreamingResponse
+        from openpyxl.styles import Font, PatternFill
         
         logger.info(f"🔄 Starting bulk export of service requests for user {current_user.email}")
         
