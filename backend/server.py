@@ -1125,6 +1125,227 @@ from app_models import (
     VehicleServiceRequest, VehicleServiceRequestCreate, VehicleServiceRequestUpdate
 )
 
+# ==================== Nura Express ====================
+@api_router.post("/nura-express/process-images")
+async def process_delivery_images(
+    files: List[UploadFile] = File(...),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Process delivery screenshots using GPT-4o vision to extract delivery information
+    """
+    try:
+        import base64
+        from openai import OpenAI
+        
+        logger.info(f"📦 Processing {len(files)} delivery images for Nura Express")
+        
+        # Get Emergent LLM key
+        emergent_key = os.environ.get("EMERGENT_LLM_KEY")
+        if not emergent_key:
+            raise HTTPException(status_code=500, detail="Emergent LLM key not configured")
+        
+        # Initialize OpenAI client with Emergent key
+        client = OpenAI(api_key=emergent_key)
+        
+        extracted_data = []
+        
+        for idx, file in enumerate(files, 1):
+            try:
+                # Read image file
+                contents = await file.read()
+                base64_image = base64.b64encode(contents).decode('utf-8')
+                
+                # Create prompt for GPT-4o vision
+                prompt = """Extract ALL delivery information from this screenshot. Look for:
+1. Order No (e.g., #23, #24, order number)
+2. Customer Name (full name of recipient)
+3. Complete Address (including street, area, landmark, city, pincode)
+
+Return the data in JSON format:
+{
+    "order_no": "order number",
+    "customer_name": "full customer name",
+    "address": "complete address with pincode"
+}
+
+If multiple deliveries are shown, extract each one separately as an array.
+Be thorough and extract all visible delivery information."""
+
+                # Call GPT-4o vision API
+                response = client.chat.completions.create(
+                    model="gpt-4o",
+                    messages=[
+                        {
+                            "role": "user",
+                            "content": [
+                                {"type": "text", "text": prompt},
+                                {
+                                    "type": "image_url",
+                                    "image_url": {
+                                        "url": f"data:image/jpeg;base64,{base64_image}"
+                                    }
+                                }
+                            ]
+                        }
+                    ],
+                    max_tokens=1000
+                )
+                
+                # Extract response
+                result_text = response.choices[0].message.content
+                
+                # Try to parse JSON from response
+                import json
+                import re
+                
+                # Find JSON in response
+                json_match = re.search(r'\{.*\}|\[.*\]', result_text, re.DOTALL)
+                if json_match:
+                    parsed_data = json.loads(json_match.group())
+                    
+                    # Handle both single object and array
+                    if isinstance(parsed_data, dict):
+                        parsed_data = [parsed_data]
+                    
+                    for delivery in parsed_data:
+                        extracted_data.append({
+                            "image_index": idx,
+                            "order_no": delivery.get("order_no", ""),
+                            "customer_name": delivery.get("customer_name", ""),
+                            "address": delivery.get("address", ""),
+                            "raw_response": result_text
+                        })
+                else:
+                    # Fallback if JSON not found
+                    extracted_data.append({
+                        "image_index": idx,
+                        "order_no": "",
+                        "customer_name": "",
+                        "address": "",
+                        "raw_response": result_text,
+                        "error": "Could not parse JSON from response"
+                    })
+                
+                logger.info(f"✅ Processed image {idx}/{len(files)}")
+                
+            except Exception as e:
+                logger.error(f"❌ Error processing image {idx}: {str(e)}")
+                extracted_data.append({
+                    "image_index": idx,
+                    "error": str(e)
+                })
+        
+        logger.info(f"✅ Extracted {len(extracted_data)} delivery records")
+        
+        return {
+            "success": True,
+            "total_images": len(files),
+            "extracted_data": extracted_data
+        }
+        
+    except Exception as e:
+        logger.error(f"Error in Nura Express processing: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/nura-express/generate-excel")
+async def generate_nura_express_excel(
+    data: dict = Body(...),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Generate Excel file with geocoded addresses using Google Maps API
+    """
+    try:
+        import pandas as pd
+        import io
+        import requests
+        from fastapi.responses import StreamingResponse
+        
+        logger.info("📊 Generating Nura Express Excel report")
+        
+        deliveries = data.get("deliveries", [])
+        google_api_key = "AIzaSyBSkRVGAnQUQY6NFklYVQQfqUBxWX1CU2c"
+        
+        # Prepare data for Excel
+        excel_data = []
+        
+        for idx, delivery in enumerate(deliveries, 1):
+            address = delivery.get("address", "")
+            
+            # Geocode address
+            latitude = ""
+            longitude = ""
+            area = ""
+            
+            if address:
+                try:
+                    url = "https://maps.googleapis.com/maps/api/geocode/json"
+                    params = {
+                        "address": address,
+                        "key": google_api_key
+                    }
+                    response = requests.get(url, params=params, timeout=5)
+                    geo_data = response.json()
+                    
+                    if geo_data['status'] == 'OK' and len(geo_data['results']) > 0:
+                        location = geo_data['results'][0]['geometry']['location']
+                        latitude = location['lat']
+                        longitude = location['lng']
+                        
+                        # Extract area from address components
+                        for component in geo_data['results'][0].get('address_components', []):
+                            if 'sublocality' in component['types'] or 'locality' in component['types']:
+                                area = component['long_name']
+                                break
+                    
+                    logger.info(f"✅ Geocoded: {address[:50]}... → {latitude}, {longitude}")
+                except Exception as e:
+                    logger.warning(f"⚠️ Geocoding failed for: {address[:50]}... - {str(e)}")
+            
+            excel_data.append({
+                "S. No.": idx,
+                "Ops Name": delivery.get("ops_name", ""),
+                "Order No.": delivery.get("order_no", ""),
+                "Customer Name": delivery.get("customer_name", ""),
+                "Address": address,
+                "Area": area,
+                "Latitude": latitude,
+                "Longitude": longitude,
+                "Driver Name": delivery.get("driver_name", ""),
+                "Vehicle No.": delivery.get("vehicle_no", ""),
+                "Start Time": delivery.get("start_time", ""),
+                "End Time": delivery.get("end_time", ""),
+                "Status": delivery.get("status", ""),
+                "COD": delivery.get("cod", "")
+            })
+        
+        # Create DataFrame
+        df = pd.DataFrame(excel_data)
+        
+        # Generate Excel file
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, sheet_name='Deliveries', index=False)
+        
+        output.seek(0)
+        
+        filename = f"nura_express_deliveries_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+        
+        logger.info(f"✅ Excel file generated: {filename}")
+        
+        return StreamingResponse(
+            io.BytesIO(output.getvalue()),
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+        
+    except Exception as e:
+        logger.error(f"Error generating Excel: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # Payment Reconciliation
 @api_router.post("/payment-reconciliation")
 async def create_payment(payment_data: PaymentRecordCreate, current_user: User = Depends(get_current_user)):
