@@ -7,7 +7,7 @@ import { Upload, Download, Image as ImageIcon, Loader2, CheckCircle, AlertCircle
 import axios from "axios";
 import { toast } from "sonner";
 
-const API = process.env.REACT_APP_BACKEND_URL;
+const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 const NuraExpress = () => {
   const [selectedImages, setSelectedImages] = useState([]);
