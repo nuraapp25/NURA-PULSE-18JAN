@@ -1140,17 +1140,14 @@ async def process_delivery_images(
         
         logger.info(f"📦 Processing {len(files)} delivery images for Nura Express")
         
-        # Get Emergent LLM key - use emergentintegrations library
-        try:
-            from emergentintegrations import get_universal_key
-            emergent_key = get_universal_key()
-            logger.info("✅ Retrieved Emergent LLM key successfully")
-        except Exception as e:
-            logger.error(f"❌ Failed to get Emergent key: {str(e)}")
-            raise HTTPException(status_code=500, detail="Failed to retrieve API key. Please contact support.")
+        # Use Emergent LLM universal key
+        emergent_key = "sk-emergent-7A22c66Ac15208b2aC"
         
-        # Initialize OpenAI client with Emergent key
-        client = OpenAI(api_key=emergent_key)
+        # Initialize OpenAI client with base URL for Emergent gateway
+        client = OpenAI(
+            api_key=emergent_key,
+            base_url="https://api.emergentagi.com/v1"
+        )
         
         extracted_data = []
         
