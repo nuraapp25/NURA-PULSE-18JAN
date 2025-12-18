@@ -9,6 +9,7 @@ import Dashboard from "@/pages/Dashboard";
 import HomePage from "@/pages/HomePage";
 import UserManagement from "@/pages/UserManagement";
 import PaymentReconciliation from "@/pages/PaymentReconciliation";
+import NuraExpress from "@/pages/NuraExpress";
 import DriverOnboarding from "@/pages/DriverOnboardingPage";
 import TelecallerQueue from "@/pages/TelecallerQueue";
 import TelecallerDesk from "@/pages/TelecallerDesk";
