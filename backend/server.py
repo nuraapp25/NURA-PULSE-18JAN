@@ -1259,7 +1259,7 @@ async def generate_nura_express_excel(
         logger.info("📊 Generating Nura Express Excel report")
         
         deliveries = data.get("deliveries", [])
-        google_api_key = "AIzaSyBSkRVGAnQUQY6NFklYVQQfqUBxWX1CU2c"
+        google_api_key = os.environ.get("GOOGLE_MAPS_API_KEY", "")
         
         # Prepare data for Excel
         excel_data = []
