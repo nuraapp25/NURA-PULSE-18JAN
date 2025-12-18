@@ -1249,17 +1249,71 @@ async def generate_nura_express_excel(
 ):
     """
     Generate Excel file with geocoded addresses using Google Maps API
+    Includes nearest hotspot assignment and distance calculation
     """
     try:
         import pandas as pd
         import io
         import requests
+        import math
         from fastapi.responses import StreamingResponse
         
         logger.info("📊 Generating Nura Express Excel report")
         
         deliveries = data.get("deliveries", [])
         google_api_key = os.environ.get("GOOGLE_MAPS_API_KEY", "")
+        
+        # Load hotspots data
+        hotspots_file = ROOT_DIR / 'hotspots.xlsx'
+        hotspots_df = None
+        if hotspots_file.exists():
+            try:
+                hotspots_df = pd.read_excel(hotspots_file)
+                logger.info(f"📍 Loaded {len(hotspots_df)} hotspots")
+            except Exception as e:
+                logger.warning(f"⚠️ Could not load hotspots file: {str(e)}")
+        
+        # Haversine formula to calculate distance between two coordinates
+        def haversine_distance(lat1, lon1, lat2, lon2):
+            """Calculate distance in km between two coordinates using Haversine formula"""
+            if not all([lat1, lon1, lat2, lon2]):
+                return None
+            try:
+                lat1, lon1, lat2, lon2 = map(float, [lat1, lon1, lat2, lon2])
+                R = 6371  # Earth's radius in km
+                dlat = math.radians(lat2 - lat1)
+                dlon = math.radians(lon2 - lon1)
+                a = math.sin(dlat/2)**2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon/2)**2
+                c = 2 * math.asin(math.sqrt(a))
+                return round(R * c, 2)
+            except:
+                return None
+        
+        def find_nearest_hotspot(delivery_lat, delivery_lng):
+            """Find the nearest hotspot to a delivery location"""
+            if hotspots_df is None or not delivery_lat or not delivery_lng:
+                return "", "", ""
+            
+            nearest_hotspot = ""
+            min_distance = float('inf')
+            
+            for _, hotspot in hotspots_df.iterrows():
+                hotspot_lat = hotspot.get('lat.1')
+                hotspot_lng = hotspot.get('lng.1')
+                hotspot_name = hotspot.get('Area name', '')
+                
+                distance = haversine_distance(delivery_lat, delivery_lng, hotspot_lat, hotspot_lng)
+                if distance is not None and distance < min_distance:
+                    min_distance = distance
+                    nearest_hotspot = hotspot_name
+            
+            if min_distance == float('inf'):
+                return "", "", ""
+            
+            # Mark as "FAR" if distance > 5 km
+            distance_status = "FAR" if min_distance > 5 else ""
+            
+            return nearest_hotspot, round(min_distance, 2), distance_status
         
         # Prepare data for Excel
         excel_data = []
@@ -1297,6 +1351,9 @@ async def generate_nura_express_excel(
                 except Exception as e:
                     logger.warning(f"⚠️ Geocoding failed for: {address[:50]}... - {str(e)}")
             
+            # Find nearest hotspot
+            nearest_hotspot, distance_to_hotspot, distance_status = find_nearest_hotspot(latitude, longitude)
+            
             excel_data.append({
                 "S. No.": idx,
                 "Ops Name": delivery.get("ops_name", ""),
@@ -1311,7 +1368,10 @@ async def generate_nura_express_excel(
                 "Start Time": delivery.get("start_time", ""),
                 "End Time": delivery.get("end_time", ""),
                 "Status": delivery.get("status", ""),
-                "COD": delivery.get("cod", "")
+                "COD": delivery.get("cod", ""),
+                "Nearest Hotspot": nearest_hotspot,
+                "Distance to Hotspot (km)": distance_to_hotspot,
+                "Distance Status": distance_status
             })
         
         # Create DataFrame
