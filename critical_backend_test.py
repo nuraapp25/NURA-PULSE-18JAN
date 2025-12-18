@@ -11,7 +11,7 @@ import base64
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://driver-hub-46.preview.emergentagent.com/api"
+BASE_URL = "https://fleetflow-8.preview.emergentagent.com/api"
 MASTER_ADMIN_EMAIL = "admin"
 MASTER_ADMIN_PASSWORD = "Nura@1234$"
 
@@ -429,7 +429,7 @@ class CriticalBackendTester:
         print("🚀 CRITICAL BACKEND TESTING - VERIFICATION OF 3 BACKEND FIXES")
         print("=" * 80)
         print("Testing credentials: admin / Nura@1234$")
-        print("Backend URL: https://driver-hub-46.preview.emergentagent.com/api")
+        print("Backend URL: https://fleetflow-8.preview.emergentagent.com/api")
         print("=" * 80)
         
         # Authenticate first
