@@ -1136,18 +1136,14 @@ async def process_delivery_images(
     """
     try:
         import base64
-        from openai import OpenAI
+        from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
+        from dotenv import load_dotenv
+        load_dotenv()
         
         logger.info(f"📦 Processing {len(files)} delivery images for Nura Express")
         
-        # Use Emergent LLM universal key
-        emergent_key = "sk-emergent-7A22c66Ac15208b2aC"
-        
-        # Initialize OpenAI client with base URL for Emergent gateway
-        client = OpenAI(
-            api_key=emergent_key,
-            base_url="https://api.emergentagi.com/v1"
-        )
+        # Get Emergent LLM key
+        emergent_key = os.environ.get("EMERGENT_LLM_KEY", "sk-emergent-7A22c66Ac15208b2aC")
         
         extracted_data = []
         
@@ -1173,28 +1169,24 @@ Return the data in JSON format:
 If multiple deliveries are shown, extract each one separately as an array.
 Be thorough and extract all visible delivery information."""
 
-                # Call GPT-4o vision API
-                response = client.chat.completions.create(
-                    model="gpt-4o",
-                    messages=[
-                        {
-                            "role": "user",
-                            "content": [
-                                {"type": "text", "text": prompt},
-                                {
-                                    "type": "image_url",
-                                    "image_url": {
-                                        "url": f"data:image/jpeg;base64,{base64_image}"
-                                    }
-                                }
-                            ]
-                        }
-                    ],
-                    max_tokens=1000
+                # Initialize LlmChat with Emergent integration
+                chat = LlmChat(
+                    api_key=emergent_key,
+                    session_id=f"nura-express-{idx}-{datetime.now().timestamp()}",
+                    system_message="You are a helpful assistant that extracts delivery information from images."
+                ).with_model("openai", "gpt-4o")
+                
+                # Create image content
+                image_content = ImageContent(image_base64=base64_image)
+                
+                # Create user message with image
+                user_message = UserMessage(
+                    text=prompt,
+                    file_contents=[image_content]
                 )
                 
-                # Extract response
-                result_text = response.choices[0].message.content
+                # Send message and get response
+                result_text = await chat.send_message(user_message)
                 
                 # Try to parse JSON from response
                 import json
