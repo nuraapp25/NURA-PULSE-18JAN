@@ -54,9 +54,13 @@ const NuraExpress = () => {
         }
       );
 
+      console.log("API Response:", response.data);
       if (response.data.success) {
         setExtractedData(response.data.extracted_data);
         toast.success(`Extracted ${response.data.extracted_data.length} delivery records`);
+      } else {
+        console.error("API returned success=false:", response.data);
+        toast.error("API processing failed");
       }
     } catch (error) {
       console.error("Error processing images:", error);
