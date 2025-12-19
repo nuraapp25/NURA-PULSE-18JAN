@@ -208,7 +208,7 @@ const NuraExpress = () => {
 
           <div className="flex gap-3">
             <Button
-              onClick={handleProcessImages}
+              onClick={handleExtractClick}
               disabled={selectedImages.length === 0 || processing}
               className="flex-1 sm:flex-none"
             >
