@@ -32,11 +32,22 @@ const NuraExpress = () => {
     toast.success(`${files.length} image(s) selected`);
   };
 
-  const handleProcessImages = async () => {
+  const handleExtractClick = () => {
     if (selectedImages.length === 0) {
       toast.error("Please upload at least one image");
       return;
     }
+    // Show modal to select Ops Name before processing
+    setShowOpsModal(true);
+  };
+
+  const handleProcessImages = async () => {
+    if (!selectedOpsName) {
+      toast.error("Please select an Ops Name");
+      return;
+    }
+
+    setShowOpsModal(false);
 
     try {
       setProcessing(true);
@@ -60,8 +71,13 @@ const NuraExpress = () => {
 
       console.log("API Response:", response.data);
       if (response.data.success) {
-        setExtractedData(response.data.extracted_data);
-        toast.success(`Extracted ${response.data.extracted_data.length} delivery records`);
+        // Add the selected Ops Name to all extracted records
+        const dataWithOpsName = response.data.extracted_data.map(item => ({
+          ...item,
+          ops_name: selectedOpsName
+        }));
+        setExtractedData(dataWithOpsName);
+        toast.success(`Extracted ${dataWithOpsName.length} delivery records for ${selectedOpsName}`);
       } else {
         console.error("API returned success=false:", response.data);
         toast.error("API processing failed");
