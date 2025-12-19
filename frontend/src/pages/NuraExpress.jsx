@@ -3,7 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Upload, Download, Image as ImageIcon, Loader2, CheckCircle, AlertCircle, X } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Upload, Download, Image as ImageIcon, Loader2, CheckCircle, AlertCircle, X, User } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner";
 
@@ -14,6 +16,8 @@ const NuraExpress = () => {
   const [processing, setProcessing] = useState(false);
   const [extractedData, setExtractedData] = useState([]);
   const [generating, setGenerating] = useState(false);
+  const [showOpsModal, setShowOpsModal] = useState(false);
+  const [selectedOpsName, setSelectedOpsName] = useState("");
 
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
