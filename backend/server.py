@@ -1355,7 +1355,7 @@ async def generate_nura_express_excel(
                     logger.warning(f"⚠️ Geocoding failed for: {address[:50]}... - {str(e)}")
             
             # Find nearest hotspot
-            nearest_hotspot, distance_to_hotspot, distance_status = find_nearest_hotspot(latitude, longitude)
+            nearest_hotspot, hotspot_id, distance_to_hotspot, distance_status = find_nearest_hotspot(latitude, longitude)
             
             excel_data.append({
                 "S. No.": idx,
@@ -1373,6 +1373,7 @@ async def generate_nura_express_excel(
                 "Status": delivery.get("status", ""),
                 "COD": delivery.get("cod", ""),
                 "Nearest Hotspot": nearest_hotspot,
+                "Hotspot ID": hotspot_id,
                 "Distance to Hotspot (km)": distance_to_hotspot,
                 "Distance Status": distance_status
             })
