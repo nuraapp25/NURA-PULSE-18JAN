@@ -353,6 +353,40 @@ const NuraExpress = () => {
           </ol>
         </CardContent>
       </Card>
+
+      {/* Ops Name Selection Modal */}
+      <Dialog open={showOpsModal} onOpenChange={setShowOpsModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <User className="w-5 h-5" />
+              Select Ops Name
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <Label htmlFor="ops-name" className="text-sm font-medium mb-2 block">
+              Choose the Ops person for this batch
+            </Label>
+            <Select value={selectedOpsName} onValueChange={setSelectedOpsName}>
+              <SelectTrigger id="ops-name" className="w-full">
+                <SelectValue placeholder="Select Ops Name" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Vicky">Vicky</SelectItem>
+                <SelectItem value="Karthick">Karthick</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter className="flex gap-2">
+            <Button variant="outline" onClick={() => setShowOpsModal(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleProcessImages} disabled={!selectedOpsName}>
+              Proceed with Extraction
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
