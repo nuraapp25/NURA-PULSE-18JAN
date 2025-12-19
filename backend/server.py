@@ -1292,10 +1292,12 @@ async def generate_nura_express_excel(
         def find_nearest_hotspot(delivery_lat, delivery_lng):
             """Find the nearest hotspot to a delivery location"""
             if hotspots_df is None or not delivery_lat or not delivery_lng:
-                return "", "", "", ""
+                return "", "", "", "", ""
             
             nearest_hotspot = ""
             nearest_hotspot_id = ""
+            nearest_hotspot_lat = None
+            nearest_hotspot_lng = None
             min_distance = float('inf')
             
             for _, hotspot in hotspots_df.iterrows():
@@ -1309,14 +1311,21 @@ async def generate_nura_express_excel(
                     min_distance = distance
                     nearest_hotspot = hotspot_name
                     nearest_hotspot_id = hotspot_id
+                    nearest_hotspot_lat = hotspot_lat
+                    nearest_hotspot_lng = hotspot_lng
             
             if min_distance == float('inf'):
-                return "", "", "", ""
+                return "", "", "", "", ""
             
             # Mark as "FAR" if distance > 5 km
             distance_status = "FAR" if min_distance > 5 else ""
             
-            return nearest_hotspot, nearest_hotspot_id, round(min_distance, 2), distance_status
+            # Generate Google Maps directions link from hotspot to delivery location
+            directions_link = ""
+            if nearest_hotspot_lat and nearest_hotspot_lng and delivery_lat and delivery_lng:
+                directions_link = f"https://www.google.com/maps/dir/?api=1&origin={nearest_hotspot_lat},{nearest_hotspot_lng}&destination={delivery_lat},{delivery_lng}"
+            
+            return nearest_hotspot, nearest_hotspot_id, round(min_distance, 2), directions_link, distance_status
         
         # Prepare data for Excel
         excel_data = []
