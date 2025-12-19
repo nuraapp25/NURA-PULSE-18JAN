@@ -1292,28 +1292,31 @@ async def generate_nura_express_excel(
         def find_nearest_hotspot(delivery_lat, delivery_lng):
             """Find the nearest hotspot to a delivery location"""
             if hotspots_df is None or not delivery_lat or not delivery_lng:
-                return "", "", ""
+                return "", "", "", ""
             
             nearest_hotspot = ""
+            nearest_hotspot_id = ""
             min_distance = float('inf')
             
             for _, hotspot in hotspots_df.iterrows():
                 hotspot_lat = hotspot.get('lat.1')
                 hotspot_lng = hotspot.get('lng.1')
                 hotspot_name = hotspot.get('Area name', '')
+                hotspot_id = hotspot.get('Hotspot ID', '')
                 
                 distance = haversine_distance(delivery_lat, delivery_lng, hotspot_lat, hotspot_lng)
                 if distance is not None and distance < min_distance:
                     min_distance = distance
                     nearest_hotspot = hotspot_name
+                    nearest_hotspot_id = hotspot_id
             
             if min_distance == float('inf'):
-                return "", "", ""
+                return "", "", "", ""
             
             # Mark as "FAR" if distance > 5 km
             distance_status = "FAR" if min_distance > 5 else ""
             
-            return nearest_hotspot, round(min_distance, 2), distance_status
+            return nearest_hotspot, nearest_hotspot_id, round(min_distance, 2), distance_status
         
         # Prepare data for Excel
         excel_data = []
