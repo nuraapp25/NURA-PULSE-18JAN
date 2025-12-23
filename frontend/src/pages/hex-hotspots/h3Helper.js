@@ -670,7 +670,7 @@ export const generateJSONContent = (clusters) => {
  * Format: h3_index, lat, lng, demand
  */
 export const generateStatusCSV = (
-  rawRides[],
+  rawRides,
   targetStatus,
   config
 ) => {
