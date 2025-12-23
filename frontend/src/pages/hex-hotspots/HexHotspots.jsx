@@ -23,7 +23,7 @@ const HexHotspots = () => {
 
     // UI State
     const [timeView, setTimeView] = useState('ALL');
-    const [startHour, setStartHour] = useState<number | 'ALL'>('ALL');
+    const [startHour, setStartHour] = useState('ALL');
     const [endHour, setEndHour] = useState<number | 'ALL'>('ALL');
     const [mapMetric, setMapMetric] = useState('DEMAND');
     const [locationType, setLocationType] = useState('PICKUP');
