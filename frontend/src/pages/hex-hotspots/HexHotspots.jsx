@@ -321,7 +321,7 @@ const HexHotspots = () => {
         document.body.removeChild(link);
     };
 
-    const handleDownloadPickupDrop = (mode: 'PICKUP' | 'DROP') => {
+    const handleDownloadPickupDrop = (mode) => {
         const csvContent = generatePickupDropPointCSV(rawRideData, mode);
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
