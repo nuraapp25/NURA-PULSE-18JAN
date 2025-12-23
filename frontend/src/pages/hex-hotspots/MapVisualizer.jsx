@@ -229,7 +229,7 @@ export const MapVisualizer = ({ clusters, metric, locationType = 'PICKUP', heigh
             return (
               <Polygon
                 key={poly.hexId}
-                positions={poly.positions as [number, number][]}
+                positions={poly.positions}
                 eventHandlers={{
                   click: () => toggleSelection(poly.hexId)
                 }}
