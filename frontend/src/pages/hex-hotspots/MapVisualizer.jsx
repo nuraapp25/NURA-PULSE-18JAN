@@ -2,19 +2,16 @@ import React, { useMemo, useEffect, useState } from 'react';
 import { Maximize2, Minimize2, ExternalLink } from 'lucide-react';
 import { MapContainer, TileLayer, Polygon, Tooltip, useMap, Circle } from 'react-leaflet';
 import { cellToBoundary } from 'h3-js';
-import { H3Cluster, MapMetric, LocationType } from '../types';
+
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-interface MapVisualizerProps {
-  clusters: H3Cluster[];
-  metric: MapMetric;
-  locationType?: LocationType;
-  height?: string;
-}
+// Props:
+  metric;
+  height?;
 
 // Helper to recenter map
-const RecenterAutomatically = ({ lat, lng }: { lat: number; lng: number }) => {
+const RecenterAutomatically = ({ lat, lng }: { lat; lng }) => {
   const map = useMap();
   useEffect(() => {
     map.setView([lat, lng]);
@@ -23,17 +20,17 @@ const RecenterAutomatically = ({ lat, lng }: { lat: number; lng: number }) => {
 };
 
 // SLA color scale
-const getSlaColor = (score: number) => {
+const getSlaColor = (score) => {
   const safeScore = Math.max(0, Math.min(100, score));
   const hue = (safeScore / 100) * 120;
   return `hsl(${hue}, 70%, 45%)`;
 };
 
-export const MapVisualizer: React.FC<MapVisualizerProps> = ({ clusters, metric, locationType = 'PICKUP', height = '100%' }) => {
+export const MapVisualizer = ({ clusters, metric, locationType = 'PICKUP', height = '100%' }) => {
   const [isClient, setIsClient] = useState(false);
   const [selectedHexes, setSelectedHexes] = useState<Set<string>>(new Set());
 
-  const toggleSelection = (hexId: string) => {
+  const toggleSelection = (hexId) => {
     setSelectedHexes(prev => {
       const next = new Set(prev);
       if (next.has(hexId)) {
@@ -84,8 +81,8 @@ export const MapVisualizer: React.FC<MapVisualizerProps> = ({ clusters, metric, 
 
     let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
     let maxD = 0;
-    const valid: H3Cluster[] = [];
-    const demands: number[] = [];
+    const valid = [];
+    const demands[] = [];
 
     clusters.forEach(c => {
       if (c.lat === 0 && c.lng === 0) return;
@@ -110,7 +107,7 @@ export const MapVisualizer: React.FC<MapVisualizerProps> = ({ clusters, metric, 
 
     // Calculate Percentiles for demand distribution
     demands.sort((a, b) => a - b);
-    const getP = (p: number) => demands[Math.floor(demands.length * p)] || 0;
+    const getP = (p) => demands[Math.floor(demands.length * p)] || 0;
 
     return {
       center: [(minLat + maxLat) / 2, (minLng + maxLng) / 2] as [number, number],
@@ -126,7 +123,7 @@ export const MapVisualizer: React.FC<MapVisualizerProps> = ({ clusters, metric, 
   }, [clusters]);
 
   // Dynamic continuous color scale based on demand percentiles
-  const getCustomDemandColor = (value: number) => {
+  const getCustomDemandColor = (value) => {
     if (value === 0 || maxDemand === 0) return 'transparent';
 
     const { p20, p40, p60, p80 } = percentiles;
@@ -176,7 +173,7 @@ export const MapVisualizer: React.FC<MapVisualizerProps> = ({ clusters, metric, 
           return null;
         }
       })
-      .filter(Boolean) as (H3Cluster & { positions: number[][]; color: string })[];
+      .filter(Boolean) as (H3Cluster & { positions[][]; color })[];
   }, [validClusters, metric, maxDemand]);
 
   // Stable hook
