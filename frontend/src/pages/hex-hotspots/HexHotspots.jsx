@@ -6,7 +6,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Upload, Map, Download, Settings, Activity, Cpu, FileText, MapPin, Car, AlertTriangle, FileJson, FileDown, Ban, UserX, CheckCircle2, Sun, Moon, Globe, Layers, ArrowRight, TrendingUp, Zap, LayoutDashboard, Filter } from 'lucide-react';
 
 import { processRideData, generateCSVContent, optimizeFleetDistribution, generateJSONContent, generateStatusCSV, buildStatusClusters, generatePickupDropPointCSV, VALID_HEX_IDS } from './h3Helper';
-import { getPacingStrategy } from './services/geminiService';
+import { getPacingStrategy } from './geminiService';
 import { Spinner } from './components/Spinner';
 import { MapVisualizer } from './components/MapVisualizer';
 import { MultiDatePicker } from './components/MultiDatePicker';
