@@ -13,7 +13,7 @@ import { MultiDatePicker } from './MultiDatePicker';
 import './hex-hotspots.css';
 
 
-const App = () => {
+const HexHotspots = () => {
     const [appState, setAppState] = useState(AppState.UPLOAD);
 
     // Cluster Data Buckets
