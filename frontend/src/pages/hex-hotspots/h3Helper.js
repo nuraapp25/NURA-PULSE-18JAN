@@ -496,7 +496,7 @@ export const processRideData = (
   // If using specific selected dates, use that count for accurate normalization
   // (Though uniqueDates.size should already capture it, this is explicit)
   const daysDenominator = (dateFilter?.selectedDates?.length || 0) > 0
-    ? dateFilter!.selectedDates!.length
+    ? dateFilter.selectedDates.length
     : Math.max(1, uniqueDates.size);
 
   let hoursPerDay = 24;
