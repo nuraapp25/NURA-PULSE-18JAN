@@ -35,9 +35,9 @@ const calculateSupply = (demandPerHour, config) => {
   return Math.ceil(bufferedSupply);
 };
 
-export const extractDate = (timeStr?, dateCol?) => {
+export const extractDate = (timeStr, dateCol) => {
   // Helper to parse Excel serial date
-  const parseExcelDate = (serial) {
+  const parseExcelDate = (serial) => {
     const utc_days = Math.floor(serial - 25569);
     const utc_value = utc_days * 86400;
     const date_info = new Date(utc_value * 1000);
