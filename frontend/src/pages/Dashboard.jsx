@@ -59,6 +59,7 @@ const Dashboard = () => {
   // Filter apps based on user account type
   const allApps = [
     { name: "Nura Express", icon: Package, path: "/dashboard/nura-express", roles: ["master_admin", "admin", "standard", "ops_team"] },
+    { name: "Hex Hotspots", icon: Hexagon, path: "/dashboard/hex-hotspots", roles: ["master_admin", "admin", "standard", "ops_team"] },
     { name: "Payment Data Extractor", icon: FileText, path: "/dashboard/payment-reconciliation", roles: ["master_admin", "admin", "standard", "ops_team"] },
     // { name: "Ride Pay Extract v2", icon: Zap, path: "/dashboard/ride-pay-extract-v2", roles: ["master_admin", "admin", "standard", "ops_team"] }, // Hidden - moved to App Settings
     { name: "Driver Onboarding", icon: Car, path: "/dashboard/driver-onboarding", roles: ["master_admin", "admin", "standard", "telecaller"] },
