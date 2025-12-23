@@ -516,7 +516,7 @@ export const processRideData = (
   const totalDurationHours = daysDenominator * hoursPerDay;
 
   // Helper to convert map to clusters
-  const mapToClusters = (map: Map<string, ClusterAccumulator>) => {
+  const mapToClusters = (map) => {
     if (map.size === 0) {
       return createDefaultCluster(config);
     }
