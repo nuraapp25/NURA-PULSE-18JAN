@@ -696,7 +696,7 @@ export const generateStatusCSV = (
 
   // 2. Format Output
   const headers = ['h3_index', 'lat', 'lng', 'demand'];
-  const rows[] = [];
+  const rows = [];
 
   hexMap.forEach((count, hexId) => {
     const [lat, lng] = cellToLatLng(hexId);
