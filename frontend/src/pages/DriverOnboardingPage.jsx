@@ -2864,6 +2864,33 @@ const DriverOnboardingPage = () => {
                   ))}
                 </div>
               </div>
+              
+              {/* Uncategorized */}
+              {statusSummary.summary.Uncategorized && statusSummary.stage_totals.Uncategorized > 0 && (
+                <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gradient-to-br from-gray-50 to-white dark:from-gray-900/10 dark:to-gray-800">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold text-gray-700 dark:text-gray-400">
+                      Uncategorized
+                    </h3>
+                    <span className="text-xs font-bold bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-400 px-2 py-1 rounded">
+                      {statusSummary.stage_totals.Uncategorized}
+                    </span>
+                  </div>
+                  <div className="space-y-2">
+                    {Object.entries(statusSummary.summary.Uncategorized).map(([status, count]) => (
+                      <div
+                        key={status}
+                        className="w-full flex items-center justify-between text-sm rounded px-2 py-1"
+                      >
+                        <span className="text-gray-700 dark:text-gray-300 truncate pr-2">{status}</span>
+                        <span className={`font-semibold ${count > 0 ? 'text-gray-600 dark:text-gray-400' : 'text-gray-400'}`}>
+                          {count}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div className="text-center py-8">
