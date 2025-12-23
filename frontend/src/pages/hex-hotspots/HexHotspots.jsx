@@ -1,45 +1,42 @@
+import { AppState } from './types';
 import React, { useState, useMemo, useEffect } from 'react';
 import Papa from 'papaparse';
 import { read, utils } from 'xlsx';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, LineChart, Line } from 'recharts';
 import { Upload, Map, Download, Settings, Activity, Cpu, FileText, MapPin, Car, AlertTriangle, FileJson, FileDown, Ban, UserX, CheckCircle2, Sun, Moon, Globe, Layers, ArrowRight, TrendingUp, Zap, LayoutDashboard, Filter } from 'lucide-react';
-import { H3Cluster, ProcessingConfig, AppState, RideDataRaw, MapMetric, LocationType } from './types';
+
 import { processRideData, generateCSVContent, optimizeFleetDistribution, generateJSONContent, generateStatusCSV, buildStatusClusters, generatePickupDropPointCSV, VALID_HEX_IDS } from './utils/h3Helper';
 import { getPacingStrategy } from './services/geminiService';
 import { Spinner } from './components/Spinner';
 import { MapVisualizer } from './components/MapVisualizer';
 import { MultiDatePicker } from './components/MultiDatePicker';
 
-type TimeView = 'ALL' | 'MORNING' | 'EVENING';
-type SortField = 'demand' | 'demandScore' | 'allocatedSupply' | 'slaComplianceScore' | 'hexId';
-type SortDirection = 'asc' | 'desc';
-type MapStatusFilter = 'ALL' | 'COMPLETED' | 'CANCELLED' | 'DRIVER_NOT_FOUND';
 
-const App: React.FC = () => {
-    const [appState, setAppState] = useState<AppState>(AppState.UPLOAD);
+const App = () => {
+    const [appState, setAppState] = useState(AppState.UPLOAD);
 
     // Cluster Data Buckets
-    const [baseClustersAll, setBaseClustersAll] = useState<H3Cluster[]>([]);
-    const [baseClustersMorning, setBaseClustersMorning] = useState<H3Cluster[]>([]);
-    const [baseClustersEvening, setBaseClustersEvening] = useState<H3Cluster[]>([]);
+    const [baseClustersAll, setBaseClustersAll] = useState([]);
+    const [baseClustersMorning, setBaseClustersMorning] = useState([]);
+    const [baseClustersEvening, setBaseClustersEvening] = useState([]);
 
     // UI State
-    const [timeView, setTimeView] = useState<TimeView>('ALL');
+    const [timeView, setTimeView] = useState('ALL');
     const [startHour, setStartHour] = useState<number | 'ALL'>('ALL');
     const [endHour, setEndHour] = useState<number | 'ALL'>('ALL');
-    const [mapMetric, setMapMetric] = useState<MapMetric>('DEMAND');
-    const [locationType, setLocationType] = useState<LocationType>('PICKUP');
-    const [mapStatusFilter, setMapStatusFilter] = useState<string[]>(['ALL']);
-    const [startDate, setStartDate] = useState<string>('');
-    const [endDate, setEndDate] = useState<string>('');
-    const [selectedDates, setSelectedDates] = useState<string[]>([]);
-    const [sortField, setSortField] = useState<SortField>('demandScore');
-    const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+    const [mapMetric, setMapMetric] = useState('DEMAND');
+    const [locationType, setLocationType] = useState('PICKUP');
+    const [mapStatusFilter, setMapStatusFilter] = useState(['ALL']);
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
+    const [selectedDates, setSelectedDates] = useState([]);
+    const [sortField, setSortField] = useState('demandScore');
+    const [sortDirection, setSortDirection] = useState('desc');
 
     // Keep raw data for status filtering
-    const [rawRideData, setRawRideData] = useState<RideDataRaw[]>([]);
+    const [rawRideData, setRawRideData] = useState([]);
 
-    const [config, setConfig] = useState<ProcessingConfig>({
+    const [config, setConfig] = useState({
         h3Resolution: 8,
         targetSlaMinutes: 5,
         avgTripTimeMinutes: 25,
@@ -48,12 +45,12 @@ const App: React.FC = () => {
 
     // Fleet Optimization State
     const [isFleetConstrained, setIsFleetConstrained] = useState(false);
-    const [fleetSize, setFleetSize] = useState<number>(0);
+    const [fleetSize, setFleetSize] = useState(0);
 
     // Debug Stats
-    const [debugStats, setDebugStats] = useState<any>(null);
+    const [debugStats, setDebugStats] = useState(null);
 
-    const [aiInsight, setAiInsight] = useState<string>("");
+    const [aiInsight, setAiInsight] = useState("");
     const [loadingAi, setLoadingAi] = useState(false);
 
     // Select the correct base clusters based on the tab view
@@ -80,8 +77,8 @@ const App: React.FC = () => {
 
         // Apply sorting
         return clusters.sort((a, b) => {
-            let aVal: any = a[sortField];
-            let bVal: any = b[sortField];
+            let aVal = a[sortField];
+            let bVal = b[sortField];
 
             if (sortField === 'hexId') {
                 aVal = aVal?.toString() || '';
@@ -269,8 +266,8 @@ const App: React.FC = () => {
     }, [startDate, endDate, selectedDates, timeView, config, locationType, startHour, endHour]);
 
     // Download Handler for Supply Plans
-    const handleDownloadSupplyPlan = (type: TimeView) => {
-        let targetClusters: H3Cluster[] = [];
+    const handleDownloadSupplyPlan = (type) => {
+        let targetClusters = [];
         let filename = "supply_plan.csv";
 
         switch (type) {
@@ -311,7 +308,7 @@ const App: React.FC = () => {
         document.body.removeChild(link);
     };
 
-    const handleDownloadStatus = (status: string, filename: string) => {
+    const handleDownloadStatus = (status, filename) => {
         const csvContent = generateStatusCSV(rawRideData, status, config);
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
@@ -903,7 +900,7 @@ const App: React.FC = () => {
                                 <div className="mt-4">
                                     <p className="text-xs font-bold text-slate-500 uppercase mb-2">Unique Statuses Found:</p>
                                     <div className="flex flex-wrap gap-2">
-                                        {debugStats.uniqueStatuses.map((s: string, i: number) => (
+                                        {debugStats.uniqueStatuses.map((s, i) => (
                                             <span key={i} className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded border border-slate-200">
                                                 {s || '(Empty)'}
                                             </span>
