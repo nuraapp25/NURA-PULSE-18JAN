@@ -404,7 +404,7 @@ const HexHotspots = () => {
                             </div>
                             <h2 className="text-3xl font-bold text-slate-900 mb-4 font-display">Upload Ride Data</h2>
                             <p className="text-slate-500 mb-10 text-lg max-w-md mx-auto leading-relaxed">
-                                Upload your CSV file containing ride coordinates and timestamps. We'll generate optimized supply plans for Chennai.
+                                Upload your CSV file containing ride coordinates and timestamps. We&apos;ll generate optimized supply plans for Chennai.
                             </p>
 
                             <div className="relative max-w-md mx-auto">
