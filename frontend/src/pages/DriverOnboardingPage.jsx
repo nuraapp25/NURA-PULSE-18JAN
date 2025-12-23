@@ -423,7 +423,7 @@ const DriverOnboardingPage = () => {
       const dataToUse = leadsData || leads; // Use provided data or fall back to state
       // Define stage structure with their statuses
       const stageDefinitions = {
-        'S1': ['New', 'Not Interested', 'Interested, No DL', 'Interested, No Badge', 
+        'S1': ['New', 'Not Interested', 'RNR', 'Interested, No DL', 'Interested, No Badge', 
                'Highly Interested', 'Call back 1D', 'Call back 1W', 'Call back 2W', 'Call back 1M'],
         'S2': ['Docs Upload Pending', 'Verification Pending', 'Duplicate License', 
                'DL - Amount', 'Verified', 'Verification Rejected'],
