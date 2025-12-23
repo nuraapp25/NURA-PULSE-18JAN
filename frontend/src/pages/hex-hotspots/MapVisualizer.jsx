@@ -57,7 +57,7 @@ export const MapVisualizer = ({ clusters, metric, locationType = 'PICKUP', heigh
   }, []);
 
   // Chennai defaults
-  const chennaiCenter: [number, number] = [13.0827, 80.2707];
+  const chennaiCenter = [13.0827, 80.2707];
 
   const chennaiBounds = new L.LatLngBounds(
     [12.75, 79.90],
