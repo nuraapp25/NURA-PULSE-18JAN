@@ -6,12 +6,8 @@ import { cellToBoundary } from 'h3-js';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-// Props:
-  metric;
-  height?;
-
 // Helper to recenter map
-const RecenterAutomatically = ({ lat, lng }: { lat; lng }) => {
+const RecenterAutomatically = ({ lat, lng }) => {
   const map = useMap();
   useEffect(() => {
     map.setView([lat, lng]);
@@ -28,7 +24,7 @@ const getSlaColor = (score) => {
 
 export const MapVisualizer = ({ clusters, metric, locationType = 'PICKUP', height = '100%' }) => {
   const [isClient, setIsClient] = useState(false);
-  const [selectedHexes, setSelectedHexes] = useState<Set<string>>(new Set());
+  const [selectedHexes, setSelectedHexes] = useStateSet(new Set());
 
   const toggleSelection = (hexId) => {
     setSelectedHexes(prev => {
