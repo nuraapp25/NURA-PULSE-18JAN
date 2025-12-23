@@ -24,7 +24,7 @@ const getSlaColor = (score) => {
 
 export const MapVisualizer = ({ clusters, metric, locationType = 'PICKUP', height = '100%' }) => {
   const [isClient, setIsClient] = useState(false);
-  const [selectedHexes, setSelectedHexes] = useStateSet(new Set());
+  const [selectedHexes, setSelectedHexes] = useState(new Set());
 
   const toggleSelection = (hexId) => {
     setSelectedHexes(prev => {
