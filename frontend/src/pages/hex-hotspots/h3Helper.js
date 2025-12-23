@@ -193,18 +193,18 @@ const isDateInRange = (date, startDate, endDate, selectedDates) => {
   return true;
 };
 
-const isMorningHour = (hour | null) => {
+const isMorningHour = (hour) => {
   if (hour === null) return false;
   return hour >= MORNING_WINDOW.startHour && hour <= MORNING_WINDOW.endHour;
 };
 
-const isEveningHour = (hour | null) => {
+const isEveningHour = (hour) => {
   if (hour === null) return false;
   if (hour >= EVENING_WINDOW.startHour) return true;
   return hour < MORNING_WINDOW.startHour;
 };
 
-const deriveRiderId = (row: Record<string, any>) | null => {
+const deriveRiderId = (row) => {
   const candidate =
     row.userId ||
     row.user_id ||
