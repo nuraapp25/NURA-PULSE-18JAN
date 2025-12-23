@@ -9,7 +9,7 @@ import { processRideData, generateCSVContent, optimizeFleetDistribution, generat
 import { getPacingStrategy } from './geminiService';
 import { Spinner } from './Spinner';
 import { MapVisualizer } from './MapVisualizer';
-import { MultiDatePicker } from './components/MultiDatePicker';
+import { MultiDatePicker } from './MultiDatePicker';
 
 
 const App = () => {
