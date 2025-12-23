@@ -739,7 +739,17 @@ const DriverOnboardingPage = () => {
     
     // Sub-status filter (specific status within a stage)
     if (activeSubStatus) {
-      filtered = filtered.filter(lead => lead.status === activeSubStatus);
+      if (activeSubStatus === 'None') {
+        // Special handling for "None" - match leads with null/empty/undefined status
+        filtered = filtered.filter(lead => !lead.status || lead.status === '' || lead.status === null);
+      } else {
+        // Case-insensitive matching for other statuses
+        const normalizedSubStatus = activeSubStatus.toLowerCase().trim();
+        filtered = filtered.filter(lead => {
+          if (!lead.status) return false;
+          return lead.status.toString().toLowerCase().trim() === normalizedSubStatus;
+        });
+      }
     }
     
     // Source filter (using 'source' field from import)
