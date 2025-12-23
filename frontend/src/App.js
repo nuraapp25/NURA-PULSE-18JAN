@@ -184,6 +184,7 @@ function App() {
                   <Route path="users" element={<UserManagement />} />
                 )}
                 <Route path="nura-express" element={<NuraExpress />} />
+                <Route path="hex-hotspots" element={<HexHotspots />} />
                 <Route path="payment-reconciliation" element={<PaymentReconciliation />} />
                 <Route path="ride-pay-extract-v2" element={<RidePayExtractV2 />} />
                 <Route path="driver-onboarding" element={<DriverOnboarding />} />
