@@ -674,7 +674,7 @@ export const generateStatusCSV = (
   targetStatus,
   config
 ) => {
-  const hexMap = new Map<string, number>();
+  const hexMap = new Map();
 
   // 1. Filter and Aggregate
   rawRides.forEach(row => {
