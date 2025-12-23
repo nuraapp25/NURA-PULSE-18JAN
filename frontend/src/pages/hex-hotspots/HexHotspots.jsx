@@ -214,7 +214,7 @@ const HexHotspots = () => {
                 header: true,
                 skipEmptyLines: true,
                 complete: (results) => {
-                    const rawData = results.data as any[];
+                    const rawData = results.data;
                     setRawRideData(rawData);
 
                     // Process splits with date filter if set
