@@ -723,17 +723,30 @@ const DriverOnboardingPage = () => {
     // Stage filters - New hierarchical filtering
     if (activeStageFilter !== "all") {
       if (activeStageFilter === "S1") {
-        const s1Statuses = S1_STATUSES.map(opt => opt.value);
-        filtered = filtered.filter(lead => s1Statuses.includes(lead.status));
+        const s1Statuses = S1_STATUSES.map(opt => opt.value.toLowerCase());
+        filtered = filtered.filter(lead => {
+          // Include leads with null/empty status in S1 (they're counted as "None")
+          if (!lead.status || lead.status === '' || lead.status === null) return true;
+          return s1Statuses.includes(lead.status.toLowerCase().trim());
+        });
       } else if (activeStageFilter === "S2") {
-        const s2Statuses = S2_STATUSES.map(opt => opt.value);
-        filtered = filtered.filter(lead => s2Statuses.includes(lead.status));
+        const s2Statuses = S2_STATUSES.map(opt => opt.value.toLowerCase());
+        filtered = filtered.filter(lead => {
+          if (!lead.status) return false;
+          return s2Statuses.includes(lead.status.toLowerCase().trim());
+        });
       } else if (activeStageFilter === "S3") {
-        const s3Statuses = S3_STATUSES.map(opt => opt.value);
-        filtered = filtered.filter(lead => s3Statuses.includes(lead.status));
+        const s3Statuses = S3_STATUSES.map(opt => opt.value.toLowerCase());
+        filtered = filtered.filter(lead => {
+          if (!lead.status) return false;
+          return s3Statuses.includes(lead.status.toLowerCase().trim());
+        });
       } else if (activeStageFilter === "S4") {
-        const s4Statuses = S4_STATUSES.map(opt => opt.value);
-        filtered = filtered.filter(lead => s4Statuses.includes(lead.status));
+        const s4Statuses = S4_STATUSES.map(opt => opt.value.toLowerCase());
+        filtered = filtered.filter(lead => {
+          if (!lead.status) return false;
+          return s4Statuses.includes(lead.status.toLowerCase().trim());
+        });
       }
     }
     
