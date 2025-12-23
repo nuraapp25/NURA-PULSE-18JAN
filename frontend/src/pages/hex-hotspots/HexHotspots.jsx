@@ -8,7 +8,7 @@ import { Upload, Map, Download, Settings, Activity, Cpu, FileText, MapPin, Car, 
 import { processRideData, generateCSVContent, optimizeFleetDistribution, generateJSONContent, generateStatusCSV, buildStatusClusters, generatePickupDropPointCSV, VALID_HEX_IDS } from './h3Helper';
 import { getPacingStrategy } from './geminiService';
 import { Spinner } from './Spinner';
-import { MapVisualizer } from './components/MapVisualizer';
+import { MapVisualizer } from './MapVisualizer';
 import { MultiDatePicker } from './components/MultiDatePicker';
 
 
