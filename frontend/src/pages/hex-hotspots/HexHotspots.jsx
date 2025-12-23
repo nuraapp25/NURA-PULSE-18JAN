@@ -184,7 +184,7 @@ const HexHotspots = () => {
                         const worksheet = workbook.Sheets[firstSheetName];
                         const jsonData = utils.sheet_to_json(worksheet, { raw: false });
 
-                        setRawRideData(jsonData as any[]);
+                        setRawRideData(jsonData);
 
                         // Process splits with date filter if set
                         const dateFilter = startDate || endDate || selectedDates.length > 0 ? {
