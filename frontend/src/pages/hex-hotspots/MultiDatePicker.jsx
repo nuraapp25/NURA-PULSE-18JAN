@@ -1,10 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, X, Calendar as CalendarIcon, Check } from 'lucide-react';
 
-// Props:
-    selectedDates;
-    onDateChange: (dates) => void;
-}
 
 export const MultiDatePicker = ({ selectedDates, onDateChange }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -14,8 +10,8 @@ export const MultiDatePicker = ({ selectedDates, onDateChange }) => {
 
     // Close on click outside (simplified handling for now)
     useEffect(() => {
-        const handleClickOutside = (e: MouseEvent) => {
-            if (isOpen && !(e.target as Element).closest('.date-picker-container')) {
+        const handleClickOutside = (e) => {
+            if (isOpen && !(e.target).closest('.date-picker-container')) {
                 setIsOpen(false);
             }
         };
@@ -23,22 +19,22 @@ export const MultiDatePicker = ({ selectedDates, onDateChange }) => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [isOpen]);
 
-    const daysInMonth = (date: Date) => {
+    const daysInMonth = (date) => {
         return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
     };
 
-    const firstDayOfMonth = (date: Date) => {
+    const firstDayOfMonth = (date) => {
         return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
     };
 
-    const formatDate = (date: Date) => {
+    const formatDate = (date) => {
         const y = date.getFullYear();
         const m = (date.getMonth() + 1).toString().padStart(2, '0');
         const d = date.getDate().toString().padStart(2, '0');
         return `${y}-${m}-${d}`;
     };
 
-    const toggleDate = (date: Date) => {
+    const toggleDate = (date) => {
         const dateStr = formatDate(date);
         let newSelection = [...selectedDates];
         if (newSelection.includes(dateStr)) {
