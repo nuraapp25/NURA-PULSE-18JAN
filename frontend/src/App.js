@@ -10,6 +10,7 @@ import HomePage from "@/pages/HomePage";
 import UserManagement from "@/pages/UserManagement";
 import PaymentReconciliation from "@/pages/PaymentReconciliation";
 import NuraExpress from "@/pages/NuraExpress";
+import HexHotspots from "@/pages/hex-hotspots/HexHotspots";
 import DriverOnboarding from "@/pages/DriverOnboardingPage";
 import TelecallerQueue from "@/pages/TelecallerQueue";
 import TelecallerDesk from "@/pages/TelecallerDesk";
