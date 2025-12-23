@@ -5,7 +5,7 @@ import { read, utils } from 'xlsx';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, LineChart, Line } from 'recharts';
 import { Upload, Map, Download, Settings, Activity, Cpu, FileText, MapPin, Car, AlertTriangle, FileJson, FileDown, Ban, UserX, CheckCircle2, Sun, Moon, Globe, Layers, ArrowRight, TrendingUp, Zap, LayoutDashboard, Filter } from 'lucide-react';
 
-import { processRideData, generateCSVContent, optimizeFleetDistribution, generateJSONContent, generateStatusCSV, buildStatusClusters, generatePickupDropPointCSV, VALID_HEX_IDS } from './utils/h3Helper';
+import { processRideData, generateCSVContent, optimizeFleetDistribution, generateJSONContent, generateStatusCSV, buildStatusClusters, generatePickupDropPointCSV, VALID_HEX_IDS } from './h3Helper';
 import { getPacingStrategy } from './services/geminiService';
 import { Spinner } from './components/Spinner';
 import { MapVisualizer } from './components/MapVisualizer';
