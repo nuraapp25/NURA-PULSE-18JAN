@@ -315,29 +315,16 @@ const finalizeCluster = (cluster, allocated) => {
 };
 
 export const processRideData = (
-  rows[],
+  rows,
   config,
-  dateFilter?: { startDate; endDate; timeView?: 'ALL' | 'MORNING' | 'EVENING'; selectedDates?[] },
-  locationType: 'PICKUP' | 'DROP' = 'PICKUP',
-  startHour | 'ALL' = 'ALL',
-  endHour | 'ALL' = 'ALL'
-): {
-  allDay,
-  morning,
-  evening,
-  debugStats: {
-    totalRows;
-    droppedUniqueReq;
-    droppedTimeRange;
-    droppedDate;
-    droppedInvalidCoord;
-    droppedInvalidStatus;
-    uniqueStatuses[];
-  }
-} => {
-  const hexMapAll = new Map<string, ClusterAccumulator>();
-  const hexMapMorning = new Map<string, ClusterAccumulator>();
-  const hexMapEvening = new Map<string, ClusterAccumulator>();
+  dateFilter,
+  locationType = 'PICKUP',
+  startHour = 'ALL',
+  endHour = 'ALL'
+) => {
+  const hexMapAll = new Map();
+  const hexMapMorning = new Map();
+  const hexMapEvening = new Map();
   const uniqueDates = new Set();
 
   // Debug Counters
