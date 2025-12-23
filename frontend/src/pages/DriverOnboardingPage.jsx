@@ -501,18 +501,23 @@ const DriverOnboardingPage = () => {
         const status = lead.status;
         
         if (status) {
-          // Find which stage this status belongs to
-          for (const [stage, statuses] of Object.entries(stageDefinitions)) {
-            if (statuses.includes(status)) {
-              if (summary[stage][status] !== undefined) {
-                summary[stage][status]++;
-                categorizedLeads++;
-              }
-              break;
-            }
+          // Normalize status for lookup (case-insensitive, trimmed)
+          const normalizedStatus = status.toString().toLowerCase().trim();
+          const mapping = statusToStageMap[normalizedStatus];
+          
+          if (mapping) {
+            // Found a matching stage/status
+            summary[mapping.stage][mapping.originalStatus]++;
+            categorizedLeads++;
+          } else {
+            // Uncategorized status
+            summary['Uncategorized']['Other']++;
+            console.warn('⚠️ Uncategorized status:', status, 'for lead:', lead.name || lead.id);
           }
         } else {
-          console.warn('⚠️  Lead without status:', lead.name || lead.id);
+          // No status - count as uncategorized
+          summary['Uncategorized']['Other']++;
+          console.warn('⚠️ Lead without status:', lead.name || lead.id);
         }
       });
       
@@ -523,6 +528,12 @@ const DriverOnboardingPage = () => {
       const stage_totals = {};
       for (const [stage, statuses] of Object.entries(summary)) {
         stage_totals[stage] = Object.values(statuses).reduce((sum, count) => sum + count, 0);
+      }
+      
+      // Remove Uncategorized if empty
+      if (stage_totals['Uncategorized'] === 0) {
+        delete summary['Uncategorized'];
+        delete stage_totals['Uncategorized'];
       }
       
       console.log('✅ Summary calculated:', { totalLeads, categorizedLeads, stage_totals });
