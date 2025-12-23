@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, X, Calendar as CalendarIcon, Check } from 'lucide-react';
 
-interface MultiDatePickerProps {
-    selectedDates: string[];
-    onDateChange: (dates: string[]) => void;
+// Props:
+    selectedDates;
+    onDateChange: (dates) => void;
 }
 
-export const MultiDatePicker: React.FC<MultiDatePickerProps> = ({ selectedDates, onDateChange }) => {
+export const MultiDatePicker = ({ selectedDates, onDateChange }) => {
     const [isOpen, setIsOpen] = useState(false);
     // Use the first selected date as the view reference, or today
     const initialDate = selectedDates.length > 0 ? new Date(selectedDates[0]) : new Date();
