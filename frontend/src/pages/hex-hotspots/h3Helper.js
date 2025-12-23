@@ -223,9 +223,9 @@ const deriveRiderId = (row) => {
 };
 
 const recordCluster = (
-  map: Map<string, ClusterAccumulator>,
+  map,
   hexId,
-  riderId | null,
+  riderId,
   status
 ) => {
   const s = status.toLowerCase();
