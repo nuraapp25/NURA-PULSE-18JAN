@@ -424,14 +424,23 @@ const DriverOnboardingPage = () => {
       // Define stage structure with their statuses
       const stageDefinitions = {
         'S1': ['New', 'Not Interested', 'RNR', 'Interested, No DL', 'Interested, No Badge', 
-               'Highly Interested', 'Call back 1D', 'Call back 1W', 'Call back 2W', 'Call back 1M'],
+               'Highly Interested', 'Call back 1D', 'Call back 1W', 'Call back 2W', 'Call back 1M',
+               'Interested', 'None'],
         'S2': ['Docs Upload Pending', 'Verification Pending', 'Duplicate License', 
                'DL - Amount', 'Verified', 'Verification Rejected'],
         'S3': ['Schedule Pending', 'Training WIP', 'Training Completed', 'Training Rejected',
                'Re-Training', 'Absent for training', 'Approved'],
         'S4': ['CT Pending', 'CT WIP', 'Shift Details Pending', 'DONE!', 
-               'Training Rejected', 'Re-Training', 'Absent for training', 'Terminated']
+               'Terminated']
       };
+      
+      // Create a normalized lookup map for case-insensitive matching
+      const statusToStageMap = {};
+      for (const [stage, statuses] of Object.entries(stageDefinitions)) {
+        statuses.forEach(status => {
+          statusToStageMap[status.toLowerCase().trim()] = { stage, originalStatus: status };
+        });
+      }
       
       // Initialize summary structure with zeros
       const summary = {};
@@ -441,6 +450,8 @@ const DriverOnboardingPage = () => {
           summary[stage][status] = 0;
         });
       }
+      // Add uncategorized section
+      summary['Uncategorized'] = { 'Other': 0 };
       
       // Filter leads based on date range and source (if filters are set)
       let leadsToCount = dataToUse;
