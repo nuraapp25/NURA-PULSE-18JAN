@@ -194,7 +194,7 @@ const HexHotspots = () => {
                             selectedDates: selectedDates
                         } : undefined;
 
-                        const processed = processRideData(jsonData as any[], config, dateFilter, locationType, startHour, endHour);
+                        const processed = processRideData(jsonData, config, dateFilter, locationType, startHour, endHour);
                         setBaseClustersAll(processed.allDay);
                         setBaseClustersMorning(processed.morning);
                         setBaseClustersEvening(processed.evening);
