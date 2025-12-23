@@ -770,9 +770,17 @@ const DriverOnboardingPage = () => {
       }
     }
     
-    // Status filter
+    // Status filter (case-insensitive)
     if (statusFilter) {
-      filtered = filtered.filter(lead => lead.status === statusFilter);
+      if (statusFilter === 'None') {
+        filtered = filtered.filter(lead => !lead.status || lead.status === '' || lead.status === null);
+      } else {
+        const normalizedStatusFilter = statusFilter.toLowerCase().trim();
+        filtered = filtered.filter(lead => {
+          if (!lead.status) return false;
+          return lead.status.toString().toLowerCase().trim() === normalizedStatusFilter;
+        });
+      }
     }
 
     setFilteredLeads(filtered);
