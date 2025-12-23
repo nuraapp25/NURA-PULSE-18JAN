@@ -438,7 +438,7 @@ const HexHotspots = () => {
                             {/* Time & Date Controls */}
                             <div className="glass-panel p-2 rounded-2xl flex flex-col sm:flex-row gap-2 w-full xl:w-auto relative z-20">
                                 <div className="flex bg-slate-100/50 p-1 rounded-xl">
-                                    {(['ALL', 'MORNING', 'EVENING'] as TimeView[]).map((view) => (
+                                    {(['ALL', 'MORNING', 'EVENING']).map((view) => (
                                         <button
                                             key={view}
                                             onClick={() => setTimeView(view)}
