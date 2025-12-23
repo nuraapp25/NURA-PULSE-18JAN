@@ -587,7 +587,7 @@ export const processRideData = (
  */
 export const optimizeFleetDistribution = (
   clusters,
-  fleetSize | null
+  fleetSize
 ) => {
   if (!clusters || clusters.length === 0) {
     return [];
