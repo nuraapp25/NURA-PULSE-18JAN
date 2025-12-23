@@ -10,6 +10,7 @@ import { getPacingStrategy } from './geminiService';
 import { Spinner } from './Spinner';
 import { MapVisualizer } from './MapVisualizer';
 import { MultiDatePicker } from './MultiDatePicker';
+import './hex-hotspots.css';
 
 
 const App = () => {
