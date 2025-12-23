@@ -100,7 +100,7 @@ export const extractDate = (timeStr?, dateCol?) => {
   return null;
 };
 
-export const extractHour = (timeStr?, hourCol?) | null => {
+export const extractHour = (timeStr, hourCol) => {
   // PRIORITY 1: Direct hour column - treat as simple integer 0-23
   // If hour column exists, use it directly (no complex parsing)
   if (hourCol !== undefined && hourCol !== null && hourCol !== '') {
