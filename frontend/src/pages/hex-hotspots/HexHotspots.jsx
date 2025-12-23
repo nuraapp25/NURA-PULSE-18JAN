@@ -165,7 +165,7 @@ const HexHotspots = () => {
         }
     }, [currentBaseClusters]);
 
-    const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileUpload = (event) => {
         const file = event.target.files?.[0];
         if (!file) return;
 
