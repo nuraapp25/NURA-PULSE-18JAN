@@ -106,7 +106,7 @@ export const MapVisualizer = ({ clusters, metric, locationType = 'PICKUP', heigh
     const getP = (p) => demands[Math.floor(demands.length * p)] || 0;
 
     return {
-      center: [(minLat + maxLat) / 2, (minLng + maxLng) / 2] as [number, number],
+      center: [(minLat + maxLat) / 2, (minLng + maxLng) / 2],
       validClusters: valid,
       maxDemand: maxD,
       percentiles: {
