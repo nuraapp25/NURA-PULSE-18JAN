@@ -715,15 +715,15 @@ export const generateStatusCSV = (
  * Builds H3Clusters for a specific ride status so they can be visualized on the map.
  */
 export const buildStatusClusters = (
-  rawRides[],
-  targetStatuses[],
+  rawRides,
+  targetStatuses,
   config,
-  locationType: 'PICKUP' | 'DROP' = 'PICKUP',
-  dateFilter?: { startDate; endDate; timeView?: 'ALL' | 'MORNING' | 'EVENING'; selectedDates?[] },
-  startHour | 'ALL' = 'ALL',
-  endHour | 'ALL' = 'ALL'
+  locationType = 'PICKUP',
+  dateFilter,
+  startHour = 'ALL',
+  endHour = 'ALL'
 ) => {
-  const hexMap = new Map<string, number>();
+  const hexMap = new Map();
 
   rawRides.forEach(row => {
     const status = row.rideStatus || row.status || row.RideStatus || '';
