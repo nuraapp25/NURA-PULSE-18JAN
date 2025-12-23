@@ -78,7 +78,7 @@ export const MapVisualizer = ({ clusters, metric, locationType = 'PICKUP', heigh
     let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
     let maxD = 0;
     const valid = [];
-    const demands[] = [];
+    const demands = [];
 
     clusters.forEach(c => {
       if (c.lat === 0 && c.lng === 0) return;
