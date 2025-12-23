@@ -857,11 +857,11 @@ export const buildStatusClusters = (
  * Simple point CSV for pickup or drop coordinates.
  */
 export const generatePickupDropPointCSV = (
-  rawRides[],
-  mode: 'PICKUP' | 'DROP'
+  rawRides,
+  mode = 'PICKUP'
 ) => {
   const headers = ['lat', 'lng'];
-  const rows[] = [];
+  const rows = [];
 
   rawRides.forEach(row => {
     const lat = mode === 'PICKUP'
