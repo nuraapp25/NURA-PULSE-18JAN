@@ -156,7 +156,7 @@ export const extractHour = (timeStr, hourCol) => {
   return null;
 };
 
-const isDateInRange = (date, startDate, endDate, selectedDates?[]) => {
+const isDateInRange = (date, startDate, endDate, selectedDates) => {
   // If no date in row, strict exclude if any filter is active
   if (!date) {
     return (!startDate && !endDate && (!selectedDates || selectedDates.length === 0));
