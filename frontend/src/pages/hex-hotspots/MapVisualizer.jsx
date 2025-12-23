@@ -169,7 +169,7 @@ export const MapVisualizer = ({ clusters, metric, locationType = 'PICKUP', heigh
           return null;
         }
       })
-      .filter(Boolean) as (H3Cluster & { positions[][]; color })[];
+      .filter(Boolean);
   }, [validClusters, metric, maxDemand]);
 
   // Stable hook
