@@ -861,7 +861,7 @@ export const buildStatusClusters = (
         requiredSupply,
         allocatedSupply: 0,
         slaComplianceScore: demandScore
-      } as H3Cluster;
+      };
     })
     .sort((a, b) => b.demandScore - a.demandScore || b.demand - a.demand);
 };
