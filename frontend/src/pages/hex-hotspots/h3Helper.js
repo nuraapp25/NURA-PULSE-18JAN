@@ -1,6 +1,6 @@
 
 import { latLngToCell, cellToLatLng } from 'h3-js';
-import { H3Cluster, ProcessingConfig } from '../types';
+
 
 // Morning: 06:00–15:59, Evening: 16:00–23:59, 00:00–05:59 treated as UNKNOWN
 const MORNING_WINDOW = { startHour: 6, endHour: 15 };
@@ -23,29 +23,21 @@ export const VALID_HEX_IDS = new Set([
   '88618c4d5dfffff', '88618c4d51fffff'
 ]);
 
-type ClusterAccumulator = {
-  demand: number;
-  riders: Set<string>;
-  completed: number;
-  cancelled: number;
-  driverNotFound: number;
-  unknown: number;
-};
 
 /**
  * core algorithm to calculate required autos per hex to meet SLA.
  * Based on Little's Law and utilization buffers.
  */
-const calculateSupply = (demandPerHour: number, config: ProcessingConfig): number => {
+const calculateSupply = (demandPerHour, config) => {
   const cycleTimeMinutes = config.avgTripTimeMinutes + config.targetSlaMinutes;
   const rawSupply = (demandPerHour * cycleTimeMinutes) / 60;
   const bufferedSupply = rawSupply / config.driverEfficiency;
   return Math.ceil(bufferedSupply);
 };
 
-export const extractDate = (timeStr?: string, dateCol?: any): Date | null => {
+export const extractDate = (timeStr?, dateCol?) => {
   // Helper to parse Excel serial date
-  const parseExcelDate = (serial: number): Date => {
+  const parseExcelDate = (serial): Date => {
     const utc_days = Math.floor(serial - 25569);
     const utc_value = utc_days * 86400;
     const date_info = new Date(utc_value * 1000);
@@ -53,7 +45,7 @@ export const extractDate = (timeStr?: string, dateCol?: any): Date | null => {
   };
 
   // Helper to parse DD-MM-YYYY format (common in India/Europe)
-  const parseDDMMYYYY = (dateStr: string): Date | null => {
+  const parseDDMMYYYY = (dateStr) => {
     const parts = dateStr.trim().match(/(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
     if (parts) {
       const day = parseInt(parts[1], 10);
@@ -108,7 +100,7 @@ export const extractDate = (timeStr?: string, dateCol?: any): Date | null => {
   return null;
 };
 
-export const extractHour = (timeStr?: string, hourCol?: any): number | null => {
+export const extractHour = (timeStr?, hourCol?) | null => {
   // PRIORITY 1: Direct hour column - treat as simple integer 0-23
   // If hour column exists, use it directly (no complex parsing)
   if (hourCol !== undefined && hourCol !== null && hourCol !== '') {
@@ -129,7 +121,7 @@ export const extractHour = (timeStr?: string, hourCol?: any): number | null => {
   if (!timeStr) return null;
 
   // Helper to handle Excel fraction (e.g. 0.5 = 12:00 PM)
-  const parseExcelTime = (fraction: number): number => {
+  const parseExcelTime = (fraction) => {
     const totalHours = fraction * 24;
     return Math.floor(totalHours);
   };
@@ -164,7 +156,7 @@ export const extractHour = (timeStr?: string, hourCol?: any): number | null => {
   return null;
 };
 
-const isDateInRange = (date: Date | null, startDate: Date | null, endDate: Date | null, selectedDates?: string[]): boolean => {
+const isDateInRange = (date, startDate, endDate, selectedDates?[]) => {
   // If no date in row, strict exclude if any filter is active
   if (!date) {
     return (!startDate && !endDate && (!selectedDates || selectedDates.length === 0));
@@ -201,18 +193,18 @@ const isDateInRange = (date: Date | null, startDate: Date | null, endDate: Date 
   return true;
 };
 
-const isMorningHour = (hour: number | null): boolean => {
+const isMorningHour = (hour | null) => {
   if (hour === null) return false;
   return hour >= MORNING_WINDOW.startHour && hour <= MORNING_WINDOW.endHour;
 };
 
-const isEveningHour = (hour: number | null): boolean => {
+const isEveningHour = (hour | null) => {
   if (hour === null) return false;
   if (hour >= EVENING_WINDOW.startHour) return true;
   return hour < MORNING_WINDOW.startHour;
 };
 
-const deriveRiderId = (row: Record<string, any>): string | null => {
+const deriveRiderId = (row: Record<string, any>) | null => {
   const candidate =
     row.userId ||
     row.user_id ||
@@ -232,10 +224,10 @@ const deriveRiderId = (row: Record<string, any>): string | null => {
 
 const recordCluster = (
   map: Map<string, ClusterAccumulator>,
-  hexId: string,
-  riderId: string | null,
-  status: string
-): void => {
+  hexId,
+  riderId | null,
+  status
+) => {
   const s = status.toLowerCase();
   // Drop PENDING rows from demand
   if (s.includes('pending')) {
@@ -243,7 +235,7 @@ const recordCluster = (
   }
 
   if (!map.has(hexId)) {
-    map.set(hexId, { demand: 0, riders: new Set<string>(), completed: 0, cancelled: 0, driverNotFound: 0, unknown: 0 });
+    map.set(hexId, { demand: 0, riders: new Set(), completed: 0, cancelled: 0, driverNotFound: 0, unknown: 0 });
   }
 
   const acc = map.get(hexId)!;
@@ -259,11 +251,11 @@ const recordCluster = (
 };
 
 const computeDemandScore = (
-  demand: number,
-  userDensity: number,
-  maxDemand: number,
-  maxDensity: number
-): number => {
+  demand,
+  userDensity,
+  maxDemand,
+  maxDensity
+) => {
   if (maxDemand === 0 && maxDensity === 0) return 0;
 
   // Use Square Root transformation to "even space" the scores and reduce outlier impact
@@ -274,7 +266,7 @@ const computeDemandScore = (
   return Math.round(Math.min(1, weighted) * 100);
 };
 
-const createDefaultCluster = (config: ProcessingConfig): H3Cluster[] => {
+const createDefaultCluster = (config) => {
   try {
     const hexId = latLngToCell(DEFAULT_CHENNAI_CENTER.lat, DEFAULT_CHENNAI_CENTER.lng, config.h3Resolution);
     const [lat, lng] = cellToLatLng(hexId);
@@ -300,7 +292,7 @@ const createDefaultCluster = (config: ProcessingConfig): H3Cluster[] => {
   }
 };
 
-const finalizeCluster = (cluster: H3Cluster, allocated: number): H3Cluster => {
+const finalizeCluster = (cluster, allocated) => {
   const safeRequired = Math.max(0, cluster.requiredSupply);
   const safeAllocated = Math.max(0, allocated);
   if (safeRequired === 0) {
@@ -323,30 +315,30 @@ const finalizeCluster = (cluster: H3Cluster, allocated: number): H3Cluster => {
 };
 
 export const processRideData = (
-  rows: any[],
-  config: ProcessingConfig,
-  dateFilter?: { startDate: Date | null; endDate: Date | null; timeView?: 'ALL' | 'MORNING' | 'EVENING'; selectedDates?: string[] },
+  rows[],
+  config,
+  dateFilter?: { startDate; endDate; timeView?: 'ALL' | 'MORNING' | 'EVENING'; selectedDates?[] },
   locationType: 'PICKUP' | 'DROP' = 'PICKUP',
-  startHour: number | 'ALL' = 'ALL',
-  endHour: number | 'ALL' = 'ALL'
+  startHour | 'ALL' = 'ALL',
+  endHour | 'ALL' = 'ALL'
 ): {
-  allDay: H3Cluster[],
-  morning: H3Cluster[],
-  evening: H3Cluster[],
+  allDay,
+  morning,
+  evening,
   debugStats: {
-    totalRows: number;
-    droppedUniqueReq: number;
-    droppedTimeRange: number;
-    droppedDate: number;
-    droppedInvalidCoord: number;
-    droppedInvalidStatus: number;
-    uniqueStatuses: string[];
+    totalRows;
+    droppedUniqueReq;
+    droppedTimeRange;
+    droppedDate;
+    droppedInvalidCoord;
+    droppedInvalidStatus;
+    uniqueStatuses[];
   }
 } => {
   const hexMapAll = new Map<string, ClusterAccumulator>();
   const hexMapMorning = new Map<string, ClusterAccumulator>();
   const hexMapEvening = new Map<string, ClusterAccumulator>();
-  const uniqueDates = new Set<string>();
+  const uniqueDates = new Set();
 
   // Debug Counters
   let totalRows = rows.length;
@@ -355,7 +347,7 @@ export const processRideData = (
   let droppedDate = 0;
   let droppedInvalidCoord = 0;
   let droppedInvalidStatus = 0;
-  const uniqueStatuses = new Set<string>();
+  const uniqueStatuses = new Set();
 
   // 1. Aggregation with date filtering
   rows.forEach(row => {
@@ -537,7 +529,7 @@ export const processRideData = (
   const totalDurationHours = daysDenominator * hoursPerDay;
 
   // Helper to convert map to clusters
-  const mapToClusters = (map: Map<string, ClusterAccumulator>): H3Cluster[] => {
+  const mapToClusters = (map: Map<string, ClusterAccumulator>) => {
     if (map.size === 0) {
       return createDefaultCluster(config);
     }
@@ -607,9 +599,9 @@ export const processRideData = (
  * Strategically distributes a fixed number of autos across clusters.
  */
 export const optimizeFleetDistribution = (
-  clusters: H3Cluster[],
-  fleetSize: number | null
-): H3Cluster[] => {
+  clusters,
+  fleetSize | null
+) => {
   if (!clusters || clusters.length === 0) {
     return [];
   }
@@ -669,7 +661,7 @@ export const optimizeFleetDistribution = (
  * Generates CSV for Supply Plans.
  * Format: h3_index, lat, lng, autos_needed, demand
  */
-export const generateCSVContent = (clusters: H3Cluster[]): string => {
+export const generateCSVContent = (clusters) => {
   const headers = ['h3_index', 'lat', 'lng', 'autos_needed', 'demand'];
   const rows = clusters.map(c => [
     c.hexId,
@@ -681,7 +673,7 @@ export const generateCSVContent = (clusters: H3Cluster[]): string => {
   return [headers.join(','), ...rows].join('\n');
 };
 
-export const generateJSONContent = (clusters: H3Cluster[]): string => {
+export const generateJSONContent = (clusters) => {
   return JSON.stringify(clusters, null, 2);
 };
 
@@ -691,10 +683,10 @@ export const generateJSONContent = (clusters: H3Cluster[]): string => {
  * Format: h3_index, lat, lng, demand
  */
 export const generateStatusCSV = (
-  rawRides: any[],
-  targetStatus: string,
-  config: ProcessingConfig
-): string => {
+  rawRides[],
+  targetStatus,
+  config
+) => {
   const hexMap = new Map<string, number>();
 
   // 1. Filter and Aggregate
@@ -717,7 +709,7 @@ export const generateStatusCSV = (
 
   // 2. Format Output
   const headers = ['h3_index', 'lat', 'lng', 'demand'];
-  const rows: string[] = [];
+  const rows[] = [];
 
   hexMap.forEach((count, hexId) => {
     const [lat, lng] = cellToLatLng(hexId);
@@ -736,14 +728,14 @@ export const generateStatusCSV = (
  * Builds H3Clusters for a specific ride status so they can be visualized on the map.
  */
 export const buildStatusClusters = (
-  rawRides: any[],
-  targetStatuses: string[],
-  config: ProcessingConfig,
+  rawRides[],
+  targetStatuses[],
+  config,
   locationType: 'PICKUP' | 'DROP' = 'PICKUP',
-  dateFilter?: { startDate: Date | null; endDate: Date | null; timeView?: 'ALL' | 'MORNING' | 'EVENING'; selectedDates?: string[] },
-  startHour: number | 'ALL' = 'ALL',
-  endHour: number | 'ALL' = 'ALL'
-): H3Cluster[] => {
+  dateFilter?: { startDate; endDate; timeView?: 'ALL' | 'MORNING' | 'EVENING'; selectedDates?[] },
+  startHour | 'ALL' = 'ALL',
+  endHour | 'ALL' = 'ALL'
+) => {
   const hexMap = new Map<string, number>();
 
   rawRides.forEach(row => {
@@ -878,11 +870,11 @@ export const buildStatusClusters = (
  * Simple point CSV for pickup or drop coordinates.
  */
 export const generatePickupDropPointCSV = (
-  rawRides: any[],
+  rawRides[],
   mode: 'PICKUP' | 'DROP'
-): string => {
+) => {
   const headers = ['lat', 'lng'];
-  const rows: string[] = [];
+  const rows[] = [];
 
   rawRides.forEach(row => {
     const lat = mode === 'PICKUP'
