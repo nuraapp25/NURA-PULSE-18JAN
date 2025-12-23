@@ -238,7 +238,7 @@ const recordCluster = (
     map.set(hexId, { demand: 0, riders: new Set(), completed: 0, cancelled: 0, driverNotFound: 0, unknown: 0 });
   }
 
-  const acc = map.get(hexId)!;
+  const acc = map.get(hexId);
   acc.demand += 1;
   if (riderId) {
     acc.riders.add(riderId);
