@@ -515,9 +515,13 @@ const DriverOnboardingPage = () => {
             console.warn('⚠️ Uncategorized status:', status, 'for lead:', lead.name || lead.id);
           }
         } else {
-          // No status - count as uncategorized
-          summary['Uncategorized']['Other']++;
-          console.warn('⚠️ Lead without status:', lead.name || lead.id);
+          // No status or null - count as "None" in S1
+          if (summary['S1']['None'] !== undefined) {
+            summary['S1']['None']++;
+            categorizedLeads++;
+          } else {
+            summary['Uncategorized']['Other']++;
+          }
         }
       });
       
