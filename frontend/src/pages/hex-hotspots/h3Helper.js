@@ -684,6 +684,7 @@ const haversineDistance = (lat1, lon1, lat2, lon2) => {
 /**
  * Generates raw data CSV with additional columns:
  * - Drop Hex ID (H3 index for drop location)
+ * - Distance from Yard to Pickup (in km)
  * - Distance from Yard to Drop (in km)
  */
 export const generateRawDataWithHexCSV = (rawRides, config) => {
@@ -695,10 +696,14 @@ export const generateRawDataWithHexCSV = (rawRides, config) => {
   const originalColumns = Object.keys(rawRides[0]);
   
   // Add new columns
-  const newColumns = ['Drop_Hex_ID', 'Yard_to_Drop_Distance_KM'];
+  const newColumns = ['Drop_Hex_ID', 'Yard_to_Pickup_Distance_KM', 'Yard_to_Drop_Distance_KM'];
   const allColumns = [...originalColumns, ...newColumns];
   
   const rows = rawRides.map(row => {
+    // Get pickup coordinates
+    const pickupLat = parseFloat(row.pickupLat || row.pickup_lat || row.pickupLatitude || row.PickupLat || row.latitude || row.Lat || 0);
+    const pickupLng = parseFloat(row.pickupLong || row.pickup_lng || row.pickupLongitude || row.PickupLong || row.longitude || row.Lng || row.Long || 0);
+    
     // Get drop coordinates
     const dropLat = parseFloat(row.dropLat || row.drop_lat || row.dropLatitude || row.DropLat || 0);
     const dropLng = parseFloat(row.dropLong || row.drop_lng || row.dropLongitude || row.DropLong || 0);
@@ -711,6 +716,12 @@ export const generateRawDataWithHexCSV = (rawRides, config) => {
       } catch (e) {
         dropHexId = 'INVALID';
       }
+    }
+    
+    // Calculate distance from Yard to Pickup
+    let yardToPickupDistance = '';
+    if (pickupLat && pickupLng && !isNaN(pickupLat) && !isNaN(pickupLng) && pickupLat !== 0 && pickupLng !== 0) {
+      yardToPickupDistance = haversineDistance(YARD_LOCATION.lat, YARD_LOCATION.lng, pickupLat, pickupLng).toFixed(2);
     }
     
     // Calculate distance from Yard to Drop
@@ -733,6 +744,7 @@ export const generateRawDataWithHexCSV = (rawRides, config) => {
     
     // Add new column values
     rowValues.push(dropHexId);
+    rowValues.push(yardToPickupDistance);
     rowValues.push(yardToDropDistance);
     
     return rowValues.join(',');
