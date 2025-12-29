@@ -953,6 +953,21 @@ const HexHotspots = () => {
                                     <FileDown className="w-3 h-3" /> Export CSV
                                 </button>
                             </div>
+
+                            <div className="glass-card p-5 rounded-2xl flex flex-col">
+                                <h4 className="text-sm font-bold text-slate-800 mb-2 flex items-center gap-2">
+                                    <FileText className="w-4 h-4 text-emerald-500" /> Raw Data + Hex
+                                </h4>
+                                <p className="text-xs text-slate-500 mb-4">
+                                    Export all raw data with Drop Hex ID and Yard-to-Drop distance (km).
+                                </p>
+                                <button
+                                    onClick={handleDownloadRawDataWithHex}
+                                    className="mt-auto w-full py-2 px-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold rounded-lg flex items-center justify-center gap-2 transition-all"
+                                >
+                                    <FileDown className="w-3 h-3" /> Export CSV
+                                </button>
+                            </div>
                         </div>
 
                         {/* Data Table with Sorting */}
