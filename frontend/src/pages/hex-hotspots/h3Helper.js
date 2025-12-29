@@ -660,6 +660,87 @@ export const generateCSVContent = (clusters) => {
   return [headers.join(','), ...rows].join('\n');
 };
 
+// Yard location: 13°04'43.0"N 80°11'56.7"E converted to decimal
+const YARD_LOCATION = {
+  lat: 13.078611,
+  lng: 80.199083
+};
+
+/**
+ * Haversine formula to calculate distance between two coordinates in kilometers
+ */
+const haversineDistance = (lat1, lon1, lat2, lon2) => {
+  const R = 6371; // Earth's radius in kilometers
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
+
+/**
+ * Generates raw data CSV with additional columns:
+ * - Drop Hex ID (H3 index for drop location)
+ * - Distance from Yard to Drop (in km)
+ */
+export const generateRawDataWithHexCSV = (rawRides, config) => {
+  if (!rawRides || rawRides.length === 0) {
+    return 'No data available';
+  }
+
+  // Get all original columns from first row
+  const originalColumns = Object.keys(rawRides[0]);
+  
+  // Add new columns
+  const newColumns = ['Drop_Hex_ID', 'Yard_to_Drop_Distance_KM'];
+  const allColumns = [...originalColumns, ...newColumns];
+  
+  const rows = rawRides.map(row => {
+    // Get drop coordinates
+    const dropLat = parseFloat(row.dropLat || row.drop_lat || row.dropLatitude || row.DropLat || 0);
+    const dropLng = parseFloat(row.dropLong || row.drop_lng || row.dropLongitude || row.DropLong || 0);
+    
+    // Calculate Drop Hex ID
+    let dropHexId = '';
+    if (dropLat && dropLng && !isNaN(dropLat) && !isNaN(dropLng) && dropLat !== 0 && dropLng !== 0) {
+      try {
+        dropHexId = latLngToCell(dropLat, dropLng, config.h3Resolution || 8);
+      } catch (e) {
+        dropHexId = 'INVALID';
+      }
+    }
+    
+    // Calculate distance from Yard to Drop
+    let yardToDropDistance = '';
+    if (dropLat && dropLng && !isNaN(dropLat) && !isNaN(dropLng) && dropLat !== 0 && dropLng !== 0) {
+      yardToDropDistance = haversineDistance(YARD_LOCATION.lat, YARD_LOCATION.lng, dropLat, dropLng).toFixed(2);
+    }
+    
+    // Build row with all columns
+    const rowValues = originalColumns.map(col => {
+      const value = row[col];
+      if (value === null || value === undefined) return '';
+      // Escape commas and quotes in CSV
+      const strValue = String(value);
+      if (strValue.includes(',') || strValue.includes('"') || strValue.includes('\n')) {
+        return `"${strValue.replace(/"/g, '""')}"`;
+      }
+      return strValue;
+    });
+    
+    // Add new column values
+    rowValues.push(dropHexId);
+    rowValues.push(yardToDropDistance);
+    
+    return rowValues.join(',');
+  });
+
+  return [allColumns.join(','), ...rows].join('\n');
+};
+
 export const generateJSONContent = (clusters) => {
   return JSON.stringify(clusters, null, 2);
 };
