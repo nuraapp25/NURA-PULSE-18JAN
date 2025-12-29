@@ -959,7 +959,7 @@ const HexHotspots = () => {
                                     <FileText className="w-4 h-4 text-emerald-500" /> Raw Data + Hex
                                 </h4>
                                 <p className="text-xs text-slate-500 mb-4">
-                                    Export all raw data with Drop Hex ID and Yard-to-Drop distance (km).
+                                    Export all raw data with Drop Hex ID, Yard-to-Pickup and Yard-to-Drop distance (km).
                                 </p>
                                 <button
                                     onClick={handleDownloadRawDataWithHex}
