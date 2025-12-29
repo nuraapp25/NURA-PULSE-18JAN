@@ -182,7 +182,7 @@ const HexHotspots = () => {
                         const workbook = read(data, { type: 'array' });
                         const firstSheetName = workbook.SheetNames[0];
                         const worksheet = workbook.Sheets[firstSheetName];
-                        const jsonData = utils.sheet_to_json(worksheet, { raw: false });
+                        const jsonData = utils.sheet_to_json(worksheet, { raw: true });
 
                         setRawRideData(jsonData);
 
