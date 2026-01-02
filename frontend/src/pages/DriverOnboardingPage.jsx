@@ -433,7 +433,7 @@ const DriverOnboardingPage = () => {
         'S3': ['Schedule Pending', 'Training WIP', 'Training Completed', 'Training Rejected',
                'Re-Training', 'Absent for training', 'Approved'],
         'S4': ['CT Pending', 'CT WIP', 'Shift Details Pending', 'DONE!', 
-               'Terminated']
+               'Terminated', 'Churn', 'Quick Churn']
       };
       
       // Create a normalized lookup map for case-insensitive matching
