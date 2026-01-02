@@ -81,6 +81,8 @@ const S4_STATUSES = [
   { value: "Re-Training", label: "Re-Training", color: "bg-gray-100 text-gray-700" },
   { value: "Absent for training", label: "Absent for training", color: "bg-gray-100 text-gray-700" },
   { value: "Terminated", label: "Terminated", color: "bg-red-100 text-red-700" },
+  { value: "Churn", label: "Churn", color: "bg-orange-100 text-orange-700" },
+  { value: "Quick Churn", label: "Quick Churn", color: "bg-red-100 text-red-700" },
 ];
 
 // Get statuses for a specific stage
