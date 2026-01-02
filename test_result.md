@@ -1,10 +1,10 @@
-# Test Results - Hex Hotspots "Raw Data + Hex" Download Feature
+# Test Results - Driver Onboarding Churn Statuses Feature
 
 ## Test Configuration
 - **Date**: 2025-12-29
-- **Feature**: Hex Hotspots - "Raw Data + Hex" Download Feature
+- **Feature**: Driver Onboarding - New "Churn" and "Quick Churn" statuses in S4 stage
 - **Tester**: Testing Agent
-- **Status**: ✅ PASSED (All functionality working correctly)
+- **Status**: 🔄 IN PROGRESS
 
 ## Test Scenarios Executed
 
