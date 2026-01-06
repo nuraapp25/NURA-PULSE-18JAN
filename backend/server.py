@@ -15433,6 +15433,197 @@ async def download_sample_template(current_user: User = Depends(get_current_user
         raise HTTPException(status_code=500, detail=f"Failed to create template: {str(e)}")
 
 
+# ==================== Monthly Ride Tracking ====================
+
+@api_router.post("/montra-vehicle/analytics/monthly-ride-tracking")
+async def get_monthly_ride_tracking(
+    data: dict = Body(...),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get monthly ride tracking data for vehicles.
+    Calculates total KM traveled based on odometer readings.
+    """
+    try:
+        vehicle_ids = data.get("vehicle_ids", [])
+        start_date_str = data.get("start_date")
+        end_date_str = data.get("end_date")
+        
+        if not vehicle_ids:
+            raise HTTPException(status_code=400, detail="No vehicles selected")
+        if not start_date_str or not end_date_str:
+            raise HTTPException(status_code=400, detail="Start and end dates are required")
+        
+        start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
+        end_date = datetime.strptime(end_date_str, "%Y-%m-%d")
+        
+        # Get vehicle registration numbers mapping
+        vehicles = await db.montra_vehicles.find(
+            {"vehicle_id": {"$in": vehicle_ids}},
+            {"_id": 0, "vehicle_id": 1, "registration_number": 1}
+        ).to_list(1000)
+        
+        vehicle_reg_map = {v["vehicle_id"]: v["registration_number"] for v in vehicles}
+        
+        # Initialize results structure
+        vehicle_summary = {}
+        daily_data = {}
+        daily_totals = {}
+        
+        # Process each vehicle
+        for vehicle_id in vehicle_ids:
+            reg_number = vehicle_reg_map.get(vehicle_id, vehicle_id)
+            
+            # Get odometer data for this vehicle in date range
+            pipeline = [
+                {
+                    "$match": {
+                        "vehicle_id": vehicle_id,
+                        "date": {
+                            "$gte": start_date_str,
+                            "$lte": end_date_str
+                        }
+                    }
+                },
+                {
+                    "$group": {
+                        "_id": "$date",
+                        "min_odometer": {"$min": "$Odometer (km)"},
+                        "max_odometer": {"$max": "$Odometer (km)"},
+                        "first_odometer": {"$first": "$Odometer (km)"},
+                        "last_odometer": {"$last": "$Odometer (km)"}
+                    }
+                },
+                {
+                    "$sort": {"_id": 1}
+                }
+            ]
+            
+            daily_records = await db.montra_feed_data.aggregate(pipeline).to_list(100)
+            
+            # Calculate KM for each day
+            total_km = 0
+            daily_kms = []
+            
+            for record in daily_records:
+                date_str = record["_id"]
+                min_odo = record.get("min_odometer", 0) or 0
+                max_odo = record.get("max_odometer", 0) or 0
+                
+                # KM traveled = max odometer - min odometer for the day
+                km_traveled = max(0, max_odo - min_odo)
+                
+                total_km += km_traveled
+                daily_kms.append(km_traveled)
+                
+                # Store daily data
+                if date_str not in daily_data:
+                    daily_data[date_str] = {"date": date_str, "vehicles": []}
+                
+                daily_data[date_str]["vehicles"].append({
+                    "vehicle_id": vehicle_id,
+                    "registration_number": reg_number,
+                    "start_odometer": min_odo,
+                    "end_odometer": max_odo,
+                    "km_traveled": km_traveled
+                })
+                
+                # Update daily totals
+                if date_str not in daily_totals:
+                    daily_totals[date_str] = 0
+                daily_totals[date_str] += km_traveled
+            
+            # Calculate vehicle summary
+            days_active = len(daily_kms)
+            vehicle_summary[vehicle_id] = {
+                "vehicle_id": vehicle_id,
+                "registration_number": reg_number,
+                "total_km": total_km,
+                "days_active": days_active,
+                "avg_km_per_day": total_km / days_active if days_active > 0 else 0,
+                "max_daily_km": max(daily_kms) if daily_kms else 0,
+                "min_daily_km": min(daily_kms) if daily_kms else 0
+            }
+        
+        # Sort daily data by date
+        sorted_daily_data = [daily_data[d] for d in sorted(daily_data.keys())]
+        
+        # Create daily totals list
+        daily_totals_list = [
+            {"date": d, "total_km": km} 
+            for d, km in sorted(daily_totals.items())
+        ]
+        
+        # Calculate overall totals
+        all_vehicle_summaries = list(vehicle_summary.values())
+        total_km_all = sum(v["total_km"] for v in all_vehicle_summaries)
+        total_days = len(daily_totals)
+        
+        # Calculate previous month comparison
+        comparison = None
+        try:
+            prev_start = start_date - timedelta(days=30)
+            prev_end = end_date - timedelta(days=30)
+            prev_start_str = prev_start.strftime("%Y-%m-%d")
+            prev_end_str = prev_end.strftime("%Y-%m-%d")
+            
+            # Get previous month data
+            prev_pipeline = [
+                {
+                    "$match": {
+                        "vehicle_id": {"$in": vehicle_ids},
+                        "date": {
+                            "$gte": prev_start_str,
+                            "$lte": prev_end_str
+                        }
+                    }
+                },
+                {
+                    "$group": {
+                        "_id": {"vehicle_id": "$vehicle_id", "date": "$date"},
+                        "min_odometer": {"$min": "$Odometer (km)"},
+                        "max_odometer": {"$max": "$Odometer (km)"}
+                    }
+                }
+            ]
+            
+            prev_records = await db.montra_feed_data.aggregate(prev_pipeline).to_list(1000)
+            prev_total_km = sum(
+                max(0, (r.get("max_odometer", 0) or 0) - (r.get("min_odometer", 0) or 0))
+                for r in prev_records
+            )
+            
+            km_change = total_km_all - prev_total_km
+            km_change_percent = (km_change / prev_total_km * 100) if prev_total_km > 0 else 0
+            
+            comparison = {
+                "previous_month_km": prev_total_km,
+                "current_month_km": total_km_all,
+                "km_change": km_change,
+                "km_change_percent": km_change_percent
+            }
+        except Exception as e:
+            logger.warning(f"Could not calculate comparison: {str(e)}")
+        
+        return {
+            "success": True,
+            "total_km": total_km_all,
+            "vehicles_count": len(vehicle_ids),
+            "days_count": total_days,
+            "avg_km_per_vehicle_per_day": total_km_all / (len(vehicle_ids) * total_days) if total_days > 0 and len(vehicle_ids) > 0 else 0,
+            "vehicle_summary": sorted(all_vehicle_summaries, key=lambda x: x["total_km"], reverse=True),
+            "daily_data": sorted_daily_data,
+            "daily_totals": daily_totals_list,
+            "comparison": comparison
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in monthly ride tracking: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get ride tracking data: {str(e)}")
+
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
