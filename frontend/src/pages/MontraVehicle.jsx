@@ -120,6 +120,14 @@ const MontraVehicle = () => {
       color: "bg-cyan-500",
       description: "Manage vehicle documentation and records",
       route: "/dashboard/montra-vehicle/vehicle-documents"
+    },
+    {
+      id: "monthly-ride-tracking",
+      title: "Monthly Ride Tracking",
+      icon: TrendingUp,
+      color: "bg-emerald-500",
+      description: "Track total KMs traveled by vehicles monthly",
+      route: "/dashboard/montra-vehicle/monthly-ride-tracking"
     }
   ];
 
