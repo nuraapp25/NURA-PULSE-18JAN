@@ -15445,6 +15445,8 @@ async def get_monthly_ride_tracking(
     Calculates total KM traveled based on odometer readings.
     """
     try:
+        from datetime import timedelta
+        
         vehicle_ids = data.get("vehicle_ids", [])
         start_date_str = data.get("start_date")
         end_date_str = data.get("end_date")
