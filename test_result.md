@@ -225,9 +225,9 @@ The feature is fully implemented and operational:
 
 ---
 
-## Monthly Ride Tracking Feature Testing Session (2026-01-06)
+## Monthly Ride Tracking Feature Testing Session (2026-01-09)
 **Tester**: Testing Agent
-**Status**: ✅ PASSED - All core functionality verified and working
+**Status**: ⚠️ PARTIALLY WORKING - Core UI functional but vehicle selection issue identified
 
 ### Test Scenarios Executed
 
@@ -236,150 +236,120 @@ The feature is fully implemented and operational:
 - **Details**: Successfully logged in with admin@nurapulse.com / admin
 - **Result**: Redirected to dashboard correctly
 
-### ✅ 2. Navigation to Montra Vehicle Insights
+### ✅ 2. Navigation to Monthly Ride Tracking
 - **Status**: PASSED
-- **Details**: Successfully navigated from sidebar to Montra Vehicle Insights page
-- **Result**: Page loaded with correct URL and interface showing all analytics widgets
+- **Details**: Successfully navigated directly to Monthly Ride Tracking page
+- **Result**: Page loaded with correct URL (/dashboard/montra-vehicle/monthly-ride-tracking)
 
-### ✅ 3. Monthly Ride Tracking Widget Verification
+### ✅ 3. Page Layout and UI Components
 - **Status**: PASSED ✅
 - **Details**: 
-  - Found Monthly Ride Tracking widget with green icon (emerald background)
-  - Widget title: "Monthly Ride Tracking"
-  - Widget description: "Track total KMs traveled by vehicles monthly"
-  - Widget positioned correctly in the analytics widgets grid
-- **Result**: ✅ WIDGET FOUND AND ACCESSIBLE
-
-### ✅ 4. Monthly Ride Tracking Page Navigation
-- **Status**: PASSED ✅
-- **Details**: Successfully clicked on widget and navigated to Monthly Ride Tracking page
-- **Result**: ✅ PAGE LOADS WITH CORRECT URL (/dashboard/montra-vehicle/monthly-ride-tracking)
-
-### ✅ 5. Filters Section Verification - CRITICAL FEATURE
-- **Status**: PASSED ✅
-- **Details**: 
+  - Monthly Ride Tracking page loads correctly with proper layout
   - Filters section visible with proper card layout
   - **Filter Mode dropdown**: Present with "By Month" and "Custom Date Range" options
   - **Select Month picker**: Present and functional (default: January 2026)
   - **Daily KM Alert Threshold input**: Present with default value 100
-  - **Vehicle selection checkboxes**: Multiple vehicle checkboxes available
-  - **Select All checkbox**: Present and functional
-- **Result**: ✅ ALL FILTER COMPONENTS WORKING CORRECTLY
+  - **Vehicle checkboxes**: Multiple vehicle checkboxes displayed (TN22ED4894, TN02CE0730, etc.)
+  - **Select All checkbox**: Present but not functioning correctly
+- **Result**: ✅ ALL UI COMPONENTS PRESENT
 
-### ✅ 6. Vehicle Selection Functionality
+### ✅ 4. Month Picker for November 2025
 - **Status**: PASSED ✅
 - **Details**: 
-  - Vehicle list populated from database (showing vehicle IDs like TN22ED4894, TN02CE0730, etc.)
-  - Select All checkbox works correctly
-  - Individual vehicle checkboxes functional
-  - Vehicle count display shows "(0 selected)" initially
-- **Result**: ✅ VEHICLE SELECTION SYSTEM WORKING
+  - Month picker button clickable and opens calendar popup
+  - Calendar navigation works (previous/next month buttons)
+  - Successfully navigated to November/December 2025 timeframe
+  - Date selection works and updates the month display
+- **Result**: ✅ MONTH PICKER FUNCTIONAL FOR NOVEMBER 2025
 
-### ✅ 7. View Data Functionality
-- **Status**: PASSED ✅
+### ❌ 5. Vehicle Selection Functionality - CRITICAL ISSUE
+- **Status**: FAILED ❌
+- **Details**: 
+  - Vehicle list populated from database correctly (API call successful)
+  - Individual vehicle checkboxes are displayed
+  - **Select All checkbox does not work properly** - clicking it doesn't select vehicles
+  - Vehicle count remains at "(0 selected)" even after clicking Select All
+  - This prevents the View Data functionality from working
+- **Result**: ❌ VEHICLE SELECTION SYSTEM NOT WORKING
+
+### ❌ 6. View Data Functionality
+- **Status**: FAILED ❌
 - **Details**: 
   - View Data button present and clickable
-  - Data loading process works correctly
-  - API call to backend successful
-  - Data displays after clicking View Data
-- **Result**: ✅ DATA LOADING AND DISPLAY WORKING
+  - However, no data loads because no vehicles are selected
+  - API endpoint `/api/montra-vehicle/analytics/monthly-ride-tracking` not called due to validation
+  - Backend logs show successful API responses for vehicle list retrieval
+- **Result**: ❌ DATA LOADING BLOCKED BY VEHICLE SELECTION ISSUE
 
-### ✅ 8. Summary Cards Display - CRITICAL FEATURE
-- **Status**: PASSED ✅
+### ❌ 7. Data Display Components
+- **Status**: NOT TESTED ❌
 - **Details**: 
-  - **Total KM card**: Present with gradient green background
-  - **Vehicles Tracked card**: Present with blue background
-  - **Avg KM/Vehicle/Day card**: Present with purple background
-  - **Days in Period card**: Present with orange background
-  - All cards show proper data when loaded
-- **Result**: ✅ ALL SUMMARY CARDS DISPLAYING CORRECTLY
-
-### ✅ 9. Charts Verification
-- **Status**: PASSED ✅
-- **Details**: 
-  - **Daily KM Trend line chart**: Present and functional
-  - **KM by Vehicle bar chart**: Present and functional
-  - **KM Distribution pie chart**: Present and functional
-  - Charts render properly using Recharts library
-- **Result**: ✅ ALL CHARTS RENDERING CORRECTLY
-
-### ✅ 10. Data Tables Verification
-- **Status**: PASSED ✅
-- **Details**: 
-  - **Vehicle-wise Summary table**: Present with all required columns:
-    - Registration No, Total KM, Days Active, Avg KM/Day, Max Daily KM, Min Daily KM
-  - **Daily Breakdown table**: Present with proper structure
-  - Tables display data correctly when loaded
-- **Result**: ✅ ALL TABLES DISPLAYING WITH CORRECT STRUCTURE
-
-### ✅ 11. Export Functionality
-- **Status**: PASSED ✅
-- **Details**: 
-  - **Export Summary button**: Present and accessible
-  - **Export Daily button**: Present and accessible
-  - Buttons appear after data is loaded
-  - CSV export functionality implemented in code
-- **Result**: ✅ EXPORT BUTTONS AVAILABLE AND FUNCTIONAL
-
-### ✅ 12. Filter Mode Switching
-- **Status**: PASSED ✅
-- **Details**: 
-  - Filter Mode dropdown works correctly
-  - Can switch between "By Month" and "Custom Date Range"
-  - UI updates appropriately for each mode
-  - Date pickers appear/disappear based on selection
-- **Result**: ✅ FILTER MODE SWITCHING WORKING
+  - Summary cards (Total KM, Vehicles Tracked, etc.) not displayed
+  - Charts not rendered
+  - Tables not populated
+  - Export buttons not visible
+  - All due to no data being loaded from failed vehicle selection
+- **Result**: ❌ DATA DISPLAY COMPONENTS NOT ACCESSIBLE
 
 ## Critical Test Results Summary
 
-### ✅ PASSED - All Requirements Met:
-1. **Login & Navigation**: ✅ Successfully accessed Monthly Ride Tracking via Montra Vehicle Insights
-2. **Widget Discovery**: ✅ Monthly Ride Tracking widget found with green icon and correct description
-3. **Page Loading**: ✅ Monthly Ride Tracking page loads correctly with all components
-4. **Filters Section**: ✅ All filter components present and functional
-   - Filter Mode dropdown (By Month / Custom Date Range) ✅
-   - Select Month picker ✅
-   - Daily KM Alert Threshold input ✅
-   - Vehicle selection checkboxes ✅
-   - Select All checkbox ✅
-5. **Data Loading**: ✅ View Data button works and loads data successfully
-6. **Summary Cards**: ✅ All 4 summary cards display correctly (Total KM, Vehicles Tracked, Avg KM/Vehicle/Day, Days in Period)
-7. **Charts**: ✅ All 3 charts render correctly (Daily KM Trend, KM by Vehicle, KM Distribution)
-8. **Tables**: ✅ Both tables present with correct structure (Vehicle-wise Summary, Daily Breakdown)
-9. **Export Functionality**: ✅ Both export buttons available (Export Summary, Export Daily)
-10. **Filter Modes**: ✅ Both filter modes work correctly (By Month and Custom Date Range)
+### ✅ WORKING Components:
+1. **Login & Navigation**: ✅ Successfully accessed Monthly Ride Tracking page directly
+2. **Page Loading**: ✅ Monthly Ride Tracking page loads correctly with all UI components
+3. **Month Picker**: ✅ Successfully navigated to November 2025 timeframe
+4. **Filter Mode**: ✅ Dropdown works correctly (By Month / Custom Date Range)
+5. **Daily KM Threshold**: ✅ Input field functional
+6. **Backend API**: ✅ Vehicle list API endpoint working correctly
+
+### ❌ FAILING Components:
+1. **Vehicle Selection**: ❌ Select All checkbox not functioning
+2. **Data Loading**: ❌ Cannot proceed due to vehicle selection validation
+3. **Summary Cards**: ❌ Not displayed (no data loaded)
+4. **Charts**: ❌ Not rendered (no data loaded)
+5. **Tables**: ❌ Not populated (no data loaded)
+6. **Export Functionality**: ❌ Not accessible (no data loaded)
+
+## Root Cause Analysis
+
+**Primary Issue**: Vehicle selection functionality is broken
+- The Select All checkbox appears to be clickable but doesn't actually select vehicles
+- Individual vehicle checkboxes may also have selection issues
+- This creates a cascade failure where no data can be loaded or displayed
+
+**Technical Details**:
+- Backend API `/api/montra-vehicle/vehicles` returns 200 OK with vehicle data
+- Frontend receives vehicle list correctly (vehicles displayed in UI)
+- Issue appears to be in the checkbox event handling or state management
+- React component state for `selectedVehicles` not updating properly
 
 ## Test Evidence
 - Screenshots captured showing:
-  - Montra Vehicle Insights page with Monthly Ride Tracking widget
-  - Monthly Ride Tracking page with all components loaded
-  - Filters section with all controls
-  - Data loading and display functionality
-  - Summary cards, charts, and tables
+  - Successful login and navigation
+  - Monthly Ride Tracking page with all UI components
+  - Month picker functionality working
+  - Vehicle selection issue (Select All not working)
+  - No data displayed due to selection issue
 
 ## Conclusion
 
-**✅ TEST PASSED - Monthly Ride Tracking Feature is FULLY FUNCTIONAL**
+**⚠️ TEST PARTIALLY PASSED - Critical Vehicle Selection Issue Identified**
 
-The Monthly Ride Tracking feature is completely implemented and working correctly:
-- All UI components are present and functional
-- Navigation flow works seamlessly
-- Data loading and display works properly
-- All filtering options are available and working
-- Charts and tables render correctly
-- Export functionality is implemented
-- The feature meets all specified requirements from the test request
+The Monthly Ride Tracking feature has most components working correctly, but a critical issue prevents full functionality:
 
-## Technical Implementation Verified
-- ✅ React component properly structured with all required elements
-- ✅ API integration working for vehicle data and ride tracking data
-- ✅ Chart rendering using Recharts library functional
-- ✅ CSV export functionality implemented
-- ✅ Date filtering and vehicle selection working
-- ✅ Responsive design and proper styling applied
+**Working**: Page loading, navigation, month selection, UI layout, backend API
+**Broken**: Vehicle selection mechanism, which blocks all data loading and display
+
+## Technical Implementation Issues
+- ❌ Vehicle selection checkbox event handling not working
+- ❌ React state management for `selectedVehicles` array not updating
+- ❌ Select All functionality broken
+- ✅ Backend API integration working correctly
+- ✅ UI components and layout properly implemented
+- ✅ Month picker and date filtering functional
 
 ## Recommendations
-- Feature is ready for production use
-- All core functionality working as expected
-- No critical issues or bugs identified
-- Implementation meets all specified requirements
+- **HIGH PRIORITY**: Fix vehicle selection checkbox functionality
+- Investigate React component state management for vehicle selection
+- Test individual vehicle checkbox selection in addition to Select All
+- Once vehicle selection is fixed, re-test data loading and display components
+- Feature cannot be considered production-ready until vehicle selection works
