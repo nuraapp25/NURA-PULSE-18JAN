@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import axios from "axios";
 import { API } from "@/App";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,8 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, Plus, Download, Upload, Trash2, Edit, Calendar } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Download, Upload, Trash2, Edit, Calendar, Clock, Users, Car, BarChart3, TrendingUp } from "lucide-react";
 import { format, addDays, startOfWeek, subDays, parseISO } from "date-fns";
 
 const SupplyPlan = () => {
