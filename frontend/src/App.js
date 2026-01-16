@@ -192,6 +192,7 @@ function App() {
                 <Route path="driver-onboarding" element={<DriverOnboarding />} />
                 <Route path="telecaller-queue" element={<TelecallerQueue />} />
                 <Route path="telecaller-desk" element={<TelecallerDeskMobile />} />
+                <Route path="telecaller-statistics" element={<TelecallerStatistics />} />
                 <Route path="montra-vehicle" element={<MontraVehicle />} />
                 <Route path="montra-vehicle/service-requests" element={<VehicleServiceRequest />} />
                 <Route path="montra-vehicle/vehicle-documents" element={<VehicleDocuments />} />
