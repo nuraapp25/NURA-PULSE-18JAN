@@ -9618,6 +9618,100 @@ async def get_vehicle_document_file(
 async def startup_event():
     await initialize_master_admin()
     logger.info("Application started")
+    
+    # Initialize scheduler for daily Slack reports
+    scheduler = AsyncIOScheduler()
+    scheduler.add_job(
+        send_daily_slack_report_job,
+        CronTrigger(hour=20, minute=0),  # 8 PM every day
+        id="daily_slack_report",
+        replace_existing=True
+    )
+    scheduler.start()
+    logger.info("Daily Slack report scheduler started (8 PM)")
+
+
+async def send_daily_slack_report_job():
+    """Background job to send daily telecaller report to Slack"""
+    try:
+        # Get Slack settings
+        settings = await db.app_settings.find_one({"type": "slack_settings"}, {"_id": 0})
+        
+        if not settings or not settings.get("enabled") or not settings.get("webhook_url"):
+            logger.info("Slack daily report skipped - not enabled or webhook not configured")
+            return
+        
+        slack_webhook_url = settings.get("webhook_url")
+        report_date = datetime.now().strftime("%Y-%m-%d")
+        
+        # Get telecallers
+        telecallers = await db.users.find(
+            {"account_type": "telecaller", "status": "active"},
+            {"_id": 0, "email": 1, "first_name": 1, "last_name": 1}
+        ).to_list(1000)
+        
+        # Build report for each telecaller
+        report_lines = [f"📊 *Daily Telecaller Report - {report_date}*\n"]
+        
+        for tc in telecallers:
+            tc_email = tc.get("email")
+            tc_name = f"{tc.get('first_name', '')} {tc.get('last_name', '')}".strip() or tc_email.split('@')[0]
+            
+            # Get leads for this telecaller
+            leads = await db.driver_leads.find({
+                "assigned_telecaller": tc_email
+            }, {"_id": 0}).to_list(10000)
+            
+            total_leads = len(leads)
+            calls_done = 0
+            no_response = 0
+            highly_interested = 0
+            not_interested = 0
+            callbacks = 0
+            
+            for lead in leads:
+                status = (lead.get("status") or "").lower()
+                
+                if lead.get("last_called") and lead.get("last_called_by") == tc_email:
+                    calls_done += 1
+                
+                if lead.get("last_no_response") and lead.get("last_no_response_by") == tc_email:
+                    no_response += 1
+                
+                if "highly interested" in status:
+                    highly_interested += 1
+                elif "not interested" in status:
+                    not_interested += 1
+                elif "call back" in status:
+                    callbacks += 1
+            
+            # Only include telecallers with leads
+            if total_leads > 0:
+                report_lines.append(f"*{tc_name}'s Report:*")
+                report_lines.append(f"Total leads = {total_leads}")
+                report_lines.append(f"Calls done = {calls_done}")
+                report_lines.append(f"No Response = {no_response}")
+                if highly_interested > 0:
+                    report_lines.append(f"Highly Interested = {highly_interested}")
+                if not_interested > 0:
+                    report_lines.append(f"Not Interested = {not_interested}")
+                if callbacks > 0:
+                    report_lines.append(f"Call back = {callbacks}")
+                report_lines.append("")  # Empty line between telecallers
+        
+        # Send to Slack
+        slack_message = {"text": "\n".join(report_lines)}
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.post(slack_webhook_url, json=slack_message, timeout=30)
+            
+            if response.status_code == 200:
+                logger.info(f"Daily Slack report sent successfully for {report_date}")
+            else:
+                logger.error(f"Failed to send Slack report: {response.status_code}")
+                
+    except Exception as e:
+        logger.error(f"Error in daily Slack report job: {str(e)}")
 
 
 
