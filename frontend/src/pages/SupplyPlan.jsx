@@ -460,6 +460,15 @@ const SupplyPlan = () => {
           <p className="text-gray-600">Manage driver-vehicle shift assignments</p>
         </div>
         <div className="flex gap-2">
+          <Button 
+            onClick={() => setShowUtilization(!showUtilization)} 
+            variant="outline" 
+            size="sm"
+            className={showUtilization ? 'bg-blue-50 text-blue-700 border-blue-200' : ''}
+          >
+            <BarChart3 className="w-4 h-4 mr-2" />
+            {showUtilization ? 'Hide' : 'Show'} Stats
+          </Button>
           <Button onClick={handleDownloadTemplate} variant="outline" size="sm">
             <Download className="w-4 h-4 mr-2" />
             Template
@@ -484,6 +493,185 @@ const SupplyPlan = () => {
           </Button>
         </div>
       </div>
+
+      {/* Utilization Statistics */}
+      {showUtilization && (
+        <div className="space-y-4">
+          {/* Summary Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-blue-600 dark:text-blue-400">Total Shifts</p>
+                    <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">{utilizationStats.totalAssignments}</p>
+                  </div>
+                  <Calendar className="h-8 w-8 text-blue-400" />
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-green-600 dark:text-green-400">Total Hours</p>
+                    <p className="text-2xl font-bold text-green-700 dark:text-green-300">{utilizationStats.totalDriverHours}h</p>
+                  </div>
+                  <Clock className="h-8 w-8 text-green-400" />
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-purple-600 dark:text-purple-400">Active Drivers</p>
+                    <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">
+                      {utilizationStats.activeDrivers}/{utilizationStats.totalDrivers}
+                    </p>
+                  </div>
+                  <Users className="h-8 w-8 text-purple-400" />
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-amber-600 dark:text-amber-400">Active Vehicles</p>
+                    <p className="text-2xl font-bold text-amber-700 dark:text-amber-300">
+                      {utilizationStats.activeVehicles}/{utilizationStats.totalVehicles}
+                    </p>
+                  </div>
+                  <Car className="h-8 w-8 text-amber-400" />
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-gradient-to-br from-cyan-50 to-cyan-100 dark:from-cyan-900/20 dark:to-cyan-800/20">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-cyan-600 dark:text-cyan-400">Avg Hrs/Driver</p>
+                    <p className="text-2xl font-bold text-cyan-700 dark:text-cyan-300">{utilizationStats.avgHoursPerDriver}h</p>
+                  </div>
+                  <TrendingUp className="h-8 w-8 text-cyan-400" />
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-gradient-to-br from-rose-50 to-rose-100 dark:from-rose-900/20 dark:to-rose-800/20">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-rose-600 dark:text-rose-400">Avg Hrs/Vehicle</p>
+                    <p className="text-2xl font-bold text-rose-700 dark:text-rose-300">{utilizationStats.avgHoursPerVehicle}h</p>
+                  </div>
+                  <TrendingUp className="h-8 w-8 text-rose-400" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Driver & Vehicle Utilization Tables */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Driver Utilization */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Users className="h-5 w-5 text-purple-600" />
+                  Driver Utilization
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="max-h-[200px] overflow-y-auto">
+                  <table className="w-full text-sm">
+                    <thead className="sticky top-0 bg-gray-50 dark:bg-gray-800">
+                      <tr className="border-b">
+                        <th className="text-left py-2 px-2">Driver</th>
+                        <th className="text-center py-2 px-2">Hours</th>
+                        <th className="text-center py-2 px-2">Shifts</th>
+                        <th className="text-center py-2 px-2">Vehicles</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {utilizationStats.driverStats.length > 0 ? (
+                        utilizationStats.driverStats.map((driver, idx) => (
+                          <tr key={idx} className="border-b hover:bg-gray-50 dark:hover:bg-gray-800">
+                            <td className="py-2 px-2 font-medium">{driver.name}</td>
+                            <td className="text-center py-2 px-2">
+                              <Badge variant="outline" className="bg-green-50 text-green-700">{driver.hours.toFixed(1)}h</Badge>
+                            </td>
+                            <td className="text-center py-2 px-2">
+                              <Badge variant="outline">{driver.shifts}</Badge>
+                            </td>
+                            <td className="text-center py-2 px-2">
+                              <Badge variant="outline" className="bg-amber-50 text-amber-700">{driver.vehicles}</Badge>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={4} className="text-center py-4 text-gray-500">No assignments for this date</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Vehicle Utilization */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Car className="h-5 w-5 text-amber-600" />
+                  Vehicle Utilization
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="max-h-[200px] overflow-y-auto">
+                  <table className="w-full text-sm">
+                    <thead className="sticky top-0 bg-gray-50 dark:bg-gray-800">
+                      <tr className="border-b">
+                        <th className="text-left py-2 px-2">Vehicle</th>
+                        <th className="text-center py-2 px-2">Hours</th>
+                        <th className="text-center py-2 px-2">Shifts</th>
+                        <th className="text-center py-2 px-2">Drivers</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {utilizationStats.vehicleStats.length > 0 ? (
+                        utilizationStats.vehicleStats.map((vehicle, idx) => (
+                          <tr key={idx} className="border-b hover:bg-gray-50 dark:hover:bg-gray-800">
+                            <td className="py-2 px-2 font-medium">{vehicle.name}</td>
+                            <td className="text-center py-2 px-2">
+                              <Badge variant="outline" className="bg-green-50 text-green-700">{vehicle.hours.toFixed(1)}h</Badge>
+                            </td>
+                            <td className="text-center py-2 px-2">
+                              <Badge variant="outline">{vehicle.shifts}</Badge>
+                            </td>
+                            <td className="text-center py-2 px-2">
+                              <Badge variant="outline" className="bg-purple-50 text-purple-700">{vehicle.drivers}</Badge>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={4} className="text-center py-4 text-gray-500">No assignments for this date</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      )}
 
       {/* Week Navigation */}
       <Card>
