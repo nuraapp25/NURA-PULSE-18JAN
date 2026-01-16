@@ -262,6 +262,86 @@ const SettingsPage = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Slack Integration Settings - Admin Only */}
+      {isAdmin && (
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
+          <CardHeader>
+            <CardTitle className="flex items-center text-gray-900 dark:text-white">
+              <Bell size={20} className="mr-2 text-purple-600" />
+              Slack Integration
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <p className="text-sm text-blue-800 dark:text-blue-300">
+                Configure Slack to receive automated daily telecaller reports at 8 PM.
+                <a 
+                  href="https://api.slack.com/messaging/webhooks" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center ml-2 text-blue-600 hover:underline"
+                >
+                  How to get webhook URL <ExternalLink size={14} className="ml-1" />
+                </a>
+              </p>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <div>
+                  <Label className="font-semibold">Enable Daily Reports</Label>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Automatically send reports to Slack at scheduled time
+                  </p>
+                </div>
+                <Switch
+                  checked={slackSettings.enabled}
+                  onCheckedChange={(checked) => setSlackSettings({ ...slackSettings, enabled: checked })}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="slack-webhook">Slack Webhook URL</Label>
+                <Input
+                  id="slack-webhook"
+                  type="url"
+                  placeholder="https://hooks.slack.com/services/..."
+                  value={slackSettings.webhook_url}
+                  onChange={(e) => setSlackSettings({ ...slackSettings, webhook_url: e.target.value })}
+                  className="mt-1 dark:bg-gray-700 dark:border-gray-600"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Paste your Slack Incoming Webhook URL here
+                </p>
+              </div>
+              
+              <div>
+                <Label htmlFor="report-time">Daily Report Time</Label>
+                <Input
+                  id="report-time"
+                  type="time"
+                  value={slackSettings.daily_report_time}
+                  onChange={(e) => setSlackSettings({ ...slackSettings, daily_report_time: e.target.value })}
+                  className="mt-1 w-32 dark:bg-gray-700 dark:border-gray-600"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Time to send the daily report (default: 8:00 PM)
+                </p>
+              </div>
+              
+              <Button 
+                onClick={handleSaveSlackSettings} 
+                disabled={savingSlack}
+                className="bg-purple-600 hover:bg-purple-700"
+              >
+                <Save size={16} className="mr-2" />
+                {savingSlack ? "Saving..." : "Save Slack Settings"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
