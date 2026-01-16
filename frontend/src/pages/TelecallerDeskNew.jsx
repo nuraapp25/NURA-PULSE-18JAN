@@ -902,7 +902,7 @@ const TelecallerDeskNew = () => {
               </p>
             </div>
             <Button
-              onClick={() => window.location.href = '/telecaller-statistics'}
+              onClick={() => window.location.href = '/dashboard/telecaller-statistics'}
               variant="outline"
               size="sm"
               className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800"
