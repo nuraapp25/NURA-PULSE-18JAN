@@ -21,6 +21,9 @@ import requests
 import asyncio
 import pandas as pd
 import numpy as np
+import httpx
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
 
 # Import hotspot optimizer
 from hotspot_optimizer import optimize_hotspots, TIME_SLOTS
