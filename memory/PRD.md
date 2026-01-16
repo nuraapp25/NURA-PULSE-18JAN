@@ -31,12 +31,40 @@ Nura Pulse is a comprehensive data management and insights dashboard for logisti
 - RNR (Reached - No Response) count in S1 summary
 - Import from CSV/XLSX with smart column mapping
 
+### Telecaller's Desk
+- Lead assignment and call tracking
+- Status management (No Response, Interested, Not Interested, Callbacks)
+- Call statistics by date range
+
+### Telecaller Statistics (NEW)
+- Dedicated analytics page at /dashboard/telecaller-statistics
+- Visual charts: Calls Per Day (Area chart), Telecaller Performance (Bar chart), Status Distribution (Pie chart)
+- Summary cards: Total Calls, Total Leads, Highly Interested, No Response, Not Interested, Callbacks
+- Daily Summary table with filtering by telecaller
+- Individual Telecaller Report cards
+- Date range selection
+- "Send Daily Report" button for manual Slack reports
+
+### Slack Integration (NEW)
+- Configurable in Settings page
+- Webhook URL configuration for Slack channel
+- Automated daily reports at 8 PM (scheduled task)
+- Report format:
+  ```
+  Angelin's Report:
+  Total leads = 82
+  Calls done = 37
+  No Response = 11
+  Highly Interested = 1
+  ```
+- Enable/disable toggle
+- Customizable report time
+
 ### Montra Vehicle Insights
 - Vehicle tracking and analytics
-- Monthly Ride Tracking feature (in progress)
+- Monthly Ride Tracking feature (in progress - checkbox bug)
 
 ### Other Features
-- Telecaller's Desk
 - Supply Plan
 - Expense Tracker
 - Hotspot Planning
@@ -48,7 +76,8 @@ Nura Pulse is a comprehensive data management and insights dashboard for logisti
 - Backend: FastAPI (Python)
 - Database: MongoDB
 - AI Integration: OpenAI GPT-4o-mini via Emergent LLM Key
-- External APIs: Google Geocoding API
+- Scheduler: APScheduler for automated tasks
+- External APIs: Google Geocoding API, Slack Webhooks
 
 ## Recent Updates (Jan 2026)
 
@@ -56,6 +85,18 @@ Nura Pulse is a comprehensive data management and insights dashboard for logisti
 - Added Jan 2026 folder for new month support
 - Added manual entry fields for Driver Name and Vehicle Number in processing modal
 - Fixed Create Folder dialog visibility in folder-selection view
+
+### Telecaller Statistics Page
+- New dedicated page with comprehensive analytics
+- Charts showing calls per day, telecaller performance, status distribution
+- Summary cards with key metrics
+- Filterable daily summary table
+- Individual telecaller report cards
+
+### Slack Integration
+- Settings page configuration for Slack webhook
+- Automated 8 PM daily reports (via APScheduler)
+- Manual report sending from Statistics page
 
 ## Known Issues
 
