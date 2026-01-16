@@ -311,30 +311,32 @@ const MonthlyRideTracking = () => {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label>Select Vehicles ({selectedVehicles.length} selected)</Label>
-              <div 
+              <label 
+                htmlFor="select-all-vehicles"
                 className="flex items-center gap-2 cursor-pointer"
-                onClick={() => handleSelectAllVehicles(!(selectedVehicles.length === vehicles.length && vehicles.length > 0))}
               >
                 <Checkbox 
+                  id="select-all-vehicles"
                   checked={selectedVehicles.length === vehicles.length && vehicles.length > 0}
-                  onCheckedChange={handleSelectAllVehicles}
+                  onCheckedChange={(checked) => handleSelectAllVehicles(checked)}
                 />
                 <span className="text-sm">Select All</span>
-              </div>
+              </label>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2 max-h-40 overflow-y-auto p-2 border rounded-lg">
               {vehicles.map(vehicle => (
-                <div 
+                <label 
                   key={vehicle.vehicle_id} 
+                  htmlFor={`vehicle-${vehicle.vehicle_id}`}
                   className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded p-1"
-                  onClick={() => handleVehicleToggle(vehicle.vehicle_id)}
                 >
                   <Checkbox 
+                    id={`vehicle-${vehicle.vehicle_id}`}
                     checked={selectedVehicles.includes(vehicle.vehicle_id)}
                     onCheckedChange={() => handleVehicleToggle(vehicle.vehicle_id)}
                   />
                   <span className="text-sm truncate">{vehicle.registration_number}</span>
-                </div>
+                </label>
               ))}
             </div>
           </div>
