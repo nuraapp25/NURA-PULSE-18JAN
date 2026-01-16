@@ -1362,92 +1362,113 @@ const PaymentReconciliation = () => {
           <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Enter Driver Profile</DialogTitle>
+            <p className="text-sm text-gray-500 mt-1">
+              Type manually or select from dropdown
+            </p>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="driver-name">Driver Name *</Label>
-              <Popover open={driverPopoverOpen} onOpenChange={setDriverPopoverOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={driverPopoverOpen}
-                    className="w-full justify-between"
-                  >
-                    {selectedDriver || "Select driver..."}
-                    <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-full p-0" onWheel={(e) => e.stopPropagation()}>
-                  <Command>
-                    <CommandInput placeholder="Search driver..." />
-                    <CommandEmpty>No driver found.</CommandEmpty>
-                    <CommandGroup className="max-h-64 overflow-y-auto overscroll-contain [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-gray-100">
-                      {driversList.map((driver) => (
-                        <CommandItem
-                          key={driver}
-                          value={driver}
-                          onSelect={(currentValue) => {
-                            setSelectedDriver(currentValue);
-                            setDriverPopoverOpen(false);
-                          }}
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              selectedDriver === driver ? "opacity-100" : "opacity-0"
-                            )}
-                          />
-                          {driver}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </Command>
-                </PopoverContent>
-              </Popover>
+              <div className="flex gap-2">
+                <Input
+                  id="driver-name-input"
+                  placeholder="Type driver name..."
+                  value={selectedDriver}
+                  onChange={(e) => setSelectedDriver(e.target.value)}
+                  className="flex-1"
+                />
+                <Popover open={driverPopoverOpen} onOpenChange={setDriverPopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={driverPopoverOpen}
+                      className="px-3"
+                      title="Select from list"
+                    >
+                      <ChevronDown className="h-4 w-4 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[250px] p-0" onWheel={(e) => e.stopPropagation()}>
+                    <Command>
+                      <CommandInput placeholder="Search driver..." />
+                      <CommandEmpty>No driver found.</CommandEmpty>
+                      <CommandGroup className="max-h-64 overflow-y-auto overscroll-contain [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-gray-100">
+                        {driversList.map((driver) => (
+                          <CommandItem
+                            key={driver}
+                            value={driver}
+                            onSelect={(currentValue) => {
+                              setSelectedDriver(currentValue);
+                              setDriverPopoverOpen(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                selectedDriver === driver ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            {driver}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </div>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="vehicle-number">Vehicle Number *</Label>
-              <Popover open={vehiclePopoverOpen} onOpenChange={setVehiclePopoverOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={vehiclePopoverOpen}
-                    className="w-full justify-between"
-                  >
-                    {selectedVehicle || "Select vehicle..."}
-                    <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-full p-0" onWheel={(e) => e.stopPropagation()}>
-                  <Command>
-                    <CommandInput placeholder="Search vehicle..." />
-                    <CommandEmpty>No vehicle found.</CommandEmpty>
-                    <CommandGroup className="max-h-64 overflow-y-auto overscroll-contain [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-gray-100">
-                      {vehiclesList.map((vehicle) => (
-                        <CommandItem
-                          key={vehicle}
-                          value={vehicle}
-                          onSelect={(currentValue) => {
-                            setSelectedVehicle(currentValue);
-                            setVehiclePopoverOpen(false);
-                          }}
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              selectedVehicle === vehicle ? "opacity-100" : "opacity-0"
-                            )}
-                          />
-                          {vehicle}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </Command>
-                </PopoverContent>
-              </Popover>
+              <div className="flex gap-2">
+                <Input
+                  id="vehicle-number-input"
+                  placeholder="Type vehicle number..."
+                  value={selectedVehicle}
+                  onChange={(e) => setSelectedVehicle(e.target.value.toUpperCase())}
+                  className="flex-1"
+                />
+                <Popover open={vehiclePopoverOpen} onOpenChange={setVehiclePopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={vehiclePopoverOpen}
+                      className="px-3"
+                      title="Select from list"
+                    >
+                      <ChevronDown className="h-4 w-4 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[250px] p-0" onWheel={(e) => e.stopPropagation()}>
+                    <Command>
+                      <CommandInput placeholder="Search vehicle..." />
+                      <CommandEmpty>No vehicle found.</CommandEmpty>
+                      <CommandGroup className="max-h-64 overflow-y-auto overscroll-contain [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-gray-100">
+                        {vehiclesList.map((vehicle) => (
+                          <CommandItem
+                            key={vehicle}
+                            value={vehicle}
+                            onSelect={(currentValue) => {
+                              setSelectedVehicle(currentValue);
+                              setVehiclePopoverOpen(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                selectedVehicle === vehicle ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            {vehicle}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </div>
             </div>
 
             <div className="space-y-2">
