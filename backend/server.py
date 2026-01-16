@@ -4487,19 +4487,258 @@ async def export_telecaller_call_logs(
         raise HTTPException(status_code=500, detail=f"Export failed: {str(e)}")
 
 
-    return {
-        "success": True,
-        "message": "Call marked as done",
-        "timestamp": current_time
-    }
+@api_router.get("/telecaller-desk/daily-summary")
+async def get_telecaller_daily_summary(
+    start_date: str = Query(None, description="Start date in YYYY-MM-DD format"),
+    end_date: str = Query(None, description="End date in YYYY-MM-DD format"),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get daily summary for all telecallers with:
+    - Total leads assigned
+    - Calls done
+    - No response
+    - Highly interested
+    - Not interested
+    - Callbacks
+    """
+    from datetime import datetime
+    from collections import defaultdict
+    
+    try:
+        # Build date filter
+        date_filter = {}
+        if start_date:
+            date_filter["$gte"] = start_date
+        if end_date:
+            date_filter["$lte"] = end_date
+        
+        # Get all telecallers
+        telecallers = await db.users.find(
+            {"account_type": "telecaller", "status": "active"},
+            {"_id": 0, "email": 1, "first_name": 1, "last_name": 1}
+        ).to_list(1000)
+        
+        summaries = []
+        
+        for tc in telecallers:
+            tc_email = tc.get("email")
+            tc_name = f"{tc.get('first_name', '')} {tc.get('last_name', '')}".strip() or tc_email.split('@')[0]
+            
+            # Build query for assigned leads
+            query = {"assigned_telecaller": tc_email}
+            if date_filter:
+                query["assigned_date"] = date_filter
+            
+            # Get all leads for this telecaller
+            leads = await db.driver_leads.find(query, {"_id": 0}).to_list(10000)
+            
+            # Count statuses
+            total_leads = len(leads)
+            calls_done = 0
+            no_response = 0
+            highly_interested = 0
+            not_interested = 0
+            callbacks = 0
+            
+            for lead in leads:
+                status = (lead.get("status") or "").lower()
+                
+                # Check if called
+                if lead.get("last_called") and lead.get("last_called_by") == tc_email:
+                    calls_done += 1
+                
+                # Check no response
+                if lead.get("last_no_response") and lead.get("last_no_response_by") == tc_email:
+                    no_response += 1
+                
+                # Status-based counts
+                if "highly interested" in status:
+                    highly_interested += 1
+                elif "not interested" in status:
+                    not_interested += 1
+                elif "call back" in status or "callback" in status:
+                    callbacks += 1
+            
+            summaries.append({
+                "telecaller_email": tc_email,
+                "telecaller_name": tc_name,
+                "total_leads": total_leads,
+                "calls_done": calls_done,
+                "no_response": no_response,
+                "highly_interested": highly_interested,
+                "not_interested": not_interested,
+                "callbacks": callbacks
+            })
+        
+        # Sort by total leads descending
+        summaries.sort(key=lambda x: x["total_leads"], reverse=True)
+        
+        return {
+            "success": True,
+            "start_date": start_date,
+            "end_date": end_date,
+            "summaries": summaries
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting daily summary: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
-    # Get updated lead for sync
-    updated_lead = await db.driver_leads.find_one({"id": lead_id}, {"_id": 0})
+
+@api_router.post("/telecaller-desk/send-slack-report")
+async def send_telecaller_slack_report(
+    request: Request,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Send daily telecaller report to Slack
+    """
+    import httpx
+    from datetime import datetime
     
-    # Sync to Google Sheets
-    sync_single_record('leads', updated_lead)
-    
-    return {"message": "Lead updated successfully", "lead": updated_lead}
+    try:
+        body = await request.json()
+        report_date = body.get("date", datetime.now().strftime("%Y-%m-%d"))
+        
+        # Get Slack webhook URL from settings
+        settings = await db.app_settings.find_one({"type": "slack_settings"}, {"_id": 0})
+        slack_webhook_url = settings.get("webhook_url") if settings else None
+        
+        if not slack_webhook_url:
+            return {
+                "success": False,
+                "message": "Slack webhook URL not configured. Please configure it in Settings."
+            }
+        
+        # Get telecallers
+        telecallers = await db.users.find(
+            {"account_type": "telecaller", "status": "active"},
+            {"_id": 0, "email": 1, "first_name": 1, "last_name": 1}
+        ).to_list(1000)
+        
+        # Build report for each telecaller
+        report_lines = [f"📊 *Daily Telecaller Report - {report_date}*\n"]
+        
+        for tc in telecallers:
+            tc_email = tc.get("email")
+            tc_name = f"{tc.get('first_name', '')} {tc.get('last_name', '')}".strip() or tc_email.split('@')[0]
+            
+            # Get leads for this telecaller on the report date
+            leads = await db.driver_leads.find({
+                "assigned_telecaller": tc_email,
+                "assigned_date": report_date
+            }, {"_id": 0}).to_list(10000)
+            
+            total_leads = len(leads)
+            calls_done = 0
+            no_response = 0
+            highly_interested = 0
+            not_interested = 0
+            callbacks = 0
+            
+            for lead in leads:
+                status = (lead.get("status") or "").lower()
+                
+                if lead.get("last_called") and lead.get("last_called_by") == tc_email:
+                    calls_done += 1
+                
+                if lead.get("last_no_response") and lead.get("last_no_response_by") == tc_email:
+                    no_response += 1
+                
+                if "highly interested" in status:
+                    highly_interested += 1
+                elif "not interested" in status:
+                    not_interested += 1
+                elif "call back" in status:
+                    callbacks += 1
+            
+            # Only include telecallers with leads
+            if total_leads > 0:
+                report_lines.append(f"*{tc_name}'s Report:*")
+                report_lines.append(f"Total leads = {total_leads}")
+                report_lines.append(f"Calls done = {calls_done}")
+                report_lines.append(f"No Response = {no_response}")
+                if highly_interested > 0:
+                    report_lines.append(f"Highly Interested = {highly_interested}")
+                if not_interested > 0:
+                    report_lines.append(f"Not Interested = {not_interested}")
+                if callbacks > 0:
+                    report_lines.append(f"Call back = {callbacks}")
+                report_lines.append("")  # Empty line between telecallers
+        
+        # Send to Slack
+        slack_message = {
+            "text": "\n".join(report_lines)
+        }
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.post(slack_webhook_url, json=slack_message, timeout=30)
+            
+            if response.status_code == 200:
+                logger.info(f"Slack report sent successfully for {report_date}")
+                return {
+                    "success": True,
+                    "message": "Report sent to Slack successfully"
+                }
+            else:
+                logger.error(f"Slack API error: {response.status_code} - {response.text}")
+                return {
+                    "success": False,
+                    "message": f"Slack API error: {response.status_code}"
+                }
+                
+    except Exception as e:
+        logger.error(f"Error sending Slack report: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/settings/slack")
+async def get_slack_settings(current_user: User = Depends(get_current_user)):
+    """Get Slack integration settings"""
+    try:
+        settings = await db.app_settings.find_one({"type": "slack_settings"}, {"_id": 0})
+        return {
+            "success": True,
+            "settings": settings or {"webhook_url": "", "daily_report_time": "20:00", "enabled": False}
+        }
+    except Exception as e:
+        logger.error(f"Error getting Slack settings: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/settings/slack")
+async def save_slack_settings(
+    request: Request,
+    current_user: User = Depends(get_current_user)
+):
+    """Save Slack integration settings"""
+    try:
+        body = await request.json()
+        
+        settings_data = {
+            "type": "slack_settings",
+            "webhook_url": body.get("webhook_url", ""),
+            "daily_report_time": body.get("daily_report_time", "20:00"),
+            "enabled": body.get("enabled", False),
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+            "updated_by": current_user.email
+        }
+        
+        await db.app_settings.update_one(
+            {"type": "slack_settings"},
+            {"$set": settings_data},
+            upsert=True
+        )
+        
+        return {
+            "success": True,
+            "message": "Slack settings saved successfully"
+        }
+    except Exception as e:
+        logger.error(f"Error saving Slack settings: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 @api_router.get("/driver-onboarding/leads/{lead_id}")
 async def get_lead(lead_id: str, current_user: User = Depends(get_current_user)):
