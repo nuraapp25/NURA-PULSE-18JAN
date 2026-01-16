@@ -355,6 +355,95 @@ const SupplyPlan = () => {
     return totalHours.toFixed(1);
   };
 
+  // Utilization Statistics
+  const utilizationStats = useMemo(() => {
+    // Get unique drivers with assignments
+    const driversWithAssignments = [...new Set(assignments.map(a => a.driver_name))];
+    
+    // Calculate driver stats
+    const driverStats = driversWithAssignments.map(driver => {
+      const driverAssignments = assignments.filter(a => a.driver_name === driver);
+      let totalHours = 0;
+      const vehiclesUsed = new Set();
+      
+      driverAssignments.forEach(a => {
+        const [startH, startM] = a.shift_start_time.split(':').map(Number);
+        const [endH, endM] = a.shift_end_time.split(':').map(Number);
+        const startMinutes = startH * 60 + startM;
+        let endMinutes = endH * 60 + endM;
+        // Handle overnight shifts
+        if (endMinutes < startMinutes) {
+          endMinutes += 24 * 60;
+        }
+        const duration = (endMinutes - startMinutes) / 60;
+        totalHours += duration;
+        vehiclesUsed.add(a.vehicle_reg_no);
+      });
+
+      return {
+        name: driver,
+        hours: totalHours,
+        shifts: driverAssignments.length,
+        vehicles: vehiclesUsed.size
+      };
+    }).sort((a, b) => b.hours - a.hours);
+
+    // Get unique vehicles with assignments
+    const vehiclesWithAssignments = [...new Set(assignments.map(a => a.vehicle_reg_no))];
+    
+    // Calculate vehicle stats
+    const vehicleStats = vehiclesWithAssignments.map(vehicle => {
+      const vehicleAssignments = assignments.filter(a => a.vehicle_reg_no === vehicle);
+      let totalHours = 0;
+      const driversUsed = new Set();
+      
+      vehicleAssignments.forEach(a => {
+        const [startH, startM] = a.shift_start_time.split(':').map(Number);
+        const [endH, endM] = a.shift_end_time.split(':').map(Number);
+        const startMinutes = startH * 60 + startM;
+        let endMinutes = endH * 60 + endM;
+        if (endMinutes < startMinutes) {
+          endMinutes += 24 * 60;
+        }
+        const duration = (endMinutes - startMinutes) / 60;
+        totalHours += duration;
+        driversUsed.add(a.driver_name);
+      });
+
+      return {
+        name: vehicle,
+        hours: totalHours,
+        shifts: vehicleAssignments.length,
+        drivers: driversUsed.size
+      };
+    }).sort((a, b) => b.hours - a.hours);
+
+    // Overall totals
+    const totalAssignments = assignments.length;
+    const totalDriverHours = driverStats.reduce((sum, d) => sum + d.hours, 0);
+    const avgHoursPerDriver = driversWithAssignments.length > 0 
+      ? (totalDriverHours / driversWithAssignments.length).toFixed(1) 
+      : 0;
+    const avgHoursPerVehicle = vehiclesWithAssignments.length > 0 
+      ? (totalDriverHours / vehiclesWithAssignments.length).toFixed(1) 
+      : 0;
+
+    return {
+      driverStats,
+      vehicleStats,
+      totalAssignments,
+      totalDriverHours: totalDriverHours.toFixed(1),
+      avgHoursPerDriver,
+      avgHoursPerVehicle,
+      activeDrivers: driversWithAssignments.length,
+      activeVehicles: vehiclesWithAssignments.length,
+      totalDrivers: drivers.length,
+      totalVehicles: vehicles.length
+    };
+  }, [assignments, drivers, vehicles]);
+
+  const [showUtilization, setShowUtilization] = useState(true);
+
   const isToday = (date) => {
     const today = new Date();
     return date.getDate() === today.getDate() &&
