@@ -12,6 +12,7 @@ import { Settings, Key, AlertCircle, Bell, Save, ExternalLink } from "lucide-rea
 
 const SettingsPage = () => {
   const { user } = useAuth();
+  const isAdmin = user?.account_type === "master_admin" || user?.account_type === "admin";
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   const [resetRequestDialogOpen, setResetRequestDialogOpen] = useState(false);
   const [passwordData, setPasswordData] = useState({
@@ -19,6 +20,51 @@ const SettingsPage = () => {
     new_password: "",
     confirm_password: ""
   });
+  
+  // Slack settings
+  const [slackSettings, setSlackSettings] = useState({
+    webhook_url: "",
+    daily_report_time: "20:00",
+    enabled: false
+  });
+  const [savingSlack, setSavingSlack] = useState(false);
+
+  useEffect(() => {
+    if (isAdmin) {
+      fetchSlackSettings();
+    }
+  }, [isAdmin]);
+
+  const fetchSlackSettings = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(`${API}/settings/slack`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.data.success && response.data.settings) {
+        setSlackSettings(response.data.settings);
+      }
+    } catch (error) {
+      console.error("Error fetching Slack settings:", error);
+    }
+  };
+
+  const handleSaveSlackSettings = async () => {
+    setSavingSlack(true);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.post(`${API}/settings/slack`, slackSettings, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.data.success) {
+        toast.success("Slack settings saved successfully");
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to save Slack settings");
+    } finally {
+      setSavingSlack(false);
+    }
+  };
 
   const handleChangePassword = async (e) => {
     e.preventDefault();
