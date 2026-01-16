@@ -13,7 +13,7 @@ import time
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://fleetflow-8.preview.emergentagent.com/api"
+BASE_URL = "https://logistics-dashboard-11.preview.emergentagent.com/api"
 MASTER_ADMIN_EMAIL = "admin"
 MASTER_ADMIN_PASSWORD = "Nura@1234$"
 

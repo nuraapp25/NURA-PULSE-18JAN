@@ -13,7 +13,7 @@ from datetime import datetime
 import pandas as pd
 
 # Configuration
-BASE_URL = "https://fleetflow-8.preview.emergentagent.com/api"
+BASE_URL = "https://logistics-dashboard-11.preview.emergentagent.com/api"
 ADMIN_EMAIL = "admin@nurapulse.com"
 ADMIN_PASSWORD = "admin123"
 

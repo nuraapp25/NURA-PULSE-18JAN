@@ -9,7 +9,7 @@ Both directions of the sync have been configured and tested successfully!
 ## 🔗 URLs Configured
 
 ### Backend Webhook (Sheets → App)
-**URL**: `https://fleetflow-8.preview.emergentagent.com/api/driver-onboarding/webhook/sync-from-sheets`
+**URL**: `https://logistics-dashboard-11.preview.emergentagent.com/api/driver-onboarding/webhook/sync-from-sheets`
 - **Purpose**: Receives data FROM Google Sheets
 - **Status**: ✅ Deployed and tested
 - **Authentication**: No auth required (webhook endpoint)
@@ -75,7 +75,7 @@ Your Google Sheet: https://docs.google.com/spreadsheets/d/1FfZYvc9EpSE03myhp3yk8
 
 ### Configuration Variables (in script)
 ```javascript
-const APP_WEBHOOK_URL = 'https://fleetflow-8.preview.emergentagent.com/api/driver-onboarding/webhook/sync-from-sheets';
+const APP_WEBHOOK_URL = 'https://logistics-dashboard-11.preview.emergentagent.com/api/driver-onboarding/webhook/sync-from-sheets';
 const SHEET_NAME = 'Driver Leads';
 ```
 
@@ -293,7 +293,7 @@ const SHEET_NAME = 'Driver Leads';
 
 Your Driver Onboarding is now fully synced between:
 - **Google Sheets**: https://docs.google.com/spreadsheets/d/1FfZYvc9EpSE03myhp3yk8lfOzCJoibVmaJ74Xm-qhv0/edit
-- **Nura Pulse App**: https://fleetflow-8.preview.emergentagent.com
+- **Nura Pulse App**: https://logistics-dashboard-11.preview.emergentagent.com
 
 Changes in either location will automatically sync to the other!
 
