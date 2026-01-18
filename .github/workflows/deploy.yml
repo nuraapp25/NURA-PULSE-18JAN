@@ -19,13 +19,12 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 16   # ⬅️ IMPORTANT: downgrade to Node 16
 
       - name: Install dependencies
         run: |
           cd frontend
           npm install --legacy-peer-deps
-
 
       - name: Build
         run: |
