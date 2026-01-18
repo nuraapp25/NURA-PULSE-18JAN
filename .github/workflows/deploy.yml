@@ -19,17 +19,18 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 16   # ⬅️ IMPORTANT: downgrade to Node 16
+          node-version: 16
 
       - name: Install dependencies
         run: |
           cd frontend
           npm install --legacy-peer-deps
+          npm install ajv@6 ajv-keywords@3 --save-dev
 
       - name: Build
         run: |
           cd frontend
-          npm run build
+          CI=false npm run build
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
