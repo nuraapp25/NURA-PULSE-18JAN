@@ -45,7 +45,7 @@ import SupplyPlan from "@/pages/SupplyPlan";
 import SettingsPage from "@/pages/SettingsPage";
 import MaintenancePage from "@/pages/MaintenancePage";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "http://localhost:8000";
 export const API = `${BACKEND_URL}/api`;
 
 // Auth Context
@@ -88,7 +88,7 @@ function App() {
   const toggleTheme = () => {
     setTheme(prev => prev === "light" ? "dark" : "light");
   };
-  
+
   // Check maintenance mode on app load and when user changes
   useEffect(() => {
     const checkMaintenanceMode = async () => {
@@ -98,7 +98,7 @@ function App() {
         setCheckingMaintenance(false);
         return;
       }
-      
+
       try {
         const response = await axios.get(`${API}/maintenance-status`);
         setMaintenanceMode(response.data.maintenance_mode || false);
@@ -109,9 +109,9 @@ function App() {
         setCheckingMaintenance(false);
       }
     };
-    
+
     checkMaintenanceMode();
-    
+
     // Check every 30 seconds if maintenance mode changed (only when logged in)
     if (user) {
       const interval = setInterval(checkMaintenanceMode, 30000);
@@ -127,14 +127,14 @@ function App() {
       axios.get(`${API}/auth/me`, {
         headers: { Authorization: `Bearer ${token}` }
       })
-      .then(response => {
-        setUser(response.data);
-        setLoading(false);
-      })
-      .catch(() => {
-        localStorage.removeItem("token");
-        setLoading(false);
-      });
+        .then(response => {
+          setUser(response.data);
+          setLoading(false);
+        })
+        .catch(() => {
+          localStorage.removeItem("token");
+          setLoading(false);
+        });
     } else {
       setLoading(false);
     }
