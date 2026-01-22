@@ -12283,7 +12283,11 @@ async def get_signups_pivot(
 
 # ==================== DRIVER ONBOARDING - DOCUMENT UPLOAD & OCR ====================
 
-from emergentintegrations.llm.chat import LlmChat, UserMessage
+try:
+    from emergentintegrations.llm.chat import LlmChat, UserMessage
+except ImportError:
+    LlmChat = None
+    UserMessage = None
 
 # Document upload folder
 DRIVER_DOCUMENTS_FOLDER = "driver_documents"

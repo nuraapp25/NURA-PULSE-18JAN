@@ -9,7 +9,12 @@ import logging
 from datetime import datetime, timezone
 from motor.motor_asyncio import AsyncIOMotorClient
 import base64
-from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
+try:
+    from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
+except ImportError:
+    LlmChat = None
+    UserMessage = None
+    ImageContent = None
 import uuid
 from PIL import Image
 import io
