@@ -8259,7 +8259,7 @@ async def process_payment_screenshots(
     load_dotenv()
     
     try:
-        from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
+        # from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
         import base64
         import tempfile
         import uuid
@@ -8284,10 +8284,10 @@ async def process_payment_screenshots(
         if len(files) > 10:
             raise HTTPException(status_code=400, detail="Maximum 10 files allowed per batch")
         
-        # Get the emergent LLM key
-        api_key = os.environ.get("EMERGENT_LLM_KEY")
+        # Get the API key (prioritize OPENAI_API_KEY)
+        api_key = os.environ.get("OPENAI_API_KEY") or os.environ.get("EMERGENT_LLM_KEY")
         if not api_key:
-            raise HTTPException(status_code=500, detail="Emergent LLM API key not configured")
+            raise HTTPException(status_code=500, detail="OpenAI API key not configured. Please add OPENAI_API_KEY to .env file")
         
         logger.info(f"🚀 Starting parallel processing of {len(files)} files")
         
@@ -8429,15 +8429,9 @@ Be precise and extract ALL rides shown in the screenshot. If a screenshot shows 
                     image_bytes = img_file.read()
                     image_base64 = base64.b64encode(image_bytes).decode('utf-8')
                 
-                # Create ImageContent
-                image_content = ImageContent(image_base64=image_base64)
-                
-                # Use GPT-4o-mini for 3x FASTER processing (still accurate for OCR!)
-                chat = LlmChat(
-                    api_key=api_key,
-                    session_id=f"payment-extraction-{uuid.uuid4()}",
-                    system_message="Extract ride payment data from screenshot. Return JSON array only."
-                ).with_model("openai", "gpt-4o-mini")  # FASTER MODEL!
+                # Use standard OpenAI client directly instead of emergentintegrations
+                from openai import AsyncOpenAI
+                client = AsyncOpenAI(api_key=api_key)
                 
                 # Simplified prompt for faster processing
                 simplified_prompt = """Extract ALL rides from this screenshot as JSON array:
@@ -8450,16 +8444,37 @@ Rules:
 - Use N/A for missing data
 - NO assumptions"""
                 
-                user_message = UserMessage(
-                    text=simplified_prompt,
-                    file_contents=[image_content]
-                )
+                messages = [
+                    {
+                        "role": "system",
+                        "content": "Extract ride payment data from screenshot. Return JSON array only."
+                    },
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": simplified_prompt},
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:image/jpeg;base64,{image_base64}"
+                                }
+                            }
+                        ]
+                    }
+                ]
                 
                 # Increased timeout for mini model (can be slower sometimes)
-                response = await asyncio.wait_for(
-                    chat.send_message(user_message),
+                # Call OpenAI API directly
+                completion = await asyncio.wait_for(
+                    client.chat.completions.create(
+                        model="gpt-4o-mini",
+                        messages=messages,
+                        max_tokens=1000
+                    ),
                     timeout=120.0  # 2 minutes per image max
                 )
+                
+                response = completion.choices[0].message.content
                 
                 # Parse JSON response
                 import json
@@ -8470,7 +8485,12 @@ Rules:
                     clean_response = clean_response[:-3]
                 clean_response = clean_response.strip()
                 
-                parsed_data = json.loads(clean_response)
+                try:
+                    parsed_data = json.loads(clean_response)
+                except json.JSONDecodeError:
+                    # Fallback cleanup for common issues
+                    clean_response = clean_response.replace('\n', '')
+                    parsed_data = json.loads(clean_response)
                 
                 # Handle both single object and array responses
                 results = []
@@ -9089,8 +9109,12 @@ async def create_payment_folder(
     except HTTPException:
         raise
     except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
         logger.error(f"Error creating payment folder: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Traceback: {error_details}")
+        # Return the actual error in the response for debugging
+        raise HTTPException(status_code=500, detail=f"Creation failed: {str(e)}")
 
 
 @api_router.get("/admin/payment-screenshots/browse")
